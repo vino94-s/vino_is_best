@@ -59,6 +59,12 @@ h1 .go { color: var(--tan-deep); }
 }
 .stat b { font-family: var(--f-display); font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
 .stat span { font-size: 12px; color: var(--ink-soft); letter-spacing: .04em; }
+@media (max-width: 520px) {
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .stat { min-width: 0; padding: 5px 8px; }
+  .stat b { font-size: 22px; }
+  .stat span { font-size: 11px; white-space: nowrap; }
+}
 .stage { position: relative; width: 100%; max-width: 560px; aspect-ratio: 1; }
 canvas#game {
   width: 100%; height: 100%; display: block; touch-action: none;
@@ -92,16 +98,17 @@ canvas#game {
 .hint { font-size: 13px; color: var(--ink-soft); }
 kbd { font-family: var(--f-body); border: 1.5px solid var(--ink-soft); border-bottom-width: 3px; border-radius: 5px; padding: 0 5px; font-size: 12px; }
 
-.pad { display: none; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 48px); gap: 6px; justify-content: center; }
+/* 숫자패드 배열: 8(위) / 4(왼) · 6(오) / 2(아래), 가운데는 비움 */
+.pad { display: none; grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 64px); gap: 10px; justify-content: center; padding-block: 4px 8px; }
 .pad button {
   touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
-  font-size: 22px; border: 2px solid var(--ink); background: var(--card); color: var(--ink);
+  font-size: 26px; border: 2px solid var(--ink); background: var(--card); color: var(--ink);
   border-radius: 10px; cursor: pointer;
 }
 .pad button:active { background: var(--tan); }
 .pad .up { grid-column: 2; grid-row: 1; }
 .pad .left { grid-column: 1; grid-row: 2; }
-.pad .down { grid-column: 2; grid-row: 2; }
+.pad .down { grid-column: 2; grid-row: 3; }
 .pad .right { grid-column: 3; grid-row: 2; }
 @media (pointer: coarse) { .pad { display: grid; } .keys-hint { display: none; } }
 
