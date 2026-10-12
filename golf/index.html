@@ -83,7 +83,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 #clubs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 #clubs::-webkit-scrollbar{display:none}
 .club{flex:none;min-width:58px;padding:6px 8px;border-radius:10px;border:1px solid var(--hud-line);background:rgba(255,255,255,.03);display:flex;flex-direction:column;align-items:center;line-height:1.15}
-.club b{font-family:var(--f-disp);font-weight:400;font-size:16px}
+.club b{font-family:var(--f-disp);font-weight:400;font-size:14px;white-space:nowrap}
 .club small{font-family:var(--f-num);font-size:10px;color:var(--muted)}
 .club.on{background:var(--gold);border-color:var(--gold);color:#241a02}
 .club.on small{color:#5a4206}
@@ -240,7 +240,7 @@ table.rk .cs{font-size:12px;color:#5b6b5f}
       <div>
         <div class="eyebrow">제1회 전국 아마추어 꼴푸 대항전</div>
         <h1 class="logo">꼴푸왕은<em>홀인원</em></h1>
-        <p class="tag">골퍼 뒤에서 바라보는 시점으로 칩니다. 코스 전체는 보이지 않으니 깃대 화살표와 미니맵, 바람을 읽고 한 샷씩 공략하세요.</p>
+        <p class="tag">홀인원에 도전해보시술? 꼴푸왕은 쌉가능한거 ㅇㅈ?</p>
       </div>
       <div id="glWarn" class="warn" hidden>이 기기나 브라우저에서 3D 그래픽을 켤 수 없어 게임을 시작할 수 없습니다. 최신 Chrome, Safari, Edge에서 다시 열어 주세요.</div>
       <div>
@@ -597,7 +597,9 @@ function init3D(){
   const disc=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.16,depthTest:false,fog:false}));disc.renderOrder=5;scene.add(disc);
   const wdot=new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(new Float32Array(3),3)),new THREE.PointsMaterial({color:0x9fd3e6,size:9,sizeAttenuation:false,depthTest:false,fog:false,transparent:true}));wdot.frustumCulled=false;wdot.renderOrder=6;scene.add(wdot);
   const golfer=makeGolfer();scene.add(golfer);
-  Object.assign(T3,{ok:true,renderer,scene,camera,hemi,sun,sky,sunSpr,bd,far,holeG,ball,bshadow,trail,trailGeo,dots,ring,disc,wdot,golfer,camPos:V(0,30,40),camLook:V(0,0,-100)});
+  const pc=document.createElement('canvas');pc.width=pc.height=1536;const ptex=new THREE.CanvasTexture(pc);ptex.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  const patch=new THREE.Mesh(new THREE.PlaneGeometry(96,96).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({map:ptex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));patch.position.y=.004;patch.renderOrder=1;patch.visible=false;scene.add(patch);
+  Object.assign(T3,{ok:true,renderer,scene,camera,hemi,sun,sky,sunSpr,bd,far,holeG,ball,bshadow,trail,trailGeo,dots,ring,disc,wdot,golfer,patch,pc,ptex,camPos:V(0,30,40),camLook:V(0,0,-100)});
   T3.maxAniso=renderer.capabilities.getMaxAnisotropy();
   return true;
 }
@@ -614,6 +616,15 @@ function setBackdrop(C,wx){
   if(!tex){const c=document.createElement('canvas');c.width=4096;c.height=512;const g=c.getContext('2d');drawBackdrop(g,C.backdrop,0,4096,512-8,1.6,wx.sky,C.seed);tex=new THREE.CanvasTexture(c);tex.wrapS=THREE.RepeatWrapping;bdCache[key]=tex;}
   T3.bd.material.map=tex;T3.bd.material.needsUpdate=true;
 }
+function updatePatch(h,cx,cy){
+  if(!T3.patch)return;const c=T3.pc,g=c.getContext('2d'),S=96,k=c.width/S;
+  g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-over';g.clearRect(0,0,c.width,c.height);
+  g.setTransform(k,0,0,k,c.width/2-cx*k,c.height/2-cy*k);drawCourse(g,h,k,'tex',{x0:cx-S,y0:cy-S,x1:cx+S,y1:cy+S});
+  g.setTransform(1,0,0,1,0,0);const R=mulberry32((cx*7+cy*13)|0);const n=Math.round(c.width*c.height/90);
+  for(let i=0;i<n;i++){g.fillStyle=R()<.5?'rgba(0,0,0,.08)':'rgba(255,255,255,.07)';g.fillRect(R()*c.width,R()*c.height,1+R()*2,1+R()*2);}
+  g.globalCompositeOperation='destination-in';const rg=g.createRadialGradient(c.width/2,c.height/2,c.width*.3,c.width/2,c.height/2,c.width*.5);rg.addColorStop(0,'rgba(0,0,0,1)');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(0,0,c.width,c.height);g.globalCompositeOperation='source-over';
+  T3.ptex.needsUpdate=true;T3.patch.position.set(cx,.004,cy);T3.patch.visible=true;
+}
 function disposeGroup(gp){gp.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const m=Array.isArray(o.material)?o.material:[o.material];m.forEach(x=>{if(x.map)x.map.dispose();x.dispose();});}});while(gp.children.length)gp.remove(gp.children[0]);}
 function buildHole3D(C,h,wx){
   const gp=T3.holeG;disposeGroup(gp);const th=h.theme;
@@ -622,7 +633,7 @@ function buildHole3D(C,h,wx){
   T3.bd.position.set((h.bx0+h.bx1)/2,240,(h.by0+h.by1)/2);
   // ground texture
   const M=280,x0=h.bx0-M,x1=h.bx1+M,y0=h.by0-M,y1=h.by1+M,w=x1-x0,d=y1-y0;
-  const ppy=Math.min(2.5,4096/Math.max(w,d));const c=document.createElement('canvas');c.width=Math.round(w*ppy);c.height=Math.round(d*ppy);
+  const ppy=Math.min(3.5,4096/Math.max(w,d));const c=document.createElement('canvas');c.width=Math.round(w*ppy);c.height=Math.round(d*ppy);
   const g=c.getContext('2d');g.setTransform(ppy,0,0,ppy,-x0*ppy,-y0*ppy);drawCourse(g,h,ppy,'tex',{x0,y0,x1,y1});
   g.setTransform(1,0,0,1,0,0);const R=mulberry32(h.idx*31+7);const n=Math.round(c.width*c.height/120);
   for(let i=0;i<n;i++){g.fillStyle=R()<.5?'rgba(0,0,0,.07)':'rgba(255,255,255,.06)';g.fillRect(R()*c.width,R()*c.height,1+R()*1.5,1+R()*1.5);}
@@ -735,7 +746,7 @@ function startHole(){
   G.wind={a:Math.random()*TAU,ms:Math.round(clamp((wx.ms[0]+Math.random()*(wx.ms[1]-wx.ms[0]))*C.wind,0,13)*10)/10};
   G.ball={x:0,y:0,z:0};G.lie='tee';G.strokes=0;G.trail=[];G.prev=null;G.flight=null;G.roll=null;G.golfer={phase:'addr',t:0};
   buildHole3D(C,h,wx);
-  G.club=0;G.aim=Math.atan2(h.tee.ty,h.tee.tx);placeGolfer();
+  G.club=0;G.aim=Math.atan2(h.tee.ty,h.tee.tx);placeGolfer();updatePatch(h,0,0);
   const d=V(Math.cos(G.aim),0,Math.sin(G.aim));
   T3.camPos.set(-d.x*40,30,-d.z*40);T3.camLook.set(d.x*120,0,d.z*120);
   G.state='intro';
@@ -768,6 +779,7 @@ function defaultAim(){
 }
 function aimReady(){
   G.club=recommend();G.aim=defaultAim();G.power=0;G.state='aim';G.golfer={phase:'addr',t:0};G.trail=[];
+  updatePatch(hole(),G.ball.x,G.ball.y);
   placeGolfer();updateClubs();updateHUD();updateCtl();
 }
 function golferOff(){const c=CLUBS[G.club];return c.putt?.55:.62+c.len*.22;}
@@ -905,7 +917,7 @@ function totals(){let s=0,p=0;for(const r of G.scores||[]){if(r){s+=r.s;p+=r.par
 function buildClubs(){
   const el=$('#clubs');el.innerHTML='';
   CLUBS.forEach((c,i)=>{const b=document.createElement('button');b.className='club';b.dataset.i=i;
-    const n=document.createElement('b');n.textContent=c.id;const s=document.createElement('small');s.textContent=c.putt?'퍼팅':c.carry+'y';
+    const n=document.createElement('b');n.textContent=({'1W':'드라이버','3W':'3번 우드','4U':'4번 유틸','PW':'P 웨지','SW':'S 웨지','PT':'퍼터'})[c.id]||c.id.replace('I','번 아이언');const s=document.createElement('small');s.textContent=c.putt?'퍼팅':c.carry+'y';
     b.append(n,s);b.title=c.name;b.addEventListener('click',()=>{audio();setClub(i);});el.append(b);});
 }
 function updateClubs(){
@@ -1126,7 +1138,7 @@ let titleT=0;
 function titleScene(){
   if(!T3.ok)return;const C=COURSES[selCourse];const h=C.holes[0];
   G.ci=null;G.ball={x:0,y:0,z:0};G.club=0;G.aim=Math.atan2(h.tee.ty,h.tee.tx);G.power=0;G.golfer={phase:'addr',t:0};G.trail=[];
-  T3._titleHole=h;buildHole3D(C,h,WEATHERS[0]);placeGolfer();titleT=0;
+  T3._titleHole=h;buildHole3D(C,h,WEATHERS[0]);placeGolfer();updatePatch(h,0,0);titleT=0;
 }
 
 /* ================= INPUT ================= */
