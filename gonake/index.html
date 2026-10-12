@@ -94,6 +94,7 @@ kbd { font-family: var(--f-body); border: 1.5px solid var(--ink-soft); border-bo
 
 .pad { display: none; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 48px); gap: 6px; justify-content: center; }
 .pad button {
+  touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
   font-size: 22px; border: 2px solid var(--ink); background: var(--card); color: var(--ink);
   border-radius: 10px; cursor: pointer;
 }
@@ -218,11 +219,11 @@ li:nth-child(1) .pos { color: var(--meat); }
   const DIRS = { up: [0,-1], down: [0,1], left: [-1,0], right: [1,0] };
   const OPP = { up: "down", down: "up", left: "right", right: "left" };
   let snake, dir, queue, meat, eaten, state = "ready", acc = 0, last = 0, face = 1, popT = 0;
-  let prevTail = null, frac = 1; // 부드러운 이동: 직전 꼬리 위치와 칸 사이 진행률
+  let movedDir = "right", frac = 0; // movedDir: 마지막으로 실제 이동한 방향, frac: 다음 칸까지 진행률
 
   function reset() {
     const y = Math.floor(N / 2);
-    snake = [[6,y],[5,y],[4,y]]; prevTail = [4,y]; frac = 1;
+    snake = [[6,y],[5,y],[4,y]]; movedDir = "right"; frac = 0;
     dir = "right"; queue = []; eaten = 0; face = 1; popT = 0;
     placeMeat(); updateStats();
   }
@@ -248,13 +249,14 @@ li:nth-child(1) .pos { color: var(--meat); }
   function turn(d) {
     if (state === "ready") { start(); }
     if (state !== "play") return;
+    // 칸을 막 출발한 직후라면 진행 중인 이동 방향을 바로 바꿔서 입력 지연을 줄임
+    if (!queue.length && frac < 0.4 && d !== dir && d !== OPP[movedDir]) { dir = d; return; }
     const lastD = queue.length ? queue[queue.length - 1] : dir;
     if (d === lastD || d === OPP[lastD] || queue.length > 2) return;
     queue.push(d);
   }
 
   function step() {
-    if (queue.length) dir = queue.shift();
     if (dir === "left") face = -1; else if (dir === "right") face = 1;
     const [dx, dy] = DIRS[dir];
     const nh = [snake[0][0] + dx, snake[0][1] + dy];
@@ -263,8 +265,8 @@ li:nth-child(1) .pos { color: var(--meat); }
     if (nh[0] < 0 || nh[1] < 0 || nh[0] >= N || nh[1] >= N || body.some(s => s[0] === nh[0] && s[1] === nh[1])) {
       return gameOver();
     }
-    prevTail = grow ? snake[snake.length - 1].slice() : snake[snake.length - 1].slice();
-    snake.unshift(nh);
+    snake.unshift(nh); movedDir = dir;
+    if (queue.length) dir = queue.shift(); // 다음 칸으로 갈 방향을 미리 확정
     if (grow) { eaten++; popT = 1; placeMeat(); } else snake.pop();
     updateStats();
   }
@@ -322,9 +324,12 @@ li:nth-child(1) .pos { color: var(--meat); }
     const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
     const f = frac;
     const n = cells.length;
-    const pt = [C(prevTail[0]), C(prevTail[1])];
+    // 머리는 지금 칸에서 다음 칸으로 미리 나아가고, 꼬리는 한 칸 앞 칸으로 따라감 (화면 지연 없음)
+    const nx = snake[0][0] + DIRS[dir][0], ny = snake[0][1] + DIRS[dir][1];
+    const willGrow = meat && nx === meat[0] && ny === meat[1];
+    const tailEnd = willGrow ? cells[n - 1] : lerp(cells[n - 1], cells[n - 2], f);
     // 머리는 직전 칸에서 현재 칸으로, 꼬리는 지난 자리에서 현재 칸으로 미끄러지듯 이동
-    const pts = [lerp(cells[1], cells[0], f), ...cells.slice(1, n - 1), cells[n - 1], lerp(pt, cells[n - 1], f)];
+    const pts = [lerp(cells[0], [C(nx), C(ny)], f), ...cells.slice(0, n - 1), tailEnd];
     const k = (cell * 0.8) / SPR.bodyH;           // 스프라이트 px → 캔버스 px
     const L = pts.length;
 
@@ -346,7 +351,7 @@ li:nth-child(1) .pos { color: var(--meat); }
     // 2) 엉덩이 + 뒷다리: 맨 뒤에서 따라옴
     if (rear.complete && rear.naturalWidth) {
       const [tx, ty] = pts[L - 1];
-      ctx.save(); ctx.translate(tx, ty); const tc = snake[n - 1]; orient(tc[0] !== prevTail[0] || tc[1] !== prevTail[1] ? dirOf(prevTail, tc) : dirOf(tc, snake[n - 2]));
+      ctx.save(); ctx.translate(tx, ty); orient(dirOf(snake[n - 1], snake[n - 2]));
       ctx.drawImage(rear, cell * 0.3 - SPR.rearSeam * k, -SPR.bodyY * k, rear.naturalWidth * k, SPR.h * k);
       ctx.restore();
     }
@@ -355,7 +360,7 @@ li:nth-child(1) .pos { color: var(--meat); }
     if (front.complete && front.naturalWidth) {
       const [hx, hy] = pts[0];
       const s = k * (1 + popT * 0.18);
-      ctx.save(); ctx.translate(hx, hy); orient(dirOf(snake[1], snake[0]));
+      ctx.save(); ctx.translate(hx, hy); orient(dir);
       ctx.drawImage(front, -cell * 0.3, -SPR.bodyY * s, front.naturalWidth * s, SPR.h * s);
       ctx.restore();
     }
@@ -397,12 +402,22 @@ li:nth-child(1) .pos { color: var(--meat); }
   });
   document.querySelectorAll(".pad button").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); turn(b.dataset.d); }));
   let sx = 0, sy = 0;
-  cv.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; });
-  cv.addEventListener("pointerup", e => {
-    const dx = e.clientX - sx, dy = e.clientY - sy;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
-    turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+  let swiping = false;
+  // 손가락을 떼지 않아도 일정 거리만 밀면 바로 방향 전환, 이어서 다른 방향으로도 밀 수 있음
+  cv.addEventListener("pointerdown", e => {
+    swiping = true; sx = e.clientX; sy = e.clientY;
+    try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   });
+  cv.addEventListener("pointermove", e => {
+    if (!swiping) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 14) return;
+    turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+    sx = e.clientX; sy = e.clientY;
+  });
+  const endSwipe = () => { swiping = false; };
+  cv.addEventListener("pointerup", endSwipe);
+  cv.addEventListener("pointercancel", endSwipe);
   cv.tabIndex = 0;
 
   // ---------- ranking ----------
@@ -479,6 +494,7 @@ li:nth-child(1) .pos { color: var(--meat); }
   initDb();
 })();
 </script>
+
 
 </body>
 </html>
