@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<title>고네이크</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: a squared-paper notebook page — the game board IS the graph paper, ranking sits on the margin like a scribbled scoreboard. Single paper theme by choice. */
+:root {
+  color-scheme: light;
+  --paper: #fbf7ec;
+  --grid: #dfe6ea;
+  --ink: #2d2a26;
+  --ink-soft: #6b655c;
+  --tan: #f2c27e;
+  --tan-deep: #d9a05a;
+  --meat: #b9502e;
+  --margin: #e98a8a;
+  --card: #fffdf6;
+  --f-display: "Gaegu", "Comic Sans MS", "Apple SD Gothic Neo", cursive;
+  --f-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  padding-inline: 16px;
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; }
+h1 {
+  font-family: var(--f-display); font-weight: 700; margin: 0;
+  font-size: clamp(48px, 9vw, 76px); line-height: .9; letter-spacing: -1px;
+  text-wrap: balance;
+}
+h1 .go { color: var(--tan-deep); }
+.tag { font-family: var(--f-display); font-size: 22px; color: var(--ink-soft); margin: 4px 0 0; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+@media (max-width: 760px) { .main { grid-template-columns: minmax(0,1fr); } }
+
+.board-col { display: grid; gap: 12px; min-width: 0; }
+.stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat {
+  background: var(--card); border: 2px solid var(--ink); border-radius: 12px 14px 10px 13px;
+  padding: 6px 14px; display: grid; min-width: 96px;
+}
+.stat b { font-family: var(--f-display); font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--ink-soft); letter-spacing: .04em; }
+.stage { position: relative; width: 100%; max-width: 560px; aspect-ratio: 1; }
+canvas#game {
+  width: 100%; height: 100%; display: block; touch-action: none;
+  border: 3px solid var(--ink); border-radius: 6px 10px 8px 12px;
+  background: var(--card); box-shadow: 5px 6px 0 var(--ink);
+}
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  padding: 20px; background: rgba(251, 247, 236, .88); border-radius: 6px 10px 8px 12px;
+}
+.overlay[hidden] { display: none; }
+.overlay .big { font-family: var(--f-display); font-weight: 700; font-size: clamp(34px, 7vw, 54px); line-height: 1; margin: 0 0 8px; }
+.overlay p { margin: 0 0 6px; color: var(--ink-soft); }
+.overlay-inner { display: grid; gap: 10px; justify-items: center; max-width: 340px; width: 100%; }
+.btn {
+  font-family: var(--f-display); font-weight: 700; font-size: 24px;
+  background: var(--tan); color: var(--ink); border: 2px solid var(--ink);
+  border-radius: 12px 10px 14px 9px; padding: 6px 22px; cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s;
+}
+.btn:hover { background: var(--tan-deep); }
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:focus-visible, input:focus-visible, .pad button:focus-visible { outline: 3px dashed var(--meat); outline-offset: 3px; }
+.btn.ghost { background: transparent; box-shadow: none; font-size: 19px; border-style: dashed; }
+.name-row { display: flex; gap: 8px; width: 100%; }
+.name-row input {
+  flex: 1; min-width: 0; font-family: var(--f-display); font-size: 24px;
+  border: 2px solid var(--ink); border-radius: 10px; padding: 4px 12px; background: var(--card); color: var(--ink);
+}
+.err { color: var(--meat); font-size: 13px; min-height: 1em; }
+.hint { font-size: 13px; color: var(--ink-soft); }
+kbd { font-family: var(--f-body); border: 1.5px solid var(--ink-soft); border-bottom-width: 3px; border-radius: 5px; padding: 0 5px; font-size: 12px; }
+
+.pad { display: none; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 48px); gap: 6px; justify-content: center; }
+.pad button {
+  font-size: 22px; border: 2px solid var(--ink); background: var(--card); color: var(--ink);
+  border-radius: 10px; cursor: pointer;
+}
+.pad button:active { background: var(--tan); }
+.pad .up { grid-column: 2; grid-row: 1; }
+.pad .left { grid-column: 1; grid-row: 2; }
+.pad .down { grid-column: 2; grid-row: 2; }
+.pad .right { grid-column: 3; grid-row: 2; }
+@media (pointer: coarse) { .pad { display: grid; } .keys-hint { display: none; } }
+
+aside.rank {
+  background: var(--card); border: 2px solid var(--ink); border-radius: 10px 14px 12px 8px;
+  padding: 14px 16px 16px 28px; position: relative; min-width: 0;
+}
+aside.rank::before { content: ""; position: absolute; left: 16px; top: 0; bottom: 0; border-left: 2px solid var(--margin); }
+aside h2 { font-family: var(--f-display); font-size: 32px; margin: 0; line-height: 1; }
+.rank-sub { font-size: 12px; color: var(--ink-soft); margin: 4px 0 10px; }
+ol.list { list-style: none; margin: 0; padding: 0; display: grid; }
+ol.list li {
+  display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 8px; align-items: baseline;
+  padding: 6px 0; border-bottom: 1px dashed var(--grid);
+}
+ol.list li.me { background: rgba(242, 194, 126, .35); border-radius: 6px; }
+.pos { font-family: var(--f-display); font-weight: 700; font-size: 22px; text-align: center; }
+li:nth-child(1) .pos { color: var(--meat); }
+.who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who small { display: block; font-size: 11px; color: var(--ink-soft); }
+.pts { font-family: var(--f-display); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+.empty { color: var(--ink-soft); font-size: 14px; padding: 10px 0; line-height: 1.5; }
+.toast { font-size: 12px; color: var(--ink-soft); margin-top: 10px; min-height: 1em; }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span class="go">고</span>네이크</h1>
+      <p class="tag">고라니 그만먹어</p>
+    </div>
+    <p class="hint keys-hint"><kbd>←</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd> 또는 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 이동 · <kbd>Space</kbd> 일시정지</p>
+  </header>
+
+  <div class="main">
+    <section class="board-col">
+      <div class="stats">
+        <div class="stat"><b id="sScore">0</b><span>점수</span></div>
+        <div class="stat"><b id="sWaist">40cm</b><span>허리 길이</span></div>
+        <div class="stat"><b id="sMeat">0</b><span>먹은 고기</span></div>
+        <div class="stat"><b id="sBest">0</b><span>내 최고점</span></div>
+      </div>
+      <div class="stage">
+        <canvas id="game" aria-label="고네이크 게임판"></canvas>
+        <div class="overlay" id="ovStart">
+          <div class="overlay-inner">
+            <p class="big">고네이크</p>
+            <p>고기를 먹을 때마다 고라니 허리가 한 칸씩 길어져요.<br>벽이나 자기 허리에 부딪히면 끝!</p>
+            <button class="btn" id="btnStart" type="button">시작하기</button>
+          </div>
+        </div>
+        <div class="overlay" id="ovPause" hidden>
+          <div class="overlay-inner">
+            <p class="big">잠깐 쉬는 중</p>
+            <button class="btn" id="btnResume" type="button">계속하기</button>
+          </div>
+        </div>
+        <div class="overlay" id="ovOver" hidden>
+          <form class="overlay-inner" id="nameForm" novalidate>
+            <p class="big">허리 삐끗!</p>
+            <p><b id="oScore">0</b>점 · 허리 <b id="oWaist">0</b>cm</p>
+            <label class="hint" for="nick">닉네임을 남기고 랭킹에 올리세요</label>
+            <div class="name-row">
+              <input id="nick" name="nick" maxlength="12" autocomplete="nickname" placeholder="닉네임 (최대 12자)">
+              <button class="btn" id="btnSave" type="submit">등록</button>
+            </div>
+            <div class="err" id="err"></div>
+            <button class="btn ghost" id="btnAgain" type="button">등록 안 하고 다시 하기</button>
+          </form>
+        </div>
+      </div>
+      <div class="pad" aria-label="방향 버튼">
+        <button class="up" data-d="up" type="button" aria-label="위">▲</button>
+        <button class="left" data-d="left" type="button" aria-label="왼쪽">◀</button>
+        <button class="down" data-d="down" type="button" aria-label="아래">▼</button>
+        <button class="right" data-d="right" type="button" aria-label="오른쪽">▶</button>
+      </div>
+    </section>
+
+    <aside class="rank">
+      <h2>고기 제일많이 먹인사람</h2>
+      <p class="rank-sub" id="rankSub">모두가 함께 보는 랭킹 · 상위 15명</p>
+      <ol class="list" id="rankList"></ol>
+      <div class="empty" id="rankEmpty">아직 기록이 없어요.<br>첫 번째 고기 먹방의 주인공이 되어 보세요.</div>
+      <div class="toast" id="toast"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  const N = 18;                 // grid cells per side
+  const CM_PER_SEG = 15;        // 허리 한 칸 = 15cm
+  // 원본 그림을 셋으로 나눔: 앞(머리+앞발) / 허리(캔버스로 늘림) / 뒤(엉덩이+뒷다리)
+  const front = new Image(); front.src = "data:image/png;base64,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";
+  const rear = new Image(); rear.src = "data:image/png;base64,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";
+  const SPR = { h: 200, bodyY: 120, bodyH: 72, rearSeam: 68 }; // 스프라이트 좌표(px)
+  const BODY_FILL = "#ffc986", BODY_LINE = "#63533a";
+
+  const cv = document.getElementById("game");
+  const ctx = cv.getContext("2d");
+  const $ = id => document.getElementById(id);
+  const ov = { start: $("ovStart"), pause: $("ovPause"), over: $("ovOver") };
+
+  let cell = 20, dpr = 1;
+  function resize() {
+    const r = cv.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    cell = cv.width / N;
+    draw();
+  }
+
+  const DIRS = { up: [0,-1], down: [0,1], left: [-1,0], right: [1,0] };
+  const OPP = { up: "down", down: "up", left: "right", right: "left" };
+  let snake, dir, queue, meat, eaten, state = "ready", acc = 0, last = 0, face = 1, popT = 0;
+  let prevTail = null, frac = 1; // 부드러운 이동: 직전 꼬리 위치와 칸 사이 진행률
+
+  function reset() {
+    const y = Math.floor(N / 2);
+    snake = [[6,y],[5,y],[4,y]]; prevTail = [4,y]; frac = 1;
+    dir = "right"; queue = []; eaten = 0; face = 1; popT = 0;
+    placeMeat(); updateStats();
+  }
+  function placeMeat() {
+    const free = [];
+    for (let x = 0; x < N; x++) for (let y = 0; y < N; y++)
+      if (!snake.some(s => s[0] === x && s[1] === y)) free.push([x,y]);
+    meat = free[Math.floor(Math.random() * free.length)];
+  }
+  const score = () => eaten * 10;
+  const waist = () => (snake.length - 1) * CM_PER_SEG;
+  const speed = () => Math.max(65, 150 - eaten * 4); // ms per step
+
+  let best = 0;
+  try { best = +localStorage.getItem("gonake_best") || 0; } catch (e) {}
+  function updateStats() {
+    $("sScore").textContent = score();
+    $("sWaist").textContent = waist() + "cm";
+    $("sMeat").textContent = eaten;
+    $("sBest").textContent = best;
+  }
+
+  function turn(d) {
+    if (state === "ready") { start(); }
+    if (state !== "play") return;
+    const lastD = queue.length ? queue[queue.length - 1] : dir;
+    if (d === lastD || d === OPP[lastD] || queue.length > 2) return;
+    queue.push(d);
+  }
+
+  function step() {
+    if (queue.length) dir = queue.shift();
+    if (dir === "left") face = -1; else if (dir === "right") face = 1;
+    const [dx, dy] = DIRS[dir];
+    const nh = [snake[0][0] + dx, snake[0][1] + dy];
+    const grow = nh[0] === meat[0] && nh[1] === meat[1];
+    const body = grow ? snake : snake.slice(0, -1);
+    if (nh[0] < 0 || nh[1] < 0 || nh[0] >= N || nh[1] >= N || body.some(s => s[0] === nh[0] && s[1] === nh[1])) {
+      return gameOver();
+    }
+    prevTail = grow ? snake[snake.length - 1].slice() : snake[snake.length - 1].slice();
+    snake.unshift(nh);
+    if (grow) { eaten++; popT = 1; placeMeat(); } else snake.pop();
+    updateStats();
+  }
+
+  function loop(t) {
+    if (state === "play") {
+      acc += t - last;
+      while (acc >= speed() && state === "play") { acc -= speed(); step(); }
+      if (state === "play") frac = Math.min(1, acc / speed());
+    }
+    last = t;
+    popT = Math.max(0, popT - 0.06);
+    draw(t);
+    requestAnimationFrame(loop);
+  }
+
+  // ---------- drawing ----------
+  const C = n => (n + 0.5) * cell;
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  let pal = {};
+  function readPal() { pal = { ink: css("--ink"), tan: css("--tan"), deep: css("--tan-deep"), grid: css("--grid"), meat: css("--meat"), card: css("--card") }; }
+
+  function drawGrid() {
+    ctx.fillStyle = pal.card; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.strokeStyle = pal.grid; ctx.lineWidth = Math.max(1, dpr);
+    ctx.beginPath();
+    for (let i = 1; i < N; i++) {
+      ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, cv.height);
+      ctx.moveTo(0, i * cell); ctx.lineTo(cv.width, i * cell);
+    }
+    ctx.stroke();
+  }
+
+  function drawMeat(t) {
+    if (!meat) return;
+    const x = C(meat[0]), y = C(meat[1]);
+    const s = cell * (0.95 + Math.sin((t || 0) / 220) * 0.05);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(-0.6);
+    ctx.lineWidth = Math.max(1.5, cell * 0.07); ctx.strokeStyle = pal.ink;
+    // bone
+    ctx.fillStyle = "#fffaf0";
+    ctx.beginPath(); ctx.rect(s * 0.1, -s * 0.07, s * 0.3, s * 0.14); ctx.fill(); ctx.stroke();
+    for (const oy of [-0.09, 0.09]) { ctx.beginPath(); ctx.arc(s * 0.42, s * oy, s * 0.09, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+    // meat
+    ctx.fillStyle = pal.meat;
+    ctx.beginPath(); ctx.ellipse(-s * 0.1, 0, s * 0.3, s * 0.25, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.45)";
+    ctx.beginPath(); ctx.ellipse(-s * 0.18, -s * 0.09, s * 0.1, s * 0.05, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawSnake() {
+    if (!snake) return;
+    const cells = snake.map(s => [C(s[0]), C(s[1])]);
+    const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    const f = frac;
+    const n = cells.length;
+    const pt = [C(prevTail[0]), C(prevTail[1])];
+    // 머리는 직전 칸에서 현재 칸으로, 꼬리는 지난 자리에서 현재 칸으로 미끄러지듯 이동
+    const pts = [lerp(cells[1], cells[0], f), ...cells.slice(1, n - 1), cells[n - 1], lerp(pt, cells[n - 1], f)];
+    const k = (cell * 0.8) / SPR.bodyH;           // 스프라이트 px → 캔버스 px
+    const L = pts.length;
+
+    // 1) 허리: 엉덩이에서 머리까지 이어지는 몸통 (먹을수록 길어짐)
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const path = () => { ctx.beginPath(); ctx.moveTo(...pts[L - 1]); for (let i = L - 2; i >= 0; i--) ctx.lineTo(...pts[i]); };
+    path(); ctx.strokeStyle = BODY_LINE; ctx.lineWidth = SPR.bodyH * k; ctx.stroke();
+    path(); ctx.strokeStyle = BODY_FILL; ctx.lineWidth = (SPR.bodyH - 16) * k; ctx.stroke();
+
+    // 방향: 오른쪽이 원본 그림 기준
+    const dirOf = (a, b) => b[0] > a[0] ? "right" : b[0] < a[0] ? "left" : b[1] > a[1] ? "down" : "up";
+    const orient = d => {
+      if (d === "left") ctx.scale(-1, 1);
+      else if (d === "up") ctx.rotate(-Math.PI / 2);
+      else if (d === "down") ctx.rotate(Math.PI / 2);
+    };
+    ctx.imageSmoothingEnabled = true;
+
+    // 2) 엉덩이 + 뒷다리: 맨 뒤에서 따라옴
+    if (rear.complete && rear.naturalWidth) {
+      const [tx, ty] = pts[L - 1];
+      ctx.save(); ctx.translate(tx, ty); const tc = snake[n - 1]; orient(tc[0] !== prevTail[0] || tc[1] !== prevTail[1] ? dirOf(prevTail, tc) : dirOf(tc, snake[n - 2]));
+      ctx.drawImage(rear, cell * 0.3 - SPR.rearSeam * k, -SPR.bodyY * k, rear.naturalWidth * k, SPR.h * k);
+      ctx.restore();
+    }
+
+    // 3) 머리 + 앞발: 고기를 향해 앞장섬
+    if (front.complete && front.naturalWidth) {
+      const [hx, hy] = pts[0];
+      const s = k * (1 + popT * 0.18);
+      ctx.save(); ctx.translate(hx, hy); orient(dirOf(snake[1], snake[0]));
+      ctx.drawImage(front, -cell * 0.3, -SPR.bodyY * s, front.naturalWidth * s, SPR.h * s);
+      ctx.restore();
+    }
+  }
+
+  function draw(t) {
+    if (!pal.ink) readPal();
+    drawGrid(); drawMeat(t); drawSnake();
+  }
+
+  // ---------- flow ----------
+  function show(name) { for (const k in ov) ov[k].hidden = k !== name; }
+  function start() { reset(); state = "play"; acc = 0; show(null); cv.focus(); }
+  function pause() { if (state === "play") { state = "pause"; show("pause"); } else if (state === "pause") { state = "play"; show(null); } }
+  function gameOver() {
+    state = "over";
+    if (score() > best) { best = score(); try { localStorage.setItem("gonake_best", best); } catch (e) {} }
+    updateStats();
+    $("oScore").textContent = score(); $("oWaist").textContent = waist();
+    $("err").textContent = ""; $("btnSave").disabled = false;
+    show("over");
+    let saved = ""; try { saved = localStorage.getItem("gonake_nick") || ""; } catch (e) {}
+    $("nick").value = saved;
+    setTimeout(() => $("nick").focus(), 50);
+  }
+
+  $("btnStart").onclick = start;
+  $("btnResume").onclick = pause;
+  $("btnAgain").onclick = start;
+
+  const KEYS = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", w: "up", s: "down", a: "left", d: "right", W: "up", S: "down", A: "left", D: "right" };
+  document.addEventListener("keydown", e => {
+    if (e.target.tagName === "INPUT") return;
+    if (KEYS[e.key]) { e.preventDefault(); turn(KEYS[e.key]); }
+    else if (e.key === " " || e.key === "p" || e.key === "P") {
+      e.preventDefault();
+      if (state === "ready" || state === "over") start(); else pause();
+    }
+  });
+  document.querySelectorAll(".pad button").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); turn(b.dataset.d); }));
+  let sx = 0, sy = 0;
+  cv.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; });
+  cv.addEventListener("pointerup", e => {
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 20) return;
+    turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
+  });
+  cv.tabIndex = 0;
+
+  // ---------- ranking ----------
+  let db = null, shared = false, myId = null, rows = [];
+  const LOCAL_KEY = "gonake_local_rank";
+  const loadLocal = () => { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]"); } catch (e) { return []; } };
+  const saveLocal = r => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(r)); } catch (e) {} };
+
+  function clean(s) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, 12); }
+  function renderRank() {
+    const list = $("rankList"); list.textContent = "";
+    const sorted = rows.filter(r => typeof r.score === "number")
+      .sort((a, b) => b.score - a.score || (a.at || 0) - (b.at || 0)).slice(0, 15);
+    $("rankEmpty").hidden = sorted.length > 0;
+    sorted.forEach((r, i) => {
+      const li = document.createElement("li");
+      if (r.id && r.id === myId) li.className = "me";
+      const pos = document.createElement("span"); pos.className = "pos"; pos.textContent = i + 1;
+      const who = document.createElement("span"); who.className = "who";
+      who.textContent = clean(r.name) || "익명 고라니";
+      const sm = document.createElement("small"); sm.textContent = "허리 " + (Number(r.waist) || 0) + "cm"; who.appendChild(sm);
+      const pts = document.createElement("span"); pts.className = "pts"; pts.textContent = Number(r.score) || 0;
+      li.append(pos, who, pts); list.appendChild(li);
+    });
+  }
+  function useLocal(note) {
+    shared = false; rows = loadLocal(); renderRank();
+    $("rankSub").textContent = "이 기기에 저장된 랭킹 · 상위 15명";
+    if (note) $("toast").textContent = note;
+  }
+
+  async function initDb() {
+    try { db = await (window.claude && window.claude.use ? window.claude.use("db") : null); } catch (e) { db = null; }
+    if (!db) return useLocal();
+    shared = true;
+    db.collection("scores").orderBy("score", "desc").limit(50).onSnapshot(
+      snap => { rows = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderRank(); },
+      () => useLocal("공유 랭킹에 연결할 수 없어 이 기기 랭킹을 보여줘요.")
+    );
+  }
+
+  $("nameForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const name = clean($("nick").value);
+    if (!name) { $("err").textContent = "닉네임을 한 글자 이상 입력해 주세요."; return; }
+    try { localStorage.setItem("gonake_nick", name); } catch (e) {}
+    const entry = { name, score: score(), waist: waist(), meat: eaten, at: Date.now() };
+    $("btnSave").disabled = true;
+    if (shared && db) {
+      try {
+        const ref = db.collection("scores").doc();
+        myId = ref.id;
+        await ref.set(entry);
+        $("toast").textContent = name + " 님의 기록을 랭킹에 올렸어요.";
+        renderRank(); state = "ready"; show("start"); return;
+      } catch (err) {
+        useLocal("공유 랭킹에 쓸 권한이 없어 이 기기에만 저장했어요.");
+      }
+    }
+    const id = "l" + Date.now(); myId = id;
+    const local = loadLocal(); local.push({ id, ...entry });
+    local.sort((a, b) => b.score - a.score); saveLocal(local.slice(0, 50));
+    rows = loadLocal(); renderRank();
+    if (!$("toast").textContent) $("toast").textContent = name + " 님의 기록을 저장했어요.";
+    state = "ready"; show("start");
+  });
+
+  // boot
+  readPal(); reset(); updateStats(); renderRank();
+  new ResizeObserver(resize).observe(cv);
+  front.onload = rear.onload = () => draw();
+  resize();
+  requestAnimationFrame(t => { last = t; loop(t); });
+  initDb();
+})();
+</script>
+
+</body>
+</html>
