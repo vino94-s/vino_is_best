@@ -428,7 +428,10 @@ li:nth-child(1) .pos { color: var(--meat); }
   cv.tabIndex = 0;
 
   // ---------- ranking ----------
-  let db = null, shared = false, myId = null, rows = [];
+  // 깃허브 등 일반 웹에서 쓰는 공유 랭킹 서버 (구글 시트 + Apps Script 웹 앱 주소)
+  const RANK_API = "";
+  const hasApi = () => /^https:\/\/script\.google\.com\//.test(RANK_API);
+  let db = null, shared = false, mode = "local", myId = null, rows = [];
   const LOCAL_KEY = "gonake_local_rank";
   const loadLocal = () => { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || "[]"); } catch (e) { return []; } };
   const saveLocal = r => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(r)); } catch (e) {} };
@@ -456,10 +459,44 @@ li:nth-child(1) .pos { color: var(--meat); }
     if (note) $("toast").textContent = note;
   }
 
+  async function apiLoad() {
+    try {
+      const r = await fetch(RANK_API + "?t=" + Date.now());
+      const j = await r.json();
+      if (!j || !j.ok || !Array.isArray(j.rows)) throw new Error("bad");
+      // 아직 서버에 못 올린 이 기기 기록도 함께 표시
+      const loc = loadLocal().filter(l => l.localOnly);
+      rows = j.rows.concat(loc); renderRank();
+      $("rankSub").textContent = "모두가 함께 보는 랭킹 · 상위 15명";
+      return true;
+    } catch (e) { return false; }
+  }
+  async function apiSave(entry) {
+    for (let n = 0; n < 2; n++) {
+      try {
+        const r = await fetch(RANK_API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(entry) });
+        const j = await r.json();
+        if (j && j.ok) return j.id;
+        return null;
+      } catch (e) { await new Promise(res => setTimeout(res, 600)); }
+    }
+    return null;
+  }
+
   async function initDb() {
+    if (hasApi() && !(window.claude && window.claude.use)) {
+      mode = "api"; shared = true;
+      $("rankSub").textContent = "랭킹 불러오는 중…";
+      if (!(await apiLoad())) useLocal("공유 랭킹에 연결하지 못해 이 기기 랭킹을 보여줘요.");
+      setInterval(() => { if (mode === "api" && state !== "play" && !document.hidden) apiLoad(); }, 20000);
+      return;
+    }
     try { db = await (window.claude && window.claude.use ? window.claude.use("db") : null); } catch (e) { db = null; }
-    if (!db) return useLocal();
-    shared = true;
+    if (!db) {
+      if (hasApi()) { mode = "api"; shared = true; if (await apiLoad()) return; }
+      return useLocal();
+    }
+    mode = "db"; shared = true;
     db.collection("scores").orderBy("score", "desc").limit(50).onSnapshot(
       snap => { rows = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderRank(); },
       () => useLocal("공유 랭킹에 연결할 수 없어 이 기기 랭킹을 보여줘요.")
@@ -473,7 +510,19 @@ li:nth-child(1) .pos { color: var(--meat); }
     try { localStorage.setItem("gonake_nick", name); } catch (e) {}
     const entry = { name, score: score(), waist: waist(), meat: eaten, at: Date.now() };
     $("btnSave").disabled = true;
-    if (shared && db) {
+    if (mode === "api") {
+      $("err").textContent = "등록하는 중…";
+      const id = await apiSave(entry);
+      $("err").textContent = "";
+      if (id) {
+        myId = id; await apiLoad();
+        $("toast").textContent = name + " 님의 기록을 랭킹에 올렸어요.";
+        state = "ready"; show("start"); return;
+      }
+      entry.localOnly = true;
+      $("toast").textContent = "공유 랭킹에 연결하지 못해 이 기기에만 저장했어요. 잠시 뒤 다시 해 주세요.";
+    }
+    if (mode === "db" && db) {
       try {
         const ref = db.collection("scores").doc();
         myId = ref.id;
@@ -487,7 +536,8 @@ li:nth-child(1) .pos { color: var(--meat); }
     const id = "l" + Date.now(); myId = id;
     const local = loadLocal(); local.push({ id, ...entry });
     local.sort((a, b) => b.score - a.score); saveLocal(local.slice(0, 50));
-    rows = loadLocal(); renderRank();
+    if (mode === "api") rows = rows.filter(r => !r.localOnly).concat(loadLocal().filter(l => l.localOnly)); else rows = loadLocal();
+    renderRank();
     if (!$("toast").textContent) $("toast").textContent = name + " 님의 기록을 저장했어요.";
     state = "ready"; show("start");
   });
