@@ -1008,7 +1008,7 @@ function showResult(){
   const last=store.get('kp_name');if(last)$('#rName').value=last;
   $('#resM').hidden=false;
 }
-const RANK_API='__RANK_API__'; // Google Apps Script web app URL (shared 명예의 전당)
+const RANK_API='https://script.google.com/macros/s/AKfycbwpnEJOrLgUpT23-hCbK_MpvOORtC1wB0iKTpUSo1tEqDtiQoZrgJUnUYGs9NLHmwGBaA/exec'; // Google Apps Script web app URL (shared 명예의 전당)
 const hasApi=()=>/^https:\/\/script\.google\.com\//.test(RANK_API);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function localRows(n){try{const a=JSON.parse(store.get('kp_rank'+n)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
