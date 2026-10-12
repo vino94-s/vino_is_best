@@ -429,7 +429,7 @@ li:nth-child(1) .pos { color: var(--meat); }
 
   // ---------- ranking ----------
   // 깃허브 등 일반 웹에서 쓰는 공유 랭킹 서버 (구글 시트 + Apps Script 웹 앱 주소)
-  const RANK_API = "";
+  const RANK_API = "https://script.google.com/macros/s/AKfycbwxZ9mc_M7ujTB35wWV4ySIpGhmyg5D7O6lCq0DSDLSJv85Go3-52cm46r-abZckzAiLA/exec";
   const hasApi = () => /^https:\/\/script\.google\.com\//.test(RANK_API);
   let db = null, shared = false, mode = "local", myId = null, rows = [];
   const LOCAL_KEY = "gonake_local_rank";
