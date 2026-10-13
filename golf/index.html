@@ -128,7 +128,17 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-o
 .howto{font-size:12.5px;color:#a9bfb0;line-height:1.7;border-top:1px solid var(--hud-line);padding-top:14px}
 .howto b{color:var(--hud-text);font-weight:500}
 .warn{background:#5a1e14;border:1px solid #a8452f;border-radius:10px;padding:10px 12px;font-size:13px}
-@media (max-width:460px){.courses{grid-template-columns:1fr}}
+.diffs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.diff{border:1px solid var(--hud-line);border-radius:12px;padding:10px;background:rgba(9,22,15,.55);display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0}
+.diff b{font-family:var(--f-disp);font-weight:400;font-size:21px;line-height:1;color:var(--dc)}
+.diff span{font-size:11px;color:var(--muted);line-height:1.35}
+.diff[aria-pressed="true"]{border-color:var(--dc);box-shadow:inset 0 0 0 1px var(--dc);background:rgba(255,255,255,.07)}
+.h-diff{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--dc);color:#fff;white-space:nowrap}
+.dbadge{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--dc);color:#fff;margin-right:6px;vertical-align:1px}
+.dfilter{display:flex;gap:6px;flex-wrap:wrap}
+.dfilter button{border:1px solid var(--paper-line);background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;color:#5b6b5f}
+.dfilter button[aria-pressed="true"]{background:var(--paper-ink);border-color:var(--paper-ink);color:#fff}
+@media (max-width:460px){.courses{grid-template-columns:1fr}.diffs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---------- paper modals ---------- */
 .modal{position:absolute;inset:0;z-index:20;background:rgba(5,14,9,.62);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
@@ -195,6 +205,7 @@ table.rk .cs{font-size:12px;color:#5b6b5f}
 
   <header id="hud" hidden>
     <div class="h-hole"><b id="hHole">1</b><span id="hHoleOf">/ 18홀</span></div>
+    <span class="h-diff" id="hDiff">노멀</span>
     <div class="h-meta"><span class="par" id="hPar">PAR 4</span><span class="yds" id="hYds">385 yd</span></div>
     <div class="h-stat"><span class="lbl">타수</span><b id="hStroke">0</b></div>
     <div class="h-stat"><span class="lbl">합계</span><b id="hTotal">E</b></div>
@@ -244,7 +255,11 @@ table.rk .cs{font-size:12px;color:#5b6b5f}
       </div>
       <div id="glWarn" class="warn" hidden>이 기기나 브라우저에서 3D 그래픽을 켤 수 없어 게임을 시작할 수 없습니다. 최신 Chrome, Safari, Edge에서 다시 열어 주세요.</div>
       <div>
-        <div class="sec-lbl">코스 선택</div>
+        <div class="sec-lbl">난이도</div>
+        <div class="diffs" id="diffList" role="group" aria-label="난이도"></div>
+      </div>
+      <div>
+        <div class="sec-lbl" id="courseLbl">코스 선택</div>
         <div class="courses" id="courseList"></div>
       </div>
       <div>
@@ -261,6 +276,7 @@ table.rk .cs{font-size:12px;color:#5b6b5f}
       <div class="howto">
         <b>조작</b> 1) 아래쪽에서 골프채 선택 → 2) 화면을 좌우로 드래그해 방향 조준 → <b>방향 확정</b> → 3) 아래로 당긴 만큼 힘, 손을 떼면 스윙. 끝까지 위로 되돌리면 취소.<br>
         <b>화면</b> 노란 화살표가 깃대 위치, 오른쪽 위 미니맵은 공 주변만 보여줍니다.<br>
+        <b>난이도</b> 어려울수록 페어웨이가 좁고 홀컵이 작으며 그린이 빨라요. 하드부터 돌풍이 불고 바람 보정점이 사라지며, 헬은 낙하 지점 표시 없이 흔들리는 게이지로 칩니다.<br>
         <b>룰</b> OB는 1벌타 후 친 자리에서 다시, 페널티 구역(물)은 1벌타 후 들어간 지점 옆 드롭. 러프·벙커는 비거리가 줄고 비에 젖은 땅은 덜 굴러갑니다. 로컬룰로 더블파(양파)에서 홀아웃 처리합니다.
       </div>
     </div>
@@ -296,6 +312,7 @@ table.rk .cs{font-size:12px;color:#5b6b5f}
       <div class="p-head"><h2>명예의 전당</h2>
         <div class="tabs" role="tablist"><button role="tab" id="tab9" aria-selected="false">9홀</button><button role="tab" id="tab18" aria-selected="true">18홀</button></div>
       </div>
+      <div class="dfilter" id="rkDiff" role="group" aria-label="난이도 필터"></div>
       <div class="rk-wrap" id="rkBody"></div>
       <div class="msg" id="rkMsg"></div>
       <div class="p-actions"><button class="pbtn main" id="rkClose">닫기</button></div>
@@ -330,14 +347,47 @@ const THEMES={
   links:{ob:'#bfb183',tuft:'#9b8852',rough:'#5d8e3d',cut1:'#6a9b44',fw:'#8ac255',fw2:'#95cc5f',fringe:'#82bb51',green:'#a3da70',greenHi:'#bde78d',sand:'#efe1b2',lip:'#c4ae76',water:'#2b78a6',waterHi:'#5ba7cf',tee:'#99cf68',tree:'#3b6634',treeHi:'#54824a',rock:'#7a7468'},
   pine:{ob:'#2a4a2e',tuft:'#2f5a35',rough:'#4d7c37',cut1:'#58883e',fw:'#7bb64d',fw2:'#86c056',fringe:'#74ad48',green:'#96d064',greenHi:'#afdf7f',sand:'#eadbb3',lip:'#bcab7c',water:'#2a6d8c',waterHi:'#4e97b7',tee:'#8ac45c',tree:'#1d4825',treeHi:'#2e6634',rock:'#5c5c55'},
   lake:{ob:'#3f6c3a',tuft:'#4f8344',rough:'#578f40',cut1:'#639e48',fw:'#84c858',fw2:'#90d163',fringe:'#7ec053',green:'#a0dd6e',greenHi:'#bce98e',sand:'#f1e4bd',lip:'#c6b483',water:'#2382b4',waterHi:'#59b3dc',tee:'#95d169',tree:'#2d5c2f',treeHi:'#457e3e',rock:'#6a6a62'},
-  jeju:{ob:'#3d3834',tuft:'#55504a',rough:'#5a8a3c',cut1:'#679846',fw:'#88c257',fw2:'#93cb61',fringe:'#80ba52',green:'#a2d96f',greenHi:'#bce68d',sand:'#e2d8c0',lip:'#a89b7f',water:'#2a7aa0',waterHi:'#58a9cc',tee:'#97cf68',tree:'#355f33',treeHi:'#4d7c45',rock:'#2e2a28'}
+  jeju:{ob:'#3d3834',tuft:'#55504a',rough:'#5a8a3c',cut1:'#679846',fw:'#88c257',fw2:'#93cb61',fringe:'#80ba52',green:'#a2d96f',greenHi:'#bce68d',sand:'#e2d8c0',lip:'#a89b7f',water:'#2a7aa0',waterHi:'#58a9cc',tee:'#97cf68',tree:'#355f33',treeHi:'#4d7c45',rock:'#2e2a28'},
+  meadow:{ob:'#7aa34e',tuft:'#6a8f42',rough:'#62983f',cut1:'#70a84a',fw:'#93cc5c',fw2:'#9fd667',fringe:'#88c257',green:'#a8de74',greenHi:'#c4ec96',sand:'#f2e6be',lip:'#c9b57f',water:'#2f86b8',waterHi:'#66b8de',tee:'#9fd66e',tree:'#3f7a3a',treeHi:'#5f9a4f',rock:'#7d786c'},
+  blossom:{ob:'#6f9a52',tuft:'#5f8746',rough:'#5f9240',cut1:'#6ca04a',fw:'#8cc65a',fw2:'#97cf64',fringe:'#82bd55',green:'#a3da70',greenHi:'#bfe78f',sand:'#f3e5c4',lip:'#c7b086',water:'#3a87b0',waterHi:'#78bcd9',tee:'#98d06a',tree:'#e79ab8',treeHi:'#f8d2e1',rock:'#7a746c'},
+  river:{ob:'#4f7d45',tuft:'#5e8a4a',rough:'#5a9042',cut1:'#66a04a',fw:'#86c85a',fw2:'#91d165',fringe:'#7fc055',green:'#a1dc70',greenHi:'#bde98f',sand:'#efe3bd',lip:'#c3b184',water:'#3b7ea3',waterHi:'#6aa9c9',tee:'#94d06a',tree:'#356a35',treeHi:'#4f8a45',rock:'#6c6c64'},
+  ranch:{ob:'#b9a85e',tuft:'#9a8a48',rough:'#8a9a48',cut1:'#7fa34c',fw:'#95c75c',fw2:'#a0d066',fringe:'#8cbe58',green:'#a6d872',greenHi:'#c1e692',sand:'#f0dfb0',lip:'#c4aa72',water:'#3a7fa8',waterHi:'#6fb1d4',tee:'#9ccf6a',tree:'#4d6f34',treeHi:'#6e8f45',rock:'#8a7d64'},
+  autumn:{ob:'#6e5a32',tuft:'#8a6a36',rough:'#6f8a3a',cut1:'#7a9a44',fw:'#94c25a',fw2:'#9fcb64',fringe:'#8aba55',green:'#a2d46e',greenHi:'#bde28e',sand:'#ecdcb2',lip:'#b9a074',water:'#2f6f8f',waterHi:'#5f9fbf',tee:'#9ac868',tree:'#c4521c',treeHi:'#f0a23a',rock:'#6a5f52'},
+  desert:{ob:'#d8b47a',tuft:'#b8955a',rough:'#a9a65c',cut1:'#8fae55',fw:'#9ccb5f',fw2:'#a7d469',fringe:'#93c35a',green:'#a9db72',greenHi:'#c4e894',sand:'#f2dca2',lip:'#c9a96a',water:'#2a8aa8',waterHi:'#62bfd6',tee:'#a3d26c',tree:'#4f8a3c',treeHi:'#6fae52',rock:'#a8643a'},
+  snow:{ob:'#e9eef2',tuft:'#cdd6dc',rough:'#7d9a6a',cut1:'#86a870',fw:'#9cc77a',fw2:'#a6cf84',fringe:'#93c072',green:'#a8d888',greenHi:'#c4e6a8',sand:'#f3ecd8',lip:'#c9bfa4',water:'#5b8fae',waterHi:'#a7cde2',tee:'#a3cf80',tree:'#244a33',treeHi:'#e8f0f2',rock:'#7a7f86'},
+  cliff:{ob:'#8a8f6a',tuft:'#6f7550',rough:'#6a8a45',cut1:'#74964c',fw:'#8fc25c',fw2:'#9acb66',fringe:'#86bb56',green:'#a2d66f',greenHi:'#bce48f',sand:'#ede0bb',lip:'#bba77b',water:'#1d5f8a',waterHi:'#4c93bd',tee:'#98cc68',tree:'#2f5a3a',treeHi:'#4c7a4c',rock:'#6f6a62'},
+  volcano:{ob:'#2a2523',tuft:'#463a34',rough:'#4d6b36',cut1:'#58773c',fw:'#79a74d',fw2:'#84b157',fringe:'#71a047',green:'#97cf63',greenHi:'#b2de83',sand:'#5a5250',lip:'#3a3432',water:'#d4471a',waterHi:'#ffab3d',tee:'#82b356',tree:'#3a4a2c',treeHi:'#566a3c',rock:'#1b1817',lava:true},
+  tropic:{ob:'#2f6e3c',tuft:'#3d8048',rough:'#4f9a42',cut1:'#5aa64a',fw:'#80cf5a',fw2:'#8bd765',fringe:'#76c552',green:'#9de06e',greenHi:'#bcec90',sand:'#f6ecc8',lip:'#d7c79a',water:'#1aa3b5',waterHi:'#72e0e2',tee:'#8fd466',tree:'#2f7a3a',treeHi:'#55a64c',rock:'#6e6a60'},
+  moor:{ob:'#5b4659',tuft:'#7d5f78',rough:'#6a7444',cut1:'#74804a',fw:'#8bb25a',fw2:'#95bb63',fringe:'#82a955',green:'#9cc86c',greenHi:'#b6d88b',sand:'#e3d7b5',lip:'#ab9a78',water:'#3b5a6e',waterHi:'#6b8ea2',tee:'#8fb562',tree:'#2c3a2c',treeHi:'#45563f',rock:'#55524f'},
+  swamp:{ob:'#2f3d27',tuft:'#435636',rough:'#4a6b33',cut1:'#53763a',fw:'#74a24c',fw2:'#7eac55',fringe:'#6b9a46',green:'#8fc562',greenHi:'#a9d57f',sand:'#cfc39c',lip:'#9a8e6a',water:'#3d5536',waterHi:'#6a8450',tee:'#7aaa52',tree:'#22401f',treeHi:'#3a5f2f',rock:'#4a4840'}
 };
-const COURSES=[
-  {id:'links',name:'서해 링크스',sub:'바닷바람과 항아리 벙커',seed:1101,theme:'links',pars:[4,5,3,4,4,3,5,4,4,4,3,5,4,4,3,4,5,4],fw:[36,48],trees:.25,bunk:1.5,water:.25,wind:1.35,decor:'tuft',hill:.6,backdrop:'sea'},
-  {id:'pine',name:'소나무 힐스',sub:'좁은 페어웨이, 울창한 숲',seed:2207,theme:'pine',pars:[4,4,3,5,4,3,4,4,5,4,4,3,5,4,3,4,4,5],fw:[26,36],trees:1.1,bunk:.9,water:.3,wind:.8,decor:'tree',hill:1.4,backdrop:'ridge'},
-  {id:'lake',name:'레이크 리조트',sub:'호수를 넘겨야 사는 도심 코스',seed:3313,theme:'lake',pars:[5,4,3,4,4,5,3,4,4,4,5,4,3,4,4,5,3,4],fw:[32,44],trees:.55,bunk:1,water:1,wind:1,decor:'mix',hill:.8,backdrop:'city'},
-  {id:'jeju',name:'제주 오름',sub:'현무암 지대와 한라산 바람',seed:4421,theme:'jeju',pars:[4,3,5,4,4,4,3,5,4,5,4,3,4,4,4,3,4,5],fw:[30,42],trees:.45,bunk:1.1,water:.35,wind:1.25,decor:'rock',hill:1.1,backdrop:'hallasan'}
+const DIFFS=[
+  {id:'easy',name:'이지',col:'#7ad893',badge:'#2f8f55',desc:'넓은 페어웨이, 큰 홀컵, 약한 바람',fw:1.35,green:1.3,rough:1.25,len:.92,cup:.45,wind:.5,gust:0,disp:.7,err:.6,slope:.6,gdecel:3.6,hazard:.5,trees:.6,island:0,shake:0,over:1.2,ring:true,windDot:true,puttLine:true,rec:true,autoAim:true,wx:[6,3,1,.5]},
+  {id:'normal',name:'노멀',col:'#7cc0ee',badge:'#2a6fb0',desc:'기본 룰, 표준 코스',fw:1,green:1,rough:1,len:1,cup:.32,wind:1,gust:.1,disp:1,err:1,slope:1,gdecel:3.2,hazard:1,trees:1,island:0,shake:0,over:1.5,ring:true,windDot:true,puttLine:true,rec:true,autoAim:true,wx:[4,3,2,2]},
+  {id:'hard',name:'하드',col:'#f4b62a',badge:'#a86400',desc:'좁은 페어웨이, 빠른 그린, 돌풍',fw:.72,green:.82,rough:.8,len:1.04,cup:.27,wind:1.4,gust:.25,disp:1.55,err:1.6,slope:1.6,gdecel:2.7,hazard:1.6,trees:1.4,island:.25,shake:.025,over:2,ring:true,windDot:false,puttLine:true,rec:true,autoAim:false,wx:[2,3,2,3]},
+  {id:'hell',name:'헬',col:'#ff6a4d',badge:'#c0321f',desc:'아일랜드 그린, 강풍, 보조선 없음',fw:.52,green:.68,rough:.6,len:1.1,cup:.23,wind:1.9,gust:.4,disp:2.2,err:2.4,slope:2.2,gdecel:2.3,hazard:2.4,trees:1.8,island:.55,shake:.05,over:2.6,ring:false,windDot:false,puttLine:false,rec:false,autoAim:false,wx:[1,2,3,4]}
 ];
+const DIFF_BY=Object.fromEntries(DIFFS.map(d=>[d.id,d]));
+function makePars(seed){const R=mulberry32(seed*31+7);const nine=()=>{const a=[3,3,5,5,4,4,4,4,4];for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};return nine().concat(nine());}
+const COURSES=[
+  {id:'sunny',diff:'easy',name:'햇살 파크',sub:'탁 트인 초원, 연습하기 좋은 코스',seed:5101,theme:'meadow',fw:[44,56],trees:.35,bunk:.6,water:.15,wind:.8,decor:'mix',hill:.6,backdrop:'hills',tree:'round'},
+  {id:'blossom',diff:'easy',name:'벚꽃 밸리',sub:'벚꽃길 따라 걷는 산책 코스',seed:5207,theme:'blossom',fw:[40,52],trees:.7,bunk:.7,water:.25,wind:.7,decor:'tree',hill:1,backdrop:'temple',tree:'round'},
+  {id:'river',diff:'easy',name:'한강 리버사이드',sub:'강변을 따라 도는 도심 코스',seed:5313,theme:'river',fw:[42,54],trees:.4,bunk:.8,water:.6,wind:.9,decor:'mix',hill:.5,backdrop:'city',tree:'round'},
+  {id:'ranch',diff:'easy',name:'황금 목장',sub:'누런 초지와 낮은 구릉',seed:5419,theme:'ranch',fw:[44,58],trees:.3,bunk:.9,water:.2,wind:1,decor:'tuft',hill:.9,backdrop:'ridge',tree:'round'},
+  {id:'links',diff:'normal',name:'서해 링크스',sub:'바닷바람과 항아리 벙커',seed:1101,theme:'links',pars:[4,5,3,4,4,3,5,4,4,4,3,5,4,4,3,4,5,4],fw:[36,48],trees:.25,bunk:1.5,water:.25,wind:1.35,decor:'tuft',hill:.6,backdrop:'sea',tree:'round'},
+  {id:'pine',diff:'normal',name:'소나무 힐스',sub:'좁은 페어웨이, 울창한 숲',seed:2207,theme:'pine',pars:[4,4,3,5,4,3,4,4,5,4,4,3,5,4,3,4,4,5],fw:[26,36],trees:1.1,bunk:.9,water:.3,wind:.8,decor:'tree',hill:1.4,backdrop:'ridge',tree:'pine'},
+  {id:'lake',diff:'normal',name:'레이크 리조트',sub:'호수를 넘겨야 사는 도심 코스',seed:3313,theme:'lake',pars:[5,4,3,4,4,5,3,4,4,4,5,4,3,4,4,5,3,4],fw:[32,44],trees:.55,bunk:1,water:1,wind:1,decor:'mix',hill:.8,backdrop:'city',tree:'round'},
+  {id:'jeju',diff:'normal',name:'제주 오름',sub:'현무암 지대와 한라산 바람',seed:4421,theme:'jeju',pars:[4,3,5,4,4,4,3,5,4,5,4,3,4,4,4,3,4,5],fw:[30,42],trees:.45,bunk:1.1,water:.35,wind:1.25,decor:'rock',hill:1.1,backdrop:'hallasan',tree:'round'},
+  {id:'autumn',diff:'hard',name:'단풍 협곡',sub:'붉은 숲 사이로 꺾이는 도그레그',seed:6101,theme:'autumn',fw:[28,38],trees:1.3,bunk:1,water:.3,wind:1,decor:'tree',hill:1.6,backdrop:'ridge',tree:'round',bend:1.5},
+  {id:'desert',diff:'hard',name:'사막 메사',sub:'선인장과 모래, 끝없는 벙커',seed:6203,theme:'desert',fw:[30,40],trees:.5,bunk:2,water:.15,wind:1.2,decor:'rock',hill:.8,backdrop:'mesa',tree:'cactus'},
+  {id:'alps',diff:'hard',name:'알프스 설원',sub:'눈 덮인 산자락의 롱 코스',seed:6307,theme:'snow',fw:[30,40],trees:1,bunk:.9,water:.35,wind:1.1,decor:'tree',hill:1.8,backdrop:'alps',tree:'pine',len:1.06},
+  {id:'cliff',diff:'hard',name:'남해 클리프',sub:'바다를 가로질러 치는 절벽 코스',seed:6411,theme:'cliff',fw:[32,42],trees:.3,bunk:1.1,water:.9,wind:1.4,decor:'tuft',hill:.9,backdrop:'sea',tree:'pine',cross:.6},
+  {id:'volcano',diff:'hell',name:'화산 칼데라',sub:'용암 호수 위 아일랜드 그린',seed:7103,theme:'volcano',fw:[28,36],trees:.3,bunk:1.2,water:1,wind:1.2,decor:'rock',hill:1.4,backdrop:'volcano',tree:'round',island:1},
+  {id:'tropic',diff:'hell',name:'트로피컬 아일랜드',sub:'바다 위에 떠 있는 그린들',seed:7207,theme:'tropic',fw:[30,40],trees:.6,bunk:1,water:1,wind:1.3,decor:'tree',hill:.6,backdrop:'tropic',tree:'palm',island:1.2,cross:.4},
+  {id:'storm',diff:'hell',name:'폭풍의 언덕',sub:'히스 들판을 휩쓰는 돌풍',seed:7309,theme:'moor',fw:[28,38],trees:.2,bunk:2.2,water:.4,wind:1.7,decor:'tuft',hill:1.3,backdrop:'ridge',tree:'pine'},
+  {id:'swamp',diff:'hell',name:'악마의 늪',sub:'늪과 고목이 삼키는 정글',seed:7411,theme:'swamp',fw:[26,34],trees:1.6,bunk:1,water:1.4,wind:.9,decor:'tree',hill:.5,backdrop:'jungle',tree:'round',cross:.7,bend:1.3}
+].map(C=>({...C,pars:C.pars||makePars(C.seed)}));
+function coursesOf(d){return COURSES.filter(C=>C.diff===d);}
 const CLUBS=[
   {id:'1W',name:'드라이버',carry:250,loft:10.5,roll:.30,wood:true,len:1.25},
   {id:'3W',name:'3번 우드',carry:225,loft:15,roll:.25,wood:true,len:1.2},
@@ -376,48 +426,51 @@ function nearest(pts,i0,i1,x,y){let best=1e18,bs=0;for(let i=i0;i<i1;i++){const 
 function genHole(C,idx){
   const R=mulberry32(C.seed*977+idx*7919+13);
   const par=C.pars[idx];
-  const len=par===3?132+R()*78:par===4?318+R()*118:472+R()*88;
-  const bend=par===3?(R()-.5)*.3:(R()-.5)*1.0;
+  const D=DIFF_BY[C.diff]||DIFF_BY.normal,R2=mulberry32(C.seed*1291+idx*37+5);
+  const len=(par===3?132+R()*78:par===4?318+R()*118:472+R()*88)*(C.len||1)*D.len;
+  const bend=(par===3?(R()-.5)*.3:(R()-.5)*1.0)*(C.bend||1);
   const p0={x:0,y:0},p1={x:bend*len*.5,y:-len*(.42+R()*.22)},p2={x:(R()-.5)*len*(par===3?.18:.32),y:-len};
   const N=90,pts=[];let L=0;
   for(let i=0;i<=N;i++){const t=i/N,u=1-t;const x=u*u*p0.x+2*u*t*p1.x+t*t*p2.x,y=u*u*p0.y+2*u*t*p1.y+t*t*p2.y;if(i)L+=hyp(x-pts[i-1].x,y-pts[i-1].y);pts.push({x,y,s:L});}
   const idxAt=s=>{for(let i=0;i<N;i++)if(pts[i+1].s>=s)return i;return N-1;};
   const ptAt=s=>{s=clamp(s,0,L);const i=idxAt(s),a=pts[i],b=pts[i+1];const f=(s-a.s)/((b.s-a.s)||1);const dx=b.x-a.x,dy=b.y-a.y,dl=hyp(dx,dy)||1;return {x:a.x+dx*f,y:a.y+dy*f,tx:dx/dl,ty:dy/dl};};
-  const fwHalf=(C.fw[0]+R()*(C.fw[1]-C.fw[0]))/2;
-  const roughW=26+R()*12;
-  const green={x:p2.x,y:p2.y,rx:(par===3?10:11)+R()*6,ry:9+R()*5,rot:R()*Math.PI};
+  const fwHalf=(C.fw[0]+R()*(C.fw[1]-C.fw[0]))/2*D.fw;
+  const roughW=(26+R()*12)*D.rough;
+  const green={x:p2.x,y:p2.y,rx:((par===3?10:11)+R()*6)*D.green,ry:(9+R()*5)*D.green,rot:R()*Math.PI};
   const gR=Math.max(green.rx,green.ry);
   let iA=null,iB=null;
   if(par>3){iA=idxAt(40+R()*50);iB=idxAt(L-gR-1);}
   const ca=R()*TAU,cr=Math.sqrt(R())*.6;
   const lx=Math.cos(ca)*green.rx*cr,ly=Math.sin(ca)*green.ry*cr,gc=Math.cos(green.rot),gs=Math.sin(green.rot);
   const cup={x:green.x+lx*gc-ly*gs,y:green.y+lx*gs+ly*gc};
-  const sa=R()*TAU,sm=.12+R()*.5;
+  const sa=R()*TAU,sm=(.12+R()*.5)*D.slope;
   const slope={x:Math.cos(sa)*sm,y:Math.sin(sa)*sm};
   const water=[];
   const addCross=(s,along)=>{const p=ptAt(s);water.push({x:p.x,y:p.y,rx:along,ry:fwHalf+roughW+10+R()*20,rot:Math.atan2(p.ty,p.tx)});};
   const addSide=s=>{const p=ptAt(s);const side=R()<.5?-1:1;const rx=24+R()*30,ry=10+R()*10;const off=fwHalf+ry*.7+1;water.push({x:p.x-p.ty*side*off,y:p.y+p.tx*side*off,rx,ry,rot:Math.atan2(p.ty,p.tx)});};
-  if(R()<C.water){if(par===3)addCross(L*(.42+R()*.1),L*(.12+R()*.06));else if(par===5&&R()<.6)addCross(L-(85+R()*30),10+R()*7);else addSide(Math.min(L-70,150+R()*170));}
+  if(R()<C.water*Math.min(1.5,D.hazard)){if(par===3)addCross(L*(.42+R()*.1),L*(.12+R()*.06));else if(par===5&&R()<.6)addCross(L-(85+R()*30),10+R()*7);else addSide(Math.min(L-70,150+R()*170));}
   if(C.id==='lake'&&par>3&&R()<.45)addSide(Math.min(L-70,90+R()*120));
+  if(par>3&&L>300&&R2()<(C.cross||0)*D.hazard*.5)addCross(140+R2()*(L-300),10+R2()*8);
+  if(R2()<D.island*(C.island??.5))water.push({x:green.x,y:green.y,rx:green.rx+7+R2()*9,ry:green.ry+7+R2()*9,rot:green.rot,island:true});
   const inWater=(x,y,p=0)=>water.some(w=>inEll(w,x,y,p));
   const bunkers=[];
-  const nG=Math.min(4,1+Math.floor(R()*C.bunk*2.2));
+  const nG=Math.min(5,1+Math.floor(R()*C.bunk*2.2*D.hazard));
   for(let k=0;k<nG;k++){const a=R()*TAU;const bx=Math.cos(a)*(green.rx+4.5),by=Math.sin(a)*(green.ry+4.5);bunkers.push({x:green.x+bx*gc-by*gs,y:green.y+bx*gs+by*gc,rx:3.5+R()*4.5,ry:2.5+R()*2.5,rot:a+green.rot+Math.PI/2});}
   if(par>3){
-    const nF=Math.floor(R()*C.bunk*2.4);
+    const nF=Math.floor(R()*C.bunk*2.4*D.hazard);
     for(let k=0;k<nF;k++){const s=Math.min(L-90,205+R()*85);const p=ptAt(s);const side=R()<.5?-1:1;const off=fwHalf+(R()-.35)*7;bunkers.push({x:p.x-p.ty*side*off,y:p.y+p.tx*side*off,rx:5+R()*6,ry:3+R()*2.5,rot:Math.atan2(p.ty,p.tx)});}
     if(par===5){const p=ptAt(L-(60+R()*60));const o=(R()-.5)*fwHalf;bunkers.push({x:p.x-p.ty*o,y:p.y+p.tx*o,rx:4+R()*4,ry:3+R()*2,rot:Math.atan2(p.ty,p.tx)});}
     if(C.id==='links'){for(let k=0;k<2;k++){const p=ptAt(150+R()*(L-220));const o=(R()-.5)*fwHalf*1.4;const r=2.2+R()*1.5;bunkers.push({x:p.x-p.ty*o,y:p.y+p.tx*o,rx:r,ry:r,rot:0});}}
   }
   for(let i=bunkers.length-1;i>=0;i--){if(inWater(bunkers[i].x,bunkers[i].y,3))bunkers.splice(i,1);}
-  const trees=[];const nT=Math.round(L/10*C.trees)+4;
+  const trees=[];const nT=Math.round(L/10*C.trees*D.trees)+4;
   for(let k=0;k<nT*4&&trees.length<nT;k++){
     const p=ptAt(R()*L);const side=R()<.5?-1:1;const off=fwHalf+7+R()*(roughW+4);
     const x=p.x-p.ty*side*off,y=p.y+p.tx*side*off,r=3+R()*4.5;
     if(hyp(x,y)<24)continue;if(inEll(green,x,y,r+6))continue;if(inWater(x,y,r))continue;
     if(bunkers.some(b=>hyp(b.x-x,b.y-y)<b.rx+r+1))continue;
     if(nearest(pts,0,N,x,y).d<fwHalf+5)continue;
-    trees.push({x,y,r,h:12+R()*8});
+    {const hh=12+R()*8;if(C.tree==='cactus')trees.push({x,y,r:1.2+R2()*1.3,h:4+R2()*5});else trees.push({x,y,r,h:hh});}
   }
   let bx0=1e9,by0=1e9,bx1=-1e9,by1=-1e9;const M=fwHalf+roughW+30;
   for(const p of pts){bx0=Math.min(bx0,p.x-M);bx1=Math.max(bx1,p.x+M);by0=Math.min(by0,p.y-M);by1=Math.max(by1,p.y+M);}
@@ -426,16 +479,16 @@ function genHole(C,idx){
     const x=bx0-140+R()*(bx1-bx0+280),y=by0-140+R()*(by1-by0+280);
     const d=nearest(pts,0,N,x,y).d;if(d<fwHalf+roughW+4)continue;if(inWater(x,y,4))continue;
     let kind=C.decor==='tree'?'tree':C.decor==='tuft'?(R()<.25?'tree':'tuft'):C.decor==='rock'?(R()<.55?'rock':'tree'):(R()<.7?'tree':'tuft');
-    decor.push({k:kind,x,y,r:kind==='tree'?4+R()*5:kind==='rock'?1.2+R()*3:1.4,h:13+R()*10});
+    const dd={k:kind,x,y,r:kind==='tree'?4+R()*5:kind==='rock'?1.2+R()*3:1.4,h:13+R()*10};if(kind==='tree'&&C.tree==='cactus'){dd.r=1.2+R2()*1.3;dd.h=4+R2()*5;}decor.push(dd);
   }
   const markers=[];for(const D of [200,150,100]){const s=L-D;if(s>30)markers.push({...ptAt(s),D});}
   const t0=ptAt(0);
   const roughPath=new Path2D();roughPath.moveTo(pts[0].x,pts[0].y);for(let i=1;i<=N;i++)roughPath.lineTo(pts[i].x,pts[i].y);
   let fwPath=null;if(iA!==null){fwPath=new Path2D();fwPath.moveTo(pts[iA].x,pts[iA].y);for(let i=iA+1;i<=iB+1;i++)fwPath.lineTo(pts[i].x,pts[i].y);}
-  return {par,idx,L,yards:Math.round(L),pts,N,fwHalf,roughW,green,cup,slope,water,bunkers,trees,decor,markers,iA,iB,tee:{tx:t0.tx,ty:t0.ty},bx0,by0,bx1,by1,roughPath,fwPath,theme:THEMES[C.theme],ptAt,hill:C.hill};
+  return {par,idx,L,yards:Math.round(L),pts,N,fwHalf,roughW,green,cup,slope,water,bunkers,trees,decor,markers,iA,iB,tee:{tx:t0.tx,ty:t0.ty},bx0,by0,bx1,by1,roughPath,fwPath,theme:THEMES[C.theme],ptAt,hill:C.hill,cupR:D.cup};
 }
 function surf(h,x,y){
-  for(const w of h.water)if(inEll(w,x,y))return 'water';
+  for(const w of h.water)if(inEll(w,x,y)&&!(w.island&&inEll(h.green,x,y,4)))return 'water';
   if(inEll(h.green,x,y))return 'green';
   for(const b of h.bunkers)if(inEll(b,x,y))return 'bunker';
   if(inEll(h.green,x,y,2.5))return 'fringe';
@@ -450,7 +503,7 @@ function hgt(h,x,y){
   let v=Math.min(34,e*.14+e*e*.0011);v+=(Math.sin(x*.045)*Math.cos(y*.038)+Math.sin((x+y)*.021)*.7)*3*clamp(e/50,0,1);
   return Math.max(0,v*h.hill);
 }
-for(const C of COURSES){C.holes=C.pars.map((_,i)=>genHole(C,i));C.yards=C.holes.reduce((a,h)=>a+h.yards,0);C.yards9=C.holes.slice(0,9).reduce((a,h)=>a+h.yards,0);}
+function ensureHoles(C){if(!C.holes){C.holes=C.pars.map((_,i)=>genHole(C,i));C.yards=C.holes.reduce((a,h)=>a+h.yards,0);C.yards9=C.holes.slice(0,9).reduce((a,h)=>a+h.yards,0);}return C;}
 
 /* ================= 2D DRAWING (texture + minimap) ================= */
 function drawTree2D(g,t,th){
@@ -477,15 +530,16 @@ function drawCourse(g,h,s,mode,ext){
     g.save();g.lineCap='butt';g.setLineDash([9,9]);g.strokeStyle=th.fw2;g.lineWidth=2*h.fwHalf-1;g.stroke(h.fwPath);g.restore();
   }
   const G=h.green;
+  for(const w of h.water){
+    g.fillStyle=mix(th.water,'#000000',.35);g.beginPath();g.ellipse(w.x,w.y,w.rx+1,w.ry+1,w.rot,0,TAU);g.fill();
+    g.fillStyle=th.water;g.beginPath();g.ellipse(w.x,w.y,w.rx,w.ry,w.rot,0,TAU);g.fill();
+    if(w.island){g.fillStyle=th.lip;g.beginPath();g.ellipse(G.x,G.y,G.rx+5,G.ry+5,G.rot,0,TAU);g.fill();g.fillStyle=th.rough;g.beginPath();g.ellipse(G.x,G.y,G.rx+4,G.ry+4,G.rot,0,TAU);g.fill();}
+  }
   g.fillStyle=th.fringe;g.beginPath();g.ellipse(G.x,G.y,G.rx+2.5,G.ry+2.5,G.rot,0,TAU);g.fill();
   for(const b of h.bunkers){g.fillStyle=th.lip;g.beginPath();g.ellipse(b.x,b.y,b.rx+.6,b.ry+.6,b.rot,0,TAU);g.fill();g.fillStyle=th.sand;g.beginPath();g.ellipse(b.x+.15,b.y+.2,b.rx,b.ry,b.rot,0,TAU);g.fill();}
   const gg=g.createRadialGradient(G.x-G.rx*.3,G.y-G.ry*.3,1,G.x,G.y,Math.max(G.rx,G.ry));gg.addColorStop(0,th.greenHi);gg.addColorStop(1,th.green);
   g.fillStyle=gg;g.beginPath();g.ellipse(G.x,G.y,G.rx,G.ry,G.rot,0,TAU);g.fill();
   g.save();g.rotate(Math.atan2(h.tee.ty,h.tee.tx));g.fillStyle=th.tee;g.fillRect(-5,-7,10,14);g.restore();
-  for(const w of h.water){
-    g.fillStyle='#1d4f6e';g.beginPath();g.ellipse(w.x,w.y,w.rx+1,w.ry+1,w.rot,0,TAU);g.fill();
-    g.fillStyle=th.water;g.beginPath();g.ellipse(w.x,w.y,w.rx,w.ry,w.rot,0,TAU);g.fill();
-  }
   for(const m of h.markers){g.fillStyle=m.D===200?'#2f6fd0':m.D===150?'#ffffff':'#d8392b';g.beginPath();g.arc(m.x,m.y,tex?.5:1.4,0,TAU);g.fill();}
   if(tex){for(const t of h.trees){g.fillStyle='rgba(0,0,0,.22)';g.beginPath();g.ellipse(t.x+t.r*.3,t.y+t.r*.3,t.r*1.05,t.r*.9,0,0,TAU);g.fill();}}
   else{for(const t of h.trees)drawTree2D(g,t,th);
@@ -508,6 +562,39 @@ function drawBackdrop(g,type,x0,w,hy,sc,pal,seed){
     ridge(mix(near,'#8a7c52',.4),2,10,5,.4);
   }else if(type==='ridge'){
     ridge(far,60,110,2,.6);ridge(mid,30,80,3,2.2);pines(near,24,28,9);
+  }else if(type==='hills'){
+    ridge(far,24,46,1.4,.7);ridge(mid,10,30,2.3,2.1);trees(near,10,12,13);
+  }else if(type==='temple'){
+    ridge(far,50,80,2,1.2);ridge(mid,18,34,3,.4);
+    for(const p of [.2,.52,.8]){const px=x0+w*p,base=hy-22*sc;g.fillStyle=near;
+      for(let k=0;k<4;k++){const ww=(70-k*14)*sc,y=base-k*24*sc;g.fillRect(px-ww*.32,y-18*sc,ww*.64,18*sc);g.beginPath();g.moveTo(px-ww/2-10*sc,y-14*sc);g.quadraticCurveTo(px,y-30*sc,px+ww/2+10*sc,y-14*sc);g.lineTo(px+ww/2-4*sc,y-20*sc);g.quadraticCurveTo(px,y-34*sc,px-ww/2+4*sc,y-20*sc);g.closePath();g.fill();}
+      g.fillRect(px-1.5*sc,base-124*sc,3*sc,22*sc);}
+    trees(near,12,12,10);
+  }else if(type==='mesa'){
+    const mesa=(col,n,hmin,hvar)=>{g.fillStyle=col;for(let i=0;i<n;i++){const cx=x0+R()*w,top=(hmin+R()*hvar)*sc,tw=(60+R()*180)*sc,sl=top*.55;g.beginPath();g.moveTo(cx-tw/2-sl,hy);g.lineTo(cx-tw/2,hy-top);g.lineTo(cx+tw/2,hy-top);g.lineTo(cx+tw/2+sl,hy);g.closePath();g.fill();}};
+    mesa(mix(pal.hor,'#b4643c',.5),8,60,120);mesa(mix(pal.hor,'#8a4a2c',.68),6,30,60);g.fillStyle=mix(pal.hor,'#c9a46a',.6);g.fillRect(x0,hy-8*sc,w,8*sc);
+  }else if(type==='alps'){
+    const n=18,pk=[];for(let i=0;i<=n;i++)pk.push({x:x0+w*i/n,h:(i%2?150+R()*130:60+R()*50)*sc});
+    g.fillStyle=far;g.beginPath();g.moveTo(x0,hy);for(const p of pk)g.lineTo(p.x,hy-p.h);g.lineTo(x0+w,hy);g.closePath();g.fill();
+    g.fillStyle=mix('#f6f9fb',pal.hor,.2);
+    for(let i=1;i<n;i+=2){const a=pk[i-1],p=pk[i],b=pk[i+1],f=.32;g.beginPath();g.moveTo(p.x,hy-p.h);g.lineTo(p.x+(a.x-p.x)*f,hy-(p.h+(a.h-p.h)*f));g.lineTo(p.x+(a.x-p.x)*f*.45,hy-(p.h+(a.h-p.h)*f*.7));g.lineTo(p.x,hy-(p.h+(a.h-p.h)*f*.55));g.lineTo(p.x+(b.x-p.x)*f*.45,hy-(p.h+(b.h-p.h)*f*.75));g.lineTo(p.x+(b.x-p.x)*f,hy-(p.h+(b.h-p.h)*f));g.closePath();g.fill();}
+    pines(near,26,30,8);
+  }else if(type==='volcano'){
+    const cone=(cx,bw,tw,hh,col)=>{g.fillStyle=col;g.beginPath();g.moveTo(cx-bw,hy);g.quadraticCurveTo(cx-tw*1.6,hy-hh*.55,cx-tw,hy-hh);g.lineTo(cx+tw,hy-hh);g.quadraticCurveTo(cx+tw*1.6,hy-hh*.55,cx+bw,hy);g.closePath();g.fill();};
+    const vx=x0+w*.55,vh=230*sc;
+    for(let i=0;i<12;i++){g.fillStyle=`rgba(70,64,62,${(.5-i*.035).toFixed(3)})`;g.beginPath();g.arc(vx+(i*i*.9+Math.sin(i)*10)*sc,hy-vh-i*16*sc,(26+i*12)*sc,0,TAU);g.fill();}
+    cone(x0+w*.15,520*sc,60*sc,150*sc,mix(pal.hor,'#3a2c2a',.55));
+    cone(vx,900*sc,110*sc,vh,mix(pal.hor,'#2a2220',.7));
+    g.strokeStyle='#ff7a2a';g.lineWidth=5*sc;g.beginPath();g.moveTo(vx-100*sc,hy-vh);g.lineTo(vx+100*sc,hy-vh);g.stroke();
+    g.strokeStyle='rgba(255,110,40,.75)';g.lineWidth=3*sc;g.beginPath();g.moveTo(vx+20*sc,hy-vh);for(let k=1;k<9;k++)g.lineTo(vx+20*sc+Math.sin(k*1.7)*24*sc+k*8*sc,hy-vh+k*24*sc);g.stroke();
+    ridge(mix(pal.hor,'#1e1a19',.82),4,14,6,.9);
+  }else if(type==='tropic'){
+    g.fillStyle=mix(pal.hor,'#1aa3b5',.55);g.fillRect(x0,hy-16*sc,w,16*sc);
+    for(let i=0;i<6;i++){const cx=x0+R()*w,rw=(60+R()*120)*sc,rh=(14+R()*30)*sc,gy=hy-14*sc;g.fillStyle=mix(pal.hor,'#2f6a3a',.6);g.beginPath();g.ellipse(cx,gy,rw,rh,0,Math.PI,TAU);g.fill();
+      for(let k=0;k<3;k++){const px=cx+(R()-.5)*rw,ph=(30+R()*30)*sc,lean=(R()-.5)*16*sc,by=gy-rh*.4;g.strokeStyle=near;g.lineWidth=2.5*sc;g.beginPath();g.moveTo(px,by);g.quadraticCurveTo(px+lean*.3,by-ph*.5,px+lean,by-ph);g.stroke();
+        g.fillStyle=near;for(let f=0;f<6;f++){const a=f/6*TAU;g.beginPath();g.ellipse(px+lean+Math.cos(a)*9*sc,by-ph+Math.sin(a)*4*sc,11*sc,2.6*sc,a,0,TAU);g.fill();}}}
+  }else if(type==='jungle'){
+    ridge(far,50,70,2.5,1.4);trees(mid,46,30,7);trees(near,24,22,5);
   }else{
     g.fillStyle=far;g.beginPath();g.moveTo(x0,hy);for(let x=0;x<=w;x+=4){const t=x/w;let y=0;for(const c of [.3,.8]){const d=Math.abs(t-c)*w/sc;y=Math.max(y,190*Math.exp(-Math.pow(d/520,1.6)));}g.lineTo(x0+x,hy-y*sc-8*sc);}g.lineTo(x0+w,hy);g.closePath();g.fill();
     g.fillStyle=mid;for(let i=0;i<9;i++){const cx=x0+R()*w,r=(30+R()*40)*sc;g.beginPath();g.ellipse(cx,hy,r*1.6,r*.8,0,Math.PI,TAU);g.fill();}
@@ -627,7 +714,7 @@ function updatePatch(h,cx,cy){
 }
 function disposeGroup(gp){gp.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const m=Array.isArray(o.material)?o.material:[o.material];m.forEach(x=>{if(x.map)x.map.dispose();x.dispose();});}});while(gp.children.length)gp.remove(gp.children[0]);}
 function buildHole3D(C,h,wx){
-  const gp=T3.holeG;disposeGroup(gp);const th=h.theme;
+  const gp=T3.holeG;disposeGroup(gp);const th=h.theme;const cupV=(h.cupR||.32)*.55;
   setSky(wx);setBackdrop(C,wx);
   T3.far.material.color.set(mix(th.ob,'#000000',.05));
   T3.bd.position.set((h.bx0+h.bx1)/2,240,(h.by0+h.by1)/2);
@@ -659,8 +746,8 @@ function buildHole3D(C,h,wx){
   const gm=new THREE.Mesh(new THREE.PlaneGeometry(S,S).rotateX(-Math.PI/2),new THREE.MeshLambertMaterial({map:gt,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2}));
   gm.position.set(G.x,.01,G.y);gp.add(gm);
   // cup + flag
-  const cupM=new THREE.Mesh(new THREE.CircleGeometry(.17,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x0b0b0b,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));cupM.position.set(h.cup.x,.02,h.cup.y);gp.add(cupM);
-  const rim=new THREE.Mesh(new THREE.RingGeometry(.17,.2,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xf2f2f2,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));rim.position.set(h.cup.x,.021,h.cup.y);gp.add(rim);
+  const cupM=new THREE.Mesh(new THREE.CircleGeometry(cupV,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x0b0b0b,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));cupM.position.set(h.cup.x,.02,h.cup.y);gp.add(cupM);
+  const rim=new THREE.Mesh(new THREE.RingGeometry(cupV,cupV+.03,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0xf2f2f2,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));rim.position.set(h.cup.x,.021,h.cup.y);gp.add(rim);
   const flagG=new THREE.Group();flagG.position.set(h.cup.x,0,h.cup.y);
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(.014,.014,2.5,6),new THREE.MeshLambertMaterial({color:0xf4f4f0}));pole.position.y=1.25;flagG.add(pole);
   const fgeo=new THREE.PlaneGeometry(.6,.4,8,1);fgeo.translate(.3,0,0);const flag=new THREE.Mesh(fgeo,new THREE.MeshLambertMaterial({color:0xe2442d,side:THREE.DoubleSide}));flag.position.y=2.28;flagG.add(flag);
@@ -669,18 +756,27 @@ function buildHole3D(C,h,wx){
   const ta=Math.atan2(h.tee.ty,h.tee.tx);const tmM=new THREE.MeshLambertMaterial({color:0x8a5a2b});
   for(const sd of [-1,1]){const lx=1.5,ly=5.4*sd;const mx=lx*Math.cos(ta)-ly*Math.sin(ta),mz=lx*Math.sin(ta)+ly*Math.cos(ta);const b=new THREE.Mesh(new THREE.BoxGeometry(.22,.2,.22),tmM);b.position.set(mx,.1,mz);b.rotation.y=-ta;gp.add(b);}
   // water
-  for(const wtr of h.water){const wm=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),new THREE.MeshPhongMaterial({color:th.water,specular:0xcfe8f5,shininess:90,transparent:true,opacity:.92}));wm.scale.set(wtr.rx,1,wtr.ry);wm.rotation.y=-wtr.rot;wm.position.set(wtr.x,.04,wtr.y);gp.add(wm);}
+  for(const wtr of h.water){
+    const wmat=new THREE.MeshPhongMaterial({color:th.water,specular:th.lava?0x552200:0xcfe8f5,shininess:th.lava?20:90,emissive:th.lava?0x8a2400:0x000000,transparent:true,opacity:.94,side:THREE.DoubleSide});
+    if(wtr.island){const G0=h.green,sh=new THREE.Shape(),hp=new THREE.Path(),NN=64;
+      const ell=(o,cx,cy,rx,ry,rot,dir)=>{const c=Math.cos(rot),s2=Math.sin(rot);for(let i=0;i<=NN;i++){const a=dir*i/NN*TAU,lx=Math.cos(a)*rx,ly=Math.sin(a)*ry,x=cx+lx*c-ly*s2,y=cy+lx*s2+ly*c;if(i)o.lineTo(x,y);else o.moveTo(x,y);}};
+      ell(sh,wtr.x,wtr.y,wtr.rx,wtr.ry,wtr.rot,1);ell(hp,G0.x,G0.y,G0.rx+4,G0.ry+4,G0.rot,-1);sh.holes.push(hp);
+      const geo=new THREE.ShapeGeometry(sh,1);geo.rotateX(Math.PI/2);const wm=new THREE.Mesh(geo,wmat);wm.position.y=.04;gp.add(wm);}
+    else{const wm=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),wmat);wm.scale.set(wtr.rx,1,wtr.ry);wm.rotation.y=-wtr.rot;wm.position.set(wtr.x,.04,wtr.y);gp.add(wm);}
+  }
   // trees & decor (instanced)
   const all=h.trees.map(t=>({...t,base:hgt(h,t.x,t.y)})).concat(h.decor.filter(d=>d.k==='tree').map(d=>({x:d.x,y:d.y,r:d.r,h:d.h,base:hgt(h,d.x,d.y)})));
-  const pine=C.decor==='tree'||C.id==='pine';
+  const shape=C.tree||(C.id==='pine'?'pine':'round'),pine=shape==='pine';
   const trunkGeo=new THREE.CylinderGeometry(.5,.7,1,6);trunkGeo.translate(0,.5,0);
-  const leafGeo=pine?new THREE.ConeGeometry(1,1,8).translate(0,.5,0):new THREE.IcosahedronGeometry(1,1);
+  const leafGeo=pine?new THREE.ConeGeometry(1,1,8).translate(0,.5,0):shape==='cactus'?new THREE.CylinderGeometry(.55,.6,1,8).translate(0,.5,0):shape==='palm'?new THREE.IcosahedronGeometry(1,0):new THREE.IcosahedronGeometry(1,1);
   const trunks=new THREE.InstancedMesh(trunkGeo,new THREE.MeshLambertMaterial({color:0x5b4330}),all.length);
   const leaves=new THREE.InstancedMesh(leafGeo,new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true}),all.length);
   const mtx=new THREE.Matrix4(),q=new THREE.Quaternion(),sv=new THREE.Vector3(),pv=new THREE.Vector3(),col=new THREE.Color(),RT=mulberry32(h.idx*97+3);
   all.forEach((t,i)=>{
     const tw=.25+t.r*.05;
-    if(pine){mtx.compose(pv.set(t.x,t.base,t.y),q.identity(),sv.set(tw,t.h*.3,tw));trunks.setMatrixAt(i,mtx);mtx.compose(pv.set(t.x,t.base+t.h*.2,t.y),q.setFromAxisAngle(V(0,1,0),RT()*TAU),sv.set(t.r*.85,t.h*.85,t.r*.85));}
+    if(shape==='cactus'){mtx.compose(pv.set(t.x,t.base,t.y),q.identity(),sv.set(.001,.001,.001));trunks.setMatrixAt(i,mtx);mtx.compose(pv.set(t.x,t.base,t.y),q.setFromAxisAngle(V(0,1,0),RT()*TAU),sv.set(t.r*.6,t.h,t.r*.6));}
+    else if(shape==='palm'){mtx.compose(pv.set(t.x,t.base,t.y),q.setFromEuler(new THREE.Euler((RT()-.5)*.25,0,(RT()-.5)*.25)),sv.set(tw*.55,t.h,tw*.55));trunks.setMatrixAt(i,mtx);mtx.compose(pv.set(t.x,t.base+t.h,t.y),q.setFromAxisAngle(V(0,1,0),RT()*TAU),sv.set(t.r*1.1,t.r*.3,t.r*1.1));}
+    else if(pine){mtx.compose(pv.set(t.x,t.base,t.y),q.identity(),sv.set(tw,t.h*.3,tw));trunks.setMatrixAt(i,mtx);mtx.compose(pv.set(t.x,t.base+t.h*.2,t.y),q.setFromAxisAngle(V(0,1,0),RT()*TAU),sv.set(t.r*.85,t.h*.85,t.r*.85));}
     else{mtx.compose(pv.set(t.x,t.base,t.y),q.identity(),sv.set(tw,t.h*.5,tw));trunks.setMatrixAt(i,mtx);mtx.compose(pv.set(t.x,t.base+t.h-t.r*.85,t.y),q.setFromAxisAngle(V(0,1,0),RT()*TAU),sv.set(t.r,t.r*.9,t.r));}
     leaves.setMatrixAt(i,mtx);col.set(th.tree).lerp(new THREE.Color(th.treeHi),RT()*.7);leaves.setColorAt(i,col);
   });
@@ -715,7 +811,8 @@ function setGolferClub(off){
 }
 
 /* ================= STATE ================= */
-let selCourse=0,selHoles=18;
+let selDiff=(()=>{const v=store.get('kp_diff');return DIFF_BY[v]?v:'normal';})(),selCourse=0,selHoles=18;
+function curD(){return G.D||DIFF_BY.normal;}
 const G={state:'title',run:0,club:0,aim:-Math.PI/2,power:0,wind:{a:0,ms:0},ball:{x:0,y:0,z:0},lie:'tee',strokes:0,trail:[]};
 let flightSnd=null;
 function course(){return COURSES[G.ci];}
@@ -734,16 +831,16 @@ function resize(){
 window.addEventListener('resize',resize);
 
 /* ================= ROUND FLOW ================= */
-function pickWeather(){const tot=WEATHERS.reduce((a,w)=>a+w.w,0);let r=Math.random()*tot;for(const w of WEATHERS){if((r-=w.w)<0)return w;}return WEATHERS[0];}
+function pickWeather(){const ws=curD().wx;const tot=ws.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let i=0;i<WEATHERS.length;i++){if((r-=ws[i])<0)return WEATHERS[i];}return WEATHERS[0];}
 function startRound(ci,holes){
   if(!T3.ok)return;audio();
-  G.run++;G.ci=ci;G.nh=holes;G.hi=0;G.scores=[];G.weather=pickWeather();
+  ensureHoles(COURSES[ci]);G.run++;G.ci=ci;G.D=DIFF_BY[COURSES[ci].diff];G.nh=holes;G.hi=0;G.scores=[];G.weather=pickWeather();
   $('#title').hidden=true;$('#hud').hidden=false;$('#ctl').hidden=false;$('#info').hidden=false;$('#mini').hidden=false;
   buildClubs();resize();startHole();
 }
 function startHole(){
   const h=hole(),wx=weather(),C=course();
-  G.wind={a:Math.random()*TAU,ms:Math.round(clamp((wx.ms[0]+Math.random()*(wx.ms[1]-wx.ms[0]))*C.wind,0,13)*10)/10};
+  G.wind={a:Math.random()*TAU,ms:Math.round(clamp((wx.ms[0]+Math.random()*(wx.ms[1]-wx.ms[0]))*C.wind*curD().wind,0,16)*10)/10};
   G.ball={x:0,y:0,z:0};G.lie='tee';G.strokes=0;G.trail=[];G.prev=null;G.flight=null;G.roll=null;G.golfer={phase:'addr',t:0};
   buildHole3D(C,h,wx);
   G.club=0;G.aim=Math.atan2(h.tee.ty,h.tee.tx);placeGolfer();updatePatch(h,0,0);
@@ -774,11 +871,11 @@ function recommend(){
 function curCarry(p){const c=CLUBS[G.club];if(c.putt)return c.max*p;return c.carry*p*lieCarry(c,G.lie)*weather().carry;}
 function defaultAim(){
   const h=hole(),b=G.ball,d=distToCup();const c=CLUBS[G.club];
-  if(!c.putt){const carry=curCarry(1);if(carry<d*.9){const n=nearest(h.pts,0,h.N,b.x,b.y);const p=h.ptAt(n.s+carry);return Math.atan2(p.y-b.y,p.x-b.x);}}
+  if(!c.putt&&curD().autoAim){const carry=curCarry(1);if(carry<d*.9){const n=nearest(h.pts,0,h.N,b.x,b.y);const p=h.ptAt(n.s+carry);return Math.atan2(p.y-b.y,p.x-b.x);}}
   return Math.atan2(h.cup.y-b.y,h.cup.x-b.x);
 }
 function aimReady(){
-  G.club=recommend();G.aim=defaultAim();G.power=0;G.state='aim';G.golfer={phase:'addr',t:0};G.trail=[];
+  G.club=curD().rec?recommend():(G.lie==='green'?PT:G.lie==='tee'?0:(G.club===PT?7:G.club));G.aim=defaultAim();G.power=0;G.state='aim';G.golfer={phase:'addr',t:0};G.trail=[];
   updatePatch(hole(),G.ball.x,G.ball.y);
   placeGolfer();updateClubs();updateHUD();updateCtl();
 }
@@ -792,25 +889,25 @@ function setClub(i){
   const prevAuto=Math.abs(G.aim-defaultAim())<1e-6;
   G.club=i;if(prevAuto)G.aim=defaultAim();placeGolfer();updateClubs();updateHUD();updateCtl();
 }
-function toPower(){if(G.state!=='aim')return;G.state='power';G.power=0;updateMeter();updateCtl();}
+function toPower(){if(G.state!=='aim')return;G.state='power';G.power=0;G.powerBase=0;updateMeter();updateCtl();}
 function toAim(){if(G.state!=='power')return;G.state='aim';G.power=0;updateCtl();}
 function swing(){G.state='swing';G.swT=0;SND.swing(G.power,CLUBS[G.club].putt);updateCtl();}
 function launch(){
   const c=CLUBS[G.club],lie=G.lie,wx=weather(),b=G.ball;
   G.strokes++;G.prev={x:b.x,y:b.y,lie};G.trail=[{x:b.x,y:b.y,z:0}];
-  const hard=G.power>.92?1.5:1;
+  const Dk=curD(),hard=G.power>.92?Dk.over:1;
   if(c.putt){
-    const a=DECEL.green*wx.decel;const D=Math.max(.05,c.max*G.power*(1+gauss()*.025*hard));
-    const v0=Math.sqrt(2*a*D);const ang=G.aim+rad(gauss()*(lie==='green'?.3:.6)*hard);
+    const a=Dk.gdecel*wx.decel;const D=Math.max(.05,c.max*G.power*(1+gauss()*.025*Dk.err*hard));
+    const v0=Math.sqrt(2*a*D);const ang=G.aim+rad(gauss()*(lie==='green'?.3:.6)*Dk.disp*hard);
     G.roll={vx:Math.cos(ang)*v0,vy:Math.sin(ang)*v0,last:{x:b.x,y:b.y},putt:true};G.state='roll';
     SND.impact('putt',G.power);
   }else{
-    const lf=lieCarry(c,lie)*wx.carry;const errD=({rough:.05,bunker:.08}[lie]||.025)*hard;
+    const lf=lieCarry(c,lie)*wx.carry;const errD=({rough:.05,bunker:.08}[lie]||.025)*hard*Dk.err;
     const carry=Math.max(2,c.carry*G.power*lf*(1+gauss()*errD));
-    const ang=G.aim+rad(gauss()*(DISP[lie]||1.5)*hard);
+    const ang=G.aim+rad(gauss()*(DISP[lie]||1.5)*Dk.disp*hard);
     const T=.9+carry/115,Hh=carry*(.09+c.loft*.0045);
-    const wk=G.wind.ms*.0125*carry*(.8+c.loft/40);
-    G.flight={sx:b.x,sy:b.y,dx:Math.cos(ang),dy:Math.sin(ang),carry,T,H:Hh,t:0,wx:Math.cos(G.wind.a)*wk,wy:Math.sin(G.wind.a)*wk,roll:c.roll*wx.roll};
+    const gm=Math.max(0,1+gauss()*Dk.gust),ga=G.wind.a+gauss()*Dk.gust*.6;const wk=G.wind.ms*gm*.0125*carry*(.8+c.loft/40);
+    G.flight={sx:b.x,sy:b.y,dx:Math.cos(ang),dy:Math.sin(ang),carry,T,H:Hh,t:0,wx:Math.cos(ga)*wk,wy:Math.sin(ga)*wk,roll:c.roll*wx.roll};
     G.state='flight';
     SND.impact(c.wood?'wood':lie==='bunker'?'sand':'iron',G.power);
     flightSnd=SND.flight(T,carry);
@@ -826,7 +923,7 @@ function stepFlight(dt){
     G.ball.z=0;const a=Math.random()*TAU;G.roll={vx:Math.cos(a)*2-f.dx*3,vy:Math.sin(a)*2-f.dy*3,last:{x:p.x,y:p.y}};G.flight=null;G.state='roll';return;}}}
   if(u>=1){
     G.ball.z=0;G.flight=null;const sf=surf(h,p.x,p.y);
-    if(hyp(h.cup.x-p.x,h.cup.y-p.y)<CUP_R+.08){holed(true);return;}
+    if(hyp(h.cup.x-p.x,h.cup.y-p.y)<curD().cup+.08){holed(true);return;}
     if(sf==='water'){SND.splash();let ent=null;for(let k=1;k<=100;k++){const q=flightPos(f,1-k/100);if(surf(h,q.x,q.y)!=='water'){ent=q;break;}}waterPenalty(ent||G.prev);return;}
     if(sf==='ob'){SND.land('rough',.5);obPenalty();return;}
     const vh=f.carry/f.T;SND.land(sf,vh/70);
@@ -845,14 +942,14 @@ function stepRoll(dt){
     if(sf==='ob'){obPenalty();return;}
     r.last={x:b.x,y:b.y};
     if(sf==='green'){r.vx+=h.slope.x*hdt;r.vy+=h.slope.y*hdt;}
-    sp=hyp(r.vx,r.vy);const a=(DECEL[sf]||9)*wx.decel;
+    sp=hyp(r.vx,r.vy);const a=(sf==='green'?curD().gdecel:(DECEL[sf]||9))*wx.decel;
     const ns=sp-a*hdt;if(ns<=.06){settle();return;}
     r.vx*=ns/sp;r.vy*=ns/sp;
     const nx=b.x+r.vx*hdt,ny=b.y+r.vy*hdt;
     const dx=nx-b.x,dy=ny-b.y,l2=dx*dx+dy*dy||1e-9;let t=((h.cup.x-b.x)*dx+(h.cup.y-b.y)*dy)/l2;t=clamp(t,0,1);
     const cd=hyp(b.x+dx*t-h.cup.x,b.y+dy*t-h.cup.y);
-    if(cd<CUP_R&&ns<5.5){b.x=h.cup.x;b.y=h.cup.y;holed(false);return;}
-    if(cd<.16&&ns<8.5&&!r.lipped){r.lipped=true;const rot=(Math.random()<.5?-1:1)*rad(40+Math.random()*45);const c=Math.cos(rot),s=Math.sin(rot);const vx=r.vx*c-r.vy*s,vy=r.vx*s+r.vy*c;r.vx=vx*.45;r.vy=vy*.45;SND.lip();toast('립아웃!','',true,1000);}
+    if(cd<curD().cup&&ns<5.5){b.x=h.cup.x;b.y=h.cup.y;holed(false);return;}
+    if(cd<curD().cup*.5&&ns<8.5&&!r.lipped){r.lipped=true;const rot=(Math.random()<.5?-1:1)*rad(40+Math.random()*45);const c=Math.cos(rot),s=Math.sin(rot);const vx=r.vx*c-r.vy*s,vy=r.vx*s+r.vy*c;r.vx=vx*.45;r.vy=vy*.45;SND.lip();toast('립아웃!','',true,1000);}
     b.x=nx;b.y=ny;
   }
   G.trail.push({x:b.x,y:b.y,z:0});if(G.trail.length>300)G.trail.shift();
@@ -922,13 +1019,14 @@ function buildClubs(){
 }
 function updateClubs(){
   const rec=recommend();
-  document.querySelectorAll('.club').forEach(b=>{const i=+b.dataset.i;b.classList.toggle('on',i===G.club);b.classList.toggle('rec',i===rec);b.setAttribute('aria-pressed',i===G.club);
+  document.querySelectorAll('.club').forEach(b=>{const i=+b.dataset.i;b.classList.toggle('on',i===G.club);b.classList.toggle('rec',curD().rec&&i===rec);b.setAttribute('aria-pressed',i===G.club);
     const c=CLUBS[i];if(!c.putt)b.querySelector('small').textContent=Math.round(c.carry*lieCarry(c,G.lie)*weather().carry)+'y';});
   const on=document.querySelector('.club.on');if(on)on.scrollIntoView({block:'nearest',inline:'nearest'});
 }
 function updateHUD(){
   if(G.ci==null)return;
   const h=hole(),C=course();
+  const Dh=curD();$('#hDiff').textContent=Dh.name;$('#hDiff').style.setProperty('--dc',Dh.badge);
   $('#hHole').textContent=G.hi+1;$('#hHoleOf').textContent=`/ ${G.nh}홀 · ${C.name}`;
   $('#hPar').textContent='PAR '+h.par;$('#hYds').textContent=h.yards+' yd';
   $('#hStroke').textContent=G.strokes;$('#hTotal').textContent=fmtPar(totals().d);
@@ -953,14 +1051,15 @@ function updateCtl(){
   go.disabled=!active;$('#bL').disabled=!active;$('#bR').disabled=!active;
   hint.textContent='';
   const add=(a,b)=>{hint.append(a);if(b){const sm=document.createElement('small');sm.textContent=b;hint.append(sm);}};
-  if(st==='aim'){add('화면을 좌우로 드래그해 방향 조준',c.putt?'그린 위 흰 화살표는 경사가 내려가는 방향':'흰 원은 바람 없을 때 낙하 지점, 파란 점은 바람에 밀린 지점');go.textContent='방향 확정';go.className='go';}
-  else if(st==='power'){add('아래로 당긴 만큼 힘 · 손 떼면 스윙','끝까지 위로 되돌리면 취소');go.textContent='← 방향 다시';go.className='go alt';}
+  const Dc=curD();
+  if(st==='aim'){add('화면을 좌우로 드래그해 방향 조준',c.putt?(Dc.puttLine?'그린 위 흰 화살표는 경사가 내려가는 방향':'퍼팅 거리 표시 없음 · 게이지 %로 감을 잡으세요'):(!Dc.ring?'낙하 지점 표시 없음 · 채 비거리와 바람으로 계산하세요':Dc.windDot?'흰 원은 바람 없을 때 낙하 지점, 파란 점은 바람에 밀린 지점':'흰 원은 바람 없을 때 낙하 지점 · 바람은 직접 계산하세요'));go.textContent='방향 확정';go.className='go';}
+  else if(st==='power'){add('아래로 당긴 만큼 힘 · 손 떼면 스윙',Dc.shake?'게이지가 흔들려요 · 원하는 힘에서 손을 떼세요':'끝까지 위로 되돌리면 취소');go.textContent='← 방향 다시';go.className='go alt';}
   else if(st==='flight'||st==='roll'||st==='swing')add(c.putt?'굴러가는 중…':'볼이 날아갑니다…');
   else if(st==='intro')add('티잉 구역으로 이동 중…');
 }
 function updateMeter(){
   $('#mFill').style.height=(G.power*100)+'%';$('#mPct').textContent=Math.round(G.power*100)+'%';
-  $('#mYd').textContent=Math.round(curCarry(G.power))+' yd';
+  $('#mYd').textContent=Math.round(curCarry(G.power))+' yd';$('#mYd').hidden=!(CLUBS[G.club].putt?curD().puttLine:curD().ring);
 }
 
 /* ---- scorecard ---- */
@@ -998,7 +1097,7 @@ function showCard(afterHole){
   cardMode=afterHole?'next':'close';
   const t=totals();const C=course();const r=G.scores[G.hi];
   $('#cTitle').textContent=afterHole&&r?`${G.hi+1}번 홀 결과: ${scoreName(r.s,r.par)}${r.dp?' (양파)':''}`:'스코어카드';
-  $('#cMeta').textContent=`${C.name} · ${G.nh}홀 · ${weather().name} · 현재 ${fmtPar(t.d)}`;
+  $('#cMeta').textContent=`${curD().name} · ${C.name} · ${G.nh}홀 · ${weather().name} · 현재 ${fmtPar(t.d)}`;
   buildCard($('#cTable'));
   $('#cNext').textContent=afterHole?(G.hi+1>=G.nh?'최종 결과 보기':`${G.hi+2}번 홀로 →`):'닫기';
   $('#cardM').hidden=false;$('#cNext').focus();
@@ -1009,7 +1108,7 @@ $('#cNext').addEventListener('click',()=>{if(cardMode==='next')nextHole();else $
 function showResult(){
   G.state='result';const t=totals(),C=course();
   $('#rN').textContent=t.s;$('#rTp').textContent=fmtPar(t.d);
-  $('#rMeta').textContent=`${C.name} · ${G.nh}홀 · ${weather().name}`;
+  $('#rMeta').textContent=`${curD().name} · ${C.name} · ${G.nh}홀 · ${weather().name}`;
   const cnt=f=>G.scores.filter(r=>r&&f(r)).length;
   const hio=cnt(r=>r.s===1),bird=cnt(r=>r.s-r.par===-1),eag=cnt(r=>r.s>1&&r.s-r.par<=-2),dp=cnt(r=>r.dp);
   const parts=[];if(hio)parts.push(`홀인원 ${hio}`);if(eag)parts.push(`이글 ${eag}`);if(bird)parts.push(`버디 ${bird}`);if(dp)parts.push(`양파 ${dp}`);
@@ -1045,7 +1144,7 @@ async function loadRank(n){
   rows=where==='local'?loc:rows.concat(loc.filter(l=>!rows.some(r=>r.id===l.id)).map(r=>({...r,localOnly:true})));
   rows=rows.filter(r=>r&&typeof r.strokes==='number'&&typeof r.name==='string');
   rows.sort((a,b)=>a.strokes-b.strokes||(a.at||0)-(b.at||0));
-  return {rows:rows.slice(0,50),where};
+  return {rows,where};
 }
 $('#rForm').addEventListener('submit',async e=>{
   e.preventDefault();const name=$('#rName').value.trim().slice(0,12);
@@ -1053,18 +1152,24 @@ $('#rForm').addEventListener('submit',async e=>{
   store.set('kp_name',name);
   $('#rSave').disabled=true;$('#rName').disabled=true;$('#rMsg').className='msg';$('#rMsg').textContent='등록하는 중…';
   const t=totals(),C=course();
-  const r=await saveScore({name,holes:G.nh,strokes:t.s,toPar:t.d,course:C.name,courseId:C.id,weather:weather().name,at:Date.now()});
+  const r=await saveScore({name,holes:G.nh,strokes:t.s,toPar:t.d,course:`[${curD().name}] ${C.name}`,courseId:curD().id+':'+C.id,difficulty:curD().id,weather:weather().name,at:Date.now()});
   $('#rMsg').textContent=r.where==='db'?'등록했습니다. 명예의 전당에서 순위를 확인하세요.':r.reason==='nodb'?'공유 랭킹에 연결되지 않아 이 기기에만 저장했습니다.':'공유 랭킹에 연결하지 못해 이 기기에만 저장했습니다. 잠시 뒤 다시 시도해 주세요.';
-  setTimeout(()=>openRank(G.nh),700);
+  setTimeout(()=>openRank(G.nh,curD().id),700);
 });
-let rankTab=18;
-async function openRank(n){
-  rankTab=n||rankTab;$('#rankM').hidden=false;
-  $('#tab9').setAttribute('aria-selected',rankTab===9);$('#tab18').setAttribute('aria-selected',rankTab===18);
+let rankTab=18,rankDiff='all';
+const DIFF_NAMES={'이지':'easy','노멀':'normal','하드':'hard','헬':'hell'};
+function diffOf(r){if(r&&DIFF_BY[r.difficulty])return r.difficulty;const m=/^\[(이지|노멀|하드|헬)\]/.exec(String(r&&r.course||''));if(m)return DIFF_NAMES[m[1]];const k=String(r&&r.courseId||'').split(':')[0];return DIFF_BY[k]&&String(r.courseId).includes(':')?k:'normal';}
+function courseNameOf(r){return (typeof r.course==='string'?r.course:'').replace(/^\[(이지|노멀|하드|헬)\]\s*/,'');}
+function buildRankFilter(){const el=$('#rkDiff');el.innerHTML='';[{id:'all',name:'전체'}].concat(DIFFS).forEach(d=>{const b=document.createElement('button');b.type='button';b.textContent=d.name;b.setAttribute('aria-pressed',rankDiff===d.id);b.addEventListener('click',()=>{rankDiff=d.id;openRank(rankTab);});el.append(b);});}
+async function openRank(n,diff){
+  rankTab=n||rankTab;if(diff)rankDiff=diff;$('#rankM').hidden=false;
+  $('#tab9').setAttribute('aria-selected',rankTab===9);$('#tab18').setAttribute('aria-selected',rankTab===18);buildRankFilter();
   const body=$('#rkBody');body.innerHTML='<div class="empty">불러오는 중…</div>';$('#rkMsg').textContent='';
-  const want=rankTab;const {rows,where}=await loadRank(want);if(want!==rankTab)return;
+  const want=rankTab,wantD=rankDiff;const {rows:all,where}=await loadRank(want);if(want!==rankTab||wantD!==rankDiff)return;
+  const rows=all.filter(r=>wantD==='all'||diffOf(r)===wantD).slice(0,50);
   body.innerHTML='';
-  if(!rows.length){const d=document.createElement('div');d.className='empty';d.textContent=`아직 ${want}홀 기록이 없어요. 첫 번째 꼴푸왕이 되어보세요.`;body.append(d);}
+  const dn=wantD==='all'?'':DIFF_BY[wantD].name+' ';
+  if(!rows.length){const d=document.createElement('div');d.className='empty';d.textContent=`아직 ${want}홀 ${dn}기록이 없어요. 첫 번째 꼴푸왕이 되어보세요.`;body.append(d);}
   else{
     const tbl=document.createElement('table');tbl.className='rk';
     tbl.innerHTML='<thead><tr><th>순위</th><th>닉네임</th><th class="num">타수</th><th class="num">스코어</th></tr></thead>';
@@ -1072,18 +1177,20 @@ async function openRank(n){
     rows.forEach((r,i)=>{const tr=document.createElement('tr');if(i===0)tr.className='top1';if(r.id&&r.id===myLastId)tr.classList.add('me');
       const p=document.createElement('td');p.className='pos';p.textContent=i+1;
       const nm=document.createElement('td');const a=document.createElement('div');a.className='nm';a.textContent=String(r.name).slice(0,12);
-      const cs=document.createElement('div');cs.className='cs';const dt=r.at?new Date(r.at):null;cs.textContent=[typeof r.course==='string'?r.course:'',typeof r.weather==='string'?r.weather:'',dt?`${dt.getMonth()+1}.${dt.getDate()}`:'',r.localOnly?'이 기기':''].filter(Boolean).join(' · ');nm.append(a,cs);
-      const s=document.createElement('td');s.className='num';s.textContent=r.strokes;
+      const dk=DIFF_BY[diffOf(r)];const bd=document.createElement('span');bd.className='dbadge';bd.style.setProperty('--dc',dk.badge);bd.textContent=dk.name;
+      const cs=document.createElement('div');cs.className='cs';const dt=r.at?new Date(+r.at||r.at):null;
+      cs.append(bd,document.createTextNode([courseNameOf(r),typeof r.weather==='string'?r.weather:'',dt&&!isNaN(dt)?`${dt.getMonth()+1}.${dt.getDate()}`:'',r.localOnly?'이 기기':''].filter(Boolean).join(' · ')));nm.append(a,cs);
+      const sc=document.createElement('td');sc.className='num';sc.textContent=r.strokes;
       const d=document.createElement('td');d.className='num';d.textContent=fmtPar(typeof r.toPar==='number'?r.toPar:r.strokes-(want===9?36:72));
-      tr.append(p,nm,s,d);tb.append(tr);});
+      tr.append(p,nm,sc,d);tb.append(tr);});
     tbl.append(tb);body.append(tbl);
   }
-  $('#rkMsg').textContent=where==='db'?'모든 플레이어가 함께 보는 랭킹입니다. 9홀과 18홀 기록은 따로 집계됩니다.':'공유 랭킹에 연결되지 않아 이 기기의 기록만 보여줍니다.';
+  $('#rkMsg').textContent=where==='db'?'함께 보는 명예의 전당이에요. 9홀·18홀, 난이도별로 따로 볼 수 있어요.':'공유 랭킹에 연결되지 않아 이 기기의 기록만 보여줍니다.';
 }
 $('#tab9').addEventListener('click',()=>openRank(9));
 $('#tab18').addEventListener('click',()=>openRank(18));
 $('#rkClose').addEventListener('click',()=>{$('#rankM').hidden=true;});
-$('#bRank').addEventListener('click',()=>openRank(selHoles));
+$('#bRank').addEventListener('click',()=>openRank(selHoles,selDiff));
 function goHome(){
   G.run++;G.state='title';G.ci=null;if(flightSnd)flightSnd.stop();
   ['#resM','#cardM','#quitM','#rankM'].forEach(s=>$(s).hidden=true);
@@ -1109,14 +1216,16 @@ window.addEventListener('keydown',e=>{
 });
 
 /* ---- title screen ---- */
+function buildDiffs(){const el=$('#diffList');el.innerHTML='';DIFFS.forEach(d=>{const b=document.createElement('button');b.className='diff';b.type='button';b.style.setProperty('--dc',d.col);b.setAttribute('aria-pressed',d.id===selDiff);const n=document.createElement('b');n.textContent=d.name;const sp=document.createElement('span');sp.textContent=d.desc;b.append(n,sp);b.addEventListener('click',()=>{if(selDiff===d.id)return;selDiff=d.id;selCourse=0;store.set('kp_diff',d.id);buildTitle();titleScene();});el.append(b);});}
 function buildTitle(){
+  buildDiffs();$('#courseLbl').textContent=DIFF_BY[selDiff].name+' 코스';
   const list=$('#courseList');list.innerHTML='';
-  COURSES.forEach((C,i)=>{
+  coursesOf(selDiff).forEach((C,i)=>{ensureHoles(C);
     const b=document.createElement('button');b.className='course';b.setAttribute('aria-pressed',i===selCourse);
     const c=document.createElement('canvas');c.width=168;c.height=168;
     const tx=document.createElement('div');tx.className='tx';
     const n=document.createElement('b');n.textContent=C.name;const s=document.createElement('span');s.textContent=C.sub;
-    const y=document.createElement('span');y.className='yd';y.dataset.ci=i;
+    const y=document.createElement('span');y.className='yd';y.dataset.ci=COURSES.indexOf(C);
     tx.append(n,s,y);b.append(c,tx);
     b.addEventListener('click',()=>{selCourse=i;document.querySelectorAll('.course').forEach((x,j)=>x.setAttribute('aria-pressed',j===i));titleScene();});
     list.append(b);
@@ -1133,10 +1242,10 @@ function buildTitle(){
 function updateYds(){document.querySelectorAll('.yd').forEach(el=>{const C=COURSES[+el.dataset.ci];el.textContent=selHoles===18?`PAR 72 · ${C.yards.toLocaleString()} yd`:`PAR 36 · ${C.yards9.toLocaleString()} yd`;});}
 $('#h9').addEventListener('click',()=>{selHoles=9;$('#h9').setAttribute('aria-pressed','true');$('#h18').setAttribute('aria-pressed','false');updateYds();});
 $('#h18').addEventListener('click',()=>{selHoles=18;$('#h18').setAttribute('aria-pressed','true');$('#h9').setAttribute('aria-pressed','false');updateYds();});
-$('#bStart').addEventListener('click',()=>startRound(selCourse,selHoles));
+$('#bStart').addEventListener('click',()=>startRound(COURSES.indexOf(coursesOf(selDiff)[selCourse]),selHoles));
 let titleT=0;
 function titleScene(){
-  if(!T3.ok)return;const C=COURSES[selCourse];const h=C.holes[0];
+  if(!T3.ok)return;const C=ensureHoles(coursesOf(selDiff)[selCourse]);const h=C.holes[0];
   G.ci=null;G.ball={x:0,y:0,z:0};G.club=0;G.aim=Math.atan2(h.tee.ty,h.tee.tx);G.power=0;G.golfer={phase:'addr',t:0};G.trail=[];
   T3._titleHole=h;buildHole3D(C,h,WEATHERS[0]);placeGolfer();updatePatch(h,0,0);titleT=0;
 }
@@ -1147,16 +1256,16 @@ cv.addEventListener('pointerdown',e=>{
   audio();if(G.state!=='aim'&&G.state!=='power')return;
   cv.setPointerCapture(e.pointerId);
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,aim:G.aim};
-  if(G.state==='power'){G.power=0;updateMeter();}
+  if(G.state==='power'){G.power=0;G.powerBase=0;updateMeter();}
 });
 cv.addEventListener('pointermove',e=>{
   if(!drag||drag.id!==e.pointerId)return;
   if(G.state==='aim'){const c=CLUBS[G.club];const sens=c.putt||G.lie==='green'?.0016:.0038;G.aim=drag.aim+(e.clientX-drag.x)*sens;placeGolfer();}
-  else if(G.state==='power'){G.power=clamp((e.clientY-drag.y)/((H-TOP-BOT)*.42),0,1);updateMeter();}
+  else if(G.state==='power'){G.powerBase=clamp((e.clientY-drag.y)/((H-TOP-BOT)*.42),0,1);G.power=G.powerBase;updateMeter();}
 });
 cv.addEventListener('pointerup',e=>{
   if(!drag||drag.id!==e.pointerId)return;drag=null;
-  if(G.state==='power'){if(G.power>.02)swing();else{G.power=0;updateMeter();}}
+  if(G.state==='power'){if((G.powerBase||0)>.02){G.power=clamp(G.power,.01,1);swing();}else{G.power=0;G.powerBase=0;updateMeter();}}
 });
 cv.addEventListener('pointercancel',()=>{drag=null;if(G.state==='power'){G.power=0;updateMeter();}});
 
@@ -1194,6 +1303,7 @@ function frame(now){
     animateWorld(dt,time);renderBall();T3.renderer.render(T3.scene,T3.camera);fctx.setTransform(1,0,0,1,0,0);fctx.clearRect(0,0,fx.width,fx.height);return;
   }
   if(G.ci==null)return;
+  if(G.state==='power'&&drag&&G.powerBase>0&&curD().shake){G.power=clamp(G.powerBase+curD().shake*(Math.sin(time*9.3)*.7+Math.sin(time*23.1)*.3),0,1);updateMeter();}
   if(G.state==='swing'){G.swT+=dt;if(G.swT>=.3){launch();G.golfer={phase:'follow',t:0};}}
   if(G.golfer&&G.golfer.phase==='follow')G.golfer.t+=dt;
   if(G.state==='flight')stepFlight(dt);else if(G.state==='roll')stepRoll(dt);
@@ -1229,12 +1339,15 @@ function renderBall(){
 function renderAim(){
   const show=G.state==='aim'||G.state==='power';T3.dots.visible=T3.ring.visible=T3.disc.visible=T3.wdot.visible=show;
   if(!show)return;
-  const b=G.ball,P=previewPoint(),c=CLUBS[G.club];const pa=T3.dots.geometry.attributes.position;const n=48;
-  for(let i=0;i<n;i++){const t=(i+1)/n;pa.setXYZ(i,b.x+(P.x-b.x)*t,.05,b.y+(P.y-b.y)*t);}pa.needsUpdate=true;
+  const D=curD(),b=G.ball,P=previewPoint(),c=CLUBS[G.club];const full=c.putt?D.puttLine:D.ring;
+  let Q=P;if(!full){const lim=c.putt?2.5:30,dd=Math.min(lim,P.d);Q={x:b.x+Math.cos(G.aim)*dd,y:b.y+Math.sin(G.aim)*dd,d:dd};}
+  const pa=T3.dots.geometry.attributes.position;const n=48;
+  for(let i=0;i<n;i++){const t=(i+1)/n;pa.setXYZ(i,b.x+(Q.x-b.x)*t,.05,b.y+(Q.y-b.y)*t);}pa.needsUpdate=true;
   T3.dots.material.size=c.putt?4:5;
-  const rr=c.putt?.35:Math.max(2,P.d*Math.sin(rad((DISP[G.lie]||1.5)*1.6)));
+  T3.ring.visible=T3.disc.visible=full;
+  const rr=c.putt?.35:Math.max(2,P.d*Math.sin(rad((DISP[G.lie]||1.5)*1.6*D.disp)));
   T3.ring.position.set(P.x,.06,P.y);T3.ring.scale.set(rr,1,rr);T3.disc.position.set(P.x,.055,P.y);T3.disc.scale.set(rr,1,rr);
-  if(!c.putt){const wk=G.wind.ms*.0125*P.d*(.8+(c.loft||10)/40);T3.wdot.visible=wk>1.5;T3.wdot.geometry.attributes.position.setXYZ(0,P.x+Math.cos(G.wind.a)*wk,.07,P.y+Math.sin(G.wind.a)*wk);T3.wdot.geometry.attributes.position.needsUpdate=true;}
+  if(!c.putt&&D.windDot){const wk=G.wind.ms*.0125*P.d*(.8+(c.loft||10)/40);T3.wdot.visible=wk>1.5;T3.wdot.geometry.attributes.position.setXYZ(0,P.x+Math.cos(G.wind.a)*wk,.07,P.y+Math.sin(G.wind.a)*wk);T3.wdot.geometry.attributes.position.needsUpdate=true;}
   else T3.wdot.visible=false;
 }
 const pv=window.THREE?new THREE.Vector3():null;
@@ -1254,7 +1367,7 @@ function drawFx(time){
       const ex=cx+Math.cos(a)*s,ey=cy+Math.sin(a)*s;arrowAt(g,ex,ey,a,15,'#f4b62a');label(g,ex-Math.cos(a)*38,ey-Math.sin(a)*30,t,'rgba(120,80,0,.92)');}
   }
   // landing label
-  if(G.state==='aim'||G.state==='power'){const P=previewPoint();const q=project(P.x,.1,P.y);if(!q.behind&&q.y>TOP+20&&q.y<H-BOT)label(g,q.x+30,q.y-14,Math.round(P.d)+' yd');}
+  if((G.state==='aim'||G.state==='power')&&(CLUBS[G.club].putt?curD().puttLine:curD().ring)){const P=previewPoint();const q=project(P.x,.1,P.y);if(!q.behind&&q.y>TOP+20&&q.y<H-BOT)label(g,q.x+30,q.y-14,Math.round(P.d)+' yd');}
   // weather
   const rel=G.wind.a-G.aim;const wdx=Math.sin(rel)*1,wdy=-Math.cos(rel)*.25;
   if(G.wind.ms>1){g.strokeStyle=`rgba(255,255,255,${.05+G.wind.ms*.012})`;g.lineWidth=1.2;g.lineCap='round';
@@ -1275,8 +1388,8 @@ function drawMini(){
   mg.translate(S/2,S/2);mg.rotate(-viewA-Math.PI/2);mg.scale(k,k);mg.translate(-b.x,-b.y);
   drawCourse(mg,h,k,'map',{x0:b.x-R*1.5,y0:b.y-R*1.5,x1:b.x+R*1.5,y1:b.y+R*1.5});
   // aim line
-  if(G.state==='aim'||G.state==='power'){const P=previewPoint();mg.strokeStyle='#fff';mg.lineWidth=2.4/k;mg.setLineDash([5/k,4/k]);mg.beginPath();mg.moveTo(b.x,b.y);mg.lineTo(P.x,P.y);mg.stroke();mg.setLineDash([]);
-    mg.beginPath();mg.arc(P.x,P.y,Math.max(4/k,c.putt?.4:P.d*.04),0,TAU);mg.stroke();}
+  if(G.state==='aim'||G.state==='power'){const Dm=curD(),full=c.putt?Dm.puttLine:Dm.ring;let P=previewPoint();if(!full){const dd=Math.min(c.putt?2.5:30,P.d);P={x:b.x+Math.cos(G.aim)*dd,y:b.y+Math.sin(G.aim)*dd,d:dd};}mg.strokeStyle='#fff';mg.lineWidth=2.4/k;mg.setLineDash([5/k,4/k]);mg.beginPath();mg.moveTo(b.x,b.y);mg.lineTo(P.x,P.y);mg.stroke();mg.setLineDash([]);
+    if(full){mg.beginPath();mg.arc(P.x,P.y,Math.max(4/k,c.putt?.4:P.d*.04),0,TAU);mg.stroke();}}
   mg.restore();
   // ball
   mg.fillStyle='#fff';mg.strokeStyle='#000';mg.lineWidth=2;mg.beginPath();mg.arc(S/2,S/2,6,0,TAU);mg.fill();mg.stroke();
