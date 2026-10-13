@@ -854,7 +854,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
 
   // ---------- 랭킹 ----------
   // 깃허브 페이지에서 쓰는 공유 랭킹 서버 (구글 시트 + Apps Script 웹 앱 주소). 비어 있으면 이 기기에만 저장.
-  const RANK_API = "";
+  const RANK_API = "https://script.google.com/macros/s/AKfycbwOeQRlPH3zZ-nd4B8CibHypl-qaBK7FMuJP6EJ-rP9OkMiVleTJcS1WFzojHGg278/exec";
   const hasApi = () => /^https:\/\/script\.google\.com\//.test(RANK_API);
   let db = null, mode = "local", myId = null, rows = [];
   const LOCAL_KEY = "yongwang_local_rank";
