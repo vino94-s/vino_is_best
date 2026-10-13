@@ -255,7 +255,7 @@ $('startBtn').onclick=start; $('retryBtn').onclick=start;
 
 // ---------- 랭킹: claude 아티팩트(db) → 구글 시트(RANK_API) → 이 기기 순서로 연결 ----------
 // 깃허브 페이지에서 쓰는 공유 랭킹 서버 (구글 시트 + Apps Script 웹 앱 주소). 비어 있으면 이 기기에만 저장.
-const RANK_API = "";
+const RANK_API = "https://script.google.com/macros/s/AKfycbxbg_vGv8Bts-yz7xraYZ4PPG5olMOQZCQ4Zjozh1aH6HNiEO8NnYJVuILfdCCNlwMk/exec";
 const hasApi=()=>/^https:\/\/script\.google\.com\//.test(RANK_API);
 const R={mode:'loading',db:null,uid:null,rows:[],myBest:0,myId:null,canWrite:true};
 const LOCAL_KEY='thumb_local_rank';
