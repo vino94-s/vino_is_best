@@ -42,6 +42,8 @@ canvas{display:block;width:100%;height:100%}
   border-radius:14px;padding:12px 28px;cursor:pointer;box-shadow:0 4px 0 var(--ink);width:100%}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .btn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.btn.ghost{display:block;box-sizing:border-box;margin-top:10px;background:var(--tent-cream);color:var(--ink);font-size:18px;padding:10px 20px;
+  box-shadow:0 3px 0 var(--ink);text-decoration:none}
 .final{font-family:var(--display);font-size:56px;color:var(--tent);line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
 .stats{display:flex;justify-content:center;gap:18px;font-size:14px;margin:0 0 16px;color:#5a4a3e}
 .stats b{font-family:var(--display);font-weight:400;color:var(--ink);font-size:17px}
@@ -106,6 +108,7 @@ canvas{display:block;width:100%;height:100%}
       <p class="status" id="rankStatus"></p>
       <div class="rank"><h2>🏆 먹방 랭킹 <small class="rankNote"></small></h2><ol class="rankList"><li class="empty">랭킹 불러오는 중…</li></ol></div>
       <button class="btn" id="retryBtn">한 판 더</button>
+      <a class="btn ghost" id="homeBtn" href="../">메인으로 돌아가기</a>
     </div>
   </div>
 </div>
@@ -270,6 +273,13 @@ function gameOver(){
   setTimeout(()=>$('retryBtn').focus(),50);
 }
 $('startBtn').onclick=start; $('retryBtn').onclick=start;
+// 메인으로: 깃허브 페이지에서는 게임방 목록(../), 단독 실행(Claude 등)에서는 이 게임의 첫 화면
+const HUB_URL="../";
+if(HUB_URL) $('homeBtn').href=HUB_URL;
+else $('homeBtn').addEventListener('click',e=>{
+  e.preventDefault(); $('overOv').hidden=true; $('startOv').hidden=false; $('hud').hidden=true;
+  newGame(); setTimeout(()=>$('startBtn').focus(),30);
+});
 
 // ---------- 랭킹: claude 아티팩트(db) → 구글 시트(RANK_API) → 이 기기 순서로 연결 ----------
 // 깃허브 페이지에서 쓰는 공유 랭킹 서버 (구글 시트 + Apps Script 웹 앱 주소). 비어 있으면 이 기기에만 저장.
