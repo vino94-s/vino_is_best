@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}</style>
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
 <title>고네이크</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap">
 <style>
-/* Layout: a squared-paper notebook page — the game board IS the graph paper, ranking sits on the margin like a scribbled scoreboard. Single paper theme by choice. */
+/* Layout: one fixed screen like a notebook page — title, score tabs, the graph-paper board, then the numpad. Ranking opens as a sheet when the game ends. Single paper theme by choice. */
 :root {
   color-scheme: light;
   --paper: #fbf7ec;
@@ -22,11 +22,12 @@
   --meat: #b9502e;
   --margin: #e98a8a;
   --card: #fffdf6;
+  --veil: rgba(251, 247, 236, .9);
   --f-display: "Gaegu", "Comic Sans MS", "Apple SD Gothic Neo", cursive;
   --f-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
-html, body { min-height: 100%; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body {
   background: var(--paper);
   background-image:
@@ -36,73 +37,71 @@ body {
   color: var(--ink);
   font-family: var(--f-body);
   font-size: 15px;
-  padding-inline: 16px;
-  padding-block: 20px 40px;
+  padding-inline: 12px;
+  padding-block: 8px;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
 }
-.wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
-header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; }
+/* 한 화면 고정: 제목 · 점수 · 게임판(남는 공간 전부) · 방향키 */
+.app { height: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+header { flex: none; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 h1 {
   font-family: var(--f-display); font-weight: 700; margin: 0;
-  font-size: clamp(48px, 9vw, 76px); line-height: .9; letter-spacing: -1px;
-  text-wrap: balance;
+  font-size: clamp(32px, 6.5vh, 60px); line-height: .95; letter-spacing: -1px;
 }
 h1 .go { color: var(--tan-deep); }
-.tag { font-family: var(--f-display); font-size: 22px; color: var(--ink-soft); margin: 4px 0 0; }
-.main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
-@media (max-width: 760px) { .main { grid-template-columns: minmax(0,1fr); } }
+.tag { font-family: var(--f-display); font-size: clamp(17px, 2.6vh, 22px); color: var(--ink-soft); margin: 0; }
 
-.board-col { display: grid; gap: 12px; min-width: 0; }
-.stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.stats { flex: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .stat {
   background: var(--card); border: 2px solid var(--ink); border-radius: 12px 14px 10px 13px;
-  padding: 6px 14px; display: grid; min-width: 96px;
+  padding: 4px 10px; display: grid; min-width: 0;
 }
-.stat b { font-family: var(--f-display); font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
-.stat span { font-size: 12px; color: var(--ink-soft); letter-spacing: .04em; }
-@media (max-width: 520px) {
-  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-  .stat { min-width: 0; padding: 5px 8px; }
-  .stat b { font-size: 22px; }
-  .stat span { font-size: 11px; white-space: nowrap; }
-}
-.stage { position: relative; width: 100%; max-width: 560px; aspect-ratio: 1; }
+.stat b { font-family: var(--f-display); font-size: clamp(20px, 3.4vh, 30px); line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.stage-wrap { flex: 1 1 auto; min-height: 0; display: grid; place-items: center; container-type: size; }
+.stage { position: relative; width: min(100cqw - 6px, 100cqh - 6px); height: min(100cqw - 6px, 100cqh - 6px); }
 canvas#game {
   width: 100%; height: 100%; display: block; touch-action: none;
   border: 3px solid var(--ink); border-radius: 6px 10px 8px 12px;
-  background: var(--card); box-shadow: 5px 6px 0 var(--ink);
+  background: var(--card); box-shadow: 4px 5px 0 var(--ink);
 }
 .overlay {
   position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
-  padding: 20px; background: rgba(251, 247, 236, .88); border-radius: 6px 10px 8px 12px;
+  padding: 16px; background: var(--veil); border-radius: 6px 10px 8px 12px;
 }
-.overlay[hidden] { display: none; }
-.overlay .big { font-family: var(--f-display); font-weight: 700; font-size: clamp(34px, 7vw, 54px); line-height: 1; margin: 0 0 8px; }
-.overlay p { margin: 0 0 6px; color: var(--ink-soft); }
+.overlay[hidden], .sheet[hidden] { display: none; }
+.big { font-family: var(--f-display); font-weight: 700; font-size: clamp(32px, 6vh, 52px); line-height: 1; margin: 0 0 6px; }
+.overlay p, .result p { margin: 0 0 4px; color: var(--ink-soft); }
+.overlay p:not(.big) { font-size: clamp(12px, 1.9vh, 15px); line-height: 1.5; }
 .overlay-inner { display: grid; gap: 10px; justify-items: center; max-width: 340px; width: 100%; }
 .btn {
   font-family: var(--f-display); font-weight: 700; font-size: 24px;
   background: var(--tan); color: var(--ink); border: 2px solid var(--ink);
   border-radius: 12px 10px 14px 9px; padding: 6px 22px; cursor: pointer;
   box-shadow: 3px 3px 0 var(--ink); transition: transform .08s, box-shadow .08s;
+  touch-action: manipulation;
 }
 .btn:hover { background: var(--tan-deep); }
 .btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:disabled { opacity: .5; cursor: default; }
 .btn:focus-visible, input:focus-visible, .pad button:focus-visible { outline: 3px dashed var(--meat); outline-offset: 3px; }
 .btn.ghost { background: transparent; box-shadow: none; font-size: 19px; border-style: dashed; }
-.name-row { display: flex; gap: 8px; width: 100%; }
-.name-row input {
-  flex: 1; min-width: 0; font-family: var(--f-display); font-size: 24px;
-  border: 2px solid var(--ink); border-radius: 10px; padding: 4px 12px; background: var(--card); color: var(--ink);
-}
-.err { color: var(--meat); font-size: 13px; min-height: 1em; }
-.hint { font-size: 13px; color: var(--ink-soft); }
+.hint { font-size: 13px; color: var(--ink-soft); margin: 0; }
+.keys-hint { flex: none; text-align: center; }
 kbd { font-family: var(--f-body); border: 1.5px solid var(--ink-soft); border-bottom-width: 3px; border-radius: 5px; padding: 0 5px; font-size: 12px; }
 
-/* 숫자패드 배열: 8(위) / 4(왼) · 6(오) / 2(아래), 가운데는 비움 */
-.pad { display: none; grid-template-columns: repeat(3, 72px); grid-template-rows: repeat(3, 64px); gap: 10px; justify-content: center; padding-block: 4px 8px; }
+/* 숫자패드 배열: 8(위) / 4(왼) · 6(오) / 2(아래), 가운데는 비움. 화면이 낮으면 버튼 높이만 줄어듦 */
+.pad {
+  flex: none; display: none; justify-content: center;
+  grid-template-columns: repeat(3, clamp(60px, 19vw, 76px));
+  grid-template-rows: repeat(3, clamp(42px, 7.2vh, 62px));
+  gap: clamp(6px, 1.2vh, 10px);
+}
 .pad button {
   touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
-  font-size: 26px; border: 2px solid var(--ink); background: var(--card); color: var(--ink);
+  font-size: 24px; border: 2px solid var(--ink); background: var(--card); color: var(--ink);
   border-radius: 10px; cursor: pointer;
 }
 .pad button:active { background: var(--tan); }
@@ -112,90 +111,113 @@ kbd { font-family: var(--f-body); border: 1.5px solid var(--ink-soft); border-bo
 .pad .right { grid-column: 3; grid-row: 2; }
 @media (pointer: coarse) { .pad { display: grid; } .keys-hint { display: none; } }
 
-aside.rank {
-  background: var(--card); border: 2px solid var(--ink); border-radius: 10px 14px 12px 8px;
-  padding: 14px 16px 16px 28px; position: relative; min-width: 0;
+/* 게임 종료 시트: 결과 + 닉네임 등록 + 랭킹 (이 안에서만 스크롤) */
+.sheet {
+  position: fixed; inset: 0; z-index: 10; background: var(--veil);
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+  -webkit-user-select: text; user-select: text;
 }
-aside.rank::before { content: ""; position: absolute; left: 16px; top: 0; bottom: 0; border-left: 2px solid var(--margin); }
-aside h2 { font-family: var(--f-display); font-size: 32px; margin: 0; line-height: 1; }
-.rank-sub { font-size: 12px; color: var(--ink-soft); margin: 4px 0 10px; }
+.sheet-card {
+  margin-block: auto; width: 100%; max-width: 420px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px;
+  background: var(--card); border: 2px solid var(--ink); border-radius: 10px 14px 12px 8px;
+  box-shadow: 5px 6px 0 var(--ink); padding: 18px 18px 18px 30px; position: relative;
+}
+.sheet-card::before { content: ""; position: absolute; left: 16px; top: 0; bottom: 0; border-left: 2px solid var(--margin); }
+.result { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; text-align: center; padding-bottom: 14px; border-bottom: 2px dashed var(--grid); }
+.result[hidden] { display: none; }
+.name-row { display: flex; gap: 8px; width: 100%; }
+.name-row input {
+  flex: 1 1 0; width: 0; min-width: 0; font-family: var(--f-display); font-size: 24px;
+  border: 2px solid var(--ink); border-radius: 10px; padding: 4px 12px; background: var(--paper); color: var(--ink);
+}
+.err { color: var(--meat); font-size: 13px; min-height: 1em; }
+.err.ok { color: var(--ink-soft); }
+.rank h2 { font-family: var(--f-display); font-size: clamp(24px, 7vw, 30px); margin: 0; line-height: 1.05; word-break: keep-all; text-wrap: balance; }
+.rank-sub { font-size: 12px; color: var(--ink-soft); margin: 4px 0 8px; }
 ol.list { list-style: none; margin: 0; padding: 0; display: grid; }
 ol.list li {
   display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 8px; align-items: baseline;
-  padding: 6px 0; border-bottom: 1px dashed var(--grid);
+  padding: 6px 4px; border-bottom: 1px dashed var(--grid);
 }
-ol.list li.me { background: rgba(242, 194, 126, .35); border-radius: 6px; }
+ol.list li.me { background: rgba(242, 194, 126, .4); border-radius: 6px; }
 .pos { font-family: var(--f-display); font-weight: 700; font-size: 22px; text-align: center; }
-li:nth-child(1) .pos { color: var(--meat); }
+ol.list li:nth-child(1) .pos { color: var(--meat); }
 .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .who small { display: block; font-size: 11px; color: var(--ink-soft); }
 .pts { font-family: var(--f-display); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
 .empty { color: var(--ink-soft); font-size: 14px; padding: 10px 0; line-height: 1.5; }
-.toast { font-size: 12px; color: var(--ink-soft); margin-top: 10px; min-height: 1em; }
+.toast { font-size: 12px; color: var(--ink-soft); margin-top: 8px; min-height: 1em; }
+.sheet-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
 </style>
 
-<div class="wrap">
+<div class="app">
   <header>
-    <div>
-      <h1><span class="go">고</span>네이크</h1>
-      <p class="tag">고라니 그만먹어</p>
-    </div>
-    <p class="hint keys-hint"><kbd>←</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd> 또는 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 이동 · <kbd>Space</kbd> 일시정지</p>
+    <h1><span class="go">고</span>네이크</h1>
+    <p class="tag">고라니 그만먹어</p>
   </header>
 
-  <div class="main">
-    <section class="board-col">
-      <div class="stats">
-        <div class="stat"><b id="sScore">0</b><span>점수</span></div>
-        <div class="stat"><b id="sWaist">40cm</b><span>허리 길이</span></div>
-        <div class="stat"><b id="sMeat">0</b><span>먹은 고기</span></div>
-        <div class="stat"><b id="sBest">0</b><span>내 최고점</span></div>
-      </div>
-      <div class="stage">
-        <canvas id="game" aria-label="고네이크 게임판"></canvas>
-        <div class="overlay" id="ovStart">
-          <div class="overlay-inner">
-            <p class="big">고네이크</p>
-            <p>고기를 먹을 때마다 고라니 허리가 한 칸씩 길어져요.<br>벽이나 자기 허리에 부딪히면 끝!</p>
-            <button class="btn" id="btnStart" type="button">시작하기</button>
-          </div>
-        </div>
-        <div class="overlay" id="ovPause" hidden>
-          <div class="overlay-inner">
-            <p class="big">잠깐 쉬는 중</p>
-            <button class="btn" id="btnResume" type="button">계속하기</button>
-          </div>
-        </div>
-        <div class="overlay" id="ovOver" hidden>
-          <form class="overlay-inner" id="nameForm" novalidate>
-            <p class="big">허리 삐끗!</p>
-            <p><b id="oScore">0</b>점 · 허리 <b id="oWaist">0</b>cm</p>
-            <label class="hint" for="nick">닉네임을 남기고 랭킹에 올리세요</label>
-            <div class="name-row">
-              <input id="nick" name="nick" maxlength="12" autocomplete="nickname" placeholder="닉네임 (최대 12자)">
-              <button class="btn" id="btnSave" type="submit">등록</button>
-            </div>
-            <div class="err" id="err"></div>
-            <button class="btn ghost" id="btnAgain" type="button">등록 안 하고 다시 하기</button>
-          </form>
-        </div>
-      </div>
-      <div class="pad" aria-label="방향 버튼">
-        <button class="up" data-d="up" type="button" aria-label="위">▲</button>
-        <button class="left" data-d="left" type="button" aria-label="왼쪽">◀</button>
-        <button class="down" data-d="down" type="button" aria-label="아래">▼</button>
-        <button class="right" data-d="right" type="button" aria-label="오른쪽">▶</button>
-      </div>
-    </section>
+  <div class="stats">
+    <div class="stat"><b id="sScore">0</b><span>점수</span></div>
+    <div class="stat"><b id="sWaist">30cm</b><span>허리 길이</span></div>
+    <div class="stat"><b id="sMeat">0</b><span>먹은 고기</span></div>
+    <div class="stat"><b id="sBest">0</b><span>내 최고점</span></div>
+  </div>
 
-    <aside class="rank">
+  <div class="stage-wrap">
+    <div class="stage">
+      <canvas id="game" aria-label="고네이크 게임판"></canvas>
+      <div class="overlay" id="ovStart">
+        <div class="overlay-inner">
+          <p class="big">고네이크</p>
+          <p>고기를 먹으면 허리가 한 칸씩 길어져요.<br>140점부터는 3칸짜리 큰 고기도 나와요.<br>벽이나 허리에 부딪히면 끝!</p>
+          <button class="btn" id="btnStart" type="button">시작하기</button>
+          <button class="btn ghost" id="btnRank" type="button">랭킹 보기</button>
+        </div>
+      </div>
+      <div class="overlay" id="ovPause" hidden>
+        <div class="overlay-inner">
+          <p class="big">잠깐 쉬는 중</p>
+          <button class="btn" id="btnResume" type="button">계속하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint keys-hint"><kbd>←</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd> 또는 <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 이동 · <kbd>Space</kbd> 일시정지</p>
+
+  <div class="pad" aria-label="방향 버튼">
+    <button class="up" data-d="up" type="button" aria-label="위">▲</button>
+    <button class="left" data-d="left" type="button" aria-label="왼쪽">◀</button>
+    <button class="down" data-d="down" type="button" aria-label="아래">▼</button>
+    <button class="right" data-d="right" type="button" aria-label="오른쪽">▶</button>
+  </div>
+</div>
+
+<div class="sheet" id="ovOver" hidden>
+  <div class="sheet-card">
+    <form class="result" id="nameForm" novalidate>
+      <p class="big">허리 삐끗!</p>
+      <p><b id="oScore">0</b>점 · 허리 <b id="oWaist">0</b>cm · 고기 <b id="oMeat">0</b>개</p>
+      <label class="hint" for="nick">닉네임을 남기고 랭킹에 올리세요</label>
+      <div class="name-row">
+        <input id="nick" name="nick" maxlength="12" autocomplete="nickname" placeholder="닉네임">
+        <button class="btn" id="btnSave" type="submit">등록</button>
+      </div>
+      <div class="err" id="err"></div>
+    </form>
+    <section class="rank">
       <h2>고기 제일많이 먹인사람</h2>
       <p class="rank-sub" id="rankSub">모두가 함께 보는 랭킹 · 상위 15명</p>
       <ol class="list" id="rankList"></ol>
       <div class="empty" id="rankEmpty">아직 기록이 없어요.<br>첫 번째 고기 먹방의 주인공이 되어 보세요.</div>
       <div class="toast" id="toast"></div>
-    </aside>
+    </section>
+    <div class="sheet-actions">
+      <button class="btn" id="btnAgain" type="button">다시 하기</button>
+    </div>
   </div>
 </div>
 
@@ -226,22 +248,27 @@ li:nth-child(1) .pos { color: var(--meat); }
   const DIRS = { up: [0,-1], down: [0,1], left: [-1,0], right: [1,0] };
   const OPP = { up: "down", down: "up", left: "right", right: "left" };
   let snake, dir, queue, meat, eaten, state = "ready", acc = 0, last = 0, face = 1, popT = 0;
+  let grown = 0, pendingGrow = 0; // grown: 늘어난 허리 칸 수(점수 기준), pendingGrow: 아직 늘어나지 않은 칸
   let movedDir = "right", frac = 0; // movedDir: 마지막으로 실제 이동한 방향, frac: 다음 칸까지 진행률
 
   function reset() {
     const y = Math.floor(N / 2);
     snake = [[6,y],[5,y],[4,y]]; movedDir = "right"; frac = 0;
-    dir = "right"; queue = []; eaten = 0; face = 1; popT = 0;
+    dir = "right"; queue = []; eaten = 0; grown = 0; pendingGrow = 0; face = 1; popT = 0;
     placeMeat(); updateStats();
   }
   function placeMeat() {
     const free = [];
     for (let x = 0; x < N; x++) for (let y = 0; y < N; y++)
       if (!snake.some(s => s[0] === x && s[1] === y)) free.push([x,y]);
-    meat = free[Math.floor(Math.random() * free.length)];
+    if (!free.length) { meat = null; return; }
+    const m = free[Math.floor(Math.random() * free.length)].slice();
+    m.big = score() >= BIG_FROM && Math.random() < BIG_CHANCE; // 140점부터 10% 확률로 큰 고기
+    meat = m;
   }
-  const score = () => eaten * 10;
-  const waist = () => (snake.length - 1) * CM_PER_SEG;
+  const BIG_FROM = 140, BIG_CHANCE = 0.1, BIG_GROW = 3;
+  const score = () => grown * 10;                       // 허리 1칸 = 10점
+  const waist = () => (2 + grown) * CM_PER_SEG;         // 시작 허리 2칸(30cm)
   const speed = () => Math.max(65, 150 - eaten * 4); // ms per step
 
   let best = 0;
@@ -267,14 +294,20 @@ li:nth-child(1) .pos { color: var(--meat); }
     if (dir === "left") face = -1; else if (dir === "right") face = 1;
     const [dx, dy] = DIRS[dir];
     const nh = [snake[0][0] + dx, snake[0][1] + dy];
-    const grow = nh[0] === meat[0] && nh[1] === meat[1];
-    const body = grow ? snake : snake.slice(0, -1);
+    const eatHere = !!meat && nh[0] === meat[0] && nh[1] === meat[1];
+    const keepTail = pendingGrow > 0 || eatHere;
+    const body = keepTail ? snake : snake.slice(0, -1);
     if (nh[0] < 0 || nh[1] < 0 || nh[0] >= N || nh[1] >= N || body.some(s => s[0] === nh[0] && s[1] === nh[1])) {
       return gameOver();
     }
     snake.unshift(nh); movedDir = dir;
     if (queue.length) dir = queue.shift(); // 다음 칸으로 갈 방향을 미리 확정
-    if (grow) { eaten++; popT = 1; placeMeat(); } else snake.pop();
+    if (eatHere) {
+      const n = meat.big ? BIG_GROW : 1;
+      eaten++; grown += n; pendingGrow += n; popT = meat.big ? 1.6 : 1;
+      placeMeat();
+    }
+    if (pendingGrow > 0) pendingGrow--; else snake.pop();
     updateStats();
   }
 
@@ -310,7 +343,13 @@ li:nth-child(1) .pos { color: var(--meat); }
   function drawMeat(t) {
     if (!meat) return;
     const x = C(meat[0]), y = C(meat[1]);
-    const s = cell * (0.95 + Math.sin((t || 0) / 220) * 0.05);
+    const s = cell * (meat.big ? 1.7 : 0.95) * (1 + Math.sin((t || 0) / (meat.big ? 140 : 220)) * (meat.big ? 0.07 : 0.05));
+    if (meat.big) {
+      ctx.save();
+      ctx.fillStyle = "rgba(242, 194, 126, .45)";
+      ctx.beginPath(); ctx.arc(x, y, s * 0.62, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
     ctx.save(); ctx.translate(x, y); ctx.rotate(-0.6);
     ctx.lineWidth = Math.max(1.5, cell * 0.07); ctx.strokeStyle = pal.ink;
     // bone
@@ -323,6 +362,15 @@ li:nth-child(1) .pos { color: var(--meat); }
     ctx.fillStyle = "rgba(255,255,255,.45)";
     ctx.beginPath(); ctx.ellipse(-s * 0.18, -s * 0.09, s * 0.1, s * 0.05, -0.4, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
+    if (meat.big) {
+      ctx.save();
+      ctx.font = "700 " + Math.round(cell * 0.62) + "px " + css("--f-display");
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.lineWidth = Math.max(2, cell * 0.14); ctx.strokeStyle = pal.card; ctx.fillStyle = pal.meat;
+      const ly = meat[1] === 0 ? y + s * 0.62 : y - s * 0.62;
+      ctx.strokeText("+3", x, ly); ctx.fillText("+3", x, ly);
+      ctx.restore();
+    }
   }
 
   function drawSnake() {
@@ -333,7 +381,7 @@ li:nth-child(1) .pos { color: var(--meat); }
     const n = cells.length;
     // 머리는 지금 칸에서 다음 칸으로 미리 나아가고, 꼬리는 한 칸 앞 칸으로 따라감 (화면 지연 없음)
     const nx = snake[0][0] + DIRS[dir][0], ny = snake[0][1] + DIRS[dir][1];
-    const willGrow = meat && nx === meat[0] && ny === meat[1];
+    const willGrow = pendingGrow > 0 || (!!meat && nx === meat[0] && ny === meat[1]);
     const tailEnd = willGrow ? cells[n - 1] : lerp(cells[n - 1], cells[n - 2], f);
     // 머리는 직전 칸에서 현재 칸으로, 꼬리는 지난 자리에서 현재 칸으로 미끄러지듯 이동
     const pts = [lerp(cells[0], [C(nx), C(ny)], f), ...cells.slice(0, n - 1), tailEnd];
@@ -380,27 +428,40 @@ li:nth-child(1) .pos { color: var(--meat); }
 
   // ---------- flow ----------
   function show(name) { for (const k in ov) ov[k].hidden = k !== name; }
-  function start() { reset(); state = "play"; acc = 0; show(null); cv.focus(); }
+  function start() {
+    reset(); state = "play"; acc = 0; show(null);
+    $("nick").disabled = false; $("btnSave").disabled = false;
+    try { document.activeElement && document.activeElement.blur(); cv.focus({ preventScroll: true }); } catch (e) {}
+  }
+  // 랭킹 시트 열기: withResult=true면 방금 판 결과와 닉네임 입력 칸도 함께 보여줌
+  function openSheet(withResult) {
+    $("nameForm").hidden = !withResult;
+    $("btnAgain").textContent = withResult ? "다시 하기" : "시작하기";
+    $("toast").textContent = "";
+    show("over"); $("ovOver").scrollTop = 0;
+    refreshRank();
+  }
   function pause() { if (state === "play") { state = "pause"; show("pause"); } else if (state === "pause") { state = "play"; show(null); } }
   function gameOver() {
     state = "over";
     if (score() > best) { best = score(); try { localStorage.setItem("gonake_best", best); } catch (e) {} }
     updateStats();
-    $("oScore").textContent = score(); $("oWaist").textContent = waist();
-    $("err").textContent = ""; $("btnSave").disabled = false;
-    show("over");
+    $("oScore").textContent = score(); $("oWaist").textContent = waist(); $("oMeat").textContent = eaten;
+    $("err").textContent = ""; $("err").className = "err"; $("btnSave").disabled = false; $("nick").disabled = false;
     let saved = ""; try { saved = localStorage.getItem("gonake_nick") || ""; } catch (e) {}
     $("nick").value = saved;
-    setTimeout(() => $("nick").focus(), 50);
+    openSheet(true);
   }
 
   $("btnStart").onclick = start;
   $("btnResume").onclick = pause;
   $("btnAgain").onclick = start;
+  $("btnRank").onclick = () => openSheet(false);
 
   const KEYS = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", w: "up", s: "down", a: "left", d: "right", W: "up", S: "down", A: "left", D: "right" };
   document.addEventListener("keydown", e => {
     if (e.target.tagName === "INPUT") return;
+    if (state === "over" && (e.key === " " || KEYS[e.key])) { if (e.key === " ") { e.preventDefault(); start(); } return; }
     if (KEYS[e.key]) { e.preventDefault(); turn(KEYS[e.key]); }
     else if (e.key === " " || e.key === "p" || e.key === "P") {
       e.preventDefault();
@@ -483,6 +544,8 @@ li:nth-child(1) .pos { color: var(--meat); }
     return null;
   }
 
+  function refreshRank() { if (mode === "api") apiLoad(); else renderRank(); }
+
   async function initDb() {
     if (hasApi() && !(window.claude && window.claude.use)) {
       mode = "api"; shared = true;
@@ -508,7 +571,9 @@ li:nth-child(1) .pos { color: var(--meat); }
     const name = clean($("nick").value);
     if (!name) { $("err").textContent = "닉네임을 한 글자 이상 입력해 주세요."; return; }
     try { localStorage.setItem("gonake_nick", name); } catch (e) {}
-    const entry = { name, score: score(), waist: waist(), meat: eaten, at: Date.now() };
+    // meat = 늘어난 허리 칸 수(큰 고기는 3칸). 랭킹 서버는 이 값으로 점수·허리를 다시 계산함
+    const entry = { name, score: score(), waist: waist(), meat: grown, at: Date.now() };
+    const done = msg => { $("btnSave").disabled = true; $("nick").disabled = true; $("err").className = "err ok"; $("err").textContent = msg; };
     $("btnSave").disabled = true;
     if (mode === "api") {
       $("err").textContent = "등록하는 중…";
@@ -516,8 +581,7 @@ li:nth-child(1) .pos { color: var(--meat); }
       $("err").textContent = "";
       if (id) {
         myId = id; await apiLoad();
-        $("toast").textContent = name + " 님의 기록을 랭킹에 올렸어요.";
-        state = "ready"; show("start"); return;
+        done(name + " 님의 기록을 랭킹에 올렸어요."); return;
       }
       entry.localOnly = true;
       $("toast").textContent = "공유 랭킹에 연결하지 못해 이 기기에만 저장했어요. 잠시 뒤 다시 해 주세요.";
@@ -527,8 +591,7 @@ li:nth-child(1) .pos { color: var(--meat); }
         const ref = db.collection("scores").doc();
         myId = ref.id;
         await ref.set(entry);
-        $("toast").textContent = name + " 님의 기록을 랭킹에 올렸어요.";
-        renderRank(); state = "ready"; show("start"); return;
+        renderRank(); done(name + " 님의 기록을 랭킹에 올렸어요."); return;
       } catch (err) {
         useLocal("공유 랭킹에 쓸 권한이 없어 이 기기에만 저장했어요.");
       }
@@ -538,8 +601,7 @@ li:nth-child(1) .pos { color: var(--meat); }
     local.sort((a, b) => b.score - a.score); saveLocal(local.slice(0, 50));
     if (mode === "api") rows = rows.filter(r => !r.localOnly).concat(loadLocal().filter(l => l.localOnly)); else rows = loadLocal();
     renderRank();
-    if (!$("toast").textContent) $("toast").textContent = name + " 님의 기록을 저장했어요.";
-    state = "ready"; show("start");
+    done(name + " 님의 기록을 이 기기에 저장했어요.");
   });
 
   // boot
