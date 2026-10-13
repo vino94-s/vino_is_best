@@ -232,7 +232,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   const mini = document.createElement("canvas"); mini.width = W; mini.height = H;
   const mctx = mini.getContext("2d"); const mimg = mctx.createImageData(W, H);
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
     vw = window.innerWidth; vh = window.innerHeight;
     cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
     const minDim = Math.min(vw, vh);
@@ -271,7 +271,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
         if (trail[i] || (owner[i] && t < 300)) { ok = false; break; }
       }
       if (!ok) continue;
-      if (ents.some(o => o !== e && o.alive && Math.abs(o.x - x) + Math.abs(o.y - y) < 12) && t < 350) continue;
+      if (ents.some(o => o !== e && o.alive && Math.abs(o.x - x) + Math.abs(o.y - y) < 18) && t < 350) continue;
       best = { x, y }; break;
     }
     if (!best) best = { x: rnd(5, W - 6), y: rnd(5, H - 6) };
@@ -279,7 +279,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
       if (dx * dx + dy * dy > 6) continue;
       owner[idxOf(best.x + dx, best.y + dy)] = e.id;
     }
-    Object.assign(e, { x: best.x, y: best.y, px: best.x, py: best.y, acc: 0, trail: [], alive: true, boost: 0, next: null });
+    Object.assign(e, { x: best.x, y: best.y, px: best.x, py: best.y, vx: best.x, vy: best.y, lean: 0, acc: 0, trail: [], alive: true, boost: 0, next: null });
     e.dir = best.x < W / 2 ? 1 : 3;
     e.ai = { legs: [], mode: "roam", target: null };
     recount();
@@ -402,7 +402,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   function think(e) {
     const p = ents[0], ai = e.ai, here = owner[idxOf(e.x, e.y)] === e.id;
     // 1) 가까이 있는 용왕의 꼬리를 노림
-    if (p.alive && p.trail.length) {
+    if (p.alive && p.trail.length && played > 6) {
       let tgt = null, bd = e.aggro + 1;
       for (let k = p.trail.length - 1; k >= 0; k -= 1) {
         const i = p.trail[k], x = i % W, y = (i / W) | 0, d = Math.abs(x - e.x) + Math.abs(y - e.y);
@@ -501,7 +501,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   function newGame() {
     owner.fill(0); trail.fill(0); items = []; fx = [];
     ents = [makeEnt(CAST[1]), makeEnt(CAST[2]), makeEnt(CAST[3]), makeEnt(CAST[4])];
-    ents.forEach(spawn);
+    ents.forEach(spawn); cam.set = false;
     timeLeft = GAME_TIME; played = 0; itemTimer = 0; deathWhy = "";
     for (let k = 0; k < 4; k++) dropItem();
     recount(); peak = pctOf(1);
@@ -552,7 +552,12 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   document.addEventListener("visibilitychange", () => { if (document.hidden && state === "play") pause(); });
 
   // ---------- 조작: 스와이프(모바일) / 키보드(PC) ----------
-  function turn(d) { if (state === "play" && ents[0] && ents[0].alive) ents[0].next = d; }
+  function turn(d) {
+    const p = ents[0];
+    if (state !== "play" || !p || !p.alive || d === p.dir || (d + 2) % 4 === p.dir) return;
+    if (p.acc < .3 && inB(p.x + DX[d], p.y + DY[d])) { p.dir = d; p.next = null; }
+    else p.next = d;
+  }
   let sw = null;
   cv.addEventListener("pointerdown", e => {
     sw = { x: e.clientX, y: e.clientY, id: e.pointerId };
@@ -561,7 +566,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   cv.addEventListener("pointermove", e => {
     if (!sw || e.pointerId !== sw.id) return;
     const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
-    if (Math.max(Math.abs(dx), Math.abs(dy)) < 16) return;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 10) return;
     turn(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
     sw.x = e.clientX; sw.y = e.clientY;
   });
@@ -624,6 +629,30 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
     const t = Math.min(1, e.acc);
     return { x: e.x + DX[e.dir] * t, y: e.y + DY[e.dir] * t };
   }
+  // 화면에 그리는 위치는 실제 위치를 부드럽게 따라감 (꺾을 때 튀지 않게)
+  const visOf = e => (e.vx === undefined ? { x: e.x, y: e.y } : { x: e.vx, y: e.vy });
+  const cam = { x: W / 2, y: H / 2, set: false };
+  function smooth(dt) {
+    const k = 1 - Math.exp(-dt * 26);
+    for (const e of ents) {
+      if (e.vx === undefined) continue;
+      const t = posOf(e);
+      if (Math.abs(t.x - e.vx) + Math.abs(t.y - e.vy) > 3) { e.vx = t.x; e.vy = t.y; }
+      else { e.vx += (t.x - e.vx) * k; e.vy += (t.y - e.vy) * k; }
+      const moving = e.alive && state === "play";
+      const goal = moving ? DX[e.dir] * .14 : 0;
+      e.lean += (goal - e.lean) * (1 - Math.exp(-dt * 10));
+    }
+    const p = ents[0];
+    if (p) {
+      const v = visOf(p), lead = state === "play" && p.alive ? 1.2 : 0;
+      const tx = v.x + DX[p.dir] * lead, ty = v.y + DY[p.dir] * lead;
+      if (!cam.set) { cam.x = tx; cam.y = ty; cam.set = true; }
+      const kc = 1 - Math.exp(-dt * 7);
+      cam.x += (tx - cam.x) * kc; cam.y += (ty - cam.y) * kc;
+    }
+  }
+
   function drawStar(c, x, y, r, rot) {
     c.save(); c.translate(x, y); c.rotate(rot);
     c.beginPath();
@@ -643,9 +672,8 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
     const c = ctx;
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     const p = ents[0];
-    let cam = p ? posOf(p) : { x: W / 2, y: H / 2 };
-    if (!p) cam = { x: W / 2 + Math.sin(now / 4000) * 6, y: H / 2 + Math.cos(now / 5000) * 6 };
-    const ox = vw / 2 - (cam.x + .5) * cs, oy = vh / 2 - (cam.y + .5) * cs;
+    const cv0 = p ? cam : { x: W / 2 + Math.sin(now / 4000) * 6, y: H / 2 + Math.cos(now / 5000) * 6 };
+    const ox = vw / 2 - (cv0.x + .5) * cs, oy = vh / 2 - (cv0.y + .5) * cs;
 
     // 먼 바다
     const g = c.createLinearGradient(0, 0, 0, vh);
@@ -725,7 +753,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
     // 꼬리(선)
     for (const e of ents) {
       if (!e.alive || !e.trail.length) continue;
-      const hp = posOf(e);
+      const hp = visOf(e);
       c.lineCap = "round"; c.lineJoin = "round";
       c.beginPath();
       e.trail.forEach((i, k) => {
@@ -752,9 +780,9 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
     }
 
     // 캐릭터
-    const order = ents.filter(e => e.alive || (e.id === 1 && state === "dying")).slice().sort((a, b) => posOf(a).y - posOf(b).y);
+    const order = ents.filter(e => e.alive || (e.id === 1 && state === "dying")).slice().sort((a, b) => visOf(a).y - visOf(b).y);
     for (const e of order) {
-      const hp = posOf(e), cx = ox + (hp.x + .5) * cs, cy = oy + (hp.y + .5) * cs;
+      const hp = visOf(e), cx = ox + (hp.x + .5) * cs, cy = oy + (hp.y + .5) * cs;
       const im = IMG[e.img];
       const tall = cs * (e.id === 1 ? 2.5 : 2.1);
       const iw = im.naturalWidth ? tall * im.naturalWidth / im.naturalHeight : tall;
@@ -772,7 +800,11 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
         c.strokeStyle = "rgba(255,210,90,.95)"; c.lineWidth = 3;
         c.beginPath(); c.ellipse(cx, cy + cs * .3, iw * .5, cs * .38, 0, 0, 6.28); c.stroke();
       }
-      if (im.complete && im.naturalWidth) c.drawImage(im, cx - iw / 2, cy + cs * .4 - tall + bobY, iw, tall);
+      if (im.complete && im.naturalWidth) {
+        c.save(); c.translate(cx, cy + cs * .4); c.rotate(e.lean || 0);
+        c.drawImage(im, -iw / 2, -tall + bobY, iw, tall);
+        c.restore();
+      }
       // 이름표
       c.font = "700 " + Math.round(Math.max(11, cs * .48)) + "px 'Gowun Dodum',sans-serif";
       const label = e.name, tw = c.measureText(label).width + 10, ty = cy + cs * .4 - tall - cs * .45 + bobY;
@@ -819,7 +851,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
     c.drawImage(mini, mx, my, size, size);
     for (const e of ents) {
       if (!e.alive) continue;
-      const hp = posOf(e);
+      const hp = visOf(e);
       c.fillStyle = e.id === 1 ? "#d6402b" : "#10324a";
       c.beginPath(); c.arc(mx + (hp.x + .5) / W * size, my + (hp.y + .5) / H * size, e.id === 1 ? 3.5 : 2.5, 0, 6.28); c.fill();
     }
@@ -847,6 +879,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   function loop(t) {
     const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
     update(dt);
+    smooth(dt);
     draw(t);
     hud(t);
     requestAnimationFrame(loop);
