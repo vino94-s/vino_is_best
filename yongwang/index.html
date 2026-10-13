@@ -327,11 +327,15 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
     if (e.id === 1) { peak = Math.max(peak, pctOf(1)); }
   }
 
-  function step(e) {
+  // 다음 칸에 도착한 뒤에 방향을 바꿈 (화면에서 향하던 칸으로 그대로 들어가도록)
+  function applyTurn(e) {
+    if (e.id !== 1) think(e);
     if (e.next !== null && (e.next + 2) % 4 !== e.dir) e.dir = e.next;
-    if (e.id === 1) e.next = null;
+    e.next = null;
+  }
+  function step(e) {
     let nx = e.x + DX[e.dir], ny = e.y + DY[e.dir];
-    if (!inB(nx, ny)) { e.px = e.x; e.py = e.y; return; } // 벽 앞에서는 멈춤
+    if (!inB(nx, ny)) { e.px = e.x; e.py = e.y; applyTurn(e); return; } // 벽 앞에서는 멈춤
     e.px = e.x; e.py = e.y; e.x = nx; e.y = ny;
     const i = idxOf(nx, ny);
 
@@ -362,6 +366,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
         sparkle(nx, ny);
       }
     }
+    if (e.alive) applyTurn(e);
   }
 
   // ---------- 봇 ----------
@@ -603,7 +608,6 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
       e.acc += dt * e.speed * (e.boost > 0 ? BOOST_MUL : 1);
       while (e.acc >= 1 && e.alive && state === "play") {
         e.acc -= 1;
-        if (e.id !== 1) think(e);
         step(e);
       }
     }
