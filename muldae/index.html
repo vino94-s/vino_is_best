@@ -172,6 +172,23 @@ input[type=text],.field input,.joinrow input{border:3px solid var(--line);border
 .rank .who small{font-weight:400;color:var(--muted);font-size:12px}
 .rank .pts{font-family:var(--f-d);font-size:20px}
 .empty{color:var(--muted);text-align:center;font-size:14px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 12px}
+.tabs button{border:2px solid var(--line);background:var(--card);border-radius:12px;padding:8px;font-family:var(--f-d);font-size:16px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:#fff}
+.rank .pts small{display:block;font-family:var(--f-b);font-size:11px;color:var(--muted);text-align:right}
+.sec{font-family:var(--f-d);font-weight:400;font-size:18px;margin:14px 0 6px}
+.duels{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:min(44vh,400px);overflow:auto}
+.duels li{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:6px 8px}
+.duels .side{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:2px 6px;min-width:0;border-radius:9px;padding:3px 4px}
+.duels .side.r{grid-template-columns:1fr 34px;text-align:right}
+.duels .side.r img{grid-column:2;grid-row:1/3}.duels .side.r b,.duels .side.r small{grid-column:1}
+.duels .side img{height:32px;width:34px;object-fit:contain;grid-row:1/3}
+.duels .side b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.duels .side small{font-size:11px;color:var(--muted)}
+.duels .side.w{background:var(--gold-l)}
+.duels .side.w b::after{content:" 승";color:var(--red-d);font-size:12px}
+.duels .sc{text-align:center;font-family:var(--f-d);font-size:20px;line-height:1.1}
+.duels .sc small{display:block;font-family:var(--f-b);font-size:11px;color:var(--muted)}
 
 /* 조작법 */
 .keys{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px;align-items:center}
@@ -214,9 +231,9 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     <p class="tagline">아홉 고수 · 60초 · 3판 2선승</p>
     <div class="menuBtns">
       <button class="btn big" id="goBot">봇 도전<small>10단계 · 최종 보스</small></button>
-      <button class="btn big alt" id="goFriend">친구와 대결<small>초대코드 1:1</small></button>
+      <button class="btn big alt" id="goFriend">친구와 대결<small>초대코드 1:1 · 전적 기록</small></button>
       <div class="row2">
-        <button class="btn ghost" id="goRank">봇 대전 랭킹</button>
+        <button class="btn ghost" id="goRank">랭킹</button>
         <button class="btn ghost" id="goHelp">조작법</button>
       </div>
     </div>
@@ -245,7 +262,7 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
       <button class="btn" type="submit" id="joinBtn">입장</button>
     </form>
     <p class="err" id="friendErr" role="status"></p>
-    <p class="note">방을 만들면 4자리 코드가 생겨요. 친구가 그 코드로 들어오면 1:1 대결! 친구 대전 결과는 랭킹에 올라가지 않아요.</p>
+    <p class="note">방을 만들면 4자리 코드가 생겨요. 친구가 그 코드로 들어오면 1:1 대결! 끝까지 치른 대결은 닉네임·캐릭터·점수가 친구 대결 랭킹에 자동으로 기록돼요.</p>
   </div>
 </section>
 
@@ -299,10 +316,24 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
 
 <section class="screen" id="scRank" hidden>
   <div class="panel narrow">
-    <header class="phead"><button class="back" data-back>‹ 메인</button><h2>봇 대전 랭킹</h2></header>
-    <p class="sub" id="rankSub"></p>
-    <ol class="rank" id="rankList"></ol>
-    <p class="empty" id="rankEmpty">아직 기록이 없어요. 봇을 이기고 첫 기록을 남겨 보세요!</p>
+    <header class="phead"><button class="back" data-back>‹ 메인</button><h2>랭킹</h2></header>
+    <div class="tabs" role="tablist">
+      <button id="tabStage" role="tab" aria-selected="true">봇 도전</button>
+      <button id="tabDuel" role="tab" aria-selected="false">친구 대결</button>
+    </div>
+    <div id="paneStage">
+      <p class="sub" id="rankSub"></p>
+      <ol class="rank" id="rankList"></ol>
+      <p class="empty" id="rankEmpty">아직 기록이 없어요. 봇 도전에서 첫 기록을 남겨 보세요!</p>
+    </div>
+    <div id="paneDuel" hidden>
+      <p class="sub" id="duelSub"></p>
+      <h3 class="sec">전적 순위</h3>
+      <ol class="rank" id="duelPlayers"></ol>
+      <h3 class="sec">최근 대결</h3>
+      <ul class="duels" id="duelList"></ul>
+      <p class="empty" id="duelEmpty">아직 친구 대결 기록이 없어요. 친구와 한 판 붙어 보세요!</p>
+    </div>
   </div>
 </section>
 
@@ -323,7 +354,8 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     <p>봇 도전은 10단계예요. 1~9단계는 아홉 고수가 무작위 순서로 나오고(나와 같은 캐릭터는 다른 색), 단계가 오를수록 봇이 강해져요. 10단계에는 최종 보스 소주가 나와요. 한 번 지면 도전이 끝나요.</p>
     <p>한 판은 60초. 먼저 두 판을 이기면 우승이에요. 시간이 다 되면 남은 체력 비율이 높은 쪽이 이겨요. 때리거나 맞으면 필살 게이지가 차고, 가득 차면 필살기를 쓸 수 있어요. 방어하면 피해가 크게 줄지만 필살기 중 일부는 막아도 조금 아파요.</p>
     <h3>랭킹</h3>
-    <p>봇 도전이 끝나면(탈락, 그만두기, 전 단계 클리어) 한 단계 이상 깼을 때 누적 점수를 랭킹에 올릴 수 있어요. 높은 단계일수록 점수가 크고, 2:0 완승과 남은 체력에 보너스가 붙어요. 친구 대전은 랭킹에 올라가지 않아요.</p>
+    <p>봇 도전이 끝나면(탈락, 그만두기, 전 단계 클리어) 한 단계 이상 깼을 때 누적 점수를 랭킹에 올릴 수 있어요. 높은 단계일수록 점수가 크고, 2:0 완승과 남은 체력에 보너스가 붙어요.</p>
+    <p>친구 대결은 끝까지 치르면 누가 어떤 캐릭터로 누구와 붙어 몇 대 몇이 됐는지 자동으로 기록돼요. 랭킹의 '친구 대결' 탭에서 닉네임별 전적과 최근 대결을 볼 수 있어요. 같은 닉네임은 같은 사람으로 셉니다.</p>
   </div>
 </section>
 
@@ -1538,6 +1570,7 @@ function stageScore(M, s) {
     if (overShown) return;
     overShown = true;
     if (MODE === 'demo') { setTimeout(() => { if (MODE === 'demo') newDemo(); }, 1600); return; }
+    if (MODE === 'host') { duelNote = ''; recordDuel(); }
     setTimeout(showResult, 900);
   }
 
@@ -1575,8 +1608,9 @@ function stageScore(M, s) {
         return runEnd(s >= 10 ? '보스에게 패배…' : s + '단계에서 탈락', run.cleared ? run.cleared + '단계까지 클리어' : '아직 깬 단계가 없어요', false, true);
       }
     } else {
-      $('resNote').textContent = '친구 대전은 랭킹에 올라가지 않아요.';
+      $('resNote').textContent = duelNote || '이 대결 결과는 친구 대결 랭킹에 기록돼요.';
       mk('한 판 더', '', backToLobby);
+      mk('친구 대결 랭킹 보기', 'ghost', () => openRank('duel'));
       mk('나가기', 'ghost', leaveRoom);
     }
     show('scResult');
@@ -1661,7 +1695,7 @@ function stageScore(M, s) {
   $('goBot').addEventListener('click', openSelect);
   $('startBot').addEventListener('click', startRun);
   $('goHelp').addEventListener('click', () => show('scHelp'));
-  $('goRank').addEventListener('click', () => { refreshRank(); show('scRank'); });
+  $('goRank').addEventListener('click', () => openRank('stage'));
   $('goFriend').addEventListener('click', openFriend);
   const roster = $('roster'); CH.forEach((c, ci) => { if (!c.boss) roster.appendChild(charImg(ci, false)); });
 
@@ -1792,6 +1826,7 @@ function stageScore(M, s) {
       case 'st':
         if (!net.host && MODE === 'guest' && d.m && d.m.f) { M = d.m; }
         break;
+      case 'rec': if (!net.host) takeDuel(d.rec); break;
       case 'bye': onPeerGone(net.conn); break;
     }
   }
@@ -1812,7 +1847,7 @@ function stageScore(M, s) {
   }
   function beginNetMatch() {
     net.me.ready = false; if (net.opp) net.opp.ready = false;
-    lastFx = 0; parts.length = 0; banners.length = 0; overShown = false; smooth.init = false;
+    lastFx = 0; parts.length = 0; banners.length = 0; overShown = false; smooth.init = false; duelNote = '';
     hpTrail[0] = hpTrail[1] = 1; resetLocal();
     show(null);
   }
@@ -1871,7 +1906,7 @@ function stageScore(M, s) {
   });
   addEventListener('beforeunload', () => netSend({ t: 'bye' }));
 
-  // ---------- 랭킹 (봇 대전 승리 기록만) ----------
+  // ---------- 랭킹 (봇 도전) ----------
   // 구글 시트 Apps Script 웹 앱 주소를 넣으면 모두가 같은 랭킹을 봐요 (README 참고). 비어 있으면 이 기기에만 저장.
   const RANK_API = 'https://script.google.com/macros/s/AKfycbz9MJNBAerUssC7GUsCsEOqQYexk-1bAnzmWMCIcceYWwKIQA2cNyyxPtIDWloLg9Xg/exec';
   const hasApi = () => /^https:\/\/script\.google\.com\//.test(RANK_API);
@@ -1938,6 +1973,116 @@ function stageScore(M, s) {
     local.sort((a, b) => b.score - a.score); saveLocal(local.slice(0, 100));
     done(entry.localOnly ? '공유 랭킹에 연결하지 못해 이 기기에만 저장했어요.' : name + ' 님의 ' + entry.score + '점을 랭킹에 올렸어요.');
   });
+
+  // ---------- 친구 대결 기록 ----------
+  // 방장 브라우저가 대결이 끝날 때 한 번 기록하고(공유 랭킹 + 이 기기), 친구 브라우저에도 같은 기록을 보내 저장
+  const DUEL_KEY = 'muldae_duels';
+  let duelNote = '', rankTab = 'stage';
+  const loadDuelsLocal = () => { try { const v = JSON.parse(localStorage.getItem(DUEL_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+  function addLocalDuel(rec, localOnly) {
+    const list = loadDuelsLocal().filter(r => r.mid !== rec.mid);
+    list.unshift(Object.assign({}, rec, { localOnly: !!localOnly }));
+    try { localStorage.setItem(DUEL_KEY, JSON.stringify(list.slice(0, 200))); } catch (e) {}
+  }
+  const charId = id => CH.some(c => c.id === id && !c.boss) ? id : CH[0].id;
+  function cleanDuel(r) {
+    if (!r || typeof r !== 'object') return null;
+    const sc = String(r.sc || ''), w = Number(r.w);
+    if (!/^[0-5]:[0-5]$/.test(sc) || ![-1, 0, 1].includes(w)) return null;
+    const p1 = cleanName(r.p1), p2 = cleanName(r.p2);
+    if (!p1 || !p2) return null;
+    return { mid: String(r.mid || '').replace(/[^a-z0-9]/g, '').slice(0, 20), p1, c1: charId(r.c1), p2, c2: charId(r.c2), w, sc, at: Number(r.at) || Date.now() };
+  }
+  async function recordDuel() {
+    const rec = cleanDuel({ mid: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), p1: names[0], c1: CH[M.c[0]].id, p2: names[1], c2: CH[M.c[1]].id,
+      w: M.winner, sc: M.wins[0] + ':' + M.wins[1], at: Date.now() });
+    if (!rec) return;
+    netSend({ t: 'rec', rec });
+    duelNote = '대결 결과를 친구 대결 랭킹에 올리는 중…';
+    const id = hasApi() ? await apiSave(Object.assign({ type: 'duel' }, rec)) : null;
+    addLocalDuel(rec, !id);
+    duelNote = id ? '이 대결 결과를 친구 대결 랭킹에 기록했어요.' : '공유 랭킹에 연결하지 못해 이 기기에만 기록했어요.';
+    if (current === 'scResult' && MODE === 'host') $('resNote').textContent = duelNote;
+  }
+  function takeDuel(raw) {
+    const rec = cleanDuel(raw); if (!rec) return;
+    addLocalDuel(rec, true);
+    duelNote = '방장이 이 대결 결과를 친구 대결 랭킹에 기록해요.';
+    if (current === 'scResult') $('resNote').textContent = duelNote;
+  }
+  function aggPlayers(list) {
+    const P = {};
+    for (const r of list) {
+      [[0, r.p1, r.c1], [1, r.p2, r.c2]].forEach(([side, name, ch]) => {
+        const p = P[name] || (P[name] = { name, w: 0, l: 0, d: 0, chars: {} });
+        if (r.w < 0) p.d++; else if (r.w === side) p.w++; else p.l++;
+        p.chars[ch] = (p.chars[ch] || 0) + 1;
+      });
+    }
+    return Object.values(P).map(p => ({ name: p.name, w: p.w, l: p.l, d: p.d, ch: Object.keys(p.chars).sort((a, b) => p.chars[b] - p.chars[a])[0] }));
+  }
+  const winRate = p => { const g = p.w + p.l + p.d; return g ? p.w / g : 0; };
+  const sortPlayers = list => list.sort((a, b) => b.w - a.w || winRate(b) - winRate(a) || (b.w + b.l + b.d) - (a.w + a.l + a.d));
+  function fmtDate(t) { const d = new Date(t), z = n => String(n).padStart(2, '0'); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + z(d.getHours()) + ':' + z(d.getMinutes()); }
+  async function loadDuels() {
+    $('duelSub').textContent = '전적 불러오는 중…';
+    let shared = false, recent = [], players = null;
+    const loc = loadDuelsLocal().map(r => Object.assign(cleanDuel(r) || {}, { localOnly: r.localOnly })).filter(r => r.p1);
+    if (hasApi()) {
+      try {
+        const r = await fetch(RANK_API + '?type=duels&t=' + Date.now()), j = await r.json();
+        if (j && j.ok && j.kind === 'duels' && Array.isArray(j.rows)) {
+          shared = true; recent = j.rows.map(cleanDuel).filter(Boolean);
+          if (Array.isArray(j.players)) players = j.players.map(p => ({ name: cleanName(p.name), w: p.w | 0, l: p.l | 0, d: p.d | 0, ch: charId(p.ch) })).filter(p => p.name);
+        }
+      } catch (e) {}
+    }
+    const mids = new Set(recent.map(r => r.mid));
+    recent = recent.concat(loc.filter(r => !shared || (r.localOnly && !mids.has(r.mid)))).sort((a, b) => b.at - a.at);
+    if (!players) players = aggPlayers(recent);
+    renderDuels(recent.slice(0, 40), sortPlayers(players).slice(0, 30), shared);
+  }
+  function renderDuels(recent, players, shared) {
+    const me = store.get('muldae_nick', '');
+    $('duelSub').textContent = (shared ? '모두가 함께 보는 친구 대결 전적' : '이 기기에 저장된 친구 대결 전적') + ' · 같은 닉네임은 같은 사람으로 셈';
+    const pl = $('duelPlayers'); pl.textContent = '';
+    players.forEach((p, i) => {
+      const li = document.createElement('li'); if (me && p.name === me) li.className = 'me';
+      const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = i + 1;
+      const ci = Math.max(0, CH.findIndex(c => c.id === p.ch));
+      const who = document.createElement('span'); who.className = 'who'; who.textContent = p.name;
+      const sm = document.createElement('small'); sm.textContent = '주력 캐릭터 · ' + CH[ci].name; who.appendChild(sm);
+      const pts = document.createElement('span'); pts.className = 'pts'; pts.textContent = p.w + '승';
+      const ps = document.createElement('small'); ps.textContent = p.l + '패' + (p.d ? ' ' + p.d + '무' : '') + ' · 승률 ' + Math.round(winRate(p) * 100) + '%'; pts.appendChild(ps);
+      li.append(pos, charImg(ci, false), who, pts); pl.appendChild(li);
+    });
+    const ul = $('duelList'); ul.textContent = '';
+    recent.forEach(r => {
+      const li = document.createElement('li');
+      const side = (name, ch, win, right, alt) => {
+        const d = document.createElement('div'); d.className = 'side' + (right ? ' r' : '') + (win ? ' w' : '');
+        const ci = Math.max(0, CH.findIndex(c => c.id === ch));
+        const b = document.createElement('b'); b.textContent = name;
+        const sm = document.createElement('small'); sm.textContent = CH[ci].name;
+        d.append(charImg(ci, alt), b, sm); return d;
+      };
+      const [a, b] = r.sc.split(':');
+      const sc = document.createElement('div'); sc.className = 'sc'; sc.textContent = a + ' : ' + b;
+      const dt = document.createElement('small'); dt.textContent = (r.w < 0 ? '무승부 · ' : '') + fmtDate(r.at); sc.appendChild(dt);
+      li.append(side(r.p1, r.c1, r.w === 0, false, false), sc, side(r.p2, r.c2, r.w === 1, true, r.c1 === r.c2));
+      ul.appendChild(li);
+    });
+    $('duelEmpty').hidden = recent.length > 0;
+  }
+  function setRankTab(t) {
+    rankTab = t;
+    $('tabStage').setAttribute('aria-selected', String(t === 'stage')); $('tabDuel').setAttribute('aria-selected', String(t === 'duel'));
+    $('paneStage').hidden = t !== 'stage'; $('paneDuel').hidden = t !== 'duel';
+    if (t === 'stage') refreshRank(); else loadDuels();
+  }
+  function openRank(t) { show('scRank'); setRankTab(t); }
+  $('tabStage').addEventListener('click', () => setRankTab('stage'));
+  $('tabDuel').addEventListener('click', () => setRankTab('duel'));
 
   // ---------- 시작 ----------
   async function boot() {
