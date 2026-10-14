@@ -488,6 +488,7 @@ async function submit(){
   }
   if (score<=0){ setNote("0점은 등록되지 않아요.","err"); return; }
   btn.disabled=true; setNote("등록 중…");
+  if (mode==="local" && RANK_API) await retrySheet();
   const entry = {name, score, hits:lastHits, at:Date.now()};
   if (mode==="sheet"){
     try{
@@ -505,15 +506,20 @@ async function submit(){
 }
 $("submitBtn").addEventListener("click", submit);
 nick.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); submit(); } });
-$("rankOpen").addEventListener("click", ()=>{ if (mode==="sheet") loadSheet(); });
-$("rankOpen2").addEventListener("click", ()=>{ if (mode==="sheet") loadSheet(); });
+async function retrySheet(){
+  if (!RANK_API || mode==="claude") return mode==="sheet";
+  if (await loadSheet()){ mode="sheet"; return true; }
+  mode="local"; setLive("공유 랭킹 연결 안 됨 · 이 기기", false); loadLocal(); return false;
+}
+$("rankOpen").addEventListener("click", ()=>{ retrySheet(); });
+$("rankOpen2").addEventListener("click", ()=>{ retrySheet(); });
 
 async function useLocalOrSheet(){
   if (RANK_API){
     mode="sheet"; setLive("불러오는 중", false);
     if (await loadSheet()) return;
   }
-  mode="local"; setLive("이 기기", false); loadLocal();
+  mode="local"; setLive(RANK_API?"공유 랭킹 연결 안 됨 · 이 기기":"이 기기", false); loadLocal();
 }
 
 (async ()=>{
