@@ -1757,7 +1757,7 @@ function calcScore(M, dk) {
 
   // ---------- 랭킹 (봇 대전 승리 기록만) ----------
   // 구글 시트 Apps Script 웹 앱 주소를 넣으면 모두가 같은 랭킹을 봐요 (README 참고). 비어 있으면 이 기기에만 저장.
-  const RANK_API = 'https://script.google.com/macros/s/AKfycbz0jgHyoOVNOL4Y-GQz8pbpEbXtYCDv7IIJUQme4yYBwp0Z_YyfLy0uAiqaFEruuvq3/exec';
+  const RANK_API = 'https://script.google.com/macros/s/AKfycbz9MJNBAerUssC7GUsCsEOqQYexk-1bAnzmWMCIcceYWwKIQA2cNyyxPtIDWloLg9Xg/exec';
   const hasApi = () => /^https:\/\/script\.google\.com\//.test(RANK_API);
   const LOCAL_KEY = 'muldae_local_rank';
   let rows = [], myRankId = null, rankMode = hasApi() ? 'api' : 'local';
