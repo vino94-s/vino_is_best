@@ -18,6 +18,7 @@
 const BOT_HEADER = ['nick', 'game', 'stage', 'won', 'best', 'at'];
 const FRIEND_HEADER = ['game', 'winner', 'loser', 'at'];
 const GAMES = ['alk', 'omok'];
+const MAX_STAGE = 100000; // 단계는 끝이 없어요 (장난 방지용 상한만)
 
 function sheet_(name, header) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -56,7 +57,7 @@ function doGet() {
     const g = p[game];
     g.plays++;
     if (r[3] === true || r[3] === 'TRUE') g.wins++;
-    g.best = Math.max(g.best, Math.min(20, Number(r[4]) || 0));
+    g.best = Math.max(g.best, Math.min(MAX_STAGE, Number(r[4]) || 0));
   });
 
   const friend = {};
@@ -86,7 +87,7 @@ function doPost(e) {
       const nick = clean_(d.nick);
       const stage = Math.floor(Number(d.stage)) || 0;
       const best = Math.floor(Number(d.best)) || 0;
-      if (!nick || stage < 1 || stage > 20 || best < 0 || best > 20) return json_({ ok: false, error: 'bad' });
+      if (!nick || stage < 1 || stage > MAX_STAGE || best < 0 || best > MAX_STAGE) return json_({ ok: false, error: 'bad' });
       sheet_('bot', BOT_HEADER).appendRow([safe_(nick), d.game, stage, !!d.won, best, Date.now()]);
     } else if (d.kind === 'friend') {
       const w = clean_(d.winner), l = clean_(d.loser);
