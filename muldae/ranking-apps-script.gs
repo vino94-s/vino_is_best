@@ -17,7 +17,7 @@
 
 const SHEET_NAME = 'scores';
 const HEADER = ['id', 'name', 'ch', 'diff', 'score', 'rw', 'at'];
-const CHARS = ['bino', 'mandu', 'juntak', 'youngjun', 'haetsal', 'umji', 'goran', 'yongwang'];
+const CHARS = ['bino', 'mandu', 'juntak', 'youngjun', 'haetsal', 'umji', 'goran', 'yongwang', 'myoungradak'];
 const BASE = { easy: 100, normal: 250, hard: 450 };
 
 function sheet_() {
