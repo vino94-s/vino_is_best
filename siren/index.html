@@ -409,7 +409,7 @@ document.addEventListener("keydown", e=>{
 
 /* ---------- ranking: claude.ai live db → Google Sheet (GitHub Pages) → this device ---------- */
 // 깃허브 페이지에서 쓰는 공유 랭킹 서버 (구글 시트 + Apps Script 웹 앱 주소). 비어 있으면 이 기기에만 저장.
-const RANK_API = "";
+const RANK_API = "https://script.google.com/macros/s/AKfycby58ArqCsEETODw_pV38u9OsBvmkoqVjd10cVbGwQsS5yMIC-Ov3ZNlp1nMKRwhjFfKlw/exec";
 let mode="local", db=null, uid=null, canWrite=null, readOnly=false, rows=[], myDoc=null;
 const nick=$("nick"), note=$("note"), list=$("rankList"), empty=$("rankEmpty"), liveTag=$("liveTag");
 const LS = {
