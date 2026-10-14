@@ -328,19 +328,19 @@ const CH = [
   { id: 'bino', name: '비노', h: 172, hp: 100, spd: 4.3, jump: 15.5, pow: 1.0, reach: 1.0, color: '#3a3a3a', title: '무표정의 달인',
     sp: '손날격파', spDesc: '한 걸음 내디디며 손날로 힘껏 내리쳐요. 방어도 깨고 들어가 상대를 공중으로 띄워요.', st: [3, 3, 3, 3] },
   { id: 'mandu', name: '만두', h: 170, hp: 104, spd: 4.4, jump: 15, pow: 1.0, reach: 1.0, color: '#b59e7e', title: '만두 저격수',
-    sp: '샤오롱바오 육즙빔', spDesc: '뜨끈한 샤오롱바오를 터뜨려 화면 끝까지 육즙 빔을 날려요. 점프로 피할 수 있어요.', st: [3, 3, 2, 4] },
+    sp: '샤오롱바오 육즙빔', spDesc: '뜨끈한 샤오롱바오를 터뜨려 화면 끝까지 육즙 빔을 날려요. 점프로 피할 수 있어요.', st: [4, 3, 3, 3] },
   { id: 'juntak', name: '준탁', h: 150, hp: 108, spd: 3.4, jump: 13.5, pow: 1.05, reach: 1.05, color: '#e0a46a', title: '깜짝 놀란 거구',
-    sp: '!!!!!!! 대폭발', spDesc: '너무 놀라서 사방으로 충격파를 터뜨려요. 맞은 상대는 한동안 기절해요.', st: [5, 1, 4, 2] },
+    sp: '!!!!!!! 대폭발', spDesc: '너무 놀라서 사방으로 충격파를 터뜨려요. 맞은 상대는 한동안 기절해요.', st: [5, 1, 4, 4] },
   { id: 'youngjun', name: '영준', h: 166, hp: 98, spd: 5.2, jump: 17.5, pow: 1.05, reach: 0.95, color: '#5aa814', title: '만세 앵무',
-    sp: '만세 회오리', spDesc: '만세를 부르며 빙글빙글 날아가 여러 번 때려요. 공중의 상대도 쫓아가요.', st: [2, 5, 2, 3] },
+    sp: '만세 회오리', spDesc: '만세를 부르며 빙글빙글 날아가 여러 번 때려요. 공중의 상대도 쫓아가요.', st: [3, 5, 4, 2] },
   { id: 'haetsal', name: '햇살', h: 176, hp: 104, spd: 3.8, jump: 14.5, pow: 1.05, reach: 1.0, color: '#f5a623', title: '안물안궁 보스',
-    sp: '눈에서 태양빛 광선발사', spDesc: '두 눈에서 태양빛 광선을 쏴 앞쪽 끝까지 네 번 지져요. 높이 뛰면 피할 수도 있어요.', st: [4, 2, 3, 5] },
+    sp: '눈에서 태양빛 광선발사', spDesc: '두 눈에서 태양빛 광선을 쏴 앞쪽 끝까지 네 번 지져요. 높이 뛰면 피할 수도 있어요.', st: [4, 2, 4, 3] },
   { id: 'umji', name: '엄지', h: 182, hp: 95, spd: 4.6, jump: 16, pow: 1.0, reach: 1.15, color: '#e8a57a', title: '긴 손가락',
-    sp: '엄지척 프레스', spDesc: '높이 뛰어올라 상대 위로 엄지를 꾹 내리찍어요. 착지 충격은 막을 수 없어요.', st: [3, 4, 4, 4] },
+    sp: '엄지척 프레스', spDesc: '높이 뛰어올라 상대 위로 엄지를 꾹 내리찍어요. 착지 충격은 막을 수 없어요.', st: [2, 4, 3, 5] },
   { id: 'goran', name: '고란', h: 166, hp: 98, spd: 5.0, jump: 19, pow: 1.05, reach: 0.95, color: '#e0903e', title: '얍얍 연타왕',
-    sp: '얍얍 무한연타', spDesc: '얍! 얍! 앞으로 밀고 나가며 주먹을 열 번 퍼부어요. 마지막 한 방이 묵직해요.', st: [2, 5, 3, 1] },
+    sp: '얍얍 무한연타', spDesc: '얍! 얍! 앞으로 밀고 나가며 주먹을 열 번 퍼부어요. 마지막 한 방이 묵직해요.', st: [3, 5, 4, 2] },
   { id: 'yongwang', name: '용왕', h: 174, hp: 98, spd: 3.7, jump: 14, pow: 1.05, reach: 1.0, color: '#1f7fc4', title: '바다의 임금님',
-    sp: '바닷물 얍얍 뿌리기', spDesc: '얍! 얍! 바닷물을 앞으로 아홉 번 흩뿌려요. 가까이부터 멀리까지 넓게 떨어져요.', st: [4, 2, 3, 3] },
+    sp: '바닷물 얍얍 뿌리기', spDesc: '얍! 얍! 바닷물을 앞으로 아홉 번 흩뿌려요. 가까이부터 멀리까지 넓게 떨어져요.', st: [3, 2, 4, 3] },
 ];
 // st = [체력, 속도, 힘, 리치] 1~5 (선택 화면 표시용)
 
@@ -1727,7 +1727,7 @@ function calcScore(M, dk) {
 
   // ---------- 랭킹 (봇 대전 승리 기록만) ----------
   // 구글 시트 Apps Script 웹 앱 주소를 넣으면 모두가 같은 랭킹을 봐요 (README 참고). 비어 있으면 이 기기에만 저장.
-  const RANK_API = '';
+  const RANK_API = 'https://script.google.com/macros/s/AKfycbz0jgHyoOVNOL4Y-GQz8pbpEbXtYCDv7IIJUQme4yYBwp0Z_YyfLy0uAiqaFEruuvq3/exec';
   const hasApi = () => /^https:\/\/script\.google\.com\//.test(RANK_API);
   const LOCAL_KEY = 'muldae_local_rank';
   let rows = [], myRankId = null, rankMode = hasApi() ? 'api' : 'local';
