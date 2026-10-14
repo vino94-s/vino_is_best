@@ -437,7 +437,7 @@ function renderRank(){
   list.textContent="";
   const valid = rows.filter(r=>typeof r.score==="number" && r.score>0);
   empty.hidden = valid.length>0;
-  if (!valid.length) empty.textContent = "아직 기록이 없어요. 첫 번째 이름을 올려 보세요.";
+  if (!valid.length) empty.textContent = (mode==="sheet" && sheetErr) ? "공유 랭킹 연결 실패 · "+sheetErr : "아직 기록이 없어요. 첫 번째 이름을 올려 보세요.";
   const myName = cleanName(nick.value);
   valid.forEach((r,i)=>{
     const li=document.createElement("li");
@@ -457,12 +457,28 @@ function bestPerName(entries){
   return Object.values(best).sort((a,b)=>b.score-a.score||a.at-b.at).slice(0,30);
 }
 function loadLocal(){ rows = bestPerName(LS.get("whack.local", [])); renderRank(); }
+let sheetErr = "";
+/* Apps Script answers JSON. A login page (access not "Anyone") fails the fetch itself;
+   a script error (e.g. no linked sheet) comes back as an HTML page that is not JSON. */
+async function callSheet(opts){
+  let r;
+  try{ r = await fetch(opts ? RANK_API : RANK_API+"?t="+Date.now(), opts); }
+  catch(e){ throw new Error("서버에 접속하지 못했어요. 앱스크립트 배포의 '액세스 권한'이 '모든 사용자'인지 확인해 주세요."); }
+  const text = await r.text();
+  let j; try{ j = JSON.parse(text); }
+  catch(e){ throw new Error("앱스크립트가 오류를 냈어요. 구글 시트의 '확장 프로그램 → Apps Script'에서 만든 스크립트인지 확인해 주세요."); }
+  if (!j.ok) throw new Error(j.error==="score" ? "점수 검증에 실패했어요." : j.error==="name" ? "닉네임을 입력해 주세요." : "서버가 기록을 거절했어요.");
+  return j;
+}
 async function loadSheet(){
   try{
-    const r = await fetch(RANK_API+"?t="+Date.now()); const j = await r.json();
-    if (!j.ok) throw 0;
-    rows = bestPerName(j.rows||[]); setLive("공유 랭킹", true); renderRank(); return true;
-  }catch(e){ setLive("연결 안 됨", false); return false; }
+    const j = await callSheet();
+    sheetErr = ""; rows = bestPerName(j.rows||[]); setLive("공유 랭킹", true); renderRank(); return true;
+  }catch(e){
+    sheetErr = e.message; setLive("연결 실패", false);
+    if (!rows.length){ empty.hidden=false; empty.textContent = "공유 랭킹 연결 실패 · " + sheetErr; }
+    return false;
+  }
 }
 
 async function submit(){
@@ -492,11 +508,10 @@ async function submit(){
   const entry = {name, score, hits:lastHits, at:Date.now()};
   if (mode==="sheet"){
     try{
-      const r = await fetch(RANK_API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(entry)});
-      const j = await r.json(); if (!j.ok) throw 0;
+      await callSheet({method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(entry)});
       if (score>(prev||0)) LS.set("whack.best", score);
       setNote("공유 랭킹에 등록했어요!","okc"); loadSheet(); return;
-    }catch(e){ setNote("공유 랭킹에 연결하지 못해서 이 기기에만 저장했어요.","err"); }
+    }catch(e){ setNote("등록 실패 · "+e.message,"err"); btn.disabled=false; return; }
   } else {
     setNote("이 기기 랭킹에 저장했어요.","okc");
   }
@@ -517,7 +532,9 @@ $("rankOpen2").addEventListener("click", ()=>{ retrySheet(); });
 async function useLocalOrSheet(){
   if (RANK_API){
     mode="sheet"; setLive("불러오는 중", false);
-    if (await loadSheet()) return;
+    loadSheet();
+    setInterval(()=>{ if (!document.hidden) loadSheet(); }, 20000);   // keep the open ranking fresh
+    return;
   }
   mode="local"; setLive(RANK_API?"공유 랭킹 연결 안 됨 · 이 기기":"이 기기", false); loadLocal();
 }

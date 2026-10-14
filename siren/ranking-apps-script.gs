@@ -19,8 +19,20 @@ const HEADER = ['id', 'name', 'score', 'hits', 'at'];
 const MAX_HITS = 20000;   // 한 판에 잡을 수 있는 컵 수 상한 (장난 방지)
 const POINTS_PER_CUP = 10;
 
+// 시트에서 만든 스크립트면 그 시트를, 따로 만든 스크립트면 랭킹용 시트를 하나 만들어 계속 씁니다.
+function spreadsheet_() {
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('SHEET_ID');
+  if (id) return SpreadsheetApp.openById(id);
+  const created = SpreadsheetApp.create('수염은 스타벅스만 잡아 랭킹');
+  props.setProperty('SHEET_ID', created.getId());
+  return created;
+}
+
 function sheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = spreadsheet_();
   let sh = ss.getSheetByName(SHEET_NAME);
   if (!sh) {
     sh = ss.insertSheet(SHEET_NAME);
