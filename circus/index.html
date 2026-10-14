@@ -50,6 +50,11 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .score b{display:block;font:400 clamp(30px,7vw,44px)/1 var(--display);color:var(--hud);letter-spacing:.02em;text-shadow:0 3px 0 var(--red-deep),0 0 18px rgba(242,179,61,.35);font-variant-numeric:tabular-nums}
 .score span{display:inline-block;margin-top:6px;font:700 12px var(--body);letter-spacing:.08em;color:var(--gold);font-variant-numeric:tabular-nums}
 .score em{font-style:normal;color:var(--hud);opacity:.75;margin-left:8px}
+.routine{display:block;width:max-content;margin:6px auto 0;font:900 12px var(--body);font-style:normal;letter-spacing:.04em;color:var(--gold-ink);background:var(--gold);padding:4px 10px;border-radius:999px;box-shadow:0 2px 0 var(--red-deep)}
+.routine:empty{display:none}
+.routine.flip{animation:flip .5s cubic-bezier(.2,1.5,.4,1)}
+@keyframes flip{from{transform:scale(.6) rotate(-6deg);opacity:.2}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.routine.flip{animation:none}}
 .tools{display:flex;gap:6px;justify-content:flex-end}
 .tbtn{pointer-events:auto;all:unset;cursor:pointer;display:grid;place-items:center;min-width:40px;height:40px;padding:0 12px;border-radius:999px;
   font:800 13px var(--body);color:var(--gold);background:rgba(20,12,34,.55);box-shadow:inset 0 0 0 2px rgba(242,179,61,.55);backdrop-filter:blur(4px)}
@@ -159,7 +164,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 
   <header class="hud" id="hud" hidden>
     <div class="lives" id="lives" aria-label="목숨"></div>
-    <div class="score" aria-live="off"><b id="scoreNum">0</b><span id="meter">0m<em id="combo"></em></span></div>
+    <div class="score" aria-live="off"><b id="scoreNum">0</b><span id="meter">0m<em id="combo"></em></span><i class="routine" id="routineTag"></i></div>
     <div class="tools">
       <button class="tbtn" id="muteBtn" type="button" aria-label="소리 끄기"><svg viewBox="0 0 24 24" id="muteIco"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
       <button class="tbtn" id="pauseBtn" type="button" aria-label="일시정지"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
@@ -269,6 +274,7 @@ const MIN_W = 640, MIN_H = 560;
 const PX_PER_M = 32;
 const GRAV = 2300, JUMP_V = 960, JUMP_CUT = 790;
 const STEP = 1/120;
+const SPEED_START = 340, SPEED_MAX = 442;   // top speed = 130% of the start
 const RING_LOW = 60, RING_HIGH = 398;      // opening (height above floor)
 const BAG_H = 322;                          // bag centre height
 const POT_H = 60;
@@ -577,50 +583,82 @@ const S = {
   h:0, vy:0, prevH:0, onGround:true, buffer:0, holding:false, cutDone:true,
   lives:3, inv:0, score:0, meters:0, pots:0, rings:0, bags:0, combo:0,
   phase:0, tailT:0, squash:1, squashV:0, rideY:0, rideV:0,
-  shake:0, nextX:900, dyingT:0, sayT:0, sayText:"", lastMilestone:0, flash:0,
+  shake:0, nextX:900, rIdx:0, rStep:0, rState:{}, tier:0, base:340, dyingT:0, sayT:0, sayText:"", lastMilestone:0, flash:0,
 };
 const obs = [];   // active obstacles
 const parts = []; for(let i=0;i<180;i++) parts.push({on:false});
 const pops = [];  for(let i=0;i<16;i++) pops.push({on:false});
 
 function resetRun(){
-  Object.assign(S, {t:0, dist:0, prevDist:0, speed:340, slow:1, h:0, vy:0, prevH:0, onGround:true, buffer:0, holding:false, cutDone:true,
+  Object.assign(S, {t:0, dist:0, prevDist:0, speed:SPEED_START, base:SPEED_START, tier:0, slow:1, h:0, vy:0, prevH:0, onGround:true, buffer:0, holding:false, cutDone:true,
     lives:3, inv:0, score:0, meters:0, pots:0, rings:0, bags:0, combo:0, squash:1, squashV:0, rideY:0, rideV:0,
     shake:0, dyingT:0, sayT:0, lastMilestone:0, flash:0});
   obs.length = 0;
   S.nextX = 820;
+  switchRoutine(true);
   parts.forEach(p=>p.on=false); pops.forEach(p=>p.on=false);
 }
 
-/* spawn patterns ahead of the camera */
+/* ---------------- obstacle routines ----------------
+   Every 300 points a new routine is drawn at random (never the same one twice in a row).
+   A routine decides which obstacle comes next and how long the gap after it is. */
+const ROUTINE_EVERY = 300;
+const DOUBLE_MIN_SPEED = 395;          // two pots side by side need a little speed to clear
+function pickW(table){ let r = Math.random()*table.reduce((a,t)=>a+t[1],0); for(const t of table){ if ((r -= t[1]) < 0) return t[0]; } return table[0][0]; }
+const ROUTINES = [
+  {name:"기본 공연",       next(){ return {kind:pickW([["pot",45],["ring",55]]), bag:.2, gap:"normal"}; }},
+  {name:"불항아리 행진",   next(){ return {kind:pickW([["pot",75],["double",25]]), bag:0, gap:Math.random()<.45 ? "short" : "normal"}; }},
+  {name:"불링 쇼",         next(){ return {kind:"ring", bag:.55, gap:"normal"}; }},
+  {name:"다가오는 링",     next(){ return {kind:pickW([["moving",70],["pot",30]]), bag:.3, gap:"normal"}; }},
+  {name:"링+항아리 콤보",  next(){ return {kind:pickW([["ringPot",60],["ring",20],["pot",20]]), bag:.25, gap:"normal"}; }},
+  {name:"리듬 박자",       init(r){ r.beat = 1.05 + Math.random()*0.3; r.off = Math.random()<.5 ? 0 : 1; },
+                           next(i,r){ return {kind:(i + r.off)%2 ? "ring" : "pot", bag:.2, gap:"beat"}; }},
+  {name:"엇박 두 번 뛰기", next(i){ return {kind:pickW([["pot",55],["ring",45]]), bag:.15, gap:i%2===0 ? "short" : "long"}; }},
+  {name:"돈주머니 잔치",   next(i){ return i%2===0 ? {kind:"ring", bag:1, gap:"normal"} : {kind:pickW([["pot",60],["moving",40]]), bag:1, gap:"normal"}; }},
+];
+function switchRoutine(first){
+  let idx = 0;
+  if (!first){ do { idx = (Math.random()*ROUTINES.length)|0; } while (idx === S.rIdx); }
+  if (window.__circus && window.__circus.lock != null) idx = window.__circus.lock;   // test hook
+  S.rIdx = idx; S.rStep = 0; S.rState = {};
+  ROUTINES[idx].init && ROUTINES[idx].init(S.rState);
+  if (!first) sfx.pick();
+  showRoutine();
+}
+
+/* spawn obstacles ahead of the camera, following the current routine */
 function spawn(){
-  const m = S.meters, sp = S.base || 340, camX = S.dist;
+  const m = S.meters, sp = S.base || SPEED_START, camX = S.dist;
   while (S.nextX < camX + W + 260){
     const x = Math.max(S.nextX, camX + W + 120);
-    const r = Math.random();
-    let span = 0, extra = 0;
-    const canMove = m > 120, canCombo = m > 260, canDouble = sp > 470;
-    const bagChance = m > 60 ? 0.28 : 0;
-    if (canDouble && r < 0.14){
+    const R = ROUTINES[S.rIdx], st = R.next(S.rStep++, S.rState);
+    const bag = () => Math.random() < (m > 40 ? st.bag : 0);
+    let span = 0, extra = 0, kind = st.kind;
+    if (kind === "double" && sp < DOUBLE_MIN_SPEED) kind = "pot";
+    if (kind === "double"){
       obs.push({type:"pot", x, done:false, hit:false});
-      obs.push({type:"pot", x:x+46, done:false, hit:false});
-      span = 46;
-    } else if (canCombo && r < 0.30){
-      obs.push({type:"ring", x, vx:0, bag:Math.random()<bagChance, got:false, done:false, hit:false});
+      obs.push({type:"pot", x:x+38, done:false, hit:false});
+      span = 38;
+    } else if (kind === "ringPot"){
+      obs.push({type:"ring", x, vx:0, bag:bag(), got:false, done:false, hit:false});
       obs.push({type:"pot", x, done:false, hit:false, under:true});
-    } else if (canMove && r < 0.48){
+    } else if (kind === "moving"){
       // moves on its own once it is on screen; head start keeps it from catching the obstacle before it
-      const vx = 55 + Math.random()*Math.min(90, 40 + m*0.05);
+      const vx = 55 + Math.random()*Math.min(80, 40 + m*0.04);
       const lead = vx*(W - PX + 60)/sp + 60;
-      obs.push({type:"ring", x:x + lead, vx, bag:Math.random()<bagChance, got:false, done:false, hit:false});
+      obs.push({type:"ring", x:x + lead, vx, bag:bag(), got:false, done:false, hit:false});
       extra = lead;
-    } else if (r < 0.74){
-      obs.push({type:"ring", x, vx:0, bag:Math.random()<bagChance, got:false, done:false, hit:false});
+    } else if (kind === "ring"){
+      obs.push({type:"ring", x, vx:0, bag:bag(), got:false, done:false, hit:false});
     } else {
       obs.push({type:"pot", x, done:false, hit:false});
     }
-    const tight = Math.min(0.62, m/2600);
-    const gap = sp*(0.95 + Math.random()*(1.05 - tight*0.8)) + 200 + Math.random()*120 - tight*60;
+    const tight = Math.min(0.15, m/4000);
+    let gap;
+    if (st.gap === "short") gap = sp*0.92 + 70 + Math.random()*30;
+    else if (st.gap === "long") gap = sp*(1.9 + Math.random()*0.5) + 220;
+    else if (st.gap === "beat") gap = sp*S.rState.beat + 190;
+    else gap = (sp*(1.0 + Math.random()*0.7) + 200 + Math.random()*100) * (1 - tight);
     S.nextX = x + span + extra + gap;
   }
 }
@@ -670,7 +708,7 @@ function step(dt){
   S.t += dt;
   const playing = S.mode === "play";
   // speed curve
-  const base = 340 + 330*(1 - Math.exp(-S.meters/1400));
+  const base = SPEED_START + (SPEED_MAX - SPEED_START)*(1 - Math.exp(-S.meters/600));
   if (S.slow < 1) S.slow = Math.min(1, S.slow + dt*0.55);
   if (S.mode === "dying"){ S.dyingT += dt; S.speed = Math.max(0, S.speed - dt*520); }
   else if (S.mode === "title" || S.mode === "over") S.speed = 210;
@@ -680,6 +718,8 @@ function step(dt){
   S.dist += S.speed*dt;
   if (playing){
     const m = Math.floor(S.dist / PX_PER_M);
+    const tier = Math.floor(totalScore() / ROUTINE_EVERY);
+    if (tier !== S.tier){ S.tier = tier; switchRoutine(false); }
     if (m !== S.meters){ S.meters = m; if (m >= S.lastMilestone + 100){ S.lastMilestone = m - m%100; pop(`${S.lastMilestone}m!`, PX+40, groundY-250, "#F2B33D"); sfx.cheer(); } }
   }
   // jump
@@ -931,6 +971,11 @@ function syncHUD(){
   if (sc !== hudScore){ hudScore = sc; $("scoreNum").textContent = sc.toLocaleString("ko-KR"); }
   if (S.meters !== hudM){ hudM = S.meters; $("meter").firstChild.nodeValue = S.meters.toLocaleString("ko-KR") + "m"; }
   if (S.combo !== hudCombo){ hudCombo = S.combo; $("combo").textContent = S.combo >= 3 ? `연속 ${S.combo}` : ""; }
+}
+function showRoutine(){
+  const tag = $("routineTag"); if (!tag) return;
+  tag.textContent = "묘기 · " + ROUTINES[S.rIdx].name;
+  tag.classList.remove("flip"); void tag.offsetWidth; tag.classList.add("flip");
 }
 function updateLivesUI(){
   const box = $("lives"); box.textContent = "";
@@ -1262,7 +1307,7 @@ loadImages().then(()=>{ buildRider(); });
 (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(()=>{});
 requestAnimationFrame(frame);
 initRanking();
-window.__circus = {S, obs, startRun, press, release, totalScore, hurt, px:()=>PX};
+window.__circus = {S, obs, startRun, press, release, totalScore, hurt, px:()=>PX, lock:null, routines:ROUTINES};
 </script>
 
 </body>
