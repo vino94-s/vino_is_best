@@ -538,5 +538,16 @@ async function useLocalOrSheet(){
 hud();
 })();
 </script>
+<!-- 벙참 뒤로가기 버튼 -->
+<a id="bungBack" href="../" aria-label="게임 나가기" title="게임 나가기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
+<style>#bungBack{position:fixed;z-index:2147483000;left:env(safe-area-inset-left);top:40%;width:30px;height:46px;box-sizing:border-box;border-radius:0 14px 14px 0;display:flex;align-items:center;justify-content:center;background:rgba(15,20,25,.5);color:#fff;border:1px solid rgba(255,255,255,.3);border-left:0;text-decoration:none;-webkit-tap-highlight-color:transparent;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);touch-action:manipulation;user-select:none;-webkit-user-select:none}#bungBack:hover{background:rgba(15,20,25,.75)}#bungBack:focus-visible{outline:2px solid #fff;outline-offset:2px}#bungBack svg{margin-left:-2px}</style>
+<script>(function(){var a=document.getElementById('bungBack');if(!a)return;
+['pointerdown','mousedown','touchstart','keydown'].forEach(function(t){a.addEventListener(t,function(e){e.stopPropagation();},{passive:true});});
+a.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();
+if(!confirm('게임을 나가서 게임 목록으로 돌아갈까요?'))return;
+var r=document.referrer,same=false;try{same=!!r&&new URL(r).origin===location.origin;}catch(_){}
+if(same&&history.length>1){history.back();return;}
+try{window.close();}catch(_){}
+setTimeout(function(){location.href=a.getAttribute('href');},300);});})();</script>
 </body>
 </html>
