@@ -150,6 +150,15 @@ input[type=text],.field input,.joinrow input{border:3px solid var(--line);border
 .score dd{margin:0;text-align:right;font-weight:700}
 .score .tot{font-family:var(--f-d);font-weight:400;font-size:22px;border-top:2px solid var(--line);padding-top:4px}
 .resBtns{display:grid;gap:8px;margin-top:14px}
+.stageNote{margin:12px 0 14px;line-height:1.55}
+.ladder{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;margin:4px 0 14px}
+.ladder span{border:2px solid var(--line);border-radius:8px;font-size:13px;padding:3px 0;background:var(--card)}
+.ladder .done{background:var(--gold)} .ladder .now{background:var(--red);color:#fff;font-weight:700}
+.ladder .boss{font-size:11px;letter-spacing:-.03em}
+.vsrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px}
+.vsrow div{display:grid;justify-items:center;gap:4px}
+.vsrow img{height:120px;width:100%;object-fit:contain;filter:drop-shadow(0 3px 0 rgba(0,0,0,.2))}
+.vsrow b{font-family:var(--f-d);font-weight:400;font-size:18px}
 
 /* 랭킹 */
 .sub{margin:0 0 10px;color:var(--muted);font-size:13px}
@@ -204,7 +213,7 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     <h1 class="logo"><span>천하제일</span><span>무술대회</span></h1>
     <p class="tagline">아홉 고수 · 60초 · 3판 2선승</p>
     <div class="menuBtns">
-      <button class="btn big" id="goBot">봇과 대결</button>
+      <button class="btn big" id="goBot">봇 도전<small>10단계 · 최종 보스</small></button>
       <button class="btn big alt" id="goFriend">친구와 대결<small>초대코드 1:1</small></button>
       <div class="row2">
         <button class="btn ghost" id="goRank">봇 대전 랭킹</button>
@@ -220,11 +229,8 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     <header class="phead"><button class="back" data-back>‹ 메인</button><h2>캐릭터 선택</h2></header>
     <div class="grid" id="gridMe"></div>
     <div class="info" id="infoMe"></div>
-    <div class="opts">
-      <div class="opt"><span class="lab">상대 봇</span><div class="chips" id="oppChips"></div></div>
-      <div class="opt"><span class="lab">난이도</span><div class="chips" id="diffChips"></div></div>
-    </div>
-    <button class="btn big" id="startBot">대결 시작</button>
+    <p class="note stageNote">1~9단계에서 아홉 고수와 차례로 겨루고, 10단계에서 최종 보스를 만나요. 단계가 오를수록 봇이 강해지고, 지면 그 자리에서 도전이 끝나요.</p>
+    <button class="btn big" id="startBot">1단계부터 도전</button>
   </div>
 </section>
 
@@ -256,6 +262,20 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     <div class="info" id="infoLobby"></div>
     <div style="height:12px"></div>
     <button class="btn big" id="readyBtn">준비 완료</button>
+  </div>
+</section>
+
+<section class="screen" id="scStage" hidden>
+  <div class="panel narrow result">
+    <p class="rtag" id="stTag"></p>
+    <h2 class="rtitle" id="stTitle"></h2>
+    <div class="ladder" id="ladder"></div>
+    <div class="vsrow"><div id="vsMe"></div><b class="vs">VS</b><div id="vsOpp"></div></div>
+    <p class="note" id="stNote"></p>
+    <div class="resBtns">
+      <button class="btn big" id="stGo">대결 시작</button>
+      <button class="btn big ghost" id="stQuit">그만두기</button>
+    </div>
   </div>
 </section>
 
@@ -300,9 +320,10 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     </div>
     <p>휴대폰에서는 화면 아래 버튼으로 조작해요.</p>
     <h3>규칙</h3>
+    <p>봇 도전은 10단계예요. 1~9단계는 아홉 고수가 무작위 순서로 나오고(나와 같은 캐릭터는 다른 색), 단계가 오를수록 봇이 강해져요. 10단계에는 최종 보스 소주가 나와요. 한 번 지면 도전이 끝나요.</p>
     <p>한 판은 60초. 먼저 두 판을 이기면 우승이에요. 시간이 다 되면 남은 체력 비율이 높은 쪽이 이겨요. 때리거나 맞으면 필살 게이지가 차고, 가득 차면 필살기를 쓸 수 있어요. 방어하면 피해가 크게 줄지만 필살기 중 일부는 막아도 조금 아파요.</p>
     <h3>랭킹</h3>
-    <p>랭킹은 봇 대전에서 이겼을 때만 올릴 수 있어요. 난이도가 높을수록, 2:0 완승일수록, 체력을 많이 남길수록 점수가 높아요.</p>
+    <p>봇 도전이 끝나면(탈락, 그만두기, 전 단계 클리어) 한 단계 이상 깼을 때 누적 점수를 랭킹에 올릴 수 있어요. 높은 단계일수록 점수가 크고, 2:0 완승과 남은 체력에 보너스가 붙어요. 친구 대전은 랭킹에 올라가지 않아요.</p>
   </div>
 </section>
 
@@ -343,7 +364,11 @@ const CH = [
     sp: '바닷물 얍얍 뿌리기', spDesc: '얍! 얍! 바닷물을 앞으로 아홉 번 흩뿌려요. 가까이부터 멀리까지 넓게 떨어져요.', st: [3, 2, 4, 3] },
   { id: 'myoungradak', name: '묭라닭', h: 160, hp: 102, spd: 4.8, jump: 17, pow: 1.05, reach: 1.0, color: '#e8443a', title: '바삭한 투척왕',
     sp: '추풍통닭', spDesc: '치킨 닭다리를 앞으로 아홉 개 마구 던져요. 높이가 제각각이라 점프로 다 피하긴 어려워요.', st: [3, 4, 4, 3] },
+  // 10단계 최종 보스 (선택 불가)
+  { id: 'soju', name: '소주', boss: true, h: 214, hp: 136, spd: 3.6, jump: 14, pow: 1.1, reach: 1.08, color: '#2e8b3e', title: '최종 보스',
+    sp: '병뚜껑 부메랑 날리기', spDesc: '병뚜껑을 부메랑처럼 날려요. 날아갔다가 되돌아오면서 두 번 때려요.', st: [5, 2, 5, 4] },
 ];
+const PLAYABLE = CH.filter(c => !c.boss).length, BOSS = CH.findIndex(c => c.boss);
 // st = [체력, 속도, 힘, 리치] 1~5 (선택 화면 표시용)
 
 const ATK = {
@@ -402,6 +427,8 @@ function step(M, ins) {
   }
   if (M.freeze > 0) { M.freeze--; return; }
   M.timer--;
+  // 보스는 필살 게이지가 저절로 조금씩 참
+  for (const f of M.f) if (CH[f.ci].boss && f.act !== 'ko' && f.g < 100) f.g = Math.min(100, f.g + 0.05);
   for (let i = 0; i < 2; i++) {
     const b = M.f[i].buf, n = ins[i] || NOIN;
     for (const k in b) if (b[k] > 0) b[k]--;
@@ -616,6 +643,14 @@ function spec(M, i) {
       }
       if (t >= 72) done();
       break;
+    case 'soju':
+      // 병뚜껑 부메랑: 앞으로 날아가다 감속해 되돌아옴. 가는 길·오는 길에 한 번씩 타격
+      if (t === 14) {
+        M.proj.push({ k: 'cap', o: i, x: f.x + f.face * 40, y: f.y - 105, y0: f.y - 105, vx: f.face * 18, ax: -f.face * 0.42, t: 0, out: 0, back: 0, r: 0 });
+        addFx(M, 'capthrow', f.x + f.face * 40, f.y - 190);
+      }
+      if (t >= 34) done();
+      break;
     case 'myoungradak':
       // 닭다리 9개를 4프레임 간격으로 마구 던짐 (높이 제각각, 거의 일직선으로 화면 끝까지)
       if (t >= 8 && t < 44 && (t - 8) % 4 === 0) {
@@ -661,10 +696,18 @@ function updProj(M) {
         hurt(M, p.o, 2.2, 11, 2, 0, 0, ''); addFx(M, 'splash', p.x, p.y); alive = false;
       } else if (p.y >= GROUND) { addFx(M, 'splash', p.x, GROUND); alive = false; }
       if (p.x < -40 || p.x > W + 40) alive = false;
+    } else if (p.k === 'cap') {
+      p.x += p.vx; p.vx += p.ax; p.r += 0.55; p.y = p.y0 + Math.sin(p.t * 0.12) * 22;
+      const back = Math.sign(p.vx) === Math.sign(p.ax), own = M.f[p.o];
+      if (Math.abs(o.x - p.x) < 46 && p.y > o.y - 150 && p.y < o.y + 4) {
+        if (!back && !p.out) { p.out = 1; if (hurt(M, p.o, 12, 22, 6, 4, 0, 'big')) addFx(M, 'clink', p.x, p.y); }
+        else if (back && !p.back) { p.back = 1; if (hurt(M, p.o, 12, 22, 6, 4, 0, 'big')) addFx(M, 'clink', p.x, p.y); }
+      }
+      if ((back && Math.abs(p.x - own.x) < 30) || p.t > 160) alive = false;
     } else if (p.k === 'leg') {
       p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.r += 0.45 * Math.sign(p.vx);
       if (Math.abs(o.x - p.x) < 44 && p.y > o.y - 150 && p.y < o.y + 4) {
-        hurt(M, p.o, 2.8, 11, 2.5, 0, 0, ''); addFx(M, 'crunch', p.x, p.y); alive = false;
+        hurt(M, p.o, 2.6, 11, 2.5, 0, 0, ''); addFx(M, 'crunch', p.x, p.y); alive = false;
       } else if (p.y >= GROUND) { addFx(M, 'dust', p.x, GROUND); alive = false; }
       if (p.x < -60 || p.x > W + 60) alive = false;
     }
@@ -697,12 +740,12 @@ function checkEnd(M) {
 
 function specOk(id, d) {
   return id === 'bino' ? d < 210 : id === 'mandu' ? d > 100 : id === 'juntak' ? d < 210 : id === 'youngjun' ? d < 380
-    : id === 'haetsal' ? true : id === 'umji' ? d < 460 : id === 'yongwang' ? d > 60 && d < 520 : id === 'myoungradak' ? d > 80 : d < 150;
+    : id === 'haetsal' ? true : id === 'umji' ? d < 460 : id === 'yongwang' ? d > 60 && d < 520 : id === 'myoungradak' ? d > 80 : id === 'soju' ? d > 90 && d < 420 : d < 150;
 }
 function botThink(M, i, dk, mem) {
   const inp = { l: 0, r: 0, d: 0, j: 0, a: 0, b: 0, s: 0 };
   if (M.phase !== 'fight' || M.freeze > 0) return inp;
-  const D = DIFF[dk], f = M.f[i], o = M.f[1 - i], c = CH[f.ci];
+  const D = typeof dk === 'string' ? DIFF[dk] : dk, f = M.f[i], o = M.f[1 - i], c = CH[f.ci];
   if (f.act === 'ko' || f.act === 'hit' || f.act === 'special') return inp;
   const dx = o.x - f.x, dist = Math.abs(dx), toward = dx > 0 ? 'r' : 'l', away = dx > 0 ? 'l' : 'r';
   if (mem.g > 0) { mem.g--; inp.d = 1; return inp; }
@@ -710,6 +753,7 @@ function botThink(M, i, dk, mem) {
   const threat = M.proj.find(p => p.o !== i && (
     ((p.k === 'beam' || p.k === 'leg') && Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(f.x - p.x) < 340) ||
     (p.k === 'water' && Math.abs(p.x - f.x) < 160) ||
+    (p.k === 'cap' && Math.abs(p.x - f.x) < 200) ||
     (p.k === 'laser' && (f.x - p.x) * p.d > 0) ||
     (p.k === 'shock' && dist < 260)));
   if (mem.cd > 0) { mem.cd--; if (mem.mv) inp[mem.mv === 'T' ? toward : away] = 1; return inp; }
@@ -732,14 +776,21 @@ function botThink(M, i, dk, mem) {
   return inp;
 }
 
-function calcScore(M, dk) {
-  const base = DIFF[dk].base;
+// 봇 도전 단계: 1단계는 쉬움 수준 → 9단계는 고수 수준, 10단계는 보스
+function stageDiff(s) {
+  if (s >= 10) return { react: 6, guard: 0.63, aggr: 0.8, spec: 1 };
+  const k = (s - 1) / 8, L = (a, b) => a + (b - a) * k;
+  return { react: Math.round(L(26, 5)), guard: L(0.08, 0.7), aggr: L(0.38, 0.8), spec: L(0.4, 1) };
+}
+const stageBase = s => s >= 10 ? 600 : 50 + s * 30;
+function stageScore(M, s) {
+  const base = stageBase(s);
   const lost = M.rw.filter(w => w === 1).length;
-  const perfect = lost === 0 ? 100 : 0;
+  const perfect = lost === 0 ? 50 : 0;
   const mine = M.rhp.filter(r => r[0] === 0).map(r => r[1]);
-  const avg = mine.length ? mine.reduce((s, v) => s + v, 0) / mine.length : 0;
-  const hpBonus = Math.round(avg * 200);
-  return { base, perfect, hpBonus, total: base + perfect + hpBonus, lost, won: M.wins[0] };
+  const avg = mine.length ? mine.reduce((a, v) => a + v, 0) / mine.length : 0;
+  const hpBonus = Math.round(avg * 100);
+  return { base, perfect, hpBonus, total: base + perfect + hpBonus, lost };
 }
 // @@SIM-END
 
@@ -975,7 +1026,7 @@ function calcScore(M, dk) {
   function resetRemote() { for (const k in remote.c) remote.u[k] = remote.c[k]; }
 
   // ---------- 화면 전환 ----------
-  const SCREENS = ['scMenu', 'scSelect', 'scFriend', 'scLobby', 'scResult', 'scRank', 'scHelp', 'scPause'];
+  const SCREENS = ['scMenu', 'scSelect', 'scStage', 'scFriend', 'scLobby', 'scResult', 'scRank', 'scHelp', 'scPause'];
   let current = 'scMenu';
   function show(id) {
     current = id;
@@ -993,22 +1044,55 @@ function calcScore(M, dk) {
 
   // ---------- 게임 상태 ----------
   let MODE = 'demo', M = null, paused = false;
-  let botDiff = store.get('muldae_diff', 'normal'), botMem = {}, demoMem = [{}, {}];
+  let botD = stageDiff(1), botMem = {}, demoMem = [{}, {}], run = null;
   let names = ['', ''], myIdx = 0, overShown = false, lastFx = 0;
-  let sel = { me: Math.min(CH.length - 1, +store.get('muldae_me', '0') || 0), opp: -1 };
-  if (!DIFF[botDiff]) botDiff = 'normal';
+  let sel = { me: Math.min(PLAYABLE - 1, +store.get('muldae_me', '0') || 0) };
 
   function newDemo() {
-    const a = (Math.random() * CH.length) | 0, b = (Math.random() * CH.length) | 0;
+    const a = (Math.random() * PLAYABLE) | 0, b = (Math.random() * PLAYABLE) | 0;
     MODE = 'demo'; M = mkMatch(a, b); demoMem = [{}, {}]; lastFx = 0; parts.length = 0; banners.length = 0; overShown = false;
   }
+  // ---------- 봇 도전 (10단계) ----------
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function startRun() {
+    run = { me: sel.me, stage: 1, order: shuffle([...Array(PLAYABLE).keys()]), total: 0, cleared: 0, log: [] };
+    showStage();
+  }
+  const stageOpp = s => s >= 10 ? BOSS : run.order[(s - 1) % run.order.length];
+  const stars = s => { const n = Math.ceil(s / 2); return '★'.repeat(n) + '☆'.repeat(5 - n); };
+  function figure(ci, alt, label) {
+    const d = document.createElement('div'); d.appendChild(charImg(ci, alt));
+    const b = document.createElement('b'); b.textContent = label; d.appendChild(b); return d;
+  }
+  function showStage() {
+    if (MODE !== 'demo') newDemo();
+    const s = run.stage, opp = stageOpp(s), boss = s >= 10, same = opp === run.me;
+    $('stTag').textContent = CH[run.me].name + ' 도전 중 · 누적 ' + run.total + '점';
+    $('stTitle').textContent = boss ? '최종 보스 등장!' : s + '단계';
+    const lad = $('ladder'); lad.textContent = '';
+    for (let k = 1; k <= 10; k++) {
+      const sp = document.createElement('span'); sp.textContent = k === 10 ? '보스' : k;
+      sp.className = (k < s ? 'done' : k === s ? 'now' : '') + (k === 10 ? ' boss' : '');
+      lad.appendChild(sp);
+    }
+    $('vsMe').replaceWith(Object.assign(figure(run.me, false, CH[run.me].name + ' (나)'), { id: 'vsMe' }));
+    $('vsOpp').replaceWith(Object.assign(figure(opp, same, CH[opp].name + (boss ? ' (보스)' : same ? ' (다른 색)' : '')), { id: 'vsOpp' }));
+    $('stNote').textContent = boss
+      ? '소주는 체력이 많고 힘이 세요. 필살 게이지가 저절로 차니 되돌아오는 병뚜껑 부메랑까지 조심하세요!'
+      : '상대 봇 실력 ' + stars(s) + ' · 이기면 +' + stageBase(s) + '점부터';
+    $('stGo').textContent = boss ? '보스와 대결' : s + '단계 대결 시작';
+    show('scStage');
+  }
   function startBot() {
-    const opp = sel.opp >= 0 ? sel.opp : (Math.random() * CH.length) | 0;
-    MODE = 'bot'; M = mkMatch(sel.me, opp); botMem = {}; lastFx = 0; parts.length = 0; banners.length = 0; overShown = false; paused = false;
-    names = ['나', '봇 · ' + DIFF[botDiff].name]; myIdx = 0;
+    const s = run.stage;
+    botD = stageDiff(s);
+    MODE = 'bot'; M = mkMatch(run.me, stageOpp(s)); botMem = {}; lastFx = 0; parts.length = 0; banners.length = 0; overShown = false; paused = false;
+    names = ['나', '']; myIdx = 0;
     hpTrail[0] = hpTrail[1] = 1;
     resetLocal(); show(null);
   }
+  $('stGo').addEventListener('click', startBot);
+  $('stQuit').addEventListener('click', () => { if (run && run.cleared > 0) runEnd('도전 종료', run.cleared + '단계까지 클리어'); else goMenu(); });
   function togglePause() {
     if (MODE !== 'bot') return;
     if (current === 'scPause') { paused = false; show(null); }
@@ -1034,7 +1118,7 @@ function calcScore(M, dk) {
   const nameOf = i => {
     const c = CH[M.c[i]].name;
     if (MODE === 'demo') return c;
-    if (MODE === 'bot') return i === 0 ? c : c + ' 봇';
+    if (MODE === 'bot') return i === 0 ? c : CH[M.c[i]].boss ? c + ' 보스' : c + ' 봇';
     return names[i] ? names[i] : c;
   };
 
@@ -1045,7 +1129,12 @@ function calcScore(M, dk) {
       if (e.id <= lastFx) continue;
       lastFx = e.id;
       switch (e.type) {
-        case 'round': banner(e.last ? '결승 라운드' : e.n + '라운드', '', '#ffe3a3', 80); SFX.bell(); break;
+        case 'round':
+          if (MODE === 'bot' && run && run.stage >= 10 && e.n === 1) banner('최종 보스!', '소주가 나타났다', '#ff5a48', 100);
+          else banner(e.last ? '결승 라운드' : e.n + '라운드', MODE === 'bot' && run && e.n === 1 ? run.stage + '단계' : '', '#ffe3a3', 80);
+          SFX.bell(); break;
+        case 'capthrow': txt(e.x, e.y, '병뚜껑 슝!', '#2e8b3e', 34); SFX.swing('h'); break;
+        case 'clink': spark(e.x, e.y, 12, '#d7dde0', 7); txt(e.x, e.y - 30, '땡!', '#5a6a72', 34); tone(1800, 0.15, 'triangle', 0.06); break;
         case 'fight': banner('시작!', '', '#f3b53a', 45); SFX.fight(); break;
         case 'swing': SFX.swing(e.k); break;
         case 'hit': spark(e.x, e.y, e.big ? 16 : 9, e.big ? '#ffd23a' : '#fff', e.big ? 8 : 5); ring(e.x, e.y, '#fff', e.big ? 70 : 44); SFX.hit(e.big); break;
@@ -1127,6 +1216,7 @@ function calcScore(M, dk) {
         else if (id === 'umji') { sy = f.sp.air ? 1.12 : f.sp.land ? 0.82 : 0.9; sx = f.sp.land ? 1.15 : 1; }
         else if (id === 'goran') { ox = (Math.random() - 0.5) * 8; rot = 0.12; }
         else if (id === 'haetsal') { sy = 1.05; ox = t >= 16 ? -3 : 0; }
+        else if (id === 'soju') { rot = t < 14 ? -0.25 : t < 24 ? 0.3 : 0.05; ox = t >= 14 && t < 24 ? 10 : 0; }
         else if (id === 'myoungradak') { rot = t >= 8 && t < 46 ? Math.sin(t * 0.9) * 0.12 : 0; sx = 1 + Math.abs(Math.sin(t * 0.9)) * 0.06; }
         else if (id === 'yongwang') { rot = t >= 10 && t < 62 ? Math.sin(t * 0.63) * 0.14 + 0.06 : 0; sy = 1 + Math.abs(Math.sin(t * 0.63)) * 0.05; }
         break;
@@ -1191,7 +1281,7 @@ function calcScore(M, dk) {
     }
     // 머리 위 표시
     let tag = '';
-    if (MODE === 'bot') tag = i === 0 ? '나' : '봇';
+    if (MODE === 'bot') tag = i === 0 ? '나' : CH[f.ci].boss ? '보스' : '봇';
     else if (MODE === 'host' || MODE === 'guest') tag = i === myIdx ? '나' : '친구';
     if (tag && f.act !== 'ko') {
       const ty = f.y - hgt - 18 + oy;
@@ -1239,6 +1329,16 @@ function calcScore(M, dk) {
       ctx.lineWidth = 6; ctx.strokeStyle = '#fff2a0';
       for (const dy of [-12, 12]) { ctx.beginPath(); ctx.moveTo(x0 - p.d * 8, y + dy - 8); ctx.lineTo(x0 + p.d * 44, y); ctx.stroke(); }
       ctx.fillStyle = '#fffbe6'; ctx.beginPath(); ctx.arc(x0 + p.d * 44, y, th * 0.7 + 4, 0, 7); ctx.fill();
+      ctx.restore();
+    } else if (p.k === 'cap') {
+      // 소주 병뚜껑 (톱니 테두리, 초록)
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = 'rgba(46,139,62,.25)'; ctx.beginPath(); ctx.arc(0, 0, 30, 0, 7); ctx.fill();
+      ctx.beginPath();
+      for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, r = k % 2 ? 19 : 22; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+      ctx.closePath(); ctx.fillStyle = '#3fae55'; ctx.fill(); ctx.strokeStyle = '#1d3b24'; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.fillStyle = '#c9eccd'; ctx.beginPath(); ctx.arc(0, 0, 12, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1d3b24'; ctx.font = '13px "Black Han Sans", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('酒', 0, 1);
       ctx.restore();
     } else if (p.k === 'leg') {
       // 치킨 닭다리: 튀김옷 덩어리 + 뼈
@@ -1339,7 +1439,8 @@ function calcScore(M, dk) {
     ctx.fillStyle = sec <= 10 && M.phase === 'fight' && M.frame % 30 < 15 ? '#ff6a5a' : '#fff';
     ctx.fillText(String(sec), 480, 53);
     ctx.font = '14px "Black Han Sans", sans-serif'; ctx.fillStyle = '#fff'; ctx.lineWidth = 4; ctx.strokeStyle = '#2a1d18';
-    ctx.strokeText(M.round + '라운드', 480, 100); ctx.fillText(M.round + '라운드', 480, 100);
+    const rl = (MODE === 'bot' && run ? run.stage + '단계 · ' : '') + M.round + '라운드';
+    ctx.strokeText(rl, 480, 100); ctx.fillText(rl, 480, 100);
     // 터치 필살 버튼 깜빡임
     if (touch) $('pad').querySelector('[data-k=s]').classList.toggle('ready', MODE !== 'demo' && M.f[myIdx].g >= 100);
   }
@@ -1406,7 +1507,7 @@ function calcScore(M, dk) {
   function tick() {
     let i0, i1;
     if (MODE === 'demo') { i0 = botThink(M, 0, 'normal', demoMem[0]); i1 = botThink(M, 1, 'normal', demoMem[1]); }
-    else if (MODE === 'bot') { i0 = takeLocal(); i1 = botThink(M, 1, botDiff, botMem); }
+    else if (MODE === 'bot') { i0 = takeLocal(); i1 = botThink(M, 1, botD, botMem); }
     else if (MODE === 'host') { i0 = takeLocal(); i1 = takeRemote(); }
     step(M, [i0, i1]);
     if (MODE === 'host' && ++sendN % 2 === 0) netSend({ t: 'st', m: snap(M) });
@@ -1445,7 +1546,7 @@ function calcScore(M, dk) {
   function showResult() {
     if (!M || MODE === 'demo') return;
     const w = M.winner, iWon = w === myIdx, draw = w < 0;
-    $('resTag').textContent = CH[M.c[myIdx]].name + ' vs ' + CH[M.c[1 - myIdx]].name + (MODE === 'bot' ? ' 봇 · ' + DIFF[botDiff].name : ' · 친구 대전');
+    $('resTag').textContent = CH[M.c[myIdx]].name + ' vs ' + CH[M.c[1 - myIdx]].name + (MODE === 'bot' ? ' · ' + (run.stage >= 10 ? '최종 보스전' : run.stage + '단계') : ' · 친구 대전');
     const title = $('resTitle');
     title.textContent = draw ? '무승부' : iWon ? '우승!' : '패배…';
     title.className = 'rtitle ' + (draw ? '' : iWon ? 'win' : 'lose');
@@ -1453,31 +1554,61 @@ function calcScore(M, dk) {
     M.rw.forEach((r, k) => { const s = document.createElement('span'); s.textContent = (k + 1) + '판 ' + (r < 0 ? '무' : r === myIdx ? '승' : '패'); if (r === myIdx) s.className = 'w'; pr.appendChild(s); });
     const btns = $('resBtns'); btns.textContent = '';
     const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn big ' + (cls || ''); b.textContent = label; b.addEventListener('click', fn); btns.appendChild(b); return b; };
-    $('scoreBox').hidden = true; $('rankErr').textContent = '';
+    $('scoreBox').hidden = true; $('rankForm').hidden = true; $('rankErr').textContent = ''; $('resNote').textContent = '';
     if (MODE === 'bot') {
-      if (iWon) {
-        lastScore = Object.assign(calcScore(M, botDiff), { ch: CH[M.c[0]].id, diff: botDiff });
-        const dl = $('scoreList'); dl.textContent = '';
-        const row = (a, b, cls) => { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = a; dd.textContent = b; if (cls) { dt.className = cls; dd.className = cls; } dl.append(dt, dd); };
-        row('난이도 ' + DIFF[botDiff].name, '+' + lastScore.base);
-        row(lastScore.lost === 0 ? '2:0 완승 보너스' : '완승 보너스 (2:' + lastScore.lost + ')', '+' + lastScore.perfect);
-        row('남은 체력 보너스', '+' + lastScore.hpBonus);
-        row('합계', lastScore.total + '점', 'tot');
-        $('scoreBox').hidden = false;
-        $('rankNick').value = store.get('muldae_nick', '');
-        $('rankNick').disabled = false; $('rankSave').disabled = false;
-        $('resNote').textContent = '';
+      const s = run.stage;
+      if (draw) {
+        $('resNote').textContent = '무승부라 같은 단계를 다시 해요.';
+        mk('다시 대결', '', startBot);
+        mk('그만두기', 'ghost', () => run.cleared > 0 ? runEnd('도전 종료', run.cleared + '단계까지 클리어') : goMenu());
+      } else if (iWon) {
+        const sc = stageScore(M, s);
+        run.total += sc.total; run.cleared = s;
+        scoreRows([[s >= 10 ? '보스 격파' : s + '단계 클리어', '+' + sc.base],
+          [sc.lost === 0 ? '2:0 완승 보너스' : '완승 보너스 (2:' + sc.lost + ')', '+' + sc.perfect],
+          ['남은 체력 보너스', '+' + sc.hpBonus], ['누적 점수', run.total + '점', 'tot']]);
+        if (s >= 10) return runEnd('천하제일!', '최종 보스 격파 · 전 단계 클리어', true);
+        title.textContent = s + '단계 클리어!';
+        mk(s + 1 >= 10 ? '최종 보스에게 도전' : (s + 1) + '단계로', '', () => { run.stage++; showStage(); });
+        mk('여기서 마치고 랭킹 등록', 'ghost', () => runEnd('도전 종료', s + '단계까지 클리어'));
       } else {
-        $('resNote').textContent = draw ? '무승부는 랭킹에 올라가지 않아요.' : '봇을 이기면 랭킹에 기록을 올릴 수 있어요.';
+        return runEnd(s >= 10 ? '보스에게 패배…' : s + '단계에서 탈락', run.cleared ? run.cleared + '단계까지 클리어' : '아직 깬 단계가 없어요', false, true);
       }
-      mk('다시 대결', '', startBot);
-      mk('캐릭터 다시 고르기', 'ghost', openSelect);
-      mk('메인으로', 'ghost', goMenu);
     } else {
       $('resNote').textContent = '친구 대전은 랭킹에 올라가지 않아요.';
       mk('한 판 더', '', backToLobby);
       mk('나가기', 'ghost', leaveRoom);
     }
+    show('scResult');
+  }
+
+  function scoreRows(list) {
+    const dl = $('scoreList'); dl.textContent = '';
+    list.forEach(([a, b, cls]) => { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = a; dd.textContent = b; if (cls) { dt.className = cls; dd.className = cls; } dl.append(dt, dd); });
+    $('scoreBox').hidden = false;
+  }
+  // 도전 끝: 탈락·그만두기·전 단계 클리어. 한 단계 이상 깼으면 랭킹 등록
+  function runEnd(head, sub, won, lost) {
+    const title = $('resTitle');
+    title.textContent = head; title.className = 'rtitle ' + (won ? 'win' : lost ? 'lose' : '');
+    $('resTag').textContent = CH[run.me].name + ' · ' + sub;
+    if (!won && !lost) $('resRounds').textContent = '';
+    if (!won) scoreRows([['깬 단계', run.cleared + ' / 10'], ['누적 점수', run.total + '점', 'tot']]);
+    $('rankErr').textContent = '';
+    if (run.cleared > 0 && !run.saved) {
+      lastScore = { ch: CH[run.me].id, stage: run.cleared, score: run.total };
+      $('rankForm').hidden = false;
+      $('rankNick').value = store.get('muldae_nick', ''); $('rankNick').disabled = false; $('rankSave').disabled = false;
+      $('resNote').textContent = '';
+    } else {
+      $('rankForm').hidden = true;
+      $('resNote').textContent = run.cleared ? '' : '한 단계 이상 깨면 랭킹에 올릴 수 있어요.';
+    }
+    const btns = $('resBtns'); btns.textContent = '';
+    const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn big ' + (cls || ''); b.textContent = label; b.addEventListener('click', fn); btns.appendChild(b); };
+    mk('1단계부터 다시 도전', '', startRun);
+    mk('캐릭터 다시 고르기', 'ghost', openSelect);
+    mk('메인으로', 'ghost', goMenu);
     show('scResult');
   }
 
@@ -1502,6 +1633,7 @@ function calcScore(M, dk) {
   function renderGrid(el, mine, opp, onPick) {
     el.textContent = '';
     CH.forEach((c, ci) => {
+      if (c.boss) return;
       const b = document.createElement('button'); b.type = 'button';
       b.className = 'card' + (ci === mine ? ' on' : '');
       b.setAttribute('aria-pressed', String(ci === mine));
@@ -1516,22 +1648,6 @@ function calcScore(M, dk) {
   function renderSelect() {
     renderGrid($('gridMe'), sel.me, -1, ci => { sel.me = ci; store.set('muldae_me', String(ci)); renderSelect(); });
     renderInfo($('infoMe'), sel.me);
-    const oc = $('oppChips'); oc.textContent = '';
-    const chip = (label, val, ci) => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip' + (sel.opp === val ? ' on' : '');
-      if (ci >= 0) b.appendChild(charImg(ci, ci === sel.me));
-      b.appendChild(document.createTextNode(label));
-      b.addEventListener('click', () => { sel.opp = val; renderSelect(); });
-      oc.appendChild(b);
-    };
-    chip('랜덤', -1, -1);
-    CH.forEach((c, ci) => chip(c.name, ci, ci));
-    const dc = $('diffChips'); dc.textContent = '';
-    Object.keys(DIFF).forEach(k => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip' + (botDiff === k ? ' on' : ''); b.textContent = DIFF[k].name;
-      b.addEventListener('click', () => { botDiff = k; store.set('muldae_diff', k); renderSelect(); });
-      dc.appendChild(b);
-    });
   }
   function openSelect() {
     if (MODE !== 'demo') newDemo();
@@ -1543,11 +1659,11 @@ function calcScore(M, dk) {
   }
   document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', goMenu));
   $('goBot').addEventListener('click', openSelect);
-  $('startBot').addEventListener('click', startBot);
+  $('startBot').addEventListener('click', startRun);
   $('goHelp').addEventListener('click', () => show('scHelp'));
   $('goRank').addEventListener('click', () => { refreshRank(); show('scRank'); });
   $('goFriend').addEventListener('click', openFriend);
-  const roster = $('roster'); CH.forEach((c, ci) => roster.appendChild(charImg(ci, false)));
+  const roster = $('roster'); CH.forEach((c, ci) => { if (!c.boss) roster.appendChild(charImg(ci, false)); });
 
   // ---------- 친구 대전 (초대코드) ----------
   // 방장 브라우저가 경기를 계산하고, 친구는 입력만 보내고 화면을 받아 그림 (PeerJS로 브라우저끼리 직접 연결)
@@ -1664,7 +1780,7 @@ function calcScore(M, dk) {
     if (!d || typeof d !== 'object') return;
     switch (d.t) {
       case 'me':
-        net.opp = { name: cleanName(d.name) || '친구', ci: Math.max(0, Math.min(CH.length - 1, d.ci | 0)), ready: !!d.ready };
+        net.opp = { name: cleanName(d.name) || '친구', ci: Math.max(0, Math.min(PLAYABLE - 1, d.ci | 0)), ready: !!d.ready };
         if (current === 'scLobby') renderLobby();
         maybeStart();
         break;
@@ -1759,7 +1875,7 @@ function calcScore(M, dk) {
   // 구글 시트 Apps Script 웹 앱 주소를 넣으면 모두가 같은 랭킹을 봐요 (README 참고). 비어 있으면 이 기기에만 저장.
   const RANK_API = 'https://script.google.com/macros/s/AKfycbz9MJNBAerUssC7GUsCsEOqQYexk-1bAnzmWMCIcceYWwKIQA2cNyyxPtIDWloLg9Xg/exec';
   const hasApi = () => /^https:\/\/script\.google\.com\//.test(RANK_API);
-  const LOCAL_KEY = 'muldae_local_rank';
+  const LOCAL_KEY = 'muldae_stage_rank';
   let rows = [], myRankId = null, rankMode = hasApi() ? 'api' : 'local';
   const loadLocal = () => { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]'); } catch (e) { return []; } };
   const saveLocal = r => { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(r)); } catch (e) {} };
@@ -1772,7 +1888,8 @@ function calcScore(M, dk) {
       const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = i + 1;
       const ci = Math.max(0, CH.findIndex(c => c.id === r.ch));
       const who = document.createElement('span'); who.className = 'who'; who.textContent = cleanName(r.name) || '이름 없는 고수';
-      const sm = document.createElement('small'); sm.textContent = CH[ci].name + ' · ' + ((DIFF[r.diff] || DIFF.normal).name) + ' · ' + (r.rw || ''); who.appendChild(sm);
+      const st = Number(r.stage) || 0;
+      const sm = document.createElement('small'); sm.textContent = CH[ci].name + ' · ' + (st >= 10 ? '보스 격파 · 전 단계 클리어' : st + '단계 클리어'); who.appendChild(sm);
       const pts = document.createElement('span'); pts.className = 'pts'; pts.textContent = Number(r.score) || 0;
       li.append(pos, charImg(ci, false), who, pts); list.appendChild(li);
     });
@@ -1802,11 +1919,12 @@ function calcScore(M, dk) {
   }
   $('rankForm').addEventListener('submit', async e => {
     e.preventDefault();
-    if (!lastScore || MODE !== 'bot') return;
+    if (!lastScore) return;
     const name = cleanName($('rankNick').value);
     if (!name) { $('rankErr').className = 'err'; $('rankErr').textContent = '닉네임을 한 글자 이상 입력해 주세요.'; return; }
     store.set('muldae_nick', name);
-    const entry = { name, ch: lastScore.ch, diff: lastScore.diff, score: lastScore.total, rw: lastScore.won + ':' + lastScore.lost, at: Date.now() };
+    const entry = { name, ch: lastScore.ch, stage: lastScore.stage, score: lastScore.score, at: Date.now() };
+    if (run) run.saved = true;
     $('rankSave').disabled = true; $('rankNick').disabled = true;
     const done = msg => { $('rankErr').className = 'err ok'; $('rankErr').textContent = msg; lastScore = null; };
     if (rankMode === 'api') {
