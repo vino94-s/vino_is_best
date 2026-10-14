@@ -1167,7 +1167,7 @@ $("muteBtn").addEventListener("click", ()=>{ audio.unlock(); audio.setMuted(!aud
 
 /* ---------------- ranking: claude.ai live db → Google Sheet (GitHub Pages) → this device ---------------- */
 // 깃허브 페이지에서 쓰는 공유 랭킹 서버 (구글 시트 + Apps Script 웹 앱 주소). 비어 있으면 이 기기에만 저장.
-const RANK_API = "";
+const RANK_API = "https://script.google.com/macros/s/AKfycbzlxKYPuVexe4qXgtrlEukzVMVPYBACaQTIbzsQgfu0r_MqkrHjD3ELY2UNeGvUHm-haw/exec";
 let mode = "local", db = null, uid = null, canWrite = null, readOnly = false, rows = [], myDoc = null, sheetErr = "";
 const nick = $("nick"), note = $("note"), list = $("rankList"), empty = $("rankEmpty"), liveTag = $("liveTag");
 nick.value = LS.get("circus.nick", "") || "";
