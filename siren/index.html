@@ -170,8 +170,8 @@ body{padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:max(12px,
       <div class="cast" id="cast"></div>
       <p>컵만 탭! 방해꾼을 치면 목숨이 하나 줄어요. 목숨 3개가 다 떨어지면 끝.</p>
       <div class="rules">
-        <div><b>점수</b> 컵 하나에 +10점, 250점마다 속도 +5% (1500점에서 130%로 고정)</div>
-        <div><b>1500점 이후</b> 방해꾼이 점점 더 자주 나와요 (최대 45%)</div>
+        <div><b>점수</b> 컵 하나에 +10점, 250점마다 속도 +5% (최대 200%)</div>
+        <div><b>1500점 이후</b> 방해꾼이 250점마다 5%씩 늘어요 (최대 75%)</div>
       </div>
       <button class="btn" id="startBtn" type="button">게임 시작</button>
     </div>
@@ -219,11 +219,13 @@ const FAKES = [
 ].map(src=>({src}));
 
 /* ---------- tuning ---------- */
-const BASE_UP = 1350, BASE_GAP = 800, STEP = 250, SPEED_CAP_SCORE = 1500;
-const BASE_FAKE = 0.25, FAKE_STEP = 0.05, FAKE_MAX = 0.45;
-const speedLevel = s => Math.min(Math.floor(s/STEP), SPEED_CAP_SCORE/STEP);   // 0..6
-const speedMul   = s => Math.pow(1.05, speedLevel(s));
-const fakeRate   = s => s < SPEED_CAP_SCORE ? BASE_FAKE : Math.min(FAKE_MAX, BASE_FAKE + FAKE_STEP*(Math.floor((s-SPEED_CAP_SCORE)/STEP)+1));
+const BASE_UP = 1350, BASE_GAP = 800, STEP = 250;
+const SPEED_STEP = 0.05, SPEED_MAX = 2.0;              // +5%p every 250 pts → 200% at 5000 pts
+const FAKE_START = 1500, BASE_FAKE = 0.25, FAKE_STEP = 0.05, FAKE_MAX = 0.75;   // 30% at 1500 → 75% at 3750
+const MAX_LEVEL  = Math.round((SPEED_MAX-1)/SPEED_STEP);
+const speedLevel = s => Math.min(Math.floor(s/STEP), MAX_LEVEL);
+const speedMul   = s => 1 + SPEED_STEP*speedLevel(s);
+const fakeRate   = s => s < FAKE_START ? BASE_FAKE : Math.min(FAKE_MAX, BASE_FAKE + FAKE_STEP*(Math.floor((s-FAKE_START)/STEP)+1));
 const maxActive  = s => s >= 1000 ? 3 : s >= 400 ? 2 : 1 + (s >= 150 ? 1 : 0);
 
 /* ---------- board ---------- */
@@ -257,13 +259,10 @@ function hud(){
   scoreEl.textContent = score.toLocaleString("ko-KR");
   livesEls.forEach((l,i)=>l.classList.toggle("lost", i>=lives));
   const lv = speedLevel(score), pct = Math.round(speedMul(score)*100);
-  if (score >= SPEED_CAP_SCORE){
-    speedEl.className="speed max";
-    speedEl.innerHTML = `${pct}%<small>가짜 ${Math.round(fakeRate(score)*100)}%</small>`;
-  } else {
-    speedEl.className="speed";
-    speedEl.innerHTML = `${pct}%<small>다음 단계 ${(lv+1)*STEP}점</small>`;
-  }
+  speedEl.className = "speed" + (lv >= MAX_LEVEL || score >= FAKE_START ? " max" : "");
+  const sub = score >= FAKE_START ? `방해꾼 ${Math.round(fakeRate(score)*100)}%`
+            : `다음 단계 ${(lv+1)*STEP}점`;
+  speedEl.innerHTML = `${pct}%<small>${sub}</small>`;
 }
 
 let toastT=0;
@@ -351,12 +350,14 @@ function whack(i){
   const lv = speedLevel(score);
   if (lv > lastLevel){
     lastLevel = lv;
-    if (score >= SPEED_CAP_SCORE) toast("최고 속도! 이제 가짜가 늘어나요", true);
-    else toast(`속도 +5% · ${Math.round(speedMul(score)*100)}%`);
+    const sp = Math.round(speedMul(score)*100), fr = Math.round(fakeRate(score)*100);
+    const top = lv >= MAX_LEVEL ? "최고 속도 200%" : `속도 ${sp}%`;
+    if (score >= FAKE_START) toast(`${top} · 방해꾼 ${fr}%`, true);
+    else toast(`${top} (+5%)`);
   }
-  if (score >= SPEED_CAP_SCORE){
-    const tier = Math.floor((score-SPEED_CAP_SCORE)/STEP)+1;
-    if (tier > lastFakeTier){ if (lastFakeTier>0 && fakeRate(score) > BASE_FAKE+FAKE_STEP*lastFakeTier) toast(`가짜 등장률 ${Math.round(fakeRate(score)*100)}%`, true); lastFakeTier = tier; }
+  if (score >= FAKE_START && fakeRate(score) > lastFakeTier){
+    if (lv >= MAX_LEVEL || score % STEP !== 0) toast(`방해꾼 ${Math.round(fakeRate(score)*100)}%`, true);
+    lastFakeTier = fakeRate(score);
   }
   hud();
   if (lives <= 0) gameOver();
