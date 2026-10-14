@@ -510,7 +510,7 @@ $('#overCard').addEventListener('click',e=>{const a=e.target.closest('[data-a]')
    claude.ai 에서 열면: 아티팩트 공유 DB
    GitHub Pages 등에서 열면: RANK_API (구글 시트 Apps Script 웹 앱, ranking-apps-script.gs 참고)
    둘 다 없으면: 이 기기에만 저장 */
-const RANK_API="";
+const RANK_API="https://script.google.com/macros/s/AKfycbxptjUMFgQChHRweHcX4Ypo4cg8wGjUb4ShICO8ZTTt8Ggw7DbHrZdNNotZ8Ss7d7aE/exec";
 let db=null,uid=null,rankBot=[],rankFriend=[],dbState='loading';
 let myBot=store.get('lbot',null),myFriend=store.get('lfriend',null);
 let wq=Promise.resolve();const queue=fn=>{wq=wq.then(fn).catch(()=>{})};
