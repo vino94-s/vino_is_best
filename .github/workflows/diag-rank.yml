@@ -26,9 +26,13 @@ jobs:
             grep -iE '^(HTTP|access-control|content-type)' diag/h.txt >> $R
             echo "--- body (first 1500 chars)" >> $R; head -c 1500 diag/b.txt >> $R; echo >> $R
           done
+          echo "===== circus 403 page text" >> $R
+          curl -sS -m 30 -L "$C?t=$(date +%s)" -H "Accept-Language: ko,en" | python3 -c "import sys,re,html; t=sys.stdin.read(); m=re.search(r'<title>(.*?)</title>',t,re.S); print('TITLE:', html.unescape(m.group(1)) if m else None); b=re.sub(r'<(script|style)[^>]*>.*?</\\1>','',t,flags=re.S); b=re.sub(r'<[^>]+>',' ',b); print('TEXT:', ' '.join(html.unescape(b).split())[:700])" >> $R 2>&1
           echo "===== circus POST probe (score 0: must be rejected, writes nothing)" >> $R
           curl -sS -m 30 -L -H "Origin: $O" -H 'Content-Type: text/plain;charset=utf-8' --data '{"name":"diag","score":0,"meters":0,"pots":0,"rings":0,"bags":0,"ch":"yongwang"}' -o diag/p.txt -w 'final_code=%{http_code} redirects=%{num_redirects} url=%{url_effective}\n' "$C" >> $R 2>&1
           head -c 1500 diag/p.txt >> $R; echo >> $R
           rm -f diag/h.txt diag/b.txt diag/p.txt
           git config user.name "diag-bot"; git config user.email "diag@users.noreply.github.com"
           git add diag/result.txt; git commit -m "diag result"; git push
+
+# rerun 2
