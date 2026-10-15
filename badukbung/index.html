@@ -193,6 +193,7 @@ canvas{display:block;width:100%;max-width:100%;aspect-ratio:1;border-radius:10px
       <canvas id="cv" width="1000" height="1000"></canvas>
       <div class="overlay" id="over" hidden><div class="card" id="overCard"></div></div>
     </div>
+    <div class="status" id="netWarn" style="color:var(--lose)" hidden></div>
     <div class="status" id="status"></div>
   </section>
 
@@ -553,7 +554,7 @@ const CODE_CHARS='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const PEER_PREFIX='daehwanjang-badukbung-v1-';
 const net={active:false,host:false,code:'',kind:'',sid:Math.random().toString(36).slice(2,12),
   me:{name:'',ci:null,ready:false},opp:null,oppSid:null,oppPeer:null,round:0,myIdx:0,game:null,note:'',
-  raw:null,outSeq:0,unacked:[],inSeq:0,buf:{},lastHeard:0,timer:0,helloTimer:0,peer:null,conn:null,room:null};
+  raw:null,outSeq:0,unacked:[],inSeq:0,buf:{},lastHeard:0,lastSent:0,lastRetry:0,oppAway:false,timer:0,helloTimer:0,peer:null,conn:null,room:null};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let roomNS;
 async function getRoomNS(){if(roomNS!==undefined)return roomNS;try{roomNS=(window.claude&&window.claude.use)?await window.claude.use('room'):null}catch(e){roomNS=null}return roomNS}
@@ -562,14 +563,15 @@ function loadScript(src){return new Promise((res,rej)=>{const s=document.createE
 async function loadPeer(){if(window.Peer)return true;try{await loadScript('https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js')}catch(e){try{await loadScript('https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js')}catch(e2){return false}}return !!window.Peer}
 
 function relReset(){net.outSeq=0;net.unacked=[];net.inSeq=0;net.buf={}}
-function rawSend(m){m.f=net.sid;if(net.oppSid&&!m.to)m.to=net.oppSid;try{net.raw&&net.raw(m)}catch(e){}}
+function rawSend(m){m.f=net.sid;if(net.oppSid&&!m.to)m.to=net.oppSid;net.lastSent=Date.now();try{net.raw&&net.raw(m)}catch(e){}}
 function nsend(d){if(!net.oppSid)return;const m={t:'r',s:++net.outSeq,d};net.unacked.push(m);rawSend(m)}
 function onRaw(m){
   if(!m||typeof m!=='object'||m.f===net.sid||typeof m.f!=='string')return;
   if(m.to&&m.to!==net.sid)return;
   if(m.t==='hello'){
     if(!net.host)return;
-    if(net.oppSid&&net.oppSid!==m.f&&Date.now()-net.lastHeard<8000){rawSend({t:'full',to:m.f});return}
+    if(net.oppSid&&net.oppSid!==m.f&&Date.now()-net.lastHeard<30000){const x={t:'full',to:m.f,f:net.sid};if(m._conn){try{m._conn.send(x)}catch(e){}setTimeout(()=>{try{m._conn.close()}catch(e){}},400)}else rawSend(x);return}
+    if(m._conn)net.conn=m._conn;
     if(net.oppSid!==m.f){net.oppSid=m.f;relReset();net.opp=null;net.note=''}
     net.oppPeer=m._peer||null;net.lastHeard=Date.now();
     rawSend({t:'welcome',to:m.f,game:sel.game});sendMe();renderLobby();return;
@@ -582,6 +584,9 @@ function onRaw(m){
   if(m.t==='full'){if(!net.host&&!net.oppSid){closeNet();friendMsg('이미 두 명이 대결 중인 방이에요.',true);friendBusy(false)}return}
   if(m.f!==net.oppSid)return;
   net.lastHeard=Date.now();
+  if(m._conn&&m._conn!==net.conn&&m._conn.open)net.conn=m._conn;
+  if(m.t==='away'){net.oppAway=true;return}
+  net.oppAway=false;
   if(m.t==='a'){net.unacked=net.unacked.filter(x=>x.s>m.s);return}
   if(m.t==='bye'){oppGone();return}
   if(m.t==='r'&&typeof m.s==='number'){
@@ -603,8 +608,12 @@ function tickNet(){
   if(!net.active)return;
   if(net.oppSid){
     for(const m of net.unacked.slice(0,8))rawSend(m);
-    if(Date.now()-net.lastHeard>2500)rawSend({t:'hb'});
-    if(Date.now()-net.lastHeard>15000)oppGone();
+    const now=Date.now(),quiet=now-net.lastHeard;
+    if(now-net.lastSent>1500)rawSend({t:'hb'});
+    if(document.hidden){net.lastHeard=Math.max(net.lastHeard,now-3000);return}
+    if(quiet>3500)reconnectGuest();
+    if(quiet>(net.oppAway?180000:45000)){oppGone();return}
+    netWarn(quiet>6000?(net.oppAway?(net.opp?net.opp.name:'친구')+'님이 잠깐 다른 앱에 가 있어요. 기다리는 중…':'연결이 불안정해요. 다시 연결하는 중…'):'');
   }
 }
 async function openTransport(code,host){
@@ -614,7 +623,6 @@ async function openTransport(code,host){
     let r;try{r=await room.join('bdb-'+code.toLowerCase())}catch(e){return '연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.'}
     net.room=r;
     r.on('g',msg=>{if(msg.sameTab)return;const d=msg.data;if(d&&typeof d==='object'){d._peer=msg.peer;onRaw(d)}},()=>{});
-    r.onPeers(ch=>{if(net.oppPeer&&ch.left.some(p=>p.peer===net.oppPeer))oppGone()},()=>{});
     net.raw=m=>{r.emit('g',m).catch(()=>{})};
     if(host){try{await r.presence({role:'host'})}catch(e){}await sleep(1200);
       if(r.peers().some(p=>!p.sameTab&&p.presence&&p.presence.role==='host')){try{await r.leave()}catch(e){}net.room=null;return 'taken'}}
@@ -628,10 +636,7 @@ async function openTransport(code,host){
     if(host){
       const peer=new window.Peer(PEER_PREFIX+code.toLowerCase());net.peer=peer;
       peer.on('open',()=>fin('ok'));
-      peer.on('connection',c=>{
-        if(net.conn&&net.conn.open&&net.oppSid&&Date.now()-net.lastHeard<8000){c.on('open',()=>{try{c.send({t:'full',f:net.sid})}catch(e){}setTimeout(()=>c.close(),400)});return}
-        try{if(net.conn)net.conn.close()}catch(e){}net.conn=c;wireConn(c);
-      });
+      peer.on('connection',c=>{wireConn(c);if(!net.conn||!net.conn.open)net.conn=c});
       peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
       peer.on('error',e=>{if(e.type==='unavailable-id'){try{peer.destroy()}catch(x){}fin('taken')}else fin('연결 서버에 문제가 있어요. 잠시 뒤 다시 시도해 주세요.')});
     }else{
@@ -642,13 +647,29 @@ async function openTransport(code,host){
     setTimeout(()=>fin('연결 서버가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.'),12000);
   });
 }
-function wireConn(c){c.on('data',onRaw);c.on('close',()=>{if(c===net.conn&&net.oppSid)oppGone()});c.on('error',()=>{})}
+function wireConn(c){c.on('data',m=>{if(m&&typeof m==='object'){m._conn=c;onRaw(m)}});c.on('close',()=>{if(c===net.conn)net.conn=null});c.on('error',()=>{})}
+/* 친구 쪽 연결이 끊기면(화면 꺼짐·앱 전환·네트워크 변경) 같은 방에 자동으로 다시 붙어요. 방장은 그대로 기다려요. */
+function reconnectGuest(){
+  if(net.host||net.kind!=='peer'||!net.active||!net.oppSid)return;
+  if(net.conn&&net.conn.open)return;
+  if(Date.now()-net.lastRetry<4000)return;net.lastRetry=Date.now();
+  const go=()=>{try{const c=net.peer.connect(PEER_PREFIX+net.code.toLowerCase(),{reliable:true,serialization:'json'});wireConn(c);c.on('open',()=>{net.conn=c;rawSend({t:'hello',name:net.me.name})})}catch(e){}};
+  if(!net.peer||net.peer.destroyed){const pr=new window.Peer();net.peer=pr;pr.on('open',go);pr.on('error',()=>{})}
+  else if(net.peer.disconnected){try{net.peer.reconnect()}catch(e){}setTimeout(go,1000)}
+  else go();
+}
+function netWarn(t){const el=$('#netWarn');if(el.textContent!==t){el.textContent=t;el.hidden=!t}}
+document.addEventListener('visibilitychange',()=>{
+  if(!net.active||!net.oppSid)return;
+  if(document.hidden){rawSend({t:'away'})}
+  else{net.lastHeard=Math.max(net.lastHeard,Date.now()-3000);rawSend({t:'hb'});net.lastRetry=0;reconnectGuest()}
+});
 function closeNet(){
   clearInterval(net.timer);clearInterval(net.helloTimer);
   try{if(net.conn)net.conn.close()}catch(e){}
   try{if(net.peer)net.peer.destroy()}catch(e){}
   try{if(net.room)net.room.leave().catch(()=>{})}catch(e){}
-  Object.assign(net,{active:false,conn:null,peer:null,room:null,raw:null,oppSid:null,oppPeer:null,opp:null,note:''});relReset();
+  Object.assign(net,{active:false,oppAway:false,lastRetry:0,conn:null,peer:null,room:null,raw:null,oppSid:null,oppPeer:null,opp:null,note:''});relReset();
 }
 function genCode(){let c='';for(let k=0;k<4;k++)c+=CODE_CHARS[(Math.random()*CODE_CHARS.length)|0];return c}
 
@@ -738,7 +759,7 @@ function leaveRoom(){
   stopLoop();G=null;sel.mode='bot';FLIP=false;show('mode');
 }
 function oppGone(){
-  if(!net.oppSid)return;
+  if(!net.oppSid)return;netWarn('');
   const name=net.opp?net.opp.name:'친구';
   net.oppSid=null;net.oppPeer=null;net.opp=null;relReset();
   if(G&&sel.mode==='net'){stopLoop();G=null}
