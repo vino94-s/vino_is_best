@@ -1,0 +1,34 @@
+name: diag-rank
+on:
+  push:
+    branches: [diag-rank]
+    paths: ['.github/workflows/diag-rank.yml']
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe circus ranking server
+        run: |
+          set +e
+          C="https://script.google.com/macros/s/AKfycbzlxKYPuVexe4qXgtrlEukzVMVPYBACaQTIbzsQgfu0r_MqkrHjD3ELY2UNeGvUHm-haw/exec"
+          S="https://script.google.com/macros/s/AKfycby58ArqCsEETODw_pV38u9OsBvmkoqVjd10cVbGwQsS5yMIC-Ov3ZNlp1nMKRwhjFfKlw/exec"
+          O="https://vino94-s.github.io"
+          mkdir -p diag; R=diag/result.txt; : > $R
+          for name in circus siren; do
+            [ $name = circus ] && U=$C || U=$S
+            echo "===== $name GET first hop" >> $R
+            curl -sS -m 30 -o /dev/null -D - -H "Origin: $O" "$U?t=$(date +%s)" 2>&1 | grep -iE '^(HTTP|location|access-control)' >> $R
+            echo "===== $name GET final" >> $R
+            curl -sS -m 30 -L -D diag/h.txt -H "Origin: $O" -o diag/b.txt -w 'final_code=%{http_code} redirects=%{num_redirects} url=%{url_effective}\n' "$U?t=$(date +%s)" >> $R 2>&1
+            grep -iE '^(HTTP|access-control|content-type)' diag/h.txt >> $R
+            echo "--- body (first 1500 chars)" >> $R; head -c 1500 diag/b.txt >> $R; echo >> $R
+          done
+          echo "===== circus POST probe (score 0: must be rejected, writes nothing)" >> $R
+          curl -sS -m 30 -L -H "Origin: $O" -H 'Content-Type: text/plain;charset=utf-8' --data '{"name":"diag","score":0,"meters":0,"pots":0,"rings":0,"bags":0,"ch":"yongwang"}' -o diag/p.txt -w 'final_code=%{http_code} redirects=%{num_redirects} url=%{url_effective}\n' "$C" >> $R 2>&1
+          head -c 1500 diag/p.txt >> $R; echo >> $R
+          rm -f diag/h.txt diag/b.txt diag/p.txt
+          git config user.name "diag-bot"; git config user.email "diag@users.noreply.github.com"
+          git add diag/result.txt; git commit -m "diag result"; git push
