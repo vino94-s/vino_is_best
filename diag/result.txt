@@ -1,0 +1,29 @@
+===== circus GET first hop
+HTTP/2 403 
+===== circus GET final
+final_code=403 redirects=0 url=https://script.google.com/macros/s/AKfycbzlxKYPuVexe4qXgtrlEukzVMVPYBACaQTIbzsQgfu0r_MqkrHjD3ELY2UNeGvUHm-haw/exec?t=1792024859
+HTTP/2 403 
+content-type: text/html; charset=utf-8
+--- body (first 1500 chars)
+<!DOCTYPE html><html lang="en"><head><script nonce="WcVdE5QM0tT-OYHxZfHKEg">window['ppConfig'] = {productName: '26981ed0d57bbad37e728ff58134270c', deleteIsEnforced:  false , sealIsEnforced:  false , heartbeatRate:  0.5 , periodicReportingRateMillis:  60000.0 , disableAllReporting:  false };(function(){'use strict';function k(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}function l(a){var b=typeof Symbol!="undefined"&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if(typeof a.length=="number")return{next:k(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}var m=typeof Object.defineProperties=="function"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+function n(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var p=n(this);function q(a,b){if(b)a:{var c=p;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&b!=null&&m(c,a,{configurable:!0,writable:!0,value:b})}}
+q("Object.is",function(a){return a?a:function(b,c){return b===c?b!==0||1/b===1/c:b!==b&&c!==c}});q("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for
+===== siren GET first hop
+HTTP/2 302 
+access-control-allow-origin: *
+location: https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRQME-4A-rXQG0OEKCFZTTZJkjLIpnfewmzcN0pvG2HRRcpsWwdfCsk4_3Fd-sBLjjlEl4MluLhvIXiG4rKLJFagli5dHfxvl-EpiAcjLwaVtUpipFBHVcWFTBT7m5wXY95Df3UDo68TK34FfB0xkxFcmNHJp6w6JzSfwaD6rGe_YZb4_habKa0Fw8xCnzqoktmcpYRP10l28v4Gfy48jtwXFCETWOBX1NUv-_TPqGeQ2aJ3QS3Ns8zlieuuW9gayntzugbFC2IcC8e045YdIryJuvMpqNJuxL_P5cZ&lib=M0huTs3SG0N8bC9Rwc0FrvYL0_IJ80Lqb
+===== siren GET final
+final_code=200 redirects=1 url=https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTHUIPGQw0dsRV486dHGObUjvNWNrB-kgqsNRkcqvN_QwkEjp_4F4smeoU0QSSoZUJhYNQzLn1lzlNtdhfDabi3hdOwtmy7oY1TV5nZnb9wDJMMEQ88I6c2W1MpDhhU4cX1ddlFA0sJRuUn5FU3LuKoYg2wIngNWzsOCr6vn_17b1D8a1nagZVB8LPihjEE3fuG0ddOUTl1Sx7KauA79b-Kxj31WFLcmMIvUkuhcCjyLZSfmWPF_PaG2vhXWXvaxID9qEgoI0JHud8hhKtqVaqicXOkZrCwhaiyPzMI&lib=M0huTs3SG0N8bC9Rwc0FrvYL0_IJ80Lqb
+HTTP/2 302 
+content-type: application/binary
+access-control-allow-origin: *
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+access-control-allow-origin: *
+--- body (first 1500 chars)
+{"ok":true,"rows":[{"name":"준탁","score":11110,"at":1792022962397},{"name":"묭","score":10230,"at":1791997735109},{"name":"차은우","score":10010,"at":1791990899288},{"name":"수현준영","score":7010,"at":1791987481424},{"name":"수염","score":3600,"at":1792021122110},{"name":"고라니","score":2680,"at":1792018652080},{"name":"현승","score":2650,"at":1791990616148},{"name":"우잉","score":2190,"at":1791989191255},{"name":"비노","score":1740,"at":1791988655784},{"name":"만두","score":1410,"at":1792024365617}]}
+===== circus POST probe (score 0: must be rejected, writes nothing)
+final_code=403 redirects=0 url=https://script.google.com/macros/s/AKfycbzlxKYPuVexe4qXgtrlEukzVMVPYBACaQTIbzsQgfu0r_MqkrHjD3ELY2UNeGvUHm-haw/exec
+<!DOCTYPE html><html lang="en"><head><script nonce="WFLQIQa-hOEMXi_nETgv8Q">window['ppConfig'] = {productName: '26981ed0d57bbad37e728ff58134270c', deleteIsEnforced:  false , sealIsEnforced:  false , heartbeatRate:  0.5 , periodicReportingRateMillis:  60000.0 , disableAllReporting:  false };(function(){'use strict';function k(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}function l(a){var b=typeof Symbol!="undefined"&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if(typeof a.length=="number")return{next:k(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}var m=typeof Object.defineProperties=="function"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
+function n(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var p=n(this);function q(a,b){if(b)a:{var c=p;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&b!=null&&m(c,a,{configurable:!0,writable:!0,value:b})}}
+q("Object.is",function(a){return a?a:function(b,c){return b===c?b!==0||1/b===1/c:b!==b&&c!==c}});q("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for
