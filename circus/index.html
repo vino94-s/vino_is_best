@@ -50,8 +50,11 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 .score b{display:block;font:400 clamp(30px,7vw,44px)/1 var(--display);color:var(--hud);letter-spacing:.02em;text-shadow:0 3px 0 var(--red-deep),0 0 18px rgba(242,179,61,.35);font-variant-numeric:tabular-nums}
 .score span{display:inline-block;margin-top:6px;font:700 12px var(--body);letter-spacing:.08em;color:var(--gold);font-variant-numeric:tabular-nums}
 .score em{font-style:normal;color:var(--hud);opacity:.75;margin-left:8px}
-.routine{display:block;width:max-content;margin:6px auto 0;font:900 12px var(--body);font-style:normal;letter-spacing:.04em;color:var(--gold-ink);background:var(--gold);padding:4px 10px;border-radius:999px;box-shadow:0 2px 0 var(--red-deep)}
+.tags{position:absolute;left:0;right:0;top:calc(84px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.routine{display:block;max-width:100%;text-align:center;font:900 12px var(--body);font-style:normal;letter-spacing:.04em;color:var(--gold-ink);background:var(--gold);padding:4px 10px;border-radius:999px;box-shadow:0 2px 0 var(--red-deep)}
 .routine:empty{display:none}
+.routine.heck{background:var(--red);color:var(--cream);box-shadow:0 2px 0 var(--red-deep),inset 0 0 0 2px var(--gold)}
 .routine.flip{animation:flip .5s cubic-bezier(.2,1.5,.4,1)}
 @keyframes flip{from{transform:scale(.6) rotate(-6deg);opacity:.2}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.routine.flip{animation:none}}
@@ -165,12 +168,13 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
 
   <header class="hud" id="hud" hidden>
     <div class="lives" id="lives" aria-label="목숨"></div>
-    <div class="score" aria-live="off"><b id="scoreNum">0</b><span id="meter">0m<em id="combo"></em></span><i class="routine" id="routineTag"></i></div>
+    <div class="score" aria-live="off"><b id="scoreNum">0</b><span id="meter">0m<em id="combo"></em></span></div>
     <div class="tools">
       <button class="tbtn" id="muteBtn" type="button" aria-label="소리 끄기"><svg viewBox="0 0 24 24" id="muteIco"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
       <button class="tbtn" id="pauseBtn" type="button" aria-label="일시정지"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
     </div>
   </header>
+  <div class="tags" id="tags" hidden><i class="routine" id="routineTag"></i><i class="routine heck" id="heckTag"></i></div>
   <div class="hint" id="hint" hidden>탭 · 스페이스 = 점프</div>
 
   <!-- title / character select -->
@@ -183,7 +187,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-o
       </div>
       <div class="section-label"><span>사자 탈 사람</span><b id="pickName">용왕</b></div>
       <div class="grid" id="picks" role="radiogroup" aria-label="캐릭터 고르기"></div>
-      <p class="how"><b>탭</b>이나 <b>스페이스</b>로 점프. 불항아리는 넘고, 불붙은 링은 통과해요.<br>링 안의 돈주머니를 낚아채면 +500. 목숨은 셋.<span class="rot"><br>폰을 가로로 돌리면 앞이 더 멀리 보여요.</span></p>
+      <p class="how"><b>탭</b>이나 <b>스페이스</b>로 점프. 불항아리는 넘고, 불붙은 링은 통과해요.<br>링 안의 돈주머니를 낚아채면 +500. 목숨은 셋.<br>가끔 다른 멤버들이 <b>난입</b>해서 방해해요.<span class="rot"><br>폰을 가로로 돌리면 앞이 더 멀리 보여요.</span></p>
       <div class="row">
         <button class="btn" id="startBtn" type="button">공연 시작</button>
         <button class="btn ghost" id="rankOpen" type="button">랭킹</button>
@@ -276,7 +280,8 @@ const MIN_W = 640, MIN_H = 560;
 const PX_PER_M = 32;
 const GRAV = 2300, JUMP_V = 960, JUMP_CUT = 790;
 const STEP = 1/120;
-const SPEED_START = 340, SPEED_MAX = 442;   // top speed = 130% of the start
+const SPEED_START = 400, SPEED_MAX = 600;   // top speed = 150% of the start
+const AIR = 2*JUMP_V/GRAV;                 // full-jump airtime (s): every gap is sized from it
 const RING_LOW = 60, RING_HIGH = 398;      // opening (height above floor)
 const BAG_H = 322;                          // bag centre height
 const POT_H = 60;
@@ -585,7 +590,8 @@ const S = {
   h:0, vy:0, prevH:0, onGround:true, buffer:0, holding:false, cutDone:true,
   lives:3, inv:0, score:0, meters:0, pots:0, rings:0, bags:0, combo:0,
   phase:0, tailT:0, squash:1, squashV:0, rideY:0, rideV:0,
-  shake:0, nextX:900, rIdx:0, rStep:0, rState:{}, tier:0, base:340, dyingT:0, sayT:0, sayText:"", lastMilestone:0, flash:0,
+  shake:0, nextX:900, rIdx:0, rStep:0, rState:{}, tier:0, base:400, dyingT:0,
+  hT:7, hLast:"", hQueue:null, glare:0, stare:0, heavy:0, bird:null, dodges:0, sayT:0, sayText:"", lastMilestone:0, flash:0,
 };
 const obs = [];   // active obstacles
 const parts = []; for(let i=0;i<180;i++) parts.push({on:false});
@@ -594,7 +600,8 @@ const pops = [];  for(let i=0;i<16;i++) pops.push({on:false});
 function resetRun(){
   Object.assign(S, {t:0, dist:0, prevDist:0, speed:SPEED_START, base:SPEED_START, tier:0, slow:1, h:0, vy:0, prevH:0, onGround:true, buffer:0, holding:false, cutDone:true,
     lives:3, inv:0, score:0, meters:0, pots:0, rings:0, bags:0, combo:0, squash:1, squashV:0, rideY:0, rideV:0,
-    shake:0, dyingT:0, sayT:0, lastMilestone:0, flash:0});
+    shake:0, dyingT:0, sayT:0, lastMilestone:0, flash:0,
+    hT:7, hLast:"", hQueue:null, glare:0, stare:0, heavy:0, bird:null, dodges:0, hSay:"", hSayT:0});
   obs.length = 0;
   S.nextX = 820;
   switchRoutine(true);
@@ -628,12 +635,24 @@ function switchRoutine(first){
   showRoutine();
 }
 
-/* spawn obstacles ahead of the camera, following the current routine */
+/* spawn obstacles ahead of the camera, following the current routine.
+   On top of the routine, any obstacle can be a random "wildcard", and queued character
+   intrusions take their own slot with extra room before and after. */
 function spawn(){
-  const m = S.meters, sp = S.base || SPEED_START, camX = S.dist;
+  const m = S.meters, sp = S.base || SPEED_START, camX = S.dist, air = AIR*sp;
   while (S.nextX < camX + W + 260){
+    if (S.hQueue){
+      const id = S.hQueue; S.hQueue = null;
+      const x = Math.max(S.nextX + air*0.7, camX + W + 120);
+      const end = spawnHeck(id, x, sp, air);
+      S.nextX = end + air*1.5 + 160;
+      continue;
+    }
     const x = Math.max(S.nextX, camX + W + 120);
-    const R = ROUTINES[S.rIdx], st = R.next(S.rStep++, S.rState);
+    const R = ROUTINES[S.rIdx];
+    let st = R.next(S.rStep++, S.rState);
+    if (Math.random() < 0.3 + Math.min(0.2, m/4000))
+      st = {kind:pickW([["pot",30],["ring",22],["moving",16],["ringPot",16],["double",16]]), bag:.25, gap:pickW([["normal",72],["short",28]])};
     const bag = () => Math.random() < (m > 40 ? st.bag : 0);
     let span = 0, extra = 0, kind = st.kind;
     if (kind === "double" && sp < DOUBLE_MIN_SPEED) kind = "pot";
@@ -646,7 +665,7 @@ function spawn(){
       obs.push({type:"pot", x, done:false, hit:false, under:true});
     } else if (kind === "moving"){
       // moves on its own once it is on screen; head start keeps it from catching the obstacle before it
-      const vx = 55 + Math.random()*Math.min(80, 40 + m*0.04);
+      const vx = 60 + Math.random()*Math.min(90, 45 + m*0.05);
       const lead = vx*(W - PX + 60)/sp + 60;
       obs.push({type:"ring", x:x + lead, vx, bag:bag(), got:false, done:false, hit:false});
       extra = lead;
@@ -655,14 +674,78 @@ function spawn(){
     } else {
       obs.push({type:"pot", x, done:false, hit:false});
     }
-    const tight = Math.min(0.15, m/4000);
+    const tight = Math.min(0.25, m/3000);
     let gap;
-    if (st.gap === "short") gap = sp*0.92 + 70 + Math.random()*30;
-    else if (st.gap === "long") gap = sp*(1.9 + Math.random()*0.5) + 220;
+    if (st.gap === "short") gap = air*1.1 + 60 + Math.random()*40;
+    else if (st.gap === "long") gap = air*2.3 + 200;
     else if (st.gap === "beat") gap = sp*S.rState.beat + 190;
-    else gap = (sp*(1.0 + Math.random()*0.7) + 200 + Math.random()*100) * (1 - tight);
+    else gap = Math.max(air*1.1 + 80, (air*(1.3 + Math.random()*0.8) + 140 + Math.random()*80) * (1 - tight));
     S.nextX = x + span + extra + gap;
   }
+}
+
+/* ---------------- character intrusions ----------------
+   The seven members who are not riding barge in. Five leave something on the track,
+   each dodged a different way; three mess with the screen or the jump. */
+const HECKS = {
+  mandu:    {kind:"track", act:"데굴데굴 · 점프!"},
+  myung:    {kind:"track", act:"알 폭격 · 깨진 알 넘기"},
+  goran:    {kind:"track", act:"콧물 미사일 · 점프 금지!"},
+  yongwang: {kind:"track", act:"에헴 파도 · 길게 점프"},
+  juntak:   {kind:"track", act:"!!!!!!! 기둥 · 꾹 눌러 높이"},
+  haessal:  {kind:"fx",    act:"눈부심"},
+  bino:     {kind:"fx",    act:"뚫어져라…"},
+  yeoni:    {kind:"fx",    act:"꼬리 잡기 · 점프가 무거워요"},
+};
+const HEAVY_MULT = 0.9;
+function heckReady(id){
+  if (id === selId || id === S.hLast) return false;
+  if ((id === "yongwang" || id === "juntak") && S.heavy > 0) return false;   // these need a full-power jump
+  if (id === "haessal" && S.glare > 0) return false;
+  if (id === "bino" && S.stare > 0) return false;
+  if (id === "yeoni" && S.heavy > 0) return false;
+  return true;
+}
+function triggerHeck(force){
+  const pool = Object.keys(HECKS).filter(heckReady);
+  if (!pool.length) return;
+  const id = force && HECKS[force] && force !== selId ? force : pool[(Math.random()*pool.length)|0];
+  S.hLast = id;
+  if (HECKS[id].kind === "track") S.hQueue = id;
+  else if (id === "haessal"){ S.glare = 2.8; }
+  else if (id === "bino"){ S.stare = 3.0; }
+  else if (id === "yeoni"){ S.heavy = 4.5; }
+  announceHeck(id);
+  sfx.heck();
+}
+/* returns the world x where the intrusion's slot ends */
+function spawnHeck(id, x, sp, air){
+  if (id === "mandu"){
+    const vx = 170 + Math.random()*80, lead = vx*(W - PX + 60)/sp + 60;
+    obs.push({type:"roll", heck:id, x:x + lead, vx, w:52, h:50, done:false, hit:false});
+    return x + lead;
+  }
+  if (id === "goran"){
+    const vx = 230 + Math.random()*70, lead = vx*(W - PX + 60)/sp + 60;
+    obs.push({type:"fly", heck:id, x:x + lead, vx, y:235, r:24, done:false, hit:false});
+    return x + lead;
+  }
+  if (id === "myung"){
+    let ex = x;
+    for(let i=0;i<3;i++){
+      obs.push({type:"egg", heck:id, x:ex, w:44, h:30, fy:330, vy:0, drop:false, landed:false, done:false, hit:false});
+      if (i < 2) ex += air*1.12 + 70 + Math.random()*50;
+    }
+    S.bird = {x:W + 90, y:330, flap:0, gone:false};
+    return ex;
+  }
+  if (id === "yongwang"){
+    obs.push({type:"wave", heck:id, x, w:96, h:64, done:false, hit:false});
+    return x + 48;
+  }
+  // juntak: springs up out of the floor as it comes on screen
+  obs.push({type:"pop", heck:id, x, w:60, h:112, up:0, done:false, hit:false});
+  return x;
 }
 
 /* ---------------- particles & popups ---------------- */
@@ -672,6 +755,7 @@ function emit(n, x, y, kind){
     p.on = true; p.kind = kind; p.x = x; p.y = y; p.life = 0;
     if (kind==="dust"){ p.vx = -60 - Math.random()*140; p.vy = -40 - Math.random()*120; p.max = .45 + Math.random()*.3; p.r = 2 + Math.random()*3; p.col = Math.random()<.5?"#E8B878":"#B98245"; }
     else if (kind==="spark"){ const a = Math.random()*Math.PI*2, v = 120+Math.random()*260; p.vx = Math.cos(a)*v; p.vy = Math.sin(a)*v - 120; p.max = .5+Math.random()*.4; p.r = 2+Math.random()*2.5; p.col = Math.random()<.5?"#FFB23E":"#FF5A2A"; }
+    else if (kind==="yolk"){ const a = -Math.PI/2 + (Math.random()-.5)*2.4, v = 90+Math.random()*160; p.vx = Math.cos(a)*v; p.vy = Math.sin(a)*v; p.max = .45+Math.random()*.3; p.r = 3+Math.random()*3; p.col = Math.random()<.45?"#FFC93A":"#FFF8E8"; }
     else if (kind==="smoke"){ p.vx = -30 + Math.random()*60; p.vy = -60 - Math.random()*60; p.max = .9 + Math.random()*.5; p.r = 8 + Math.random()*8; p.col = "rgba(70,60,70,"; }
     else { const a = -Math.PI/2 + (Math.random()-.5)*2.2, v = 180+Math.random()*240; p.vx = Math.cos(a)*v; p.vy = Math.sin(a)*v; p.max = 1+Math.random()*.6; p.r = 3+Math.random()*2; p.rot = Math.random()*6; p.col = ["#F2B33D","#C7313A","#F7E9CC","#5FC4E8"][(Math.random()*4)|0]; }
   }
@@ -695,6 +779,7 @@ function stepParticles(dt){
 function lionBox(){ return {x0:PX-58, x1:PX+86, b:S.h+14, t:S.h+122}; }
 function riderTop(){ return S.h + 102 + (rider ? rider.h*0.86 : RIDER_H*0.86); }
 
+function say(id){ S.hSay = CHAR_BY_ID[id].say; S.hSayT = 1.2; }
 function hurt(o){
   if (S.inv > 0 || S.mode!=="play") return;
   o.hit = true; o.done = true;
@@ -710,7 +795,7 @@ function step(dt){
   S.t += dt;
   const playing = S.mode === "play";
   // speed curve
-  const base = SPEED_START + (SPEED_MAX - SPEED_START)*(1 - Math.exp(-S.meters/600));
+  const base = SPEED_START + (SPEED_MAX - SPEED_START)*(1 - Math.exp(-S.meters/900));
   if (S.slow < 1) S.slow = Math.min(1, S.slow + dt*0.55);
   if (S.mode === "dying"){ S.dyingT += dt; S.speed = Math.max(0, S.speed - dt*520); }
   else if (S.mode === "title" || S.mode === "over") S.speed = 210;
@@ -722,12 +807,17 @@ function step(dt){
     const m = Math.floor(S.dist / PX_PER_M);
     const tier = Math.floor(totalScore() / ROUTINE_EVERY);
     if (tier !== S.tier){ S.tier = tier; switchRoutine(false); }
+    S.hT -= dt;
+    if (S.hT <= 0 && !S.hQueue){
+      triggerHeck();
+      S.hT = (6.5 + Math.random()*4.5) * Math.max(0.55, 1 - S.meters/3000);
+    }
     if (m !== S.meters){ S.meters = m; if (m >= S.lastMilestone + 100){ S.lastMilestone = m - m%100; pop(`${S.lastMilestone}m!`, PX+40, groundY-250, "#F2B33D"); sfx.cheer(); } }
   }
   // jump
   if (S.buffer > 0) S.buffer -= dt;
   if ((playing || S.mode==="title") && S.buffer > 0 && S.onGround){
-    S.vy = JUMP_V; S.onGround = false; S.buffer = 0; S.cutDone = false; sfx.jump();
+    S.vy = JUMP_V * (S.heavy > 0 ? HEAVY_MULT : 1); S.onGround = false; S.buffer = 0; S.cutDone = false; sfx.jump();
     emit(6, PX-30, groundY-4, "dust");
   }
   if (!S.onGround){
@@ -752,6 +842,18 @@ function step(dt){
   if (S.shake > 0) S.shake -= dt;
   if (S.flash > 0) S.flash -= dt;
   if (S.sayT > 0) S.sayT -= dt;
+  if (S.hSayT > 0) S.hSayT -= dt;
+  if (S.glare > 0) S.glare -= dt;
+  if (S.stare > 0) S.stare -= dt;
+  if (S.heavy > 0) S.heavy -= dt;
+  if (S.bird){
+    const B = S.bird; B.flap += dt*12;
+    let tx = -220;
+    for (const o of obs){ if (o.type === "egg" && !o.drop){ const ex = o.x - S.dist + PX; tx = Math.min(Math.max(ex, W*0.35), W*0.84); break; } }
+    B.x += (tx - B.x)*Math.min(1, dt*(tx < 0 ? 2.2 : 4));
+    if (tx < 0) B.y += dt*120;
+    if (B.x < -160) S.bird = null;
+  }
   stepParticles(dt);
   if (!playing && S.mode !== "dying") return;
 
@@ -765,6 +867,29 @@ function step(dt){
     const sx = o.x - camX + PX;           // screen x where PX is the lion
     if (sx < -200){ obs.splice(i,1); continue; }
     if (!playing || o.done) {
+      continue;
+    }
+    if (o.heck){
+      if (o.type === "egg" && !o.drop && sx < Math.min(W*0.84, (S.bird ? S.bird.x : W) + 10)){ o.drop = true; sfx.drop(); }
+      if (o.type === "egg" && o.drop && !o.landed){
+        o.vy -= 1500*dt; o.fy += o.vy*dt;
+        if (o.fy <= 0){ o.fy = 0; o.landed = true; emit(8, sx, groundY-6, "yolk"); }
+      }
+      if (o.type === "pop" && !o.upOn && sx < W - 30){ o.upOn = true; sfx.pop(); }
+      if (o.type === "pop" && o.upOn) o.up = Math.min(1, o.up + dt*6);
+      const half = o.type === "fly" ? o.r : o.w/2;
+      let hit = false;
+      if (o.type === "fly"){
+        const rw = (rider ? rider.w : 80)*0.36, rb = S.h + 101, rt = rTop, cy = o.y, rr = o.r*0.75;
+        const riderHit = Math.abs(sx - (PX-12)) < rw + rr && cy + rr > rb && cy - rr < rt;
+        const headHit = sx + rr > PX + 25 && sx - rr < PX + 115 && cy - rr < S.h + 150 && cy + rr > S.h + 60;
+        hit = riderHit || headHit;
+      } else if (o.type !== "egg" || o.landed){
+        const top = o.type === "pop" ? o.h*o.up : o.h;
+        hit = sx + half > L.x0 && sx - half < L.x1 && L.b < top;
+      }
+      if (hit){ hurt(o); if (o.hit) say(o.heck, "hit"); continue; }
+      if (sx + half < L.x0){ o.done = true; S.dodges++; pop("피했다!", PX-10, groundY - S.h - 160, "#7FE3C9"); sfx.clear(); }
       continue;
     }
     if (o.type === "pot"){
@@ -840,8 +965,11 @@ function render(alpha){
       ctx.drawImage(layers.pot, sx-32, groundY-50, 64, 52);
       if (!o.hit) ctx.drawImage(layers.flames[(fr + (o.x|0)) % 8], sx-26, groundY-50-62, 52, 70);
       ctx.globalAlpha = 1;
-    } else drawRing(o, sx, true, fr);
+    } else if (o.heck){ if (o.type !== "fly") drawHeck(o, sx, fr); }
+    else drawRing(o, sx, true, fr);
   }
+  if (S.bird) drawBird(S.bird);
+  if (S.heavy > 0 && S.mode === "play") drawYeoni(h);
   // lion + rider
   const blinkOff = false;
   const ghost = S.inv > 0 && S.mode==="play" && ((S.inv*12)|0) % 2 === 0;
@@ -877,6 +1005,7 @@ function render(alpha){
   }
   // obstacles: front pass
   for(const o of obs){
+    if (o.type === "fly"){ drawFly(o, o.x - dist + PX); continue; }
     if (o.type !== "ring") continue;
     const sx = o.x - dist + PX;
     if (sx < -120 || sx > W + 120) continue;
@@ -889,6 +1018,10 @@ function render(alpha){
     else if (p.kind==="confetti"){ ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.globalAlpha = a; ctx.fillStyle = p.col; ctx.fillRect(-p.r, -p.r*0.5, p.r*2, p.r); ctx.restore(); ctx.globalAlpha = 1; }
     else { ctx.globalAlpha = a; ctx.fillStyle = p.col; ctx.fillRect(p.x-p.r/2, p.y-p.r/2, p.r, p.r); ctx.globalAlpha = 1; }
   }
+  // screen intrusions
+  if (S.glare > 0) drawGlare();
+  if (S.stare > 0) drawStare();
+  if (S.hSayT > 0) drawSay(PX + 150, groundY - 260, S.hSay, Math.min(1, S.hSayT*4));
   // speech bubble
   if (S.sayT > 0 && rider) drawSay(PX - 12, ly - 110 - rider.h, S.sayText, Math.min(1, S.sayT*4));
   // score popups
@@ -910,6 +1043,127 @@ function render(alpha){
     ctx.fillStyle = g; ctx.fillRect(0, groundY+120, W, H-groundY-120);
   }
 }
+/* ---------------- intrusion drawing ---------------- */
+function drawChar(id, cx, bottom, h, rot, alpha){
+  const im = charImgs[id]; if (!im || !im.naturalWidth) return;
+  const w = h * im.naturalWidth / im.naturalHeight;
+  ctx.save(); ctx.translate(cx, bottom - h/2); if (rot) ctx.rotate(rot);
+  if (alpha != null) ctx.globalAlpha = alpha;
+  ctx.drawImage(im, -w/2, -h/2, w, h);
+  ctx.restore();
+}
+function ease(t){ return t<0?0:t>1?1:1-(1-t)*(1-t); }
+function drawHeck(o, sx, fr){
+  ctx.globalAlpha = o.hit ? 0.35 : 1;
+  if (o.type === "roll"){
+    const ang = -(S.t*(S.speed + o.vx))/27;
+    ctx.strokeStyle = "rgba(255,236,190,.55)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    for (let i=0;i<3;i++){ const y = groundY - 14 - i*14; ctx.beginPath(); ctx.moveTo(sx+34+i*6, y); ctx.lineTo(sx+60+i*10, y); ctx.stroke(); }
+    ctx.fillStyle = "rgba(40,18,6,.3)"; ctx.beginPath(); ctx.ellipse(sx, groundY+2, 26, 5, 0, 0, Math.PI*2); ctx.fill();
+    drawChar("mandu", sx, groundY + 4, 64, ang);
+  } else if (o.type === "egg"){
+    if (o.drop && !o.landed){
+      ctx.save(); ctx.translate(sx, groundY - o.fy - 14);
+      ctx.beginPath(); ctx.ellipse(0, 0, 10, 13, 0, 0, Math.PI*2); ctx.fillStyle = "#FFF8EA"; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = "#2A1206"; ctx.stroke();
+      ctx.restore();
+      const k2 = Math.max(.2, 1 - o.fy/330);
+      ctx.fillStyle = `rgba(40,18,6,${.35*k2})`; ctx.beginPath(); ctx.ellipse(sx, groundY+2, 20*k2, 4*k2, 0, 0, Math.PI*2); ctx.fill();
+    } else if (o.landed){
+      // splat + standing broken shell halves (the part you have to clear)
+      ctx.beginPath(); ctx.ellipse(sx, groundY-3, 30, 8, 0, 0, Math.PI*2); ctx.fillStyle = "#FFF8EA"; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = "#2A1206"; ctx.stroke();
+      ctx.beginPath(); ctx.arc(sx+4, groundY-5, 7, 0, Math.PI*2); ctx.fillStyle = "#FFB81F"; ctx.fill(); ctx.stroke();
+      for (const d of [-1, 1]){
+        ctx.save(); ctx.translate(sx + d*13, groundY - 4); ctx.rotate(d*0.18);
+        ctx.beginPath(); ctx.moveTo(-9, 0); ctx.quadraticCurveTo(-10, -22, 0, -26); ctx.quadraticCurveTo(10, -22, 9, 0);
+        ctx.lineTo(9, -14); ctx.lineTo(5, -9); ctx.lineTo(1, -16); ctx.lineTo(-3, -9); ctx.lineTo(-7, -15); ctx.lineTo(-9, -10); ctx.closePath();
+        ctx.fillStyle = "#FFF3DA"; ctx.fill(); ctx.lineWidth = 2.2; ctx.strokeStyle = "#2A1206"; ctx.stroke();
+        ctx.restore();
+      }
+    }
+  } else if (o.type === "wave"){
+    const x0 = sx - o.w/2, x1 = sx + o.w/2, top = groundY - o.h, sw = Math.sin(S.t*6)*3;
+    ctx.beginPath(); ctx.moveTo(x0 - 6, groundY);
+    ctx.bezierCurveTo(x0 + 6, groundY - 30, x0 + 10, top + sw, sx - 6, top + sw);
+    ctx.bezierCurveTo(sx + 26, top - 4 + sw, x1 + 4, top + 22, x1 + 8, groundY);
+    ctx.closePath();
+    const g = ctx.createLinearGradient(0, top, 0, groundY); g.addColorStop(0, "#5FC4E8"); g.addColorStop(1, "#1D6FB0");
+    ctx.fillStyle = g; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#0E3558"; ctx.stroke();
+    // curl of foam toward the lion
+    ctx.beginPath(); ctx.arc(x0 + 16, top + 16 + sw, 13, Math.PI*0.9, Math.PI*2.1); ctx.lineWidth = 5; ctx.strokeStyle = "#F4FBFF"; ctx.stroke();
+    ctx.fillStyle = "#F4FBFF"; for (let i=0;i<5;i++){ ctx.beginPath(); ctx.arc(x0 + 26 + i*15, top + 6 + sw + (i%2)*5, 4, 0, Math.PI*2); ctx.fill(); }
+    drawChar("yongwang", sx + 10, top + 14 + sw, 50, -0.12);   // surfing the crest
+  } else if (o.type === "pop"){
+    if (!o.upOn){
+      ctx.fillStyle = "rgba(40,18,6,.45)"; ctx.beginPath(); ctx.ellipse(sx, groundY+2, 26, 5, 0, 0, Math.PI*2); ctx.fill();
+    } else {
+      const u = ease(o.up), top = groundY - o.h*u + Math.sin(S.t*40)*(1-u)*6;
+      ctx.fillStyle = "#2A1206"; ctx.fillRect(sx - 9, top + 34, 18, groundY - top - 34);
+      for (let y = top + 36; y < groundY; y += 14){ ctx.fillStyle = ((y - top)/14|0) % 2 ? "#C7313A" : "#F7E9CC"; ctx.fillRect(sx - 6, y, 12, Math.min(14, groundY - y)); }
+      drawChar("juntak", sx, top + 52, 54, Math.sin(S.t*30)*0.06);
+      if (u > 0.8){
+        ctx.font = `400 22px "Black Han Sans", sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.lineWidth = 5; ctx.strokeStyle = "#2A1206"; ctx.strokeText("!!!!!!!", sx + Math.sin(S.t*50)*2, top - 14);
+        ctx.fillStyle = "#FFF4DC"; ctx.fillText("!!!!!!!", sx + Math.sin(S.t*50)*2, top - 14);
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+function drawFly(o, sx){
+  const y = groundY - o.y;
+  if (sx > W + 10){
+    if (sx < W + 560 && !o.hit){
+      const a = 0.55 + 0.45*Math.sin(S.t*14);
+      ctx.save(); ctx.globalAlpha = a;
+      ctx.beginPath(); ctx.arc(W - 34, y, 22, 0, Math.PI*2); ctx.fillStyle = "#C7313A"; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#FFF4DC"; ctx.stroke();
+      ctx.font = `400 26px "Black Han Sans", sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = "#FFF4DC"; ctx.fillText("!", W - 34, y + 1);
+      ctx.font = `900 13px "Gothic A1", sans-serif`; ctx.lineWidth = 4; ctx.strokeStyle = "#2A1206"; ctx.strokeText("점프 금지", W - 40, y + 36); ctx.fillText("점프 금지", W - 40, y + 36);
+      ctx.restore();
+    }
+    return;
+  }
+  ctx.globalAlpha = o.hit ? 0.35 : 1;
+  ctx.strokeStyle = "rgba(140,210,255,.75)"; ctx.lineCap = "round";
+  for (let i=0;i<3;i++){ ctx.lineWidth = 6 - i*1.5; ctx.beginPath(); ctx.moveTo(sx + 18, y + 8 + i*5); ctx.lineTo(sx + 70 + i*22, y + 4 + i*7); ctx.stroke(); }
+  drawChar("goran", sx, y + 30, 58, -0.25);
+  ctx.globalAlpha = 1;
+}
+function drawBird(B){
+  const y = groundY - B.y, f = Math.sin(B.flap);
+  ctx.save(); ctx.translate(B.x, y);
+  ctx.fillStyle = "#F7E9CC"; ctx.strokeStyle = "#2A1206"; ctx.lineWidth = 2.5;
+  for (const d of [-1, 1]){ ctx.beginPath(); ctx.ellipse(d*26, -18 - f*10, 20, 8, d*(0.5 + f*0.4), 0, Math.PI*2); ctx.fill(); ctx.stroke(); }
+  ctx.restore();
+  drawChar("myung", B.x, y + 30, 60, Math.sin(B.flap*0.5)*0.08);
+}
+function drawYeoni(h){
+  const tx = PX - 116, ty = groundY - h - 122, bx = PX - 150, by = groundY + 2;
+  ctx.strokeStyle = "#2A1206"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(tx - 20, (ty + by)/2, bx + 12, by - 40); ctx.stroke();
+  drawChar("yeoni", bx, by + Math.abs(Math.sin(S.t*18))*2, 58, -0.38);
+  ctx.fillStyle = "#7FC8F0"; for (let i=0;i<2;i++){ const t = (S.t*1.6 + i*0.5) % 1; ctx.beginPath(); ctx.arc(bx + 22 + i*8, by - 54 + t*24, 3, 0, Math.PI*2); ctx.globalAlpha = 1 - t; ctx.fill(); }
+  ctx.globalAlpha = 1;
+  if (S.heavy > 3.4) drawSay(bx + 10, by - 70, "끄응..", 1);
+}
+function fxAlpha(left, total){ return Math.max(0, Math.min(1, (total - left)/0.35, left/0.5)); }
+function drawGlare(){
+  const e = fxAlpha(S.glare, 2.8), cx = W*0.8, cy = groundY*0.36;
+  const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, W*0.78);
+  g.addColorStop(0, `rgba(255,252,232,${0.97*e})`); g.addColorStop(0.32, `rgba(255,240,180,${0.86*e})`);
+  g.addColorStop(0.62, `rgba(255,214,120,${0.42*e})`); g.addColorStop(1, "rgba(255,200,100,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(S.t*0.8); ctx.globalAlpha = e;
+  ctx.strokeStyle = "rgba(255,190,60,.75)"; ctx.lineWidth = 6; ctx.lineCap = "round";
+  for (let i=0;i<12;i++){ const a = i/12*Math.PI*2; ctx.beginPath(); ctx.moveTo(Math.cos(a)*70, Math.sin(a)*70); ctx.lineTo(Math.cos(a)*112, Math.sin(a)*112); ctx.stroke(); }
+  ctx.restore();
+  drawChar("haessal", cx, cy + 62, 124, 0, e);
+  if (e > 0.6) drawSay(cx - 40, cy - 70, "안물안궁? ㅇㅋ", e);
+}
+function drawStare(){
+  const e = ease(fxAlpha(S.stare, 3.0)), hh = Math.min(H*0.9, 520);
+  drawChar("bino", W*0.64, H + 20 + (1 - e)*hh, hh, Math.sin(S.t*1.5)*0.03, 0.72*e);
+  if (e > 0.8) drawSay(W*0.64, H - hh - 10, "……", e);
+}
+
 function drawRing(o, sx, back, fr){
   const cy = groundY - (RING_LOW + RING_HIGH)/2, ry = (RING_HIGH - RING_LOW)/2 + 9, rx = 19;
   ctx.globalAlpha = o.hit ? 0.35 : 1;
@@ -979,6 +1233,13 @@ function syncHUD(){
   if (S.meters !== hudM){ hudM = S.meters; $("meter").firstChild.nodeValue = S.meters.toLocaleString("ko-KR") + "m"; }
   if (S.combo !== hudCombo){ hudCombo = S.combo; $("combo").textContent = S.combo >= 3 ? `연속 ${S.combo}` : ""; }
 }
+let heckTimer = 0;
+function announceHeck(id){
+  const tag = $("heckTag"); if (!tag) return;
+  tag.textContent = `${CHAR_BY_ID[id].name} 난입! ${HECKS[id].act}`;
+  tag.classList.remove("flip"); void tag.offsetWidth; tag.classList.add("flip");
+  clearTimeout(heckTimer); heckTimer = setTimeout(()=>{ tag.textContent = ""; }, 2600);
+}
 function showRoutine(){
   const tag = $("routineTag"); if (!tag) return;
   tag.textContent = "묘기 · " + ROUTINES[S.rIdx].name;
@@ -1021,7 +1282,7 @@ function show(id){ for(const s of ["titleScr","pauseScr","overScr","rankScr"]) $
 function startRun(){
   audio.unlock();
   resetRun(); S.mode = "play";
-  show(null); $("hud").hidden = false;
+  show(null); $("hud").hidden = false; $("tags").hidden = false;
   const h = $("hint"); h.hidden = false; h.classList.remove("fade");
   clearTimeout(hintTimer); hintTimer = setTimeout(hideHint, 4000);
   hudScore = hudM = hudCombo = -1; updateLivesUI(); syncHUD();
@@ -1032,10 +1293,12 @@ function togglePause(){
   if (S.mode === "play"){ S.mode = "pause"; show("pauseScr"); music.stop(); $("resumeBtn").focus(); }
   else if (S.mode === "pause"){ S.mode = "play"; show(null); last = 0; music.start(); }
 }
-function toTitle(){ S.mode = "title"; resetRun(); $("hud").hidden = true; $("hint").hidden = true; show("titleScr"); music.stop(); renderBest(); }
+function toTitle(){ S.mode = "title"; resetRun(); $("hud").hidden = true; $("tags").hidden = true; $("hint").hidden = true; show("titleScr"); music.stop(); renderBest(); }
 let lastRun = null;
 function finishRun(){
   S.mode = "over"; obs.length = 0; S.inv = 0;
+  S.glare = S.stare = S.heavy = 0; S.bird = null; S.hQueue = null; S.hSayT = 0;
+  clearTimeout(heckTimer); $("heckTag").textContent = "";
   const sc = totalScore();
   const prev = LS.get("circus.best", 0);
   const isBest = sc > prev; if (isBest) LS.set("circus.best", sc);
@@ -1048,7 +1311,7 @@ function finishRun(){
   $("submitBtn").disabled = false; nick.disabled = false;
   setNote(sc > 0 ? "" : "0점은 등록되지 않아요.");
   syncSubmitAvailability();
-  $("hud").hidden = true; $("hint").hidden = true;
+  $("hud").hidden = true; $("tags").hidden = true; $("hint").hidden = true;
   show("overScr");
 }
 $("startBtn").addEventListener("click", startRun);
@@ -1133,6 +1396,9 @@ const sfx = {
   hit(){ const t=now(); noise(t, .35, .25); tone(220, t, .35, "sawtooth", .1, 70); },
   over(){ const t=now(); [523,494,466,440,415,392].forEach((f,i)=>tone(f, t+.1+i*.16, .2, "square", .07)); tone(196, t+1.1, .6, "triangle", .1, 98); },
   cheer(){ const t=now(); noise(t, .6, .07); tone(1047, t, .1, "square", .05); tone(1319, t+.1, .16, "square", .05); },
+  heck(){ const t=now(); tone(520, t, .12, "square", .06, 980); tone(980, t+.1, .16, "square", .06, 420); },
+  drop(){ const t=now(); tone(1400, t, .25, "triangle", .05, 300); },
+  pop(){ const t=now(); tone(180, t, .14, "square", .08, 900); noise(t, .12, .08); },
   pick(){ const t=now(); tone(660, t, .07, "square", .05); tone(990, t+.06, .09, "square", .05); },
 };
 /* original oom-pah march loop (not any existing song) */
@@ -1329,8 +1595,9 @@ loadImages().then(()=>{ buildRider(); });
 (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(()=>{});
 requestAnimationFrame(frame);
 initRanking();
-window.__circus = {S, obs, startRun, press, release, totalScore, hurt, px:()=>PX, lock:null, routines:ROUTINES};
+window.__circus = {S, obs, startRun, press, release, totalScore, hurt, px:()=>PX, lock:null, routines:ROUTINES, forceHeck:id=>triggerHeck(id), HECKS};
 </script>
+
 
 <!-- 벙참 뒤로가기 버튼 -->
 <a id="bungBack" href="../" aria-label="게임 나가기" title="게임 나가기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
