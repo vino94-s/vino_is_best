@@ -1,19 +1,23 @@
 ===== circus GET first hop
-HTTP/2 403 
+HTTP/2 302 
+access-control-allow-origin: *
+location: https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQkg1ll1GZUQ5huoaN6SX0liBbSLOnXkH4PIJJne4P5ZNHCLwqnu9AxA1u0AEgYZb98BWSyGLRuMzY8yIFPp6fzMCjvexk4HRS5nmAlxn3y1OZTqGTgZ52y3aHG3bIlnSiYWgTxT_qmANOcBVUbD0bpCMzdH4CyU7jzJFSZfr1QfPtQGDZW2KqqtQKEqF5FJZpk0iVL8fgosSX6a1Riqfo8RdfQeojDYEq6j4FJ75Z0syShi8dYO1uqP84sWNBT4LCFWGnTBKBTzKaU8ZRZbZkfZ02yly1ZZCvDy8C3&lib=MbFFw0LJb-QcODra6Hmv6EIL0_IJ80Lqb
 ===== circus GET final
-final_code=403 redirects=0 url=https://script.google.com/macros/s/AKfycbzlxKYPuVexe4qXgtrlEukzVMVPYBACaQTIbzsQgfu0r_MqkrHjD3ELY2UNeGvUHm-haw/exec?t=1792024913
-HTTP/2 403 
-content-type: text/html; charset=utf-8
+final_code=200 redirects=1 url=https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnT3qXQXohVwDSomATFmS5fsts99AeFgFwspV0Ed-BiV37Sb_p9vzow2u8plSPliSw4WtEt7eazCduzfBI4ujKI5zrkJ7xU39B8u212LBE2rXD-1ZT4o9_ZuTqcNlHIv2eq07SZFzA0oUvtWbY1OIoRTR4vXlLW0xsk7zcJrP3f-R6rLsyyk8mR8vlZ48ciSxdnEDbcY4Te-rHDJmqqvEoFt7psT8ingfT7Kpc8m7MRDO130W6rHgxavSDwg_39poeYgIJ45O4y_mi0vSTASB1cVgL5a9zfNDd1J-l1Y&lib=MbFFw0LJb-QcODra6Hmv6EIL0_IJ80Lqb
+HTTP/2 302 
+content-type: application/binary
+access-control-allow-origin: *
+HTTP/2 200 
+content-type: application/json; charset=utf-8
+access-control-allow-origin: *
 --- body (first 1500 chars)
-<!DOCTYPE html><html lang="en"><head><script nonce="UXrcNSEbVslDsnnv3Pmqsw">window['ppConfig'] = {productName: '26981ed0d57bbad37e728ff58134270c', deleteIsEnforced:  false , sealIsEnforced:  false , heartbeatRate:  0.5 , periodicReportingRateMillis:  60000.0 , disableAllReporting:  false };(function(){'use strict';function k(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}function l(a){var b=typeof Symbol!="undefined"&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if(typeof a.length=="number")return{next:k(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}var m=typeof Object.defineProperties=="function"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
-function n(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var p=n(this);function q(a,b){if(b)a:{var c=p;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&b!=null&&m(c,a,{configurable:!0,writable:!0,value:b})}}
-q("Object.is",function(a){return a?a:function(b,c){return b===c?b!==0||1/b===1/c:b!==b&&c!==c}});q("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for
+{"ok":true,"rows":[]}
 ===== siren GET first hop
 HTTP/2 302 
 access-control-allow-origin: *
-location: https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnT3x090hNkYJAB_TuiWDAgj77jwZ80DS07RLMb2Bt8MrGlizEebRxsQofYV1yNXZlxEL2WcRBWS48HGQHvQcm6bjLy28dkhffbJW58pFihN9M4j2vd_XrTgw5I95stMAVz6o2CJR1dtHsXKl_AdPOe21BHbkFCFpYMWTCZdpcylbP4Uvpel65_eWON95NOypBDESYjTUcTX7rWL9vHA3nOsVv9pVCey0K3uZkYuNP923JARvQJO-h6ilYsbG9PJ_KRR6oghB_ZqHyY1bm6znf6-AcKdV4Gz6anZa2yt&lib=M0huTs3SG0N8bC9Rwc0FrvYL0_IJ80Lqb
+location: https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnRCvLoAh25vBwPTu361lLD6ZlIlE3rt5EICT5pH54TTELUxZ-6-NnJFTX8r_OvzGUvJ8hrCR5Ng0XZmfMY0sdWace1UECeCx8ACMR8MQiXwdJ93MLhTl8a8BURNdleZ3jXb0Cx26gz3F-mP073qpszV4jvNltuUe297ZcLkBbkF416BJBbCFBm2XWAJwqjSiMzelsI1sRjrl4pCG-ZwHJB6FHASXoTa6bXeMeNNDudmKP1HvnAwFPCtdr1_qhDPh-17YxwW5tw-Ba5hx8nmNEjC0vO6kMTMuqfe79pt&lib=M0huTs3SG0N8bC9Rwc0FrvYL0_IJ80Lqb
 ===== siren GET final
-final_code=200 redirects=1 url=https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTyXH8VzywhHTiDCMBdmufuOoqlBD_jj-D_cuR8nJwuxYbmRNOAeZqjp0gGIn5zdR6jY7x5_KtbzH4FJgam2neNahy2BZrHWGDjt6L0hqLTAbxthWHG9a3n6u2_zHsZwsEitlG_zE3tRmOXqxj2Bfds-Dx-cbSTAq-6upiPqzMWa3cHIIoWUTaM7HrsZOZirS-HY46tLlR5ij1kNHSAj4LyAWToY8RzRunql0gRIZJr8NIxqcj7CPfIPevj5YjUvFVCUguEwdJVuh9p28WzHAf5o3NMk6el0kthWt_j&lib=M0huTs3SG0N8bC9Rwc0FrvYL0_IJ80Lqb
+final_code=200 redirects=1 url=https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnT2wnFzL2VO3ENIXquhk5uKmcZjynja-jXg0W2IPhTz0M2ZZESg5pK-wpj9cJrJq-urYWtEEcNwOsLpWEW9Wr4qY-QkoEAtTIkLBkGxebo2yWBSouPbFKtHLIQt8rMn5RI7k3F4vKXoGI4eqMG1h5F5SVu5QGEKsq1EF_XxmlbGr57KhFrKgAgJ4PC6urIt5LvkijblrUK8qm6sf83tZhoDS0wu1BfWDNcC6308pNixXYf-ZJqLEcHaAhn4rmdZg31HNT3P-lVJZ8Exdx0Yg6cJhll2R7ZSgcUGhH3t&lib=M0huTs3SG0N8bC9Rwc0FrvYL0_IJ80Lqb
 HTTP/2 302 
 content-type: application/binary
 access-control-allow-origin: *
@@ -23,10 +27,8 @@ access-control-allow-origin: *
 --- body (first 1500 chars)
 {"ok":true,"rows":[{"name":"준탁","score":11110,"at":1792022962397},{"name":"묭","score":10230,"at":1791997735109},{"name":"차은우","score":10010,"at":1791990899288},{"name":"수현준영","score":7010,"at":1791987481424},{"name":"수염","score":3600,"at":1792021122110},{"name":"고라니","score":2680,"at":1792018652080},{"name":"현승","score":2650,"at":1791990616148},{"name":"우잉","score":2190,"at":1791989191255},{"name":"비노","score":1740,"at":1791988655784},{"name":"만두","score":1410,"at":1792024365617}]}
 ===== circus 403 page text
-TITLE: 액세스 거부됨
-TEXT: 액세스 거부됨 Drive 액세스 권한 필요 문서를 직접 열어 액세스 요청이 가능한지 확인하거나 액세스 권한이 있는 계정으로 전환하세요. 자세히 알아보기 로그인된 계정:
+TITLE: None
+TEXT: {"ok":true,"rows":[]}
 ===== circus POST probe (score 0: must be rejected, writes nothing)
-final_code=403 redirects=0 url=https://script.google.com/macros/s/AKfycbzlxKYPuVexe4qXgtrlEukzVMVPYBACaQTIbzsQgfu0r_MqkrHjD3ELY2UNeGvUHm-haw/exec
-<!DOCTYPE html><html lang="en"><head><script nonce="3Tv5oi1wVo_uJa6G3FnFZQ">window['ppConfig'] = {productName: '26981ed0d57bbad37e728ff58134270c', deleteIsEnforced:  false , sealIsEnforced:  false , heartbeatRate:  0.5 , periodicReportingRateMillis:  60000.0 , disableAllReporting:  false };(function(){'use strict';function k(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}function l(a){var b=typeof Symbol!="undefined"&&Symbol.iterator&&a[Symbol.iterator];if(b)return b.call(a);if(typeof a.length=="number")return{next:k(a)};throw Error(String(a)+" is not an iterable or ArrayLike");}var m=typeof Object.defineProperties=="function"?Object.defineProperty:function(a,b,c){if(a==Array.prototype||a==Object.prototype)return a;a[b]=c.value;return a};
-function n(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var p=n(this);function q(a,b){if(b)a:{var c=p;a=a.split(".");for(var d=0;d<a.length-1;d++){var e=a[d];if(!(e in c))break a;c=c[e]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&b!=null&&m(c,a,{configurable:!0,writable:!0,value:b})}}
-q("Object.is",function(a){return a?a:function(b,c){return b===c?b!==0||1/b===1/c:b!==b&&c!==c}});q("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var e=d.length;c=c||0;for
+final_code=200 redirects=1 url=https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTM6uAZhs1_uu8A-UqNz6kfrAqHUbtHTuBBshd_Gbo1bCGJdeuy58cjMkQwcO_HcXqwmcLtHhLn0Oiz_lDt8S7Z6To5ZLc67ZiJX-mwvt_PH_YkhhnJV4_xwWZPgyfDqhm_JGucoZGQObIiFYeeJmYEx1saoYL4nHpMHkaOsMh9wGV2EWyis4tiST81TLiD95SpEN9RsarQypgIk2pcoMVFW6bzy-KZk08OQe80CJBkoyuGjBHSZGlmgiDgrWu9I6WGBcvsFAWKRX7FAjXZHVByszBQGA&lib=MbFFw0LJb-QcODra6Hmv6EIL0_IJ80Lqb
+{"ok":false,"error":"score"}
