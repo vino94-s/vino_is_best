@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>게임 여는 중…</title>
+<style>
+:root{--bg:#F1F3EF;--ink:#5B6770}
+@media (prefers-color-scheme:dark){:root{--bg:#10151A;--ink:#95A2A8}}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+</style>
+</head>
+<body>
+<p>게임 여는 중…</p>
+<script>
+// 벙참 게임 실행 횟수 집계 후 게임으로 이동해요.
+var PLAY_API = '';
+var GAMES = {
+  'gorani-survival': 'https://gorani-survival.bababi.chatgpt.site/',
+  'gorani-run': 'https://gorani-twieo-2026.bababi.chatgpt.site/',
+  'mandu-defense': 'https://mandu-mayhem-play.bababi.chatgpt.site/',
+  'yongwang-land': 'https://yongwang-land.bababi.chatgpt.site/',
+  'frog': 'https://beotyeo-kkaegulssi-2026.bababi.chatgpt.site/',
+  'ruru': 'https://urururu-ruru-play-2026.bababi.chatgpt.site/',
+  'golf': '../golf/', 'gonake': '../gonake/', 'yongwang': '../yongwang/', 'ddomeok': '../ddomeok/',
+  'muldae': '../muldae/', 'badukbung': '../badukbung/', 'siren': '../siren/', 'circus': '../circus/',
+  'yutjabi': '../yutjabi/', 'hallin': '../hallin/'
+};
+var id = new URLSearchParams(location.search).get('g') || '';
+var to = Object.prototype.hasOwnProperty.call(GAMES, id) ? GAMES[id] : '../';
+function go() { location.replace(to); }
+if (PLAY_API && to !== '../') {
+  try { fetch(PLAY_API + '?hit=' + encodeURIComponent(id), { mode: 'no-cors', keepalive: true }).catch(function () {}); } catch (e) {}
+  setTimeout(go, 150);
+} else { go(); }
+</script>
+</body>
+</html>
