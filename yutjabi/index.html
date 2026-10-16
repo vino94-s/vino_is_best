@@ -597,7 +597,10 @@ function facesResult(f){const n=f.filter(Boolean).length;if(n===0)return 5;if(n=
 function rollFaces(power){
   const P=.6,roll=()=>[0,1,2,3].map(()=>rnd()<P);
   let f=roll();const r=facesResult(f);
-  if(power>=72&&power<86&&(r===1||r===2)&&rnd()<.3)f=roll();
+  const gold=power>=72&&power<86;
+  if(gold&&(r===1||r===2)&&rnd()<.3)f=roll();
+  /* 황금 구간의 윷은 이전보다 20% 덜 나오게: 윷이 나오면 5번에 1번은 윷이 아닌 끗수로 다시 굴려요 */
+  if(gold&&facesResult(f)===4&&rnd()<.2){do f=roll();while(facesResult(f)===4)}
   let nak=-1;if(power>=95&&rnd()<.45)nak=(rnd()*4)|0;
   return {f,nak};
 }
