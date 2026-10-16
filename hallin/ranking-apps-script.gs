@@ -13,13 +13,14 @@
  *
  * 'bot' 탭: 봇전 한 판마다 한 줄 (닉네임, 승리 여부, 봇 수, 난이도, 승점, 종 성공·헛방, 최고 반응ms, 남은 카드, 걸린 초)
  *           승점 = 이겼을 때만 난이도(쉬움1·보통2·어려움3) × 봇 수. 서버가 직접 계산해요.
- * 'friend' 탭: 친구대전 한 판마다 한 줄 (경기 id, 방 코드, 참가자 'A|B|C', 끝났을 때 카드 수, 우승자, 걸린 초)
+ * 'friend' 탭: 친구대전 한 판마다 한 줄 (경기 id, 방 코드, 참가자 'A|B|C', 끝났을 때 카드 수, 우승자, 걸린 초, 봇 자리 '0|0|1')
+ *           봇 자리(1)는 랭킹 개인 순위에서 빠지고 판별 기록에만 보여요.
  *           참가자 모두가 같은 경기 id로 보내고, 서버가 한 줄만 남겨요.
  * 장난 기록은 그 줄을 지우면 랭킹에서 빠집니다.
  */
 
 const BOT_HEADER = ['nick', 'win', 'bots', 'lv', 'pts', 'rings', 'wrongs', 'best', 'cards', 'dur', 'at'];
-const FRIEND_HEADER = ['gid', 'code', 'players', 'cards', 'winner', 'dur', 'at'];
+const FRIEND_HEADER = ['gid', 'code', 'players', 'cards', 'winner', 'dur', 'at', 'bots', 'wi'];
 const LV = { easy: 1, normal: 2, hard: 3 };
 const DECK = 56;            // 카드 전체 장수
 const KEEP_BOT = 1000;      // 최근 몇 판까지 돌려줄지
@@ -51,6 +52,8 @@ function sheet_(name, header) {
     sh = ss.insertSheet(name);
     sh.appendRow(header);
     sh.setFrozenRows(1);
+  } else if (sh.getLastColumn() < header.length) {
+    sh.getRange(1, 1, 1, header.length).setValues([header]); // 예전 시트에 새 칸 이름 채우기
   }
   return sh;
 }
@@ -89,10 +92,14 @@ function doGet() {
   const friend = rows_('friend', FRIEND_HEADER, KEEP_FRIEND).map(r => {
     const names = String(r[2] || '').split('|').map(clean_);
     const cards = String(r[3] || '').replace(/^'/, '').split('|').map(x => Number(x) || 0);
-    return {
+    const bots = String(r[7] == null ? '' : r[7]).replace(/^'/, '').split('|').map(x => x === '1' ? 1 : 0);
+    const wi = r[8] === '' || r[8] == null ? -1 : Number(r[8]);
+    const m = {
       mid: String(r[0]), code: String(r[1] || '').replace(/^'/, ''), ts: Number(r[6]) || 0, dur: Number(r[5]) || 0,
-      ps: names.map((n, i) => ({ n: n, c: cards[i] || 0 })), w: { n: clean_(r[4]) }
+      ps: names.map((n, i) => ({ n: n, c: cards[i] || 0, b: bots[i] || 0 })), w: { n: clean_(r[4]) }
     };
+    if (wi >= 0 && wi < names.length) m.wi = wi;
+    return m;
   }).filter(m => m.ps.length >= 2 && m.ps.every(p => p.n) && m.w.n);
 
   return json_({ ok: true, bot: bot, friend: friend });
@@ -124,17 +131,19 @@ function doPost(e) {
       const names = Array.isArray(d.ps) ? d.ps.map(clean_) : [];
       const cards = Array.isArray(d.cs) ? d.cs.map(c => int_(c, 0, DECK)) : [];
       const wi = int_(d.wi, 0, 3), dur = int_(d.dur, 0, 400);
+      const bt = Array.isArray(d.bt) ? d.bt.map(b => b === 1 || b === true ? 1 : 0) : names.map(() => 0);
       if (!/^[A-Z0-9]{5}-[a-z0-9]{4,12}$/.test(gid) || !/^[A-Z0-9]{5}$/.test(code)) return json_({ ok: false, error: 'bad' });
       if (names.length < 2 || names.length > 4 || names.some(n => !n)) return json_({ ok: false, error: 'bad' });
       if (cards.length !== names.length || cards.some(c => c === null) || cards.reduce((a, b) => a + b, 0) > DECK) return json_({ ok: false, error: 'bad' });
       if (wi === null || wi >= names.length || dur === null) return json_({ ok: false, error: 'bad' });
+      if (bt.length !== names.length || bt.indexOf(0) < 0 || bt.reduce((a, b) => a + b, 0) > 3) return json_({ ok: false, error: 'bad' });
 
       const sh = sheet_('friend', FRIEND_HEADER);
       const last = sh.getLastRow();
       const from = Math.max(2, last - 499);
       const ids = last >= 2 ? sh.getRange(from, 1, last - from + 1, 1).getValues().map(r => String(r[0])) : [];
       if (ids.indexOf(gid) < 0) {
-        sh.appendRow([gid, "'" + code, safe_(names.join('|')), "'" + cards.join('|'), safe_(names[wi]), dur, Date.now()]);
+        sh.appendRow([gid, "'" + code, safe_(names.join('|')), "'" + cards.join('|'), safe_(names[wi]), dur, Date.now(), "'" + bt.join('|'), wi]);
       }
 
     } else {

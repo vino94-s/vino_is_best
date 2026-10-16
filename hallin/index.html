@@ -93,6 +93,11 @@ input[type=text]{font-family:var(--f-ui);font-size:20px;border:3px solid var(--i
 .plist{display:grid;gap:8px;margin-top:12px;padding:0;list-style:none}
 .plist li{display:flex;align-items:center;gap:10px;font-family:var(--f-ui);font-size:18px;border:3px solid var(--ink);border-radius:12px;padding:8px 12px;background:var(--paper-2)}
 .plist .badge{margin-left:auto;font-size:13px;background:var(--ink);color:var(--paper);border-radius:999px;padding:2px 10px}
+.plist li.bot{background:var(--paper)}
+.plist .badge.bot{background:var(--cobalt)}
+.bot-ctl{display:grid;gap:4px;margin-top:14px;padding-top:12px;border-top:3px dashed var(--ink)}
+.pp.bot{border-style:dashed}
+.pp.bot.win{border-style:solid}
 .plist li.empty{border-style:dashed;color:var(--muted);background:transparent}
 .join-row{display:flex;gap:10px;margin-top:8px}
 .join-row input{text-transform:uppercase;letter-spacing:4px}
@@ -294,6 +299,12 @@ tr.mine td{background:var(--paper-2)}
         <div class="label">친구 코드</div>
         <div class="code-box"><span class="code" id="codeShow"></span><button class="btn sm" id="copyCode" type="button">복사</button></div>
         <ul class="plist" id="plist"></ul>
+        <div class="bot-ctl" id="botCtl" hidden>
+          <div class="label">빈자리 봇으로 채우기</div>
+          <div class="seg" id="lobBots"><button type="button" data-v="0">없음</button><button type="button" data-v="1">1명</button><button type="button" data-v="2">2명</button><button type="button" data-v="3">3명</button></div>
+          <div class="seg" id="lobLevel"><button type="button" data-v="easy">쉬움</button><button type="button" data-v="normal">보통</button><button type="button" data-v="hard">어려움</button></div>
+          <p class="note">친구가 더 들어오면 봇이 자리를 비켜줘요. 봇은 방장 화면에서 움직여요.</p>
+        </div>
         <p class="note" id="lobbyNote" style="margin-top:10px"></p>
         <div class="row-btns" style="margin-top:14px"><button class="btn red" id="startOnline" type="button" hidden>게임 시작</button><button class="btn" id="leaveRoom" type="button">방 나가기</button></div>
       </div>
@@ -710,7 +721,7 @@ async function saveMatch(res){
     try{await db.doc('matches/'+res.mid).set(res);setSaveNote('친구대전 랭킹에 기록했어요.')}
     catch(e){setSaveNote(mode==='host'?'기록 권한이 없어서 이 화면에서는 저장하지 못했어요. 다른 참가자 화면에서 저장될 수 있어요.':'')}
   }else if(rankSrc==='api'){
-    const ok=await postOrQueue({kind:'friend',gid:res.mid,code:res.code,ps:res.ps.map(p=>p.n),cs:res.ps.map(p=>p.c),wi:res.wi,dur:res.dur});
+    const ok=await postOrQueue({kind:'friend',gid:res.mid,code:res.code,ps:res.ps.map(p=>p.n),cs:res.ps.map(p=>p.c),bt:res.ps.map(p=>p.b?1:0),wi:res.wi,dur:res.dur});
     setSaveNote(ok?'친구대전 랭킹에 기록했어요.':'랭킹 서버에 연결되지 않아 이 기기에 모아 뒀어요. 다음에 열 때 올라가요.');
   }else{localPush('friend',res);loadLocal();renderRanks();setSaveNote('이 기기 랭킹에 기록했어요.')}
 }
@@ -893,22 +904,37 @@ function showLobby(){
   show('friend');$('#friendEntry').hidden=true;$('#roomNote').hidden=true;$('#lobby').hidden=false;$('#overlay').hidden=true;
   $('#codeShow').textContent=code||'';renderLobby();
 }
+let lobBots=Math.min(3,Math.max(0,Number(store.get('hg-lobbots'))||0)),lobLv=LV[store.get('hg-loblv')]?store.get('hg-loblv'):'normal';
 function lobbyList(){
-  if(mode==='host')return joinOrder.slice(0,4).map(p=>({id:p.peer,n:String(p.presence.nick||'손님').slice(0,10)}));
+  if(mode==='host'){
+    const humans=joinOrder.slice(0,4).map(p=>({id:p.peer,n:String(p.presence.nick||'손님').slice(0,10)}));
+    const nb=Math.min(lobBots,4-humans.length);
+    for(let i=0;i<nb;i++)humans.push({id:'bot'+i,n:BOT_NAMES[i],b:1});
+    return humans;
+  }
   const h=net&&net.peers().find(p=>p.peer===hostPeerId);
   return (h&&Array.isArray(h.presence.lob))?h.presence.lob.slice(0,4):[];
 }
 function renderLobby(){
   const list=lobbyList();
   let html='';
-  for(let i=0;i<4;i++){const p=list[i];html+=p?`<li><span>${esc(p.n)}${p.id===myId?' (나)':''}</span>${i===0?'<span class="badge">방장</span>':''}</li>`:'<li class="empty">빈 자리</li>'}
+  const lvName=LV[mode==='host'?lobLv:hostLv()]?.name||'보통';
+  for(let i=0;i<4;i++){const p=list[i];html+=p?`<li class="${p.b?'bot':''}"><span>${esc(p.n)}${p.id===myId?' (나)':''}</span>${i===0?'<span class="badge">방장</span>':p.b?`<span class="badge bot">봇 · ${esc(lvName)}</span>`:''}</li>`:'<li class="empty">빈 자리</li>'}
   $('#plist').innerHTML=html;
+  $('#botCtl').hidden=mode!=='host';
+  if(mode==='host'){
+    for(const b of document.querySelectorAll('#lobBots button'))b.setAttribute('aria-pressed',String(Number(b.dataset.v)===lobBots));
+    for(const b of document.querySelectorAll('#lobLevel button'))b.setAttribute('aria-pressed',String(b.dataset.v===lobLv));
+  }
   const extra=mode==='host'?Math.max(0,joinOrder.length-4):0;
   const sb=$('#startOnline');
-  if(mode==='host'){sb.hidden=false;sb.disabled=list.length<2;$('#lobbyNote').textContent=(list.length<2?'친구가 들어오면 시작할 수 있어요. 코드를 보내주세요.':`${list.length}명 준비 완료. 시작을 누르면 바로 카드가 돌아가요.`)+(extra?` (5번째부터 ${extra}명은 관전)`:'')}
+  if(mode==='host'){sb.hidden=false;sb.disabled=list.length<2;const nb=list.filter(p=>p.b).length;$('#lobbyNote').textContent=(list.length<2?'친구가 들어오거나 봇을 넣으면 시작할 수 있어요.':`${list.length-nb}명${nb?` + 봇 ${nb}`:''} 준비 완료. 시작을 누르면 바로 카드가 돌아가요.`)+(extra?` (5번째부터 ${extra}명은 관전)`:'')}
   else{sb.hidden=true;if(hostSeen)$('#lobbyNote').textContent='방장이 시작하면 게임이 열려요.'}
 }
-function pushLob(){const l=lobbyList();const s=JSON.stringify(l);if(s!==lastLob&&net){lastLob=s;net.presence({lob:l})}}
+function pushLob(){const l=lobbyList();const s=JSON.stringify(l)+lobLv;if(s!==lastLob&&net){lastLob=s;net.presence({lob:l,lv:lobLv})}}
+function hostLv(){const h=net&&net.peers().find(p=>p.peer===hostPeerId);return h&&h.presence.lv}
+$('#lobBots').onclick=e=>{const b=e.target.closest('button');if(!b||mode!=='host')return;lobBots=Number(b.dataset.v);store.set('hg-lobbots',lobBots);pushLob();renderLobby()};
+$('#lobLevel').onclick=e=>{const b=e.target.closest('button');if(!b||mode!=='host')return;lobLv=b.dataset.v;store.set('hg-loblv',lobLv);pushLob();renderLobby()};
 function onPeers(ch){
   const all=ch.peers;
   const mine=all.find(p=>p.sameTab);if(mine)myId=mine.peer;
@@ -949,13 +975,13 @@ $('#startOnline').onclick=()=>{
   const list=lobbyList();if(list.length<2)return;
   const byPeer=Object.fromEntries(joinOrder.map(p=>[p.peer,p]));
   for(const p of joinOrder)lastAct[p.peer]=Number(p.presence.act&&p.presence.act.id)||0;
-  const players=list.map(x=>({id:x.id,nick:x.n,kind:x.id===myId?'me':'remote',uid:x.id===myId?myUid:(byPeer[x.id]&&byPeer[x.id].by)||null}));
+  const players=list.map(x=>x.b?{id:x.id,nick:x.n,kind:'bot',uid:null}:{id:x.id,nick:x.n,kind:x.id===myId?'me':'remote',uid:x.id===myId?myUid:(byPeer[x.id]&&byPeer[x.id].by)||null});
   const mid=code+'-'+Date.now().toString(36);
   endLocalGame();resetView();show('game');
-  game=new Game({players,chars:pick4(),mid,
+  game=new Game({players,chars:pick4(),mid,level:lobLv,
     onChange:s=>{renderGame(s);if(net)net.presence({st:'game',g:s})},
     onEnd:g=>{const w=g.ps.find(p=>p.id===g.win);g.res={mid:g.mid,code,ts:Date.now(),dur:Math.round((g.endedAt-g.startedAt)/1000),
-      ps:g.ps.map(p=>({n:p.nick,u:p.uid||null,c:p.deck.length+p.pile.length})),wi:g.ps.indexOf(w),w:{n:w.nick,u:w.uid||null}}}});
+      ps:g.ps.map(p=>({n:p.nick,u:p.uid||null,c:p.deck.length+p.pile.length,b:p.kind==='bot'?1:0})),wi:g.ps.indexOf(w),w:{n:w.nick,u:w.uid||null}}}});
 };
 function backToLobby(){
   endLocalGame();lastLob='';
@@ -1024,16 +1050,17 @@ function renderRanks(){
   const ms=matchRows.filter(m=>m&&Array.isArray(m.ps)&&m.w);
   if(!ms.length){box.innerHTML='<div class="panel"><div class="empty-state">아직 친구대전 기록이 없어요. 방을 만들고 친구에게 코드를 보내보세요.</div></div>';return}
   const agg=new Map();
-  for(const m of [...ms].reverse()){const wk=keyOf(m.w.u,m.w.n);for(const p of m.ps){if(!p||typeof p.n!=='string')continue;const k=keyOf(p.u,p.n);const a=agg.get(k)||{k,n:p.n,g:0,w:0};a.n=p.n;a.g++;if(k===wk)a.w++;agg.set(k,a)}}
+  const winIdx=m=>{if(typeof m.wi==='number'&&m.ps[m.wi])return m.wi;const wk=keyOf(m.w.u,m.w.n);return m.ps.findIndex(p=>p&&!p.b&&keyOf(p.u,p.n)===wk)};
+  for(const m of [...ms].reverse()){const wi=winIdx(m);m.ps.forEach((p,i)=>{if(!p||typeof p.n!=='string'||p.b)return;const k=keyOf(p.u,p.n);const a=agg.get(k)||{k,n:p.n,g:0,w:0};a.n=p.n;a.g++;if(i===wi)a.w++;agg.set(k,a)})}
   const rows=[...agg.values()].sort((a,b)=>b.w-a.w||(b.w/b.g)-(a.w/a.g)||b.g-a.g);
   box.innerHTML=`<div class="split">
-    <div class="panel"><div class="section-h">우승 랭킹</div><div class="tbl-wrap"><table><thead><tr><th>순위</th><th>닉네임</th><th class="num">우승</th><th class="num">참여</th><th class="num">승률</th></tr></thead><tbody>${
+    <div class="panel"><div class="section-h">우승 랭킹</div><p class="note" style="margin-bottom:6px">봇은 순위에서 빠져요.</p><div class="tbl-wrap"><table><thead><tr><th>순위</th><th>닉네임</th><th class="num">우승</th><th class="num">참여</th><th class="num">승률</th></tr></thead><tbody>${
       rows.slice(0,50).map((r,i)=>`<tr class="${isMine(r.k)?'mine':''}"><td class="rk${i===0?' g1':''}">${i+1}</td><td>${esc(r.n)}${isMine(r.k)?' (나)':''}</td><td class="num"><b>${r.w}</b></td><td class="num">${r.g}</td><td class="num">${pct(r.w,r.g)}</td></tr>`).join('')
     }</tbody></table></div></div>
     <div class="panel"><div class="section-h">판별 기록</div><ul class="matches">${
-      ms.slice(0,60).map(m=>{const wk=keyOf(m.w.u,m.w.n);const d=Number(m.dur)||0;return `<li class="match"><div class="match-meta"><span>${esc(fmtT(m.ts))}</span><span>방 ${esc(m.code||'')}</span><span>${m.ps.length}인전</span><span>${Math.floor(d/60)}분 ${d%60}초</span></div>
-        <div class="ppl">${m.ps.map(p=>{const w=keyOf(p.u,p.n)===wk;return `<span class="pp${w?' win':''}">${w?CROWN:''}${esc(p.n)}${typeof p.c==='number'?` · ${p.c}장`:''}</span>`}).join('')}</div>
-        <div class="note">우승 <b>${esc(m.w.n)}</b></div></li>`}).join('')
+      ms.slice(0,60).map(m=>{const wi=winIdx(m);const nb=m.ps.filter(p=>p&&p.b).length;const d=Number(m.dur)||0;return `<li class="match"><div class="match-meta"><span>${esc(fmtT(m.ts))}</span><span>방 ${esc(m.code||'')}</span><span>${m.ps.length-nb}인${nb?` + 봇 ${nb}`:'전'}</span><span>${Math.floor(d/60)}분 ${d%60}초</span></div>
+        <div class="ppl">${m.ps.map((p,i)=>{const w=i===wi;return `<span class="pp${w?' win':''}${p.b?' bot':''}">${w?CROWN:''}${esc(p.n)}${typeof p.c==='number'?` · ${p.c}장`:''}</span>`}).join('')}</div>
+        <div class="note">우승 <b>${esc(wi>=0?m.ps[wi].n:m.w.n)}</b>${wi>=0&&m.ps[wi].b?' (봇)':''}</div></li>`}).join('')
     }</ul></div></div>`;
 }
 renderRanks();
@@ -1043,6 +1070,7 @@ renderRanks();
   if(c.length===5){$('#codeIn').value=c;$('#goFriend').click();setTimeout(()=>{if(!net)enterRoom(c,'guest')},50)}})();
 })();
 </script>
+
 
 <!-- 벙참 뒤로가기 버튼 -->
 <a id="bungBack" href="../" aria-label="게임 나가기" title="게임 나가기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
