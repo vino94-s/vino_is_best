@@ -284,6 +284,33 @@ html.playing .mat .netwarn{position:absolute;left:8px;right:8px;top:32px;z-index
   html.playing .gside{width:clamp(250px,32vw,380px);display:flex;flex-direction:column;justify-content:center}
   html.playing .throwstage{height:clamp(70px,22vh,150px)}
 }
+
+/* 채팅 */
+.chatbox{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.clog{max-height:170px;min-height:60px;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding:4px 2px;-webkit-user-select:text;user-select:text}
+.cm{display:flex;gap:8px;align-items:baseline;font-size:15px;line-height:1.4;min-width:0}
+.cm b{font-family:var(--f-ui);font-weight:400;flex:none;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cm b.p0{color:#FF8F84}.cm b.p1{color:#8DBBF5}
+.cm span{min-width:0;overflow-wrap:anywhere}
+.cm.me{flex-direction:row-reverse;text-align:right}
+.cm.me span{background:var(--night-3);border-radius:10px;padding:2px 9px}
+.cempty{color:var(--muted);font-family:var(--f-ui);font-size:14px;text-align:center;margin:auto}
+.cform{display:flex;gap:8px}
+.cform input{flex:1;min-width:0;min-height:42px;border-radius:11px;border:2px solid var(--line);background:var(--night);color:var(--text);padding:0 12px;font-size:16px;font-family:var(--f-body)}
+.cform input:focus{border-color:var(--gold);outline:none}
+.chatbtn{position:relative}
+.cbadge{position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;border-radius:10px;background:var(--red);color:#fff;font-size:11px;font-weight:400;font-family:var(--f-ui);display:grid;place-items:center;padding:0 4px}
+.csheet{position:fixed;left:50%;bottom:0;translate:-50% 0;z-index:85;width:min(100%,480px);display:flex;flex-direction:column;gap:8px;max-height:62vh;
+  background:var(--night-2);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -10px 30px #0009;
+  padding:12px max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.csheet .chead{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-ui);font-size:17px}
+.csheet .clog{flex:1;max-height:none;min-height:80px}
+.quick{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.qbtn{flex:none;min-height:34px;padding:0 12px;border-radius:17px;background:var(--hanji);color:var(--ink);font-size:14px}
+.cbub{position:fixed;z-index:75;max-width:min(70vw,280px);background:var(--hanji);color:var(--ink);border-radius:14px;padding:6px 12px;box-shadow:0 6px 16px #0008;pointer-events:none;opacity:0;font-size:15px;line-height:1.35;display:grid;border:3px solid var(--pc)}
+.cbub b{font-family:var(--f-ui);font-weight:400;font-size:12px;color:var(--ink-soft)}
+.cbub span{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -363,6 +390,8 @@ html.playing .mat .netwarn{position:absolute;left:8px;right:8px;top:32px;z-index
     <div class="chars" id="lobbyGrid"></div>
     <button class="btn" id="readyBtn" disabled>준비 완료</button>
     <div class="fmsg" id="lobbyMsg"></div>
+    <div class="chatbox"><div class="clog" id="lobbyLog" aria-live="polite"></div>
+      <form class="cform" id="lobbyForm"><input id="lobbyIn" maxlength="80" autocomplete="off" placeholder="대기실 채팅" aria-label="채팅 메시지"><button class="btn sm blue" type="submit">보내기</button></form></div>
   </div>
 </section>
 
@@ -371,7 +400,7 @@ html.playing .mat .netwarn{position:absolute;left:8px;right:8px;top:32px;z-index
   <div class="topbar">
     <button class="icon-btn" id="quitBtn">나가기</button>
     <div class="confirm" id="quitAsk" hidden>정말 나갈까요? <button class="btn sm" id="quitYes">나가기</button><button class="btn sm ghost" id="quitNo">계속하기</button></div>
-    <div class="r"><button class="icon-btn" id="muteBtn" aria-label="소리 켜고 끄기">🔊</button></div>
+    <div class="r"><button class="icon-btn chatbtn" id="chatBtn" aria-label="채팅 열기" hidden>💬<b class="cbadge" id="chatBadge" hidden></b></button><button class="icon-btn" id="muteBtn" aria-label="소리 켜고 끄기">🔊</button></div>
   </div>
   <div class="gwrap" id="gwrap">
     <div class="gmain">
@@ -417,6 +446,12 @@ html.playing .mat .netwarn{position:absolute;left:8px;right:8px;top:32px;z-index
 <div class="taunt" id="taunt" hidden><div class="tn" id="tName"></div><img class="ti" id="tImg" alt=""><div class="tb" id="tText"></div></div>
 <div class="ov" id="over" hidden><div class="box" id="overBox"></div></div>
 <div class="toast" id="toast" hidden></div>
+<div class="csheet" id="chatSheet" hidden role="dialog" aria-label="채팅">
+  <div class="chead"><b>채팅</b><button class="icon-btn" id="chatClose" type="button">닫기</button></div>
+  <div class="clog" id="gameLog" aria-live="polite"></div>
+  <div class="quick" id="quick"></div>
+  <form class="cform" id="gameForm"><input id="gameIn" maxlength="80" autocomplete="off" placeholder="메시지 보내기" aria-label="채팅 메시지"><button class="btn sm blue" type="submit">보내기</button></form>
+</div>
 
 <script>
 'use strict';
@@ -697,6 +732,7 @@ function teamName(t){return teamSeats(t).map(s=>s.nick).join(' & ')}
 function startGame(o){
   clearTimeout(botT);
   G=newState(o.seats,o.first);G.mode=o.mode;G.gid=o.gid||null;me=o.me;busy=false;selRi=null;Q=Promise.resolve();
+  $('#chatBtn').hidden=o.mode!=='net';closeChat();chatUnread=0;syncBadge();
   $('#over').hidden=true;$('#quitAsk').hidden=true;$('#quitBtn').hidden=false;$('#fx').textContent='';
   buildPanels();buildPieces();resetSticks();
   show('sGame');
@@ -1339,6 +1375,7 @@ function closeNet(){
   for(const L of net.links.values())try{L.conn&&L.conn.close()}catch(e){}
   try{net.peer&&net.peer.destroy()}catch(e){}
   try{net.room&&net.room.leave().catch(()=>{})}catch(e){}
+  chatLog=[];renderChat();
   Object.assign(net,{on:false,kind:'',links:new Map(),hostSid:null,joined:false,seats:[],room:null,peer:null,again:new Set(),playing:false,lastPres:'',fullShown:false,hostSeen:null});
   netWarn('');
 }
@@ -1447,6 +1484,7 @@ function onNet(L,d){
         if(G&&G.mode==='net'&&d.g===G.gid&&!G.over&&Number.isInteger(d.by)&&G.seats[d.by]&&G.seats[d.by].sid===L.sid){broadcast(d,L.sid);enqueue(d)}break;
       case 'again':net.again.add(L.sid);againStatus();break;
       case 'quit':hostDrop(L,seatName(L.sid));break;
+      case 'chat':{const x=cleanChat(d.x);if(!x)break;const m={t:'chat',sid:L.sid,n:seatName(L.sid),x};broadcast(m,L.sid);addChat(m);break;}
     }
   }else{
     switch(d.t){
@@ -1455,6 +1493,7 @@ function onNet(L,d){
       case 'start':if(Array.isArray(d.seats))beginNet(d);break;
       case 'throw':case 'move':if(G&&G.mode==='net'&&d.g===G.gid&&!G.over)enqueue(d);break;
       case 'agst':showAgain(d.n|0,d.need|0);break;
+      case 'chat':{const x=cleanChat(d.x);if(x)addChat({sid:String(d.sid||''),n:cleanNick(d.n)||'친구',x});break;}
       case 'end':{
         const who=cleanNick(d.n)||'친구';
         if(G&&G.mode==='net'&&!G.over){G.over=true;clearGhosts();updateUI();showNote(`${who}님이 나가서 경기가 끝났어요.`)}
@@ -1557,6 +1596,77 @@ $('#copyCode').onclick=async()=>{
 /* 초대 링크로 들어오면 코드 자동 입력 */
 (function(){try{const q=(new URLSearchParams(location.search).get('room')||location.hash.replace('#','')||'').toUpperCase();
   if(/^[A-Z0-9]{4}$/.test(q)){if(location.search)history.replaceState(null,'',location.pathname);openFriend();$('#codeIn').value=q;fMsg('초대받은 방이에요. 닉네임을 확인하고 입장을 눌러 주세요.')}}catch(e){}})();
+
+
+/* ================= 친구 채팅 ================= */
+let chatLog=[],chatUnread=0,lastChatAt=0;
+const QUICK=['ㅋㅋㅋㅋ','빨리 던져!','잡았지롱~','아깝다!','나이스!','봐주세요 🙏','한 판 더?','GG'];
+function cleanChat(t){return String(t||'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/\s+/g,' ').trim().slice(0,80)}
+function chatTeam(sid){
+  const seats=(G&&G.mode==='net')?G.seats:net.seats;
+  const i=(seats||[]).findIndex(s=>s&&s.sid===sid);return i<0?0:i%2;
+}
+function sendChat(text){
+  const x=cleanChat(text);if(!x||!(net.host?net.on:net.joined))return false;
+  const now=Date.now();if(now-lastChatAt<400){toast('조금 천천히 보내 주세요.',1200);return false}lastChatAt=now;
+  const m={t:'chat',sid:net.sid,n:nick,x};
+  if(net.host){broadcast(m);addChat(m)}else{toHost({t:'chat',x});addChat(m)}
+  return true;
+}
+function addChat(m){
+  const mine=m.sid===net.sid;
+  chatLog.push({sid:m.sid,n:m.n,x:m.x,mine,team:chatTeam(m.sid),at:Date.now()});
+  if(chatLog.length>60)chatLog.shift();
+  renderChat();
+  if(!mine)SFX.pick();
+  if(G&&G.mode==='net'&&!$('#sGame').hidden){
+    chatBubble(m);
+    if($('#chatSheet').hidden&&!mine){chatUnread++;syncBadge()}
+  }
+}
+function renderChat(){
+  for(const id of ['#lobbyLog','#gameLog']){
+    const box=$(id);if(!box)continue;
+    const atEnd=box.scrollHeight-box.scrollTop-box.clientHeight<40;
+    box.textContent='';
+    if(!chatLog.length)box.appendChild(el('div','cempty','아직 메시지가 없어요. 인사 한마디 남겨 보세요.'));
+    chatLog.forEach(c=>{const r=el('div','cm'+(c.mine?' me':''));r.appendChild(el('b','p'+c.team,c.mine?'나':c.n));r.appendChild(el('span',null,c.x));box.appendChild(r)});
+    if(atEnd||chatLog.length&&chatLog[chatLog.length-1].mine)box.scrollTop=box.scrollHeight;
+  }
+}
+function syncBadge(){const b=$('#chatBadge');b.hidden=!chatUnread;b.textContent=chatUnread>9?'9+':String(chatUnread)}
+/* 보낸 사람 얼굴 옆에 말풍선 */
+function chatBubble(m){
+  let anchor=null;
+  if(G){const i=G.seats.findIndex(s=>s.sid===m.sid);if(i>=0)anchor=document.querySelector(`#sGame .pl .av[data-seat="${i}"]`)}
+  const r=anchor?anchor.getBoundingClientRect():null;
+  const b=el('div','cbub p'+chatTeam(m.sid));b.appendChild(el('b',null,m.sid===net.sid?'나':m.n));b.appendChild(el('span',null,m.x));
+  document.body.appendChild(b);
+  const bw=b.offsetWidth,bh=b.offsetHeight;
+  let x=r?r.left+r.width/2-24:innerWidth/2-bw/2,y=r?(r.top>innerHeight/2?r.top-bh-8:r.bottom+8):70;
+  x=Math.max(8,Math.min(innerWidth-bw-8,x));y=Math.max(8,Math.min(innerHeight-bh-8,y));
+  b.style.left=x+'px';b.style.top=y+'px';
+  anim(220,t=>{b.style.opacity=t;b.style.transform=`scale(${.7+.3*E.outBack(t)})`});
+  setTimeout(()=>anim(300,t=>{b.style.opacity=1-t}).then(()=>b.remove()),3600);
+}
+function openChat(){
+  const sh=$('#chatSheet');sh.hidden=false;chatUnread=0;syncBadge();renderChat();placeSheet();
+  const log=$('#gameLog');log.scrollTop=log.scrollHeight;
+}
+function closeChat(){$('#chatSheet').hidden=true;try{$('#gameIn').blur()}catch(e){}}
+/* 휴대폰 키보드가 올라오면 채팅창을 키보드 위로 */
+function placeSheet(){
+  const sh=$('#chatSheet');if(sh.hidden)return;
+  const vv=window.visualViewport;const kb=vv?Math.max(0,innerHeight-vv.height-vv.offsetTop):0;
+  sh.style.bottom=kb+'px';sh.style.maxHeight=Math.round((vv?vv.height:innerHeight)*.62)+'px';
+}
+if(window.visualViewport){visualViewport.addEventListener('resize',placeSheet);visualViewport.addEventListener('scroll',placeSheet)}
+$('#chatBtn').onclick=()=>{$('#chatSheet').hidden?openChat():closeChat()};
+$('#chatClose').onclick=closeChat;
+QUICK.forEach(q=>{const b=el('button','qbtn',q);b.type='button';b.onclick=()=>sendChat(q);$('#quick').appendChild(b)});
+$('#gameForm').addEventListener('submit',e=>{e.preventDefault();const i=$('#gameIn');if(sendChat(i.value))i.value=''});
+$('#lobbyForm').addEventListener('submit',e=>{e.preventDefault();const i=$('#lobbyIn');if(sendChat(i.value))i.value=''});
+renderChat();
 
 /* ================= 오픈 랭킹 =================
    claude.ai 아티팩트: 공유 DB
