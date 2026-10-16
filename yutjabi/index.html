@@ -1524,28 +1524,60 @@ async function rankInit(){
     return;
   }
   if(RANK_API&&await apiLoad())return;
-  RK.src='local';const l=localRows();RK.bot=l.bot;RK.friend=l.friend;renderRank();
+  useLocal();
 }
+function useLocal(){RK.src='local';const l=localRows();RK.bot=l.bot;RK.friend=l.friend;renderRank()}
+/* 구글 시트 웹 앱: 실패하면 이유를 남겨서 랭킹 화면에 보여줘요 */
 async function apiLoad(){
-  try{const r=await fetch(RANK_API+'?t='+Date.now());const j=await r.json();if(!j||!j.ok)throw 0;RK.src='api';RK.bot=j.bot||[];RK.friend=j.friend||[];renderRank();return true}catch(e){return false}
+  if(!RANK_API)return false;
+  RK.err='';
+  let r;
+  try{r=await fetch(RANK_API+'?t='+Date.now(),{redirect:'follow'})}catch(e){RK.err='net';renderRank();return false}
+  let j=null;try{j=JSON.parse(await r.text())}catch(e){RK.err='html';renderRank();return false}
+  if(!j||!j.ok){RK.err='notok';renderRank();return false}
+  RK.src='api';RK.bot=j.bot||[];RK.friend=j.friend||[];renderRank();
+  flushPending();
+  return true;
 }
-async function apiPost(body){for(let n=0;n<2;n++){try{const r=await fetch(RANK_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});const j=await r.json();if(j&&j.ok){apiLoad();return true}}catch(e){await sleep(700)}}return false}
+async function apiPost(body){
+  if(!RANK_API)return false;
+  for(let n=0;n<2;n++){
+    try{const r=await fetch(RANK_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});const j=JSON.parse(await r.text());if(j&&j.ok)return true}catch(e){}
+    await sleep(700);
+  }
+  return false;
+}
+/* 서버가 잠깐 안 될 때 끝난 경기는 이 기기에 모아 뒀다가 연결되면 올려요 */
+let flushing=false;
+async function flushPending(){
+  if(flushing)return;flushing=true;
+  try{
+    let q=store.get('pendingApi',[]);let sent=0;
+    while(q.length){if(!(await apiPost(q[0])))break;q.shift();store.set('pendingApi',q);sent++}
+    if(sent){const r=await fetch(RANK_API+'?t='+Date.now()).then(x=>x.json()).catch(()=>null);if(r&&r.ok){RK.bot=r.bot||[];RK.friend=r.friend||[];renderRank()}}
+  }finally{flushing=false}
+}
+async function postOrQueue(body){
+  if(await apiPost(body)){await apiLoad();return true}
+  const q=store.get('pendingApi',[]);if(!q.some(x=>x.kind===body.kind&&x.at===body.at&&(x.gid||'')===(body.gid||'')))q.push(body);store.set('pendingApi',q.slice(-100));
+  return false;
+}
 async function recordBot(row){
   row={nick:cleanNick(row.nick),c:row.c,w:!!row.w,tn:row.tn|0,at:Date.now()};
   if(RK.src==='db'){try{await RK.db.collection('botgames').add(row);return}catch(e){toast('랭킹에 기록할 권한이 없어 이 기기에만 저장했어요.',2600)}}
-  else if(RK.src==='api'){if(await apiPost({kind:'bot',...row}))return}
-  const l=store.get('lbot',[]);l.unshift(row);store.set('lbot',l.slice(0,300));if(RK.src!=='db'){RK.bot=l;renderRank()}
+  else if(RANK_API){if(await postOrQueue({kind:'bot',...row}))return;toast('공유 랭킹 서버에 연결되지 않아 이 기기에 모아 뒀어요. 연결되면 올라가요.',2800)}
+  const l=store.get('lbot',[]);l.unshift(row);store.set('lbot',l.slice(0,300));if(RK.src==='local'){RK.bot=l;renderRank()}
 }
 async function recordFriend(row){
   const team=row.m==='2v2';
   row={gid:String(row.gid).slice(0,60),m:team?'2v2':'1v1',a:cleanNick(row.a),b:cleanNick(row.b),a2:team?cleanNick(row.a2):'',b2:team?cleanNick(row.b2):'',
     ca:row.ca,cb:row.cb,ca2:team?row.ca2:'',cb2:team?row.cb2:'',w:row.w?1:0,bots:(row.bots||[]).filter(i=>i>=0&&i<4),at:Date.now()};
   if(RK.src==='db'){try{await RK.db.doc('friendgames/'+row.gid.replace(/[^A-Za-z0-9_\-.~:@+]/g,'_')).set(row);return}catch(e){if(!net.host)return;toast('랭킹에 기록할 권한이 없어 이 기기에만 저장했어요.',2600)}}
-  else if(RK.src==='api'){if(!net.host)return;if(await apiPost({kind:'friend',...row,bots:row.bots.join(',')}))return}
-  const l=store.get('lfriend',[]);if(!l.some(x=>x.gid===row.gid))l.unshift(row);store.set('lfriend',l.slice(0,300));if(RK.src!=='db'){RK.friend=l;renderRank()}
+  else if(RANK_API){if(!net.host)return;if(await postOrQueue({kind:'friend',...row,bots:row.bots.join(',')}))return}
+  const l=store.get('lfriend',[]);if(!l.some(x=>x.gid===row.gid))l.unshift(row);store.set('lfriend',l.slice(0,300));if(RK.src==='local'){RK.friend=l;renderRank()}
 }
 let rkTab='bot';
-function openRank(tab){rkTab=tab||'bot';renderRank();show('sRank')}
+function openRank(tab){rkTab=tab||'bot';renderRank();show('sRank');if(RK.src==='api'||(RK.src==='local'&&RANK_API))apiLoad()}
 $('#rankBack').onclick=()=>show('sHome');
 $('#tabBot').onclick=()=>{rkTab='bot';renderRank()};
 $('#tabFriend').onclick=()=>{rkTab='friend';renderRank()};
@@ -1562,7 +1594,13 @@ function sidesOf(r){
 const sideLabel=S=>S.map(x=>x.n).join(' & ');
 function renderRank(){
   $('#tabBot').setAttribute('aria-selected',String(rkTab==='bot'));$('#tabFriend').setAttribute('aria-selected',String(rkTab==='friend'));
-  $('#rkSrc').textContent={db:'모두가 같이 보는 공유 랭킹이에요.',api:'모두가 같이 보는 공유 랭킹이에요.',local:'공유 랭킹에 연결되지 않아 이 기기에서 한 경기만 보여요.',loading:'랭킹을 불러오는 중…'}[RK.src]||'';
+  const src=$('#rkSrc');src.textContent='';
+  if(RK.src==='local'&&RANK_API){
+    const why={net:'서버에 닿지 못했어요. Apps Script 배포의 액세스 권한이 \'모든 사용자\'인지, 주소가 맞는지 확인해 주세요.',html:'서버가 랭킹 대신 오류 화면을 돌려줬어요. Apps Script를 구글 시트의 확장 프로그램 메뉴에서 만들었는지, 배포할 때 권한 승인을 끝냈는지 확인해 주세요.',notok:'서버가 응답했지만 랭킹을 읽지 못했어요.'}[RK.err]||'서버에 연결하는 중이에요.';
+    src.appendChild(document.createTextNode('공유 랭킹 서버에 연결되지 않아 이 기기에서 한 경기만 보여요. '+why+' '));
+    const b=el('button','btn sm ghost','다시 연결');b.style.marginTop='6px';b.onclick=async()=>{b.disabled=true;b.textContent='연결하는 중…';if(!(await apiLoad())){b.disabled=false;b.textContent='다시 연결'}};src.appendChild(b);
+    const pend=store.get('pendingApi',[]).length;if(pend)src.appendChild(el('div',null,`아직 올리지 못한 경기 ${pend}판이 이 기기에 있어요.`));
+  }else src.textContent={db:'모두가 같이 보는 공유 랭킹이에요.',api:'모두가 같이 보는 공유 랭킹이에요.',local:'공유 랭킹에 연결되지 않아 이 기기에서 한 경기만 보여요.',loading:'랭킹을 불러오는 중…'}[RK.src]||'';
   const body=$('#rkBody');body.textContent='';
   const myNick=cleanNick(nickIn.value);
   const table=(heads,rows)=>{const tw=el('div','tablewrap'),t=el('table','rk');tw.appendChild(t);
