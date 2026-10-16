@@ -736,7 +736,8 @@ function startGame(o){
   clearTimeout(botT);
   G=newState(o.seats,o.first);G.mode=o.mode;G.gid=o.gid||null;me=o.me;busy=false;selRi=null;Q=Promise.resolve();
   $('#chatBtn').hidden=false;closeChat();chatUnread=0;syncBadge();
-  if(o.mode==='bot'){chatLog=[];renderChat();botGreet()}
+  if(o.mode==='bot'){chatLog=[];renderChat()}
+  if(o.mode==='bot'||net.host)botGreet();
   $('#over').hidden=true;$('#quitAsk').hidden=true;$('#quitBtn').hidden=false;$('#fx').textContent='';
   buildPanels();buildPieces();resetSticks();
   show('sGame');
@@ -1488,7 +1489,7 @@ function onNet(L,d){
         if(G&&G.mode==='net'&&d.g===G.gid&&!G.over&&Number.isInteger(d.by)&&G.seats[d.by]&&G.seats[d.by].sid===L.sid){broadcast(d,L.sid);enqueue(d)}break;
       case 'again':net.again.add(L.sid);againStatus();break;
       case 'quit':hostDrop(L,seatName(L.sid));break;
-      case 'chat':{const x=cleanChat(d.x);if(!x)break;const m={t:'chat',sid:L.sid,n:seatName(L.sid),x};broadcast(m,L.sid);addChat(m);break;}
+      case 'chat':{const x=cleanChat(d.x);if(!x)break;const m={t:'chat',sid:L.sid,n:seatName(L.sid),x};broadcast(m,L.sid);addChat(m);botsHear(m);break;}
     }
   }else{
     switch(d.t){
@@ -1615,9 +1616,9 @@ function sendChat(text){
   const vsBot=G&&G.mode==='bot';
   if(!vsBot&&!(net.host?net.on:net.joined))return false;
   const now=Date.now();if(now-lastChatAt<400){toast('조금 천천히 보내 주세요.',1200);return false}lastChatAt=now;
-  if(vsBot){addChat({sid:G.seats[me].sid,n:nick,x,mine:true});botReply(x);return true}
+  if(vsBot){const m={sid:G.seats[me].sid,n:nick,x,mine:true};addChat(m);botsHear(m);return true}
   const m={t:'chat',sid:net.sid,n:nick,x};
-  if(net.host){broadcast(m);addChat(m)}else{toHost({t:'chat',x});addChat(m)}
+  if(net.host){broadcast(m);addChat(m);botsHear(m)}else{toHost({t:'chat',x});addChat(m)}
   return true;
 }
 function addChat(m){
@@ -1677,37 +1678,56 @@ renderChat();
 
 
 /* ================= 봇 채팅: 플레이어 말에 캐릭터 말투로 대답 =================
-   claude.ai 아티팩트에서는 Claude가 대답을 지어 주고(처음 한 번 허락 필요),
-   안 되면 아래 규칙으로 대답해요 */
+   봇 대전과, 친구 대전(2:2)에서 빈자리를 채운 봇 모두 대답해요.
+   친구 대전 봇은 방장 기기에서 대답을 만들어 모두에게 보내요.
+   claude.ai 아티팩트에서는 Claude가 대답을 지어 주고, 안 되면 아래 규칙으로 대답해요 */
 const BOT_TIC={gaeguri:['굴~','깨굴!'],imgeum:['에헴.','짐이 말하노라.'],ddabong:['따봉!','👍'],manse:['짹!','만세~'],haetnim:['ㅇㅋ?','안물안궁~'],kkokko:['꼬끼오!','꼬꼬댁~'],chureup:['츄릅…','주르륵…'],simuruk:['끄응…','…미안'],mupyo:['',''],eomji:['냥~','냥!'],gentle:['아가씨.','실례.']};
 const pick=a=>a[(rnd()*a.length)|0];
-function botSeat(){return G&&G.mode==='bot'?G.seats.find(s=>s.bot):null}
-function gameSituation(){
-  if(!G)return {lead:0,myGoal:0,botGoal:0};
-  const mt=myTeam(),bt=1-mt;
-  const rem=t=>G.pieces[t].reduce((a,q)=>a+remain(q.pos),0);
-  return {lead:rem(mt)-rem(bt),myGoal:G.pieces[mt].filter(q=>q.pos===GOAL).length,botGoal:G.pieces[bt].filter(q=>q.pos===GOAL).length,over:G.over,botWon:G.over&&G.winner===bt};
+function seatList(){return G?G.seats:(net.seats||[]).filter(Boolean)}
+function roomBots(){
+  if(G&&G.mode==='bot')return G.seats.filter(s=>s.bot);
+  if(G&&G.mode==='net')return net.host?G.seats.filter(s=>s.bot):[];
+  return net.host&&!$('#fLobby').hidden?net.seats.filter(s=>s&&s.bot):[];
 }
-function ruleReply(x){
-  const s=gameSituation(),t=x.toLowerCase();
-  const ahead=s.lead>3,behind=s.lead<-3;
-  const R=[
+function seatIdx(sid){const a=G?G.seats:net.seats;return (a||[]).findIndex(s=>s&&s.sid===sid)}
+/* 봇 팀 입장에서 본 판 상황: lead>0 이면 봇 팀이 앞섬 */
+function situationFor(botTeam){
+  if(!G)return {lead:0,goal:0,oppGoal:0,over:false,won:false,lobby:true};
+  const rem=t=>G.pieces[t].reduce((a,q)=>a+remain(q.pos),0);
+  return {lead:rem(1-botTeam)-rem(botTeam),goal:G.pieces[botTeam].filter(q=>q.pos===GOAL).length,oppGoal:G.pieces[1-botTeam].filter(q=>q.pos===GOAL).length,over:G.over,won:G.over&&G.winner===botTeam};
+}
+function ruleReply(x,ally,s){
+  const t=x.toLowerCase(),ahead=s.lead>3,behind=s.lead<-3;
+  const R=ally?[
+    [/안녕|하이|ㅎㅇ|반가|hello|hi\b/,['같은 팀이다! 가 보자~','팀원 반가워! 우리가 이긴다']],
+    [/gg|지지|수고|한\s?판\s?더|다시/,s.over?(s.won?['우리 팀 최고! GG','팀워크 완벽했다']:['아깝다… 다음 판은 우리가 가져가자']):['아직 안 끝났어, 끝까지 가자']],
+    [/봐줘|살려|제발|ㅠ|ㅜ|흑/,['괜찮아, 내가 뒤에서 받쳐 줄게','울지 마, 아직 기회 있어']],
+    [/빨리|느려|언제|ㅃㄹ|기다/,['알았어 알았어, 금방 던질게','팀장님 재촉 들어왔다']],
+    [/바보|멍청|허접|못하|약하|ㅂㅅ|노잼|별로/,['왜 나한테 그래, 우리 편이잖아','팀 내분 금지!']],
+    [/잘했|나이스|굿|최고|대단|멋|따봉|good|nice/,['우리 팀 최고!','너도 잘했어, 하이파이브']],
+    [/잡(았|아|지|힐|혀)|복수/,['잡히면 내가 복수해 줄게','잡는 건 우리 팀 특기지']],
+    [/누가\s?이|이길|질\s?것|이기고|지고|점수|몇\s?개/,ahead?['지금 우리가 앞서! 이대로 가자']:behind?['조금 밀리는데… 지름길 노리자']:['팽팽해. 한 번만 잡으면 된다']],
+    [/윷|모|빽도|도|개|걸|운/,['윷 하나만 나와라…','황금 구간 노려, 팀원!']],
+    [/누구|이름|너\s?뭐/,null],
+    [/ㅋㅋ|ㅎㅎ|웃/,['ㅋㅋㅋ 우리 팀 분위기 좋다','웃으면서 이기자']],
+  ]:[
     [/안녕|하이|ㅎㅇ|반가|hello|hi\b/,['안녕! 오늘 판은 내가 가져간다','반가워~ 살살 할게(거짓말)','왔구나! 윷 던질 준비 됐어?']],
-    [/gg|지지|수고|한\s?판\s?더|다시/,s.over?(s.botWon?['GG! 한 판 더 하면 또 이길걸?','수고했어~ 다음엔 좀 더 세게 와']:['GG… 이번엔 졌다. 다음 판은 다르다!','인정. 근데 한 판 더 해']):['아직 안 끝났거든?','GG는 끝나고 치는 거야']],
+    [/gg|지지|수고|한\s?판\s?더|다시/,s.over?(s.won?['GG! 한 판 더 하면 또 이길걸?','수고했어~ 다음엔 좀 더 세게 와']:['GG… 이번엔 졌다. 다음 판은 다르다!','인정. 근데 한 판 더 해']):['아직 안 끝났거든?','GG는 끝나고 치는 거야']],
     [/봐줘|살려|제발|ㅠ|ㅜ|흑/,['봐주는 거 없음','…한 번만이야. (안 봐줌)','울어도 소용없다~']],
     [/빨리|느려|언제|ㅃㄹ|기다/,['생각 중이라고!','서두르면 낙 나온다~','명장은 신중한 법이지']],
     [/바보|멍청|허접|못하|약하|ㅂㅅ|노잼|별로/,['말로만 하지 말고 윷으로 보여줘','그 말 그대로 돌려줄게','어허, 판 위에서 얘기하자']],
     [/잘했|나이스|굿|최고|대단|멋|따봉|good|nice/,['고마워, 근데 안 봐줌','칭찬해도 안 져줘~','알아, 나 좀 하지?']],
     [/잡(았|아|지|힐|혀)|복수/,['잡히면 다시 오면 되지~','다음엔 내가 잡는다','방심하면 바로 잡아간다']],
-    [/누가\s?이|이길|질\s?것|이기고|지고|점수|몇\s?개/,ahead?['지금은 네가 앞서… 잠깐만이야','네가 조금 앞서네. 곧 뒤집는다']:behind?['지금은 내가 앞서지롱','보이지? 내가 앞서고 있어']:['아직 팽팽해. 이제부터지','엎치락뒤치락이네']],
+    [/누가\s?이|이길|질\s?것|이기고|지고|점수|몇\s?개/,ahead?['지금은 내가 앞서지롱','보이지? 내가 앞서고 있어']:behind?['지금은 네가 앞서… 잠깐만이야','네가 조금 앞서네. 곧 뒤집는다']:['아직 팽팽해. 이제부터지','엎치락뒤치락이네']],
     [/윷|모|빽도|도|개|걸|운/,['윷이 너무 잘 나오면 반칙 아냐?','황금 구간 노려 봐','운도 실력이야~']],
-    [/누구|이름|너\s?뭐/,[`나는 ${chById(botSeat()?.char)?.name||'윷봇'}!`,'윷판의 지배자지']],
+    [/누구|이름|너\s?뭐/,null],
     [/ㅋㅋ|ㅎㅎ|웃/,['웃음이 나와? 곧 울걸','ㅋㅋㅋ 나도 웃겨','웃을 때 잘 웃어둬']],
-    [/사랑|좋아|귀여/,['…갑자기? 그래도 안 봐줌','나도 윷놀이 좋아해']],
   ];
-  for(const [re,arr] of R)if(re.test(t))return pick(arr);
-  if(ahead)return pick(['말 많은 거 보니 이기고 있나 보네','앞서 있다고 방심하지 마']);
-  if(behind)return pick(['그건 모르겠고 윷이나 던져','내가 앞서니까 여유롭다~']);
+  for(const [re,arr] of R)if(re.test(t))return arr?pick(arr):null;
+  if(s.lobby)return pick(ally?['우리 팀 잘해 보자!','준비됐어? 난 됐어']:['대기실에서부터 기싸움이냐?','준비 완료하고 붙어 보자']);
+  if(ally)return pick(['오케이, 같이 가자','좋아, 믿고 간다','응응 알겠어']);
+  if(ahead)return pick(['그건 모르겠고 윷이나 던져','내가 앞서니까 여유롭다~']);
+  if(behind)return pick(['말 많은 거 보니 이기고 있나 보네','앞서 있다고 방심하지 마']);
   return pick(['ㅇㅇ','그건 모르겠고 윷이나 던져','흠… 일단 판에 집중하자','오 그래?']);
 }
 function withTic(text,charId){
@@ -1715,42 +1735,64 @@ function withTic(text,charId){
   const tic=BOT_TIC[charId];if(!tic)return text;
   return text+' '+pick(tic);
 }
-let sampleFn,sampleOff=false,botBusy=false;
+let sampleFn,sampleOff=false;const botBusy=new Set();
 async function getSample(){if(sampleFn!==undefined)return sampleFn;try{sampleFn=(window.claude&&window.claude.use)?await window.claude.use('sample'):null}catch(e){sampleFn=null}return sampleFn}
-async function aiReply(x){
+async function sampleAllowed(ask){
+  if(ask)return true;                       // 내가 보낸 말에 대답할 때는 처음 한 번 허락을 물어도 돼요
+  try{const p=window.claude&&window.claude.use?await window.claude.use('permissions'):null;if(!p)return false;return (await p.state('sample'))==='granted'}catch(e){return false}
+}
+async function aiReply(bot,ally,s,ask){
   if(sampleOff)return null;
-  const smp=await getSample();if(!smp)return null;
-  const b=botSeat(),c=chById(b.char),s=gameSituation();
-  const recent=chatLog.slice(-6).map(m=>(m.mine?'플레이어':c.name)+': '+m.x).join('\n');
-  const prompt=`너는 윷놀이 게임 '내가바로 윷잡이!'에서 플레이어와 대결 중인 봇 캐릭터 "${c.name}"이야.
+  const smp=await getSample();if(!smp||!(await sampleAllowed(ask)))return null;
+  const c=chById(bot.char);
+  const recent=chatLog.slice(-6).map(m=>(m.mine?nick:m.n)+': '+m.x).join('\n');
+  const state=s.lobby?'아직 대기실(경기 전)':`너희 팀 골인 ${s.goal}/4, 상대 팀 골인 ${s.oppGoal}/4, ${s.lead>3?'너희 팀이 앞섬':s.lead<-3?'상대 팀이 앞섬':'팽팽함'}${s.over?(s.won?', 경기 끝(너희 팀 승리)':', 경기 끝(상대 팀 승리)'):''}`;
+  const prompt=`너는 윷놀이 게임 '내가바로 윷잡이!'의 봇 플레이어 "${bot.nick}"이고 캐릭터는 "${c.name}"이야.
 말투 특징: ${c.hi} / 상대 말을 잡을 때 하는 말: ${c.t.join(' / ')}
-지금 판: 플레이어 골인 ${s.myGoal}/4, 너 골인 ${s.botGoal}/4, ${s.lead>3?'플레이어가 앞섬':s.lead<-3?'네가 앞섬':'팽팽함'}${s.over?(s.botWon?', 경기 끝(네가 이김)':', 경기 끝(플레이어가 이김)'):''}.
+마지막에 말한 사람은 너의 ${ally?'같은 팀 팀원':'상대 팀'}이야. ${ally?'팀원답게 응원하고 맞장구쳐.':'장난스럽게 도발해.'}
+판 상황: ${state}.
 최근 채팅:
 ${recent}
 
-플레이어의 마지막 말에 캐릭터 말투로 한 문장만 대답해. 반말, 장난스러운 도발은 좋지만 욕설·비하·민감한 주제는 금지. 40자 이내, 따옴표나 이름표 없이 대답만.`;
+마지막 말에 캐릭터 말투로 한 문장만 대답해. 반말, 욕설·비하·민감한 주제 금지. 40자 이내, 따옴표나 이름표 없이 대답만.`;
   try{
     const r=await Promise.race([smp(prompt,{modelTier:'quick',cache:false}),sleep(7000).then(()=>null)]);
     if(!r||!r.text)return null;
-    const out=cleanChat(r.text.replace(/^["'「“]|["'」”]$/g,'').replace(/^[^:：]{1,8}[:：]\s*/,''));
-    return out||null;
+    return cleanChat(r.text.replace(/^["'「“]|["'」”]$/g,'').replace(/^[^:：]{1,10}[:：]\s*/,''))||null;
   }catch(e){if(e&&(e.code==='not_granted'||e.code==='rate_limited'||e.code==='quota_exceeded'))sampleOff=true;return null}
 }
-async function botReply(x){
-  const b=botSeat();if(!b||botBusy)return;botBusy=true;
+function sayAsBot(bot,x){
+  const m={t:'chat',sid:bot.sid,n:bot.nick,x:cleanChat(x)};if(!m.x)return;
+  if(G&&G.mode==='net'||(!G&&net.host))broadcast(m);
+  addChat({...m,mine:false});
+}
+/* 사람이 말하면 봇 하나가 대답 (이름을 부르면 그 봇이, 아니면 가끔) */
+async function botsHear(m){
+  const bots=roomBots();if(!bots.length)return;
+  const vsBot=G&&G.mode==='bot';
+  const t=String(m.x||'');
+  let bot=bots.find(b=>t.includes(b.nick)||t.includes(chById(b.char).name));
+  if(!bot&&!vsBot&&/팀|같은\s?편|우리/.test(t)){const si=seatIdx(m.sid);const mates=bots.filter(b=>si>=0&&seatIdx(b.sid)%2===si%2);if(mates.length)bot=pick(mates)}
+  if(!bot){if(!vsBot&&rnd()>.6)return;bot=pick(bots)}
+  if(botBusy.has(bot.sid))return;botBusy.add(bot.sid);
   const g0=G;
   try{
+    const si=seatIdx(m.sid),bi=seatIdx(bot.sid);
+    const ally=si>=0&&bi>=0&&si%2===bi%2&&!vsBot;
+    const s=situationFor(bi>=0?bi%2:1);
     const t0=Date.now();
-    let reply=await aiReply(x);
-    if(!reply)reply=withTic(ruleReply(x),b.char);
-    const wait=Math.max(0,700+rnd()*700-(Date.now()-t0));await sleep(wait);
-    if(G!==g0||!G)return;
-    addChat({sid:b.sid,n:b.nick,x:cleanChat(reply),mine:false});
-  }finally{botBusy=false}
+    let reply=await aiReply(bot,ally,s,vsBot&&!!m.mine);
+    if(!reply){const base=ruleReply(t,ally,s)||`나는 ${chById(bot.char).name}! ${ally?'너랑 같은 팀':'윷판의 지배자'}`;reply=withTic(base,bot.char)}
+    await sleep(Math.max(0,700+rnd()*800-(Date.now()-t0)));
+    if(G!==g0)return;
+    sayAsBot(bot,reply);
+  }finally{botBusy.delete(bot.sid)}
 }
 function botGreet(){
-  const b=botSeat();if(!b)return;const g0=G;
-  setTimeout(()=>{if(G!==g0||!G)return;addChat({sid:b.sid,n:b.nick,x:withTic(pick(['한 판 붙어보자!','오늘은 내가 윷잡이다','살살 해 줄게~ (아마도)']),b.char),mine:false})},1600);
+  const bots=roomBots();if(!bots.length)return;const g0=G;
+  bots.forEach((b,k)=>setTimeout(()=>{if(G!==g0||!G)return;
+    const ally=G.mode==='net'&&b.sid&&seatIdx(b.sid)%2===myTeam();
+    sayAsBot(b,withTic(pick(ally?['우리 팀 파이팅!','같이 이겨 보자!']:['한 판 붙어보자!','오늘은 내가 윷잡이다','살살 해 줄게~ (아마도)']),b.char))},1600+k*1300));
 }
 
 /* ================= 오픈 랭킹 =================
