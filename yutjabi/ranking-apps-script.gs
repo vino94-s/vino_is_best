@@ -11,12 +11,12 @@
  *    yutjabi/index.html 의 RANK_API 에 넣습니다.
  *
  * 'bot' 탭: 봇 대결 한 판마다 한 줄 (닉네임, 캐릭터, 승리 여부, 걸린 차례 수)
- * 'friend' 탭: 친구 대결 한 판마다 한 줄 (경기 id, 1P 닉네임, 2P 닉네임, 캐릭터, 이긴 쪽)
+ * 'friend' 탭: 친구 대결 한 판마다 한 줄 (경기 id, 방식 1v1/2v2, 적팀·청팀 닉네임과 캐릭터, 이긴 팀, 봇 자리)
  * 장난 기록은 그 줄을 지우면 랭킹에서 빠집니다.
  */
 
 const BOT_HEADER = ['nick', 'c', 'w', 'tn', 'at'];
-const FRIEND_HEADER = ['gid', 'a', 'b', 'ca', 'cb', 'w', 'at'];
+const FRIEND_HEADER = ['gid', 'm', 'a', 'b', 'a2', 'b2', 'ca', 'cb', 'ca2', 'cb2', 'w', 'bots', 'at'];
 const CHARS = ['gaeguri', 'imgeum', 'ddabong', 'manse', 'haetnim', 'kkokko', 'chureup', 'simuruk', 'mupyo', 'eomji', 'gentle'];
 const KEEP = 800; // 최근 몇 판까지 돌려줄지
 
@@ -59,7 +59,8 @@ function doGet() {
     nick: clean_(r[0]), c: char_(r[1]), w: r[2] === true || r[2] === 'TRUE', tn: Number(r[3]) || 0, at: Number(r[4]) || 0
   })).filter(r => r.nick);
   const friend = rows_('friend', FRIEND_HEADER).map(r => ({
-    gid: String(r[0]), a: clean_(r[1]), b: clean_(r[2]), ca: char_(r[3]), cb: char_(r[4]), w: Number(r[5]) ? 1 : 0, at: Number(r[6]) || 0
+    gid: String(r[0]), m: r[1] === '2v2' ? '2v2' : '1v1', a: clean_(r[2]), b: clean_(r[3]), a2: clean_(r[4]), b2: clean_(r[5]),
+    ca: char_(r[6]), cb: char_(r[7]), ca2: char_(r[8]), cb2: char_(r[9]), w: Number(r[10]) ? 1 : 0, bots: String(r[11] || ''), at: Number(r[12]) || 0
   })).filter(r => r.a && r.b);
   return json_({ ok: true, bot: bot, friend: friend });
 }
@@ -75,11 +76,13 @@ function doPost(e) {
       if (!nick || tn < 0 || tn > 500) return json_({ ok: false, error: 'bad' });
       sheet_('bot', BOT_HEADER).appendRow([safe_(nick), char_(d.c), !!d.w, tn, Date.now()]);
     } else if (d.kind === 'friend') {
-      const a = clean_(d.a), b = clean_(d.b), gid = String(d.gid || '').slice(0, 60);
-      if (!a || !b || !gid) return json_({ ok: false, error: 'bad' });
+      const a = clean_(d.a), b = clean_(d.b), gid = String(d.gid || '').slice(0, 60), team = d.m === '2v2';
+      const a2 = team ? clean_(d.a2) : '', b2 = team ? clean_(d.b2) : '';
+      const bots = String(d.bots || '').split(',').filter(x => /^[0-3]$/.test(x)).join(',');
+      if (!a || !b || !gid || (team && (!a2 || !b2))) return json_({ ok: false, error: 'bad' });
       const sh = sheet_('friend', FRIEND_HEADER);
       const ids = sh.getRange(1, 1, sh.getLastRow(), 1).getValues().map(r => String(r[0]));
-      if (ids.indexOf(gid) < 0) sh.appendRow([gid, safe_(a), safe_(b), char_(d.ca), char_(d.cb), d.w ? 1 : 0, Date.now()]);
+      if (ids.indexOf(gid) < 0) sh.appendRow([gid, team ? '2v2' : '1v1', safe_(a), safe_(b), safe_(a2), safe_(b2), char_(d.ca), char_(d.cb), char_(d.ca2), char_(d.cb2), d.w ? 1 : 0, bots, Date.now()]);
     } else {
       return json_({ ok: false, error: 'kind' });
     }
