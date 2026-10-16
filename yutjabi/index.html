@@ -149,13 +149,13 @@ details.rules summary{font-family:var(--f-ui);font-size:18px;cursor:pointer}
   background-color:#3B2C1A;background-image:repeating-linear-gradient(90deg,#0000 0 6px,#00000022 6px 7px),repeating-linear-gradient(0deg,#ffffff08 0 3px,#0000 3px 6px);
   box-shadow:inset 0 0 0 2px #5A4326,0 10px 26px #0006}
 .throwstage{position:relative;height:150px;perspective:700px;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at center,#6A5233 0,#3B2C1A 75%)}
-.stw{position:absolute;left:50%;top:50%;width:19px;height:100px;margin:-50px 0 0 -9.5px;will-change:transform;transform-style:preserve-3d}
+.stw{position:absolute;left:50%;top:var(--sy,50%);width:calc(var(--sh,100px)*.19);height:var(--sh,100px);margin:calc(var(--sh,100px)/-2) 0 0 calc(var(--sh,100px)*-.095);will-change:transform;transform-style:preserve-3d}
 .sk{position:absolute;inset:0;transform-style:preserve-3d}
 .face{position:absolute;inset:0;border-radius:11px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .face.f{background:linear-gradient(90deg,#E0B677,#F6DDB0 50%,#D7A962);display:grid;align-content:space-evenly;justify-items:center;color:#5A3713;font-size:13px;font-family:var(--f-ui);line-height:1}
 .face.b{background:linear-gradient(90deg,#5E3412,#B07A3F 42%,#6E3F17);transform:rotateY(180deg)}
 .face.f.mk::before{content:"빽";position:absolute;top:6px;left:50%;translate:-50% 0;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;display:grid;place-items:center}
-.sh{position:absolute;left:50%;top:50%;width:20px;height:100px;margin:-50px 0 0 -10px;border-radius:12px;background:#000;opacity:.35;filter:blur(3px);will-change:transform,opacity}
+.sh{position:absolute;left:50%;top:var(--sy,50%);width:calc(var(--sh,100px)*.2);height:var(--sh,100px);margin:calc(var(--sh,100px)/-2) 0 0 calc(var(--sh,100px)*-.1);border-radius:12px;background:#000;opacity:.35;filter:blur(3px);will-change:transform,opacity}
 .result{position:absolute;left:50%;top:50%;font-family:var(--f-disp);font-size:64px;color:var(--hanji);-webkit-text-stroke:2px var(--ink);text-shadow:4px 5px 0 var(--red);pointer-events:none;opacity:0;white-space:nowrap;translate:-50% -50%;z-index:5}
 .gauge{position:relative;height:18px;border-radius:9px;overflow:hidden;display:flex;box-shadow:inset 0 0 0 2px #0006}
 .gauge i{display:block;height:100%}
@@ -246,6 +246,44 @@ table.rk tr.me td{background:#F4C33A1A}
 h3.sub{font-family:var(--f-ui);font-weight:400;font-size:19px;color:var(--hanji)}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));translate:-50% 0;background:var(--hanji);color:var(--ink);font-family:var(--f-ui);padding:10px 16px;border-radius:12px;z-index:90;box-shadow:0 6px 18px #0008;max-width:min(90vw,420px);text-align:center}
 @media (prefers-reduced-motion:reduce){.deco i,.parade .track,.pc.can::after{animation:none}}
+
+/* ===== 게임 중 화면 고정 (스크롤 없음) ===== */
+html.playing,html.playing body{height:100%;overflow:hidden;overscroll-behavior:none}
+html.playing body{position:fixed;inset:0;width:100%}
+html.playing .app{padding:0;max-width:none}
+html.playing #sGame{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;gap:6px;overflow:hidden;touch-action:manipulation;
+  padding:max(6px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(8px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+  -webkit-user-select:none;user-select:none}
+html.playing #sGame .topbar{flex:none;min-height:36px}
+html.playing #sGame .icon-btn{min-height:34px;min-width:34px;padding:0 10px;font-size:14px}
+html.playing .gwrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;max-width:620px;width:100%;margin:0 auto}
+html.playing .gmain{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+html.playing .gside{flex:none;position:static}
+.bcell{flex:1;min-height:0;min-width:0;display:grid;place-items:center}
+html.playing .boardbox{max-width:none;margin:0;flex:none}
+html.playing .pl{flex:none;flex-wrap:nowrap;padding:5px 8px;gap:8px;border-radius:12px}
+html.playing .pl .av{width:34px;height:34px;border-width:2px}
+html.playing .pl .av+.av{margin-left:-12px}
+html.playing .pl .nm b{font-size:15px}
+html.playing .pl .nm small{font-size:11px}
+html.playing .pl .nm{flex:1 1 0}
+html.playing .slot{width:calc(var(--ps)*.72);height:calc(var(--ps)*.72)}
+html.playing .gs{width:calc(var(--ps)*.5);height:calc(var(--ps)*.5)}
+html.playing .mat{padding:8px;gap:6px;border-radius:14px}
+html.playing .throwstage{height:clamp(76px,14vh,130px);--sy:60%}
+html.playing .gauge{height:15px}
+html.playing .glabels{font-size:10px;margin-top:-4px}
+html.playing .throwbtn{min-height:50px;font-size:18px}
+html.playing .chips{min-height:36px;gap:6px}
+html.playing .chip{min-height:36px;font-size:16px;padding:0 12px}
+html.playing .mat .msg{position:absolute;left:8px;right:8px;top:12px;z-index:6;min-height:0;font-size:14px;pointer-events:none;text-shadow:0 1px 3px #000c}
+html.playing .mat .netwarn{position:absolute;left:8px;right:8px;top:32px;z-index:6;font-size:12px;pointer-events:none;text-shadow:0 1px 3px #000c}
+/* 가로로 넓은 화면: 말판 | 멍석 */
+@media (min-aspect-ratio:5/4){
+  html.playing .gwrap{flex-direction:row;max-width:1100px;align-items:stretch}
+  html.playing .gside{width:clamp(250px,32vw,380px);display:flex;flex-direction:column;justify-content:center}
+  html.playing .throwstage{height:clamp(70px,22vh,150px)}
+}
 </style>
 </head>
 <body>
@@ -338,10 +376,10 @@ h3.sub{font-family:var(--f-ui);font-weight:400;font-size:19px;color:var(--hanji)
   <div class="gwrap" id="gwrap">
     <div class="gmain">
       <div class="pl" id="plTop"></div>
-      <div class="boardbox" id="board">
+      <div class="bcell" id="bcell"><div class="boardbox" id="board">
         <svg id="boardSvg" viewBox="-11 -11 122 122" aria-label="윷판"></svg>
         <div class="banner" id="banner"></div>
-      </div>
+      </div></div>
       <div class="pl" id="plBot"></div>
     </div>
     <div class="gside">
@@ -610,7 +648,7 @@ function botChoose(G,pl){
 
 /* ================= 화면 전환 ================= */
 const screens=['sHome','sPick','sFriend','sGame','sRank'];
-function show(id){screens.forEach(s=>{$('#'+s).hidden=s!==id});window.scrollTo(0,0);if(id==='sGame')requestAnimationFrame(()=>layout(false))}
+function show(id){screens.forEach(s=>{$('#'+s).hidden=s!==id});document.documentElement.classList.toggle('playing',id==='sGame');window.scrollTo(0,0);if(id==='sGame')requestAnimationFrame(()=>layout(false))}
 let toastT=0;
 function toast(t,ms=2200){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>e.hidden=true,ms)}
 
@@ -718,7 +756,8 @@ function targetOf(pl,i,g){
 const animating=new Set();
 function layout(smooth=true){
   if(!G)return;
-  const g=geo();PS=Math.max(26,Math.min(48,g.b.width*.092));$('#gwrap').style.setProperty('--ps',PS+'px');
+  fitBoard();
+  const g=geo();PS=Math.max(24,Math.min(48,g.b.width*.092));$('#gwrap').style.setProperty('--ps',PS+'px');
   for(const pl of [0,1])for(let i=0;i<4;i++){
     const d=pieceEls[pl][i];if(!d||animating.has(d))continue;
     const t=targetOf(pl,i,g);d.style.zIndex=t.z;
@@ -730,7 +769,19 @@ function layout(smooth=true){
   }
   drawGhosts();
 }
-new ResizeObserver(()=>{if(!$('#sGame').hidden)layout(false)}).observe(document.body);
+/* 게임 중에는 화면 하나에 고정: 남은 칸에 맞춰 말판 크기를 정해요 */
+function fitBoard(){
+  const cell=$('#bcell'),b=$('#board');if(!cell)return;
+  const s=Math.max(160,Math.floor(Math.min(cell.clientWidth,cell.clientHeight)));
+  if(b.style.width!==s+'px'){b.style.width=s+'px';b.style.height=s+'px'}
+  const ts=$('#tstage');const pl=document.documentElement.classList.contains('playing');ts.style.setProperty('--sh',Math.round(Math.min(100,ts.clientHeight*(pl?.62:.8)))+'px');ts.classList.toggle('low',pl);
+}
+const relayout=()=>{if(!$('#sGame').hidden)layout(false)};
+new ResizeObserver(relayout).observe(document.body);
+new ResizeObserver(relayout).observe($('#sGame'));
+addEventListener('resize',relayout);
+if(window.visualViewport)visualViewport.addEventListener('resize',relayout);
+addEventListener('orientationchange',()=>setTimeout(relayout,250));
 
 /* 진행 상태 */
 const myTurn=()=>G&&!G.over&&G.seat===me&&!G.seats[me].bot;
