@@ -82,7 +82,7 @@ function doPost(e) {
       if (!a || !b || !gid || (team && (!a2 || !b2))) return json_({ ok: false, error: 'bad' });
       const sh = sheet_('friend', FRIEND_HEADER);
       const ids = sh.getRange(1, 1, sh.getLastRow(), 1).getValues().map(r => String(r[0]));
-      if (ids.indexOf(gid) < 0) sh.appendRow([gid, team ? '2v2' : '1v1', safe_(a), safe_(b), safe_(a2), safe_(b2), char_(d.ca), char_(d.cb), char_(d.ca2), char_(d.cb2), d.w ? 1 : 0, bots, Date.now()]);
+      if (ids.indexOf(gid) < 0) sh.appendRow([gid, team ? '2v2' : '1v1', safe_(a), safe_(b), safe_(a2), safe_(b2), char_(d.ca), char_(d.cb), char_(d.ca2), char_(d.cb2), d.w ? 1 : 0, bots ? "'" + bots : '', Date.now()]); // 봇 자리 '1,3'이 숫자로 바뀌지 않게
     } else {
       return json_({ ok: false, error: 'kind' });
     }
