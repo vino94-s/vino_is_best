@@ -67,6 +67,7 @@ h1 em{font-style:normal;color:var(--gold)}
 .hole.up .char{transform:translate3d(0,0,0);transition:transform var(--rise,560ms) cubic-bezier(.16,.84,.3,1)}
 .hole.hit .char{transform:translate3d(0,8%,0) scale(1.04,.92);transition:transform 110ms ease-out}
 .hole.bad .char{opacity:.7;transition:transform 110ms ease-out,opacity .1s}
+.hole.missed .char{opacity:.45;filter:grayscale(1)}
 .rim{position:absolute;left:3%;right:3%;bottom:4%;height:16%;border-radius:50%;z-index:2;
   background:linear-gradient(var(--kraft) 0 55%,var(--kraft-dark));
   -webkit-mask:radial-gradient(ellipse 46% 60% at 50% 0%,transparent 98%,#000 100%);mask:radial-gradient(ellipse 46% 60% at 50% 0%,transparent 98%,#000 100%)}
@@ -168,7 +169,7 @@ body{padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:max(12px,
     <div class="overlay" id="startOv">
       <h2>준비됐나요?</h2>
       <div class="cast" id="cast"></div>
-      <p>컵만 탭! 방해꾼을 치면 목숨이 하나 줄어요. 목숨 3개가 다 떨어지면 끝.</p>
+      <p>컵만 탭! 방해꾼을 치거나 컵을 놓치면 목숨이 하나 줄어요. 목숨 3개가 다 떨어지면 끝.</p>
       <div class="rules">
         <div><b>점수</b> 컵 하나에 +10점, 250점마다 속도 +5% (최대 200%)</div>
         <div><b>1500점 이후</b> 방해꾼이 250점마다 5%씩 늘어요 (최대 75%)</div>
@@ -298,7 +299,7 @@ let combo=0;
 
 function hide(h){
   const wasShown = h.el.classList.contains("up");
-  h.up=false; h.el.classList.remove("up","hit","good","bad"); clearTimeout(h.t); clearTimeout(h.freeT);
+  h.up=false; h.el.classList.remove("up","hit","good","bad","missed"); clearTimeout(h.t); clearTimeout(h.freeT);
   if (!wasShown){ h.busy=false; return; }
   const down = parseFloat(h.el.style.getPropertyValue("--down")) || 460;
   h.freeT = setTimeout(()=>{ h.busy=false; }, down + 40);
@@ -321,12 +322,33 @@ function spawn(){
     const show = ()=>{
       if (!running){ h.busy=false; h.pending=false; return; }
       void h.img.offsetHeight;                       // commit the hidden pose first
-      requestAnimationFrame(()=>{ h.pending=false; if(!running){h.busy=false;return;} h.up = true; h.el.classList.add("up"); h.t = setTimeout(()=>hide(h), stay); });
+      requestAnimationFrame(()=>{ h.pending=false; if(!running){h.busy=false;return;} h.up = true; h.el.classList.add("up"); h.t = setTimeout(()=>expire(h), stay); });
     };
     (h.img.decode ? h.img.decode() : Promise.resolve()).then(show, show);
   }
   const gap = (BASE_GAP/speedMul(score)) * (0.6 + Math.random()*0.6);
   spawnTimer = setTimeout(spawn, gap);
+}
+
+function hurt(){
+  lives--; combo=0;
+  const st=$("stage"); st.classList.remove("hurt"); void st.offsetWidth; st.classList.add("hurt");
+  const fl=$("flash"); fl.classList.add("on"); requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));
+  if (navigator.vibrate) try{navigator.vibrate(60)}catch(e){}
+  hud();
+  if (lives <= 0) gameOver();
+}
+
+/* a character's time is up: decoys just leave, an untouched cup costs a life */
+function expire(h){
+  if (!running || !h.up || h.hit) return;
+  if (!h.fake){
+    h.hit = true;
+    h.el.classList.add("missed");
+    popText(h,"놓침 -1 ♥",false);
+    hurt();
+  }
+  hide(h);
 }
 
 function whack(i){
@@ -335,10 +357,10 @@ function whack(i){
   h.hit = true; clearTimeout(h.t);
   h.el.classList.add("hit");
   if (h.fake){
-    lives--; combo=0; h.el.classList.add("bad"); burst(h,false); popText(h,"-1 ♥",false);
-    const st=$("stage"); st.classList.remove("hurt"); void st.offsetWidth; st.classList.add("hurt");
-    const fl=$("flash"); fl.classList.add("on"); requestAnimationFrame(()=>requestAnimationFrame(()=>fl.classList.remove("on")));
-    if (navigator.vibrate) try{navigator.vibrate(60)}catch(e){}
+    h.el.classList.add("bad"); burst(h,false); popText(h,"-1 ♥",false);
+    h.t = setTimeout(()=>hide(h), 200);
+    hurt();
+    return;
   } else {
     score += 10; hits++; combo++;
     h.el.classList.add("good"); burst(h,true);
