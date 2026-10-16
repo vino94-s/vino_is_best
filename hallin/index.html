@@ -352,7 +352,7 @@ const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},se
 
 /* faces as blob urls */
 const FACES=FACE_DATA.map(d=>{try{const [h,b]=d.split(',');const bin=atob(b);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return URL.createObjectURL(new Blob([u],{type:h.slice(5,h.indexOf(';'))}))}catch(e){return d}});
-const NAMES=['왈왈이','용왕','엄지','영준','햇살','묭라닥','고란','여니','비노','만두','준탁','깨굴'];
+const NAMES=['봉춤','용왕','엄지','영준','햇살','묭라닥','고란','여니','비노','만두','준탁','깨굴'];
 const pick4=()=>shuffle([...Array(FACES.length).keys()]).slice(0,4);
 
 const LV={
@@ -409,7 +409,7 @@ const myNick=()=>(nickIn.value.trim()||'플레이어').slice(0,10);
    GitHub Pages 등: 랭킹은 RANK_API(구글 시트 Apps Script 웹 앱, ranking-apps-script.gs 참고),
                     친구대전은 PeerJS로 브라우저끼리 직접 연결
    RANK_API가 비어 있으면 랭킹은 이 기기에만 저장돼요. */
-const RANK_API='';
+const RANK_API='https://script.google.com/macros/s/AKfycbwv5WLvcVlOvse_DThC_k5q7cZlk8uDscJaHYMlcta5uBiIxEDEhD5024_ZXc4CXpKPRw/exec';
 const IN_CLAUDE=!!(window.claude&&typeof window.claude.use==='function');
 let db=null,user=null,myUid=null,roomNS=null,rankSrc='local';
 const caps=(async()=>{
