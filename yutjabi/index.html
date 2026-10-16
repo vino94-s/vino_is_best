@@ -1511,7 +1511,7 @@ $('#copyCode').onclick=async()=>{
    claude.ai 아티팩트: 공유 DB
    GitHub Pages 등: RANK_API (구글 시트 Apps Script 웹 앱, ranking-apps-script.gs 참고)
    둘 다 없으면: 이 기기에만 저장 */
-const RANK_API='';
+const RANK_API='https://script.google.com/macros/s/AKfycbxCWKFM6IAq_QyUAAUONgsKfm4y3jmqhL2eSqWcrNH87floRbOeHiDA6aPHOO4zkBWO/exec';
 const RK={src:'loading',bot:[],friend:[],db:null};
 function localRows(){return {bot:store.get('lbot',[]),friend:store.get('lfriend',[])}}
 async function rankInit(){
