@@ -90,7 +90,7 @@ body.touch.fighting #pad{display:flex;height:190px}
 @keyframes bob{50%{transform:translateY(-6px)}}
 
 /* 캐릭터 선택 */
-.grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+.grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
 @media (max-width:720px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 .card{position:relative;border:3px solid var(--line);border-radius:14px;background:var(--card);padding:6px 4px 4px;cursor:pointer;display:grid;justify-items:center;gap:2px}
 .card img{height:66px;width:100%;object-fit:contain}
@@ -228,7 +228,7 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
   <div class="menu">
     <p class="hanja">天下第一武術大會</p>
     <h1 class="logo"><span>천하제일</span><span>무술대회</span></h1>
-    <p class="tagline">아홉 고수 · 60초 · 3판 2선승</p>
+    <p class="tagline">열 고수 · 60초 · 3판 2선승</p>
     <div class="menuBtns">
       <button class="btn big" id="goBot">봇 도전<small>10단계 · 최종 보스</small></button>
       <button class="btn big alt" id="goFriend">친구와 대결<small>초대코드 1:1 · 전적 기록</small></button>
@@ -246,7 +246,7 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     <header class="phead"><button class="back" data-back>‹ 메인</button><h2>캐릭터 선택</h2></header>
     <div class="grid" id="gridMe"></div>
     <div class="info" id="infoMe"></div>
-    <p class="note stageNote">1~9단계에서 아홉 고수와 차례로 겨루고, 10단계에서 최종 보스를 만나요. 단계가 오를수록 봇이 강해지고, 지면 그 자리에서 도전이 끝나요.</p>
+    <p class="note stageNote">1~9단계에서 열 고수 중 아홉 명과 차례로 겨루고, 10단계에서 최종 보스를 만나요. 단계가 오를수록 봇이 강해지고, 지면 그 자리에서 도전이 끝나요.</p>
     <button class="btn big" id="startBot">1단계부터 도전</button>
   </div>
 </section>
@@ -351,7 +351,7 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
     </div>
     <p>휴대폰에서는 화면 아래 버튼으로 조작해요.</p>
     <h3>규칙</h3>
-    <p>봇 도전은 10단계예요. 1~9단계는 아홉 고수가 무작위 순서로 나오고(나와 같은 캐릭터는 다른 색), 단계가 오를수록 봇이 강해져요. 10단계에는 최종 보스 소주가 나와요. 한 번 지면 도전이 끝나요.</p>
+    <p>봇 도전은 10단계예요. 1~9단계는 열 고수 중 아홉 명이 무작위 순서로 나오고(나와 같은 캐릭터는 다른 색), 단계가 오를수록 봇이 강해져요. 10단계에는 최종 보스 소주가 나와요. 한 번 지면 도전이 끝나요.</p>
     <p>한 판은 60초. 먼저 두 판을 이기면 우승이에요. 시간이 다 되면 남은 체력 비율이 높은 쪽이 이겨요. 때리거나 맞으면 필살 게이지가 차고, 가득 차면 필살기를 쓸 수 있어요. 방어하면 피해가 크게 줄지만 필살기 중 일부는 막아도 조금 아파요.</p>
     <h3>랭킹</h3>
     <p>봇 도전이 끝나면(탈락, 그만두기, 전 단계 클리어) 한 단계 이상 깼을 때 누적 점수를 랭킹에 올릴 수 있어요. 높은 단계일수록 점수가 크고, 2:0 완승과 남은 체력에 보너스가 붙어요.</p>
@@ -396,6 +396,8 @@ const CH = [
     sp: '바닷물 얍얍 뿌리기', spDesc: '얍! 얍! 바닷물을 앞으로 아홉 번 흩뿌려요. 가까이부터 멀리까지 넓게 떨어져요.', st: [3, 2, 4, 3] },
   { id: 'myoungradak', name: '묭라닭', h: 160, hp: 102, spd: 4.8, jump: 17, pow: 1.05, reach: 1.0, color: '#e8443a', title: '바삭한 투척왕',
     sp: '추풍통닭', spDesc: '치킨 닭다리를 앞으로 아홉 개 마구 던져요. 높이가 제각각이라 점프로 다 피하긴 어려워요.', st: [3, 4, 4, 3] },
+  { id: 'yeoni', name: '여니', h: 164, hp: 102, spd: 4.3, jump: 15, pow: 1.04, reach: 1.0, color: '#c8312c', title: '참다 터지는 강아지',
+    sp: '쌍욕사자후', spDesc: '참고 참다 앞으로 쌍욕 사자후를 내질러요. 맞은 상대는 귀에서 피가 나며 3초 동안 기절! 기절 중에 맞으면 기절이 조금씩 줄어요. 방어하면 기절은 막을 수 있어요.', st: [3, 3, 3, 3] },
   // 10단계 최종 보스 (선택 불가)
   { id: 'soju', name: '소주', boss: true, h: 214, hp: 136, spd: 3.6, jump: 14, pow: 1.1, reach: 1.08, color: '#2e8b3e', title: '최종 보스',
     sp: '병뚜껑 부메랑 날리기', spDesc: '병뚜껑을 부메랑처럼 날려요. 날아갔다가 되돌아오면서 두 번 때려요.', st: [5, 2, 5, 4] },
@@ -480,7 +482,8 @@ function ctrl(M, i, inp) {
   if (f.flash > 0) f.flash--;
   if (f.inv > 0) f.inv--;
   if (f.act === 'ko') return;
-  if (f.act === 'hit') { f.stun--; if (f.stun <= 0 && f.y >= GROUND) { f.act = 'idle'; f.t = 0; } return; }
+  if (f.dz > 0) { f.dz--; if (f.act !== 'hit') f.dz = 0; }
+  if (f.act === 'hit') { f.stun--; if (f.stun <= 0 && f.y >= GROUND) { f.act = 'idle'; f.t = 0; f.dz = 0; } return; }
   if (f.act === 'light' || f.act === 'heavy') {
     const A = f.act === 'light' ? ATK.l : ATK.h;
     if (f.act === 'heavy' && f.t === A.s - 2 && f.y >= GROUND) f.vx = f.face * A.lunge;
@@ -580,7 +583,10 @@ function hurt(M, i, dmg, stun, kb, pop, gain, kind, unblock) {
     return true;
   }
   o.hp = Math.max(0, o.hp - dmg);
-  o.act = 'hit'; o.t = 0; o.stun = stun; o.vx = dir * kb; o.sp = {};
+  // 쌍욕사자후 기절 중에 맞으면 기절이 풀리지 않고 0.7초씩만 줄어듦
+  const dz = o.dz > 0 && o.act === 'hit' ? Math.max(0, o.dz - 40) : 0;
+  o.act = 'hit'; o.t = 0; o.stun = Math.max(stun, dz); o.vx = dz ? dir * Math.min(kb, 2.5) : dir * kb; o.sp = {}; o.dz = dz;
+  if (dz) pop = 0;
   if (pop) { o.vy = -pop; if (o.y >= GROUND) o.y -= 1; }
   o.flash = 8;
   f.g = Math.min(100, f.g + gain); o.g = Math.min(100, o.g + gain * 0.55);
@@ -683,6 +689,15 @@ function spec(M, i) {
       }
       if (t >= 34) done();
       break;
+    case 'yeoni':
+      // 숨을 크게 들이마셨다가(18프레임) 앞으로 쌍욕 사자후. 음파가 앞으로 퍼져 나감
+      if (t < 18) f.vx = 0;
+      if (t === 18) {
+        M.proj.push({ k: 'roar', o: i, x: f.x + f.face * 30, y: f.y - 110, d: f.face, r: 30, t: 0, life: 34, hit: 0 });
+        addFx(M, 'roar', f.x + f.face * 60, f.y - 150, { d: f.face }); M.shake = 14;
+      }
+      if (t >= 58) done();
+      break;
     case 'myoungradak':
       // 닭다리 9개를 4프레임 간격으로 마구 던짐 (높이 제각각, 거의 일직선으로 화면 끝까지)
       if (t >= 8 && t < 44 && (t - 8) % 4 === 0) {
@@ -728,6 +743,17 @@ function updProj(M) {
         hurt(M, p.o, 2.2, 11, 2, 0, 0, ''); addFx(M, 'splash', p.x, p.y); alive = false;
       } else if (p.y >= GROUND) { addFx(M, 'splash', p.x, GROUND); alive = false; }
       if (p.x < -40 || p.x > W + 40) alive = false;
+    } else if (p.k === 'roar') {
+      const own = M.f[p.o];
+      p.x = own.x + p.d * 30; p.y = own.y - 110;
+      p.r = Math.min(440, p.r + 15);
+      const dx = (o.x - p.x) * p.d, dy = (o.y - 80) - p.y;
+      if (!p.hit && dx > -30 && Math.hypot(dx, dy) < p.r + 40 && Math.abs(dy) < Math.max(120, dx * 0.7)) {
+        p.hit = 1;
+        // 방어하면 조금만 아프고 기절은 없음. 맞으면 귀에서 피가 나며 3초(180프레임) 기절
+        if (hurt(M, p.o, 9, 180, 2, 0, 0, 'big') && o.act === 'hit') { o.stun = 180; o.dz = 180; addFx(M, 'deafen', o.x, o.y - 150); }
+      }
+      if (p.t > p.life) alive = false;
     } else if (p.k === 'cap') {
       p.x += p.vx; p.vx += p.ax; p.r += 0.55; p.y = p.y0 + Math.sin(p.t * 0.12) * 22;
       const back = Math.sign(p.vx) === Math.sign(p.ax), own = M.f[p.o];
@@ -757,7 +783,7 @@ function checkEnd(M) {
   M.rw.push(w);
   for (let i = 0; i < 2; i++) {
     const f = M.f[i];
-    f.sp = {};
+    f.sp = {}; f.dz = 0;
     if (f.act === 'ko') continue;
     f.act = i === w ? 'win' : 'lose'; f.t = 0; f.vx = 0;
   }
@@ -772,7 +798,7 @@ function checkEnd(M) {
 
 function specOk(id, d) {
   return id === 'bino' ? d < 210 : id === 'mandu' ? d > 100 : id === 'juntak' ? d < 210 : id === 'youngjun' ? d < 380
-    : id === 'haetsal' ? true : id === 'umji' ? d < 460 : id === 'yongwang' ? d > 60 && d < 520 : id === 'myoungradak' ? d > 80 : id === 'soju' ? d > 90 && d < 420 : d < 150;
+    : id === 'haetsal' ? true : id === 'umji' ? d < 460 : id === 'yongwang' ? d > 60 && d < 520 : id === 'myoungradak' ? d > 80 : id === 'yeoni' ? d < 380 : id === 'soju' ? d > 90 && d < 420 : d < 150;
 }
 function botThink(M, i, dk, mem) {
   const inp = { l: 0, r: 0, d: 0, j: 0, a: 0, b: 0, s: 0 };
@@ -786,6 +812,7 @@ function botThink(M, i, dk, mem) {
     ((p.k === 'beam' || p.k === 'leg') && Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(f.x - p.x) < 340) ||
     (p.k === 'water' && Math.abs(p.x - f.x) < 160) ||
     (p.k === 'cap' && Math.abs(p.x - f.x) < 200) ||
+    (p.k === 'roar' && (f.x - p.x) * p.d > -30 && Math.abs(f.x - p.x) < 470) ||
     (p.k === 'laser' && (f.x - p.x) * p.d > 0) ||
     (p.k === 'shock' && dist < 260)));
   if (mem.cd > 0) { mem.cd--; if (mem.mv) inp[mem.mv === 'T' ? toward : away] = 1; return inp; }
@@ -1183,6 +1210,12 @@ function stageScore(M, s) {
         case 'shock': for (let k = 0; k < 7; k++) txt(e.x + (k - 3) * 34, e.y - 80 - Math.abs(k - 3) * -8, '!', '#c8312c', 46); SFX.boom(); break;
         case 'slam': ring(e.x, GROUND, '#fff', 170); dust(e.x, GROUND, 14); txt(e.x, GROUND - 210, '꾹!', '#c8312c', 48); SFX.boom(); break;
         case 'throw': txt(e.x, e.y, '추풍통닭!', '#e8443a', 34); SFX.swing('h'); break;
+        case 'roar': {
+          const sw = ['#@%&!', '$#@!!', '%&*#@!', '@#$%!!', '#$%&*!'];
+          for (let k = 0; k < 5; k++) parts.push({ k: 'tx', x: e.x + e.d * k * 50, y: e.y + (k % 2 ? -30 : 20) + (Math.random() - 0.5) * 30, vx: e.d * (3 + k), vy: -0.6, life: 50, t: 0, s: sw[k], col: '#c8312c', size: 30 + k * 3 });
+          txt(e.x, e.y - 50, '쌍욕사자후!!', '#1f1720', 40); SFX.boom(); tone(160, 0.6, 'sawtooth', 0.08, 0.6); noise(0.6, 0.16, 300); break;
+        }
+        case 'deafen': txt(e.x, e.y - 20, '삐———', '#5a6a72', 34); ring(e.x, e.y + 60, '#c8312c', 70); tone(3200, 1.2, 'sine', 0.03); break;
         case 'crunch': spark(e.x, e.y, 7, '#f0a640', 5); txt(e.x, e.y - 24, '바삭!', '#c9772b', 26); SFX.hit(0); break;
         case 'yap': txt(e.x, e.y, '얍!', e.c ? '#1f7fc4' : '#1f1720', 30); break;
         case 'ko': SFX.ko(); break;
@@ -1235,7 +1268,7 @@ function stageScore(M, s) {
       case 'guard': sx = 0.9; sy = 0.95; rot = -0.06; break;
       case 'light': { const A = ATK.l; rot = t < A.s ? -0.05 : t < A.s + A.a + 4 ? 0.16 : 0.05; ox = t >= A.s && t < A.s + A.a + 4 ? 14 : 0; break; }
       case 'heavy': { const A = ATK.h; rot = t < A.s ? -0.16 : t < A.s + A.a + 6 ? 0.26 : 0.08; ox = t >= A.s && t < A.s + A.a + 6 ? 24 : t < A.s ? -8 : 0; sy = t < A.s ? 0.94 : 1.04; break; }
-      case 'hit': rot = -0.2; ox = -6 + Math.sin(t * 2) * 3; break;
+      case 'hit': if (f.dz > 0) { rot = Math.sin(M.frame / 7) * 0.13; ox = 0; } else { rot = -0.2; ox = -6 + Math.sin(t * 2) * 3; } break;
       case 'ko': rot = -Math.min(1.45, t * 0.09); break;
       case 'win': sy = 1 + Math.abs(Math.sin(t / 7)) * 0.08; oy = -Math.abs(Math.sin(t / 7)) * 16; break;
       case 'lose': rot = -0.1; sy = 0.93; break;
@@ -1249,6 +1282,7 @@ function stageScore(M, s) {
         else if (id === 'goran') { ox = (Math.random() - 0.5) * 8; rot = 0.12; }
         else if (id === 'haetsal') { sy = 1.05; ox = t >= 16 ? -3 : 0; }
         else if (id === 'soju') { rot = t < 14 ? -0.25 : t < 24 ? 0.3 : 0.05; ox = t >= 14 && t < 24 ? 10 : 0; }
+        else if (id === 'yeoni') { const p = Math.min(1, t / 18); if (t < 18) { sx = sy = 1 + p * 0.14; rot = -0.12 * p; } else { sx = 1.08 + (Math.random() - 0.5) * 0.06; sy = 0.96; rot = 0.1; ox = (Math.random() - 0.5) * 6; } }
         else if (id === 'myoungradak') { rot = t >= 8 && t < 46 ? Math.sin(t * 0.9) * 0.12 : 0; sx = 1 + Math.abs(Math.sin(t * 0.9)) * 0.06; }
         else if (id === 'yongwang') { rot = t >= 10 && t < 62 ? Math.sin(t * 0.63) * 0.14 + 0.06 : 0; sy = 1 + Math.abs(Math.sin(t * 0.63)) * 0.05; }
         break;
@@ -1315,7 +1349,31 @@ function stageScore(M, s) {
     let tag = '';
     if (MODE === 'bot') tag = i === 0 ? '나' : CH[f.ci].boss ? '보스' : '봇';
     else if (MODE === 'host' || MODE === 'guest') tag = i === myIdx ? '나' : '친구';
-    if (tag && f.act !== 'ko') {
+    if (f.dz > 0 && f.act === 'hit') {
+      const hy = f.y - hgt + oy, ear = w * 0.36, k = M.frame;
+      ctx.save(); ctx.lineCap = 'round';
+      for (const sd of [-1, 1]) {
+        const ex = f.x + sd * ear, ey = hy + hgt * 0.32;
+        ctx.strokeStyle = '#c01818'; ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.moveTo(ex, ey); ctx.quadraticCurveTo(ex + sd * 4, ey + 20, ex + sd * 2, ey + 34 + Math.sin(k / 9 + sd) * 4); ctx.stroke();
+        for (let n = 0; n < 2; n++) {
+          const dy = ((k * 1.6 + n * 22 + (sd > 0 ? 11 : 0)) % 44);
+          ctx.globalAlpha = 1 - dy / 44; ctx.fillStyle = '#d42020';
+          ctx.beginPath(); ctx.ellipse(ex + sd * 2, ey + 38 + dy, 3.5, 5, 0, 0, 7); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+      for (let n = 0; n < 3; n++) {
+        const a = k / 10 + n * 2.09, sx2 = f.x + Math.cos(a) * 44, sy2 = hy - 4 + Math.sin(a) * 10;
+        ctx.fillStyle = '#ffd23a'; ctx.strokeStyle = '#2a1d18'; ctx.lineWidth = 2;
+        ctx.beginPath(); for (let q = 0; q < 10; q++) { const rr2 = q % 2 ? 4 : 10, aa = q / 10 * Math.PI * 2 - Math.PI / 2; ctx.lineTo(sx2 + Math.cos(aa) * rr2, sy2 + Math.sin(aa) * rr2); } ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+      ctx.font = '18px "Black Han Sans", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; const lb = '기절 ' + Math.ceil(f.dz / 60);
+      ctx.strokeText(lb, f.x, hy - 18); ctx.fillStyle = '#c8312c'; ctx.fillText(lb, f.x, hy - 18);
+      ctx.restore();
+    }
+    if (tag && f.act !== 'ko' && !(f.dz > 0)) {
       const ty = f.y - hgt - 18 + oy;
       ctx.fillStyle = i ? '#2f7fe0' : '#e2463f';
       ctx.beginPath(); ctx.moveTo(f.x - 7, ty + 6); ctx.lineTo(f.x + 7, ty + 6); ctx.lineTo(f.x, ty + 14); ctx.fill();
@@ -1361,6 +1419,19 @@ function stageScore(M, s) {
       ctx.lineWidth = 6; ctx.strokeStyle = '#fff2a0';
       for (const dy of [-12, 12]) { ctx.beginPath(); ctx.moveTo(x0 - p.d * 8, y + dy - 8); ctx.lineTo(x0 + p.d * 44, y); ctx.stroke(); }
       ctx.fillStyle = '#fffbe6'; ctx.beginPath(); ctx.arc(x0 + p.d * 44, y, th * 0.7 + 4, 0, 7); ctx.fill();
+      ctx.restore();
+    } else if (p.k === 'roar') {
+      // 앞으로 퍼지는 음파 호 여러 겹 + 붉은 기운
+      const a = Math.max(0, 1 - p.t / p.life), f2 = viewF(p.o), x = f2.x + p.d * 30, y = f2.y - 110;
+      ctx.save(); ctx.globalAlpha = a; ctx.lineCap = 'round';
+      const gr = ctx.createRadialGradient(x, y, 10, x, y, p.r);
+      gr.addColorStop(0, 'rgba(200,49,44,.35)'); gr.addColorStop(1, 'rgba(200,49,44,0)');
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, p.r, p.d > 0 ? -0.7 : Math.PI - 0.7, p.d > 0 ? 0.7 : Math.PI + 0.7); ctx.closePath(); ctx.fill();
+      for (let n = 0; n < 4; n++) {
+        const rr2 = p.r - n * 55; if (rr2 < 20) continue;
+        ctx.strokeStyle = n % 2 ? '#fff' : '#c8312c'; ctx.lineWidth = 9 - n * 1.5;
+        ctx.beginPath(); ctx.arc(x, y, rr2, p.d > 0 ? -0.6 : Math.PI - 0.6, p.d > 0 ? 0.6 : Math.PI + 0.6); ctx.stroke();
+      }
       ctx.restore();
     } else if (p.k === 'cap') {
       // 소주 병뚜껑 (톱니 테두리, 초록)

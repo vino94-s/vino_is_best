@@ -23,7 +23,7 @@
 
 const SHEET_NAME = 'stage_scores';
 const HEADER = ['id', 'name', 'ch', 'stage', 'score', 'at'];
-const CHARS = ['bino', 'mandu', 'juntak', 'youngjun', 'haetsal', 'umji', 'goran', 'yongwang', 'myoungradak'];
+const CHARS = ['bino', 'mandu', 'juntak', 'youngjun', 'haetsal', 'umji', 'goran', 'yongwang', 'myoungradak', 'yeoni'];
 const stageBase_ = s => (s >= 10 ? 600 : 50 + s * 30);
 const DUEL_SHEET = 'duels';
 const DUEL_HEADER = ['id', 'mid', 'p1', 'c1', 'p2', 'c2', 'w', 'sc', 'at'];
