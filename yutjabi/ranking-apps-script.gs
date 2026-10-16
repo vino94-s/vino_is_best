@@ -20,8 +20,27 @@ const FRIEND_HEADER = ['gid', 'm', 'a', 'b', 'a2', 'b2', 'ca', 'cb', 'ca2', 'cb2
 const CHARS = ['gaeguri', 'imgeum', 'ddabong', 'manse', 'haetnim', 'kkokko', 'chureup', 'simuruk', 'mupyo', 'eomji', 'gentle'];
 const KEEP = 800; // 최근 몇 판까지 돌려줄지
 
+// 시트에서 만든 스크립트면 그 시트를, 따로 만든 프로젝트면 '윷잡이 랭킹' 시트를 새로 만들어 써요
+function book_() {
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty('SHEET_ID');
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) {} }
+  const ss = SpreadsheetApp.create('윷잡이 랭킹');
+  props.setProperty('SHEET_ID', ss.getId());
+  return ss;
+}
+
+// 편집기에서 이 함수를 골라 ▶ 실행하면 권한 승인 창이 뜨고, 랭킹 시트 주소가 실행 로그에 나와요
+function setup() {
+  sheet_('bot', BOT_HEADER);
+  sheet_('friend', FRIEND_HEADER);
+  Logger.log('랭킹 시트: ' + book_().getUrl());
+}
+
 function sheet_(name, header) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = book_();
   let sh = ss.getSheetByName(name);
   if (!sh) {
     sh = ss.insertSheet(name);
