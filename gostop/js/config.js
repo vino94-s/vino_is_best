@@ -21,7 +21,7 @@ export const POINT_VALUES = [50, 100, 500]; // 점당 금액 선택지
 //  - passwordSha256: 어드민 비밀번호의 SHA-256 해시 (비밀번호 원문은 저장하지 않아요)
 export const ADMIN = {
   revealKey: 'pdnyc4xjerpx',
-  passwordSha256: '722916f3744bdfb80e775fddb6605e7d91808a0d98f7c1ee7180d81bfd8ab873',
+  passwordSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
 
 // 4) 온라인 대결에서 차례가 오래 멈추면 자동으로 대신 내는 시간(초)
