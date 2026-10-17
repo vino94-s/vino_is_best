@@ -314,6 +314,30 @@ html.playing .mat .netwarn{position:absolute;left:8px;right:8px;top:32px;z-index
 </style>
 </head>
 <body>
+<!-- 벙참 인앱 탈출: 카톡·라인 안의 브라우저는 채팅방으로 돌아가는 순간 게임 화면이 닫혀서, 대결 방이 사라지지 않게 기본 브라우저로 옮겨 열어요 -->
+<script>(function(){
+var ua=navigator.userAgent||'',href=location.href;
+var kakao=/KAKAOTALK/i.test(ua),line=/\bLine\//.test(ua);
+if(!(kakao||line))return;
+try{if(sessionStorage.getItem('bung-inapp-stay')==='1')return}catch(e){}
+function out(){
+  if(kakao){location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(href);return}
+  try{var x=new URL(href);x.searchParams.set('openExternalBrowser','1');location.href=x.toString()}catch(e){}
+}
+function build(){
+  var d=document.createElement('div');d.id='bungInapp';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','bungInappT');
+  d.innerHTML='<div class="bi-box"><h2 id="bungInappT">브라우저에서 열게요</h2><p>'+(kakao?'카카오톡':'라인')+' 안에서 열면 채팅방에 코드를 보내러 가는 순간 게임 화면이 닫혀서 대결 방이 사라져요. 크롬이나 사파리 새 화면에서 열어 주세요.</p><button type="button" class="bi-go">브라우저로 열기</button><button type="button" class="bi-stay">여기서 그냥 할게요</button><p class="bi-tip">브라우저가 안 열리면 화면 구석의 ⋮ 또는 ⋯ 메뉴에서 ‘다른 브라우저로 열기’를 눌러 주세요.</p></div>';
+  document.body.appendChild(d);
+  d.querySelector('.bi-go').onclick=out;
+  d.querySelector('.bi-stay').onclick=function(){try{sessionStorage.setItem('bung-inapp-stay','1')}catch(e){}d.remove()};
+  d.querySelector('.bi-go').focus();
+  out();
+}
+if(document.body)build();else document.addEventListener('DOMContentLoaded',build);
+})();</script>
+<style>#bungInapp{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;padding:20px;background:rgba(10,14,18,.72);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}#bungInapp .bi-box{max-width:360px;width:100%;box-sizing:border-box;background:#fff;color:#17202A;border-radius:16px;padding:22px 20px;display:grid;gap:10px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35)}#bungInapp h2{margin:0;font-size:21px}#bungInapp p{margin:0;font-size:14.5px;line-height:1.55;color:#3c4650}#bungInapp button{font:inherit;font-weight:700;font-size:16px;border-radius:12px;padding:13px;border:1.5px solid #D9DED8;background:#fff;color:#17202A;cursor:pointer}#bungInapp .bi-go{background:#FEE500;border-color:#FEE500;color:#191600}#bungInapp .bi-tip{font-size:12.5px;color:#6b7680}</style>
+<!-- /벙참 인앱 탈출 -->
+
 
 
 <div class="app">
@@ -1307,7 +1331,10 @@ async function openPeer(code){
     }else{
       const peer=new window.Peer();net.peer=peer;
       peer.on('open',()=>{connectGuest();fin('ok')});
-      peer.on('error',e=>{if(e.type==='peer-unavailable'){if(!net.joined){closeNet();fMsg('그 코드의 방이 없어요. 코드를 다시 확인해 주세요.',true);fBusy(false)}}else if(!done)fin('연결에 실패했어요. 잠시 뒤 다시 시도해 주세요.')});
+      peer.on('error',e=>{if(e.type==='peer-unavailable'){if(!net.joined&&net.peer===peer){
+        if(Date.now()<(net.waitUntil||0)){fMsg(WAIT_MSG);setTimeout(()=>{if(net.peer===peer&&!peer.destroyed&&!net.joined)connectGuest()},3000)}
+        else{closeNet();sset(null);fMsg('그 코드의 방을 찾지 못했어요. 코드를 확인하거나 친구에게 방을 다시 만들어 달라고 해 주세요.',true);fBusy(false)}}}
+        else if(!done)fin('연결에 실패했어요. 잠시 뒤 다시 시도해 주세요.')});
     }
     setTimeout(()=>fin('연결 서버가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.'),12000);
   });
@@ -1329,6 +1356,10 @@ function wireConn(c){
     }
     if(m.t==='welcome'){
       if(net.host)return;
+      if(net.hostSid&&net.hostSid!==m.f){
+        net.links.delete(net.hostSid);net.hostSid=null;net.joined=false;
+        if(G&&G.mode==='net'&&!G.over){G.over=true;clearGhosts();updateUI();showNote('방장 연결이 끊겨서 경기가 끝났어요. 대기실로 돌아가요.')}
+      }
       if(!net.hostSid){net.hostSid=m.f;net.links.set(m.f,newLink(m.f,c))}
       const L=net.links.get(net.hostSid);if(!L||m.f!==net.hostSid)return;
       L.conn=c;L.lastHeard=Date.now();
@@ -1373,7 +1404,7 @@ function linkGone(L){
   if(G&&G.mode==='net'&&!G.over){G.over=true;clearGhosts();updateUI();showNote('방장 연결이 끊겨서 경기가 끝났어요.')}
   else if(G&&G.over){const a=$('#againBtn');if(a){a.disabled=true;a.textContent='방장이 나갔어요'}}
   else if(!$('#sFriend').hidden){backToEntry('방장 연결이 끊겼어요.')}
-  closeNet();
+  sset(null);closeNet();
 }
 function closeNet(){
   clearInterval(net.timer);
@@ -1384,8 +1415,37 @@ function closeNet(){
   Object.assign(net,{on:false,kind:'',links:new Map(),hostSid:null,joined:false,seats:[],room:null,peer:null,again:new Set(),playing:false,lastPres:'',fullShown:false,hostSeen:null});
   netWarn('');
 }
+/* 카톡에 코드를 보내러 다녀오는 사이 방이 사라지지 않게: 이 탭의 방을 기억해 두고, 끊기면 같은 코드로 다시 열어요 */
+const ROOM_KEY='yut_room';
+const WAIT_MSG='방장을 기다리는 중… 방장이 카톡에 코드를 보내고 돌아오면 바로 들어가요.';
+function sget(){try{return JSON.parse(sessionStorage.getItem(ROOM_KEY)||'null')}catch(e){return null}}
+function sset(v){try{if(v==null)sessionStorage.removeItem(ROOM_KEY);else sessionStorage.setItem(ROOM_KEY,JSON.stringify(v))}catch(e){}}
+async function hostOpen(fixed){
+  let r='taken';
+  if(fixed){for(let n=0;n<15&&r==='taken';n++){if(n){await sleep(2000);if(net.code!==fixed)return 'cancel'}r=await openTransport(fixed)}}
+  else for(let n=0;n<5&&r==='taken';n++){net.code=genCode();r=await openTransport(net.code)}
+  return r;
+}
+function hostStarted(){net.on=true;net.timer=setInterval(tickNet,800);sset({code:net.code,host:1,mode:net.mode,at:Date.now()});enterLobby();broadcastLobby()}
+function hostHeal(){
+  if(!net.on||!net.host||net.kind!=='peer'||document.hidden||net.healing)return;
+  const p=net.peer;
+  if(!p||p.destroyed){
+    net.healing=true;const code=net.code;
+    (async()=>{let r='taken';for(let n=0;n<15&&r==='taken'&&net.on&&net.code===code;n++){if(n)await sleep(2000);r=await openPeer(code)}net.healing=false})();
+    return;
+  }
+  if(p.disconnected){try{p.reconnect()}catch(e){}}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){const r=sget();if(r&&r.code===net.code&&net.on)sset({...r,at:Date.now()})}
+  else hostHeal();
+});
+addEventListener('online',hostHeal);addEventListener('pageshow',hostHeal);
+/* 친구가 새로고침하면 방장에게 자리를 비워 달라고 알려서, 다시 들어올 때 '방이 꽉 찼어요'가 안 뜨게 */
+addEventListener('beforeunload',()=>{if(net.on&&!net.host&&net.kind==='peer')toHost({t:'quit'})});
 function leaveNet(){
-  if(!net.on)return;
+  if(!net.on)return;sset(null);
   if(net.host)broadcast({t:'end',n:nick,host:1});else toHost({t:'quit'});
   setTimeout(closeNet,600);
 }
@@ -1532,9 +1592,9 @@ $('#mkRoom').onclick=async()=>{
   au();ensureNick();fBusy(true);fMsg('방을 만드는 중…');closeNet();
   net.host=true;net.round=0;net.mode=entryMode;net.me={char:store.get('char',null),ready:false};
   net.seats=Array(seatsMax()).fill(null);net.seats[0]={sid:net.sid};
-  let r='taken';for(let n=0;n<5&&r==='taken';n++){net.code=genCode();r=await openTransport(net.code)}
+  const r=await hostOpen();
   if(r!=='ok'){closeNet();fBusy(false);fMsg(r==='taken'?'방을 만들지 못했어요. 다시 눌러 주세요.':r,true);return}
-  net.on=true;net.timer=setInterval(tickNet,800);enterLobby();broadcastLobby();
+  hostStarted();
 };
 $('#codeIn').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)});
 $('#joinForm').addEventListener('submit',async e=>{
@@ -1542,6 +1602,7 @@ $('#joinForm').addEventListener('submit',async e=>{
   const code=$('#codeIn').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(code.length!==4){fMsg('방 코드 4자리를 넣어 주세요.',true);return}
   fBusy(true);fMsg('방을 찾는 중…');closeNet();net.host=false;net.code=code;net.me={char:store.get('char',null),ready:false};
+  net.waitUntil=Date.now()+60000;sset({code,host:0,at:Date.now()});
   const r=await openTransport(code);
   if(r!=='ok'){closeNet();fBusy(false);fMsg(r,true);return}
   net.on=true;net.timer=setInterval(tickNet,800);
@@ -1599,8 +1660,19 @@ $('#copyCode').onclick=async()=>{
   catch(e){const r=document.createRange();r.selectNodeContents($('#codeShow'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('코드를 선택해 뒀어요. 길게 눌러 복사해 주세요.')}
 };
 /* 초대 링크로 들어오면 코드 자동 입력 */
-(function(){try{const q=(new URLSearchParams(location.search).get('room')||location.hash.replace('#','')||'').toUpperCase();
-  if(/^[A-Z0-9]{4}$/.test(q)){if(location.search)history.replaceState(null,'',location.pathname);openFriend();$('#codeIn').value=q;fMsg('초대받은 방이에요. 닉네임을 확인하고 입장을 눌러 주세요.')}}catch(e){}})();
+/* 스크립트가 끝까지 읽힌 다음에 실행해야 해요(뒤에서 선언되는 채팅 변수를 openFriend가 써요) */
+setTimeout(function(){try{const q=(new URLSearchParams(location.search).get('room')||location.hash.replace('#','')||'').toUpperCase();
+  if(/^[A-Z0-9]{4}$/.test(q)){if(location.search)history.replaceState(null,'',location.pathname);openFriend();$('#codeIn').value=q;fMsg('초대받은 방이에요. 닉네임을 확인하고 입장을 눌러 주세요.');return}
+  const sv=sget();
+  if(sv&&/^[A-Z0-9]{4}$/.test(sv.code||'')&&Date.now()-(sv.at||0)<30*60*1000){
+    if(sv.host){
+      openFriend();ensureNick();fBusy(true);fMsg('방 '+sv.code+' 을(를) 다시 여는 중…');
+      net.host=true;net.round=0;net.mode=sv.mode==='2v2'?'2v2':'1v1';net.me={char:store.get('char',null),ready:false};
+      net.seats=Array(seatsMax()).fill(null);net.seats[0]={sid:net.sid};net.code=sv.code;
+      hostOpen(sv.code).then(r=>{if(r==='ok')hostStarted();else{closeNet();sset(null);fBusy(false);fMsg('같은 코드로 방을 다시 열지 못했어요. 방을 새로 만들어 주세요.',true)}});
+    }else{openFriend();$('#codeIn').value=sv.code;fMsg('방 '+sv.code+' 에 다시 들어가는 중…');setTimeout(()=>$('#joinForm').requestSubmit(),50)}
+  }
+}catch(e){console.error(e)}},0);
 
 
 /* ================= 친구 채팅 ================= */

@@ -8,7 +8,8 @@
 <style>
 :root{--bg:#F1F3EF;--ink:#5B6770}
 @media (prefers-color-scheme:dark){:root{--bg:#10151A;--ink:#95A2A8}}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--ink);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;text-align:center;padding:0 16px}
+a{color:inherit}
 </style>
 </head>
 <body>
@@ -30,10 +31,23 @@ var GAMES = {
 var id = new URLSearchParams(location.search).get('g') || '';
 var to = Object.prototype.hasOwnProperty.call(GAMES, id) ? GAMES[id] : '../';
 function go() { location.replace(to); }
-if (PLAY_API && to !== '../') {
-  try { fetch(PLAY_API + '?hit=' + encodeURIComponent(id), { mode: 'no-cors', keepalive: true }).catch(function () {}); } catch (e) {}
-  setTimeout(go, 150);
-} else { go(); }
+function start() {
+  if (PLAY_API && to !== '../') {
+    try { fetch(PLAY_API + '?hit=' + encodeURIComponent(id), { mode: 'no-cors', keepalive: true }).catch(function () {}); } catch (e) {}
+    setTimeout(go, 150);
+  } else { go(); }
+}
+// 카톡·라인 안의 브라우저는 채팅방에 코드를 보내러 가는 순간 게임 화면이 닫혀서 대결 방이 사라져요.
+// 그래서 휴대폰 기본 브라우저(크롬·사파리) 새 화면으로 옮겨서 열어요. 집계는 옮겨 연 쪽에서 한 번만 해요.
+var ua = navigator.userAgent || '';
+var kakao = /KAKAOTALK/i.test(ua), line = /\bLine\//.test(ua) && !/openExternalBrowser=1/.test(location.search);
+if ((kakao || line) && to !== '../') {
+  var msg = document.querySelector('p');
+  msg.innerHTML = '브라우저에서 게임을 여는 중…<br><small>열리지 않으면 <a href="#" id="here">여기서 그냥 열기</a></small>';
+  document.getElementById('here').onclick = function (e) { e.preventDefault(); start(); };
+  if (kakao) location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+  else location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
+} else { start(); }
 </script>
 </body>
 </html>

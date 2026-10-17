@@ -202,6 +202,30 @@ kbd{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;bo
 </style>
 </head>
 <body>
+<!-- 벙참 인앱 탈출: 카톡·라인 안의 브라우저는 채팅방으로 돌아가는 순간 게임 화면이 닫혀서, 대결 방이 사라지지 않게 기본 브라우저로 옮겨 열어요 -->
+<script>(function(){
+var ua=navigator.userAgent||'',href=location.href;
+var kakao=/KAKAOTALK/i.test(ua),line=/\bLine\//.test(ua);
+if(!(kakao||line))return;
+try{if(sessionStorage.getItem('bung-inapp-stay')==='1')return}catch(e){}
+function out(){
+  if(kakao){location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(href);return}
+  try{var x=new URL(href);x.searchParams.set('openExternalBrowser','1');location.href=x.toString()}catch(e){}
+}
+function build(){
+  var d=document.createElement('div');d.id='bungInapp';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','bungInappT');
+  d.innerHTML='<div class="bi-box"><h2 id="bungInappT">브라우저에서 열게요</h2><p>'+(kakao?'카카오톡':'라인')+' 안에서 열면 채팅방에 코드를 보내러 가는 순간 게임 화면이 닫혀서 대결 방이 사라져요. 크롬이나 사파리 새 화면에서 열어 주세요.</p><button type="button" class="bi-go">브라우저로 열기</button><button type="button" class="bi-stay">여기서 그냥 할게요</button><p class="bi-tip">브라우저가 안 열리면 화면 구석의 ⋮ 또는 ⋯ 메뉴에서 ‘다른 브라우저로 열기’를 눌러 주세요.</p></div>';
+  document.body.appendChild(d);
+  d.querySelector('.bi-go').onclick=out;
+  d.querySelector('.bi-stay').onclick=function(){try{sessionStorage.setItem('bung-inapp-stay','1')}catch(e){}d.remove()};
+  d.querySelector('.bi-go').focus();
+  out();
+}
+if(document.body)build();else document.addEventListener('DOMContentLoaded',build);
+})();</script>
+<style>#bungInapp{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;padding:20px;background:rgba(10,14,18,.72);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}#bungInapp .bi-box{max-width:360px;width:100%;box-sizing:border-box;background:#fff;color:#17202A;border-radius:16px;padding:22px 20px;display:grid;gap:10px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35)}#bungInapp h2{margin:0;font-size:21px}#bungInapp p{margin:0;font-size:14.5px;line-height:1.55;color:#3c4650}#bungInapp button{font:inherit;font-weight:700;font-size:16px;border-radius:12px;padding:13px;border:1.5px solid #D9DED8;background:#fff;color:#17202A;cursor:pointer}#bungInapp .bi-go{background:#FEE500;border-color:#FEE500;color:#191600}#bungInapp .bi-tip{font-size:12.5px;color:#6b7680}</style>
+<!-- /벙참 인앱 탈출 -->
+
 <div id="app">
   <div id="stageBox">
     <canvas id="cv" aria-label="천하제일 무술대회 경기장"></canvas>
@@ -1801,9 +1825,10 @@ function stageScore(M, s) {
   function netSend(o) { const c = net.conn; if (c && c.open) { try { c.send(o); } catch (e) {} } }
   function destroyPeer() {
     clearTimeout(net.joinTimer);
-    try { if (net.conn) net.conn.close(); } catch (e) {}
-    try { if (net.peer) net.peer.destroy(); } catch (e) {}
+    const c = net.conn, p = net.peer;
     net.peer = null; net.conn = null; net.opp = null;
+    try { if (c) c.close(); } catch (e) {}
+    try { if (p) p.destroy(); } catch (e) {}
   }
 
   $('mkRoom').addEventListener('click', async () => {
@@ -1813,12 +1838,20 @@ function stageScore(M, s) {
     if (!(await loadPeer())) return friendErr('연결 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
     hostTry(0);
   });
-  function hostTry(n) {
+  // 카톡에 코드를 보내러 다녀오는 사이 방이 사라지지 않게: 이 탭의 방 정보를 기억해 두고, 끊기면 같은 코드로 다시 열어요
+  const ROOM_KEY = 'muldae_room';
+  const sget = k => { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+  const sset = (k, v) => { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  function hostTry(n, fixed) {
     destroyPeer();
-    let code = ''; for (let k = 0; k < 4; k++) code += CODE_CHARS[(Math.random() * CODE_CHARS.length) | 0];
+    let code = fixed || ''; if (!code) for (let k = 0; k < 4; k++) code += CODE_CHARS[(Math.random() * CODE_CHARS.length) | 0];
     const peer = new window.Peer(PREFIX + code.toLowerCase());
     net.peer = peer; net.host = true; net.code = code;
-    peer.on('open', () => { net.me.ready = false; net.me.ci = sel.me; enterLobby(); });
+    peer.on('open', () => {
+      sset(ROOM_KEY, { code, host: 1, at: Date.now() });
+      if (current === 'scLobby') renderLobby();
+      else { net.me.ready = false; net.me.ci = sel.me; enterLobby(); }
+    });
     peer.on('connection', c => {
       if (net.conn && net.conn.open) {
         c.on('open', () => { try { c.send({ t: 'full' }); } catch (e) {} setTimeout(() => c.close(), 400); });
@@ -1828,6 +1861,12 @@ function stageScore(M, s) {
     });
     peer.on('disconnected', () => { try { peer.reconnect(); } catch (e) {} });
     peer.on('error', e => {
+      if (net.peer !== peer) return;
+      if (e.type === 'unavailable-id' && fixed) {
+        // 방금 끊긴 방 코드는 서버가 잠깐 붙잡고 있어서, 잠시 뒤 같은 코드로 다시 시도해요
+        if (n < 15) { if (current === 'scLobby') $('lobbyStatus').textContent = '방을 다시 여는 중…'; setTimeout(() => { if (net.peer === peer && (current === 'scLobby' || current === 'scFriend')) hostTry(n + 1, fixed); }, 2000); return; }
+        sset(ROOM_KEY, null); destroyPeer(); return friendErrOrToast('같은 코드로 방을 다시 열지 못했어요. 방을 새로 만들어 주세요.');
+      }
       if (e.type === 'unavailable-id' && n < 4) return hostTry(n + 1);
       if (current === 'scLobby' || current === 'scFriend') friendErrOrToast('연결 서버에 문제가 있어요. 잠시 뒤 다시 시도해 주세요. (' + e.type + ')');
     });
@@ -1842,19 +1881,35 @@ function stageScore(M, s) {
     $('mkRoom').disabled = true; $('joinBtn').disabled = true;
     $('friendErr').className = 'err ok'; $('friendErr').textContent = '방을 찾는 중…';
     if (!(await loadPeer())) return friendErr('연결 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+    sset(ROOM_KEY, { code, host: 0, at: Date.now() });
+    guestJoin(code, Date.now() + 60000);
+  });
+  // 방장이 카톡에 코드를 보내러 가 있는 동안에도 들어올 수 있게, 방이 안 보이면 1분 동안 다시 찾아요
+  function guestJoin(code, until) {
     destroyPeer();
     const peer = new window.Peer();
     net.peer = peer; net.host = false; net.code = code;
+    const retry = () => {
+      if (net.peer !== peer || Date.now() > until) return false;
+      destroyPeer(); net.code = code;
+      const msg = '방장을 기다리는 중… 방장이 카톡에 코드를 보내고 돌아오면 바로 들어가요.';
+      if (current === 'scLobby') $('lobbyStatus').textContent = msg; else { $('friendErr').className = 'err ok'; $('friendErr').textContent = msg; }
+      net.joinTimer = setTimeout(() => { if (!net.peer && net.code === code && (current === 'scFriend' || current === 'scLobby')) guestJoin(code, until); }, 3000);
+      return true;
+    };
+    const fail = m => { if (current === 'scLobby') { newDemo(); openFriend(); } destroyPeer(); sset(ROOM_KEY, null); friendErr(m); };
     peer.on('open', () => {
+      if (net.peer !== peer) return;
       const c = peer.connect(PREFIX + code.toLowerCase(), { reliable: true, serialization: 'json' });
       net.conn = c; wire(c);
-      net.joinTimer = setTimeout(() => { if (!c.open) { destroyPeer(); friendErr('방에 연결하지 못했어요. 코드를 확인하거나 친구에게 방을 다시 만들어 달라고 해 주세요.'); } }, 12000);
+      net.joinTimer = setTimeout(() => { if (net.peer === peer && !c.open && !retry()) fail('방에 연결하지 못했어요. 코드를 확인하거나 친구에게 방을 다시 만들어 달라고 해 주세요.'); }, 9000);
     });
     peer.on('error', er => {
-      if (er.type === 'peer-unavailable') { destroyPeer(); friendErr('그 코드의 방이 없어요. 코드를 다시 확인해 주세요.'); }
-      else if (current === 'scFriend') { destroyPeer(); friendErr('연결에 실패했어요. 잠시 뒤 다시 시도해 주세요. (' + er.type + ')'); }
+      if (net.peer !== peer) return;
+      if (er.type === 'peer-unavailable') { if (!retry()) fail('그 코드의 방을 찾지 못했어요. 코드를 확인하거나 친구에게 방을 다시 만들어 달라고 해 주세요.'); }
+      else if (current === 'scFriend' || current === 'scLobby') { if (!retry()) fail('연결에 실패했어요. 잠시 뒤 다시 시도해 주세요. (' + er.type + ')'); }
     });
-  });
+  }
 
   function wire(c) {
     c.on('open', () => {
@@ -1876,8 +1931,13 @@ function stageScore(M, s) {
       toast('친구가 나갔어요. 같은 코드로 다시 들어올 수 있어요.', 3600);
       renderLobby();
     } else {
-      destroyPeer(); newDemo();
-      openFriend(); friendErr('방장과의 연결이 끊겼어요.');
+      if (!wasGame && current === 'scLobby' && net.code) {
+        const code = net.code; renderLobby();
+        $('lobbyStatus').textContent = '방장과 연결이 끊겼어요. 다시 연결하는 중…';
+        guestJoin(code, Date.now() + 60000); return;
+      }
+      sset(ROOM_KEY, null); destroyPeer(); newDemo();
+      openFriend(); friendErr(net.left ? '방장이 방을 나갔어요.' : '방장과의 연결이 끊겼어요.'); net.left = false;
     }
   }
   function sendMe() { netSend({ t: 'me', name: net.me.name, ci: net.me.ci, ready: net.me.ready }); }
@@ -1898,7 +1958,7 @@ function stageScore(M, s) {
         if (!net.host && MODE === 'guest' && d.m && d.m.f) { M = d.m; }
         break;
       case 'rec': if (!net.host) takeDuel(d.rec); break;
-      case 'bye': onPeerGone(net.conn); break;
+      case 'bye': if (d.x && !net.host) { net.code = ''; net.left = true; } onPeerGone(net.conn); break;
     }
   }
   function maybeStart() {
@@ -1931,7 +1991,7 @@ function stageScore(M, s) {
   function renderLobby() {
     const opp = net.opp, connected = !!(net.conn && net.conn.open);
     const st = $('lobbyStatus');
-    if (!connected) { st.textContent = net.host ? '친구를 기다리는 중… 코드나 초대 링크를 보내 주세요.' : '방장과 연결하는 중…'; st.className = 'status'; }
+    if (!connected) { st.textContent = net.host ? '친구를 기다리는 중… 코드나 초대 링크를 보내 주세요. 카톡에 다녀와도 방은 그대로예요.' : '방장과 연결하는 중…'; st.className = 'status'; }
     else if (net.me.ready && opp && opp.ready) { st.textContent = '곧 시작해요!'; st.className = 'status go'; }
     else if (net.me.ready) { st.textContent = '친구가 준비하기를 기다리는 중…'; st.className = 'status'; }
     else { st.textContent = '캐릭터를 고르고 준비 완료를 눌러 주세요.'; st.className = 'status go'; }
@@ -1963,7 +2023,7 @@ function stageScore(M, s) {
   $('lobbyLeave').addEventListener('click', () => leaveRoom());
   $('btnLeave').addEventListener('click', () => { if (confirm('대결을 그만두고 나갈까요?')) leaveRoom(); });
   function leaveRoom(silent) {
-    netSend({ t: 'bye' });
+    netSend({ t: 'bye', x: 1 }); sset(ROOM_KEY, null);
     setTimeout(destroyPeer, 150);
     if (silent === true) return;
     MODE = 'demo'; newDemo(); show('scMenu');
@@ -1976,6 +2036,17 @@ function stageScore(M, s) {
     catch (e) { prompt('아래 내용을 복사해서 친구에게 보내 주세요.', text); }
   });
   addEventListener('beforeunload', () => netSend({ t: 'bye' }));
+  function hostHeal() {
+    if (!net.host || !net.code || document.hidden) return;
+    const p = net.peer;
+    if (!p || p.destroyed) { if (current === 'scLobby') hostTry(0, net.code); return; }
+    if (p.disconnected) { try { p.reconnect(); } catch (e) {} }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { const r = sget(ROOM_KEY); if (r && r.code === net.code) sset(ROOM_KEY, { ...r, at: Date.now() }); }
+    else hostHeal();
+  });
+  addEventListener('online', hostHeal); addEventListener('pageshow', hostHeal);
 
   // ---------- 랭킹 (봇 도전) ----------
   // 구글 시트 Apps Script 웹 앱 주소를 넣으면 모두가 같은 랭킹을 봐요 (README 참고). 비어 있으면 이 기기에만 저장.
@@ -2167,6 +2238,15 @@ function stageScore(M, s) {
       openFriend(); $('codeIn').value = q.toUpperCase();
       $('friendErr').className = 'err ok'; $('friendErr').textContent = '초대받은 방이에요. 닉네임을 확인하고 입장을 눌러 주세요.';
       history.replaceState(null, '', location.pathname);
+      return;
+    }
+    const saved = sget(ROOM_KEY);
+    if (saved && /^[A-Z0-9]{4}$/.test(saved.code || '') && Date.now() - (saved.at || 0) < 30 * 60 * 1000) {
+      openFriend(); net.me.name = myNick();
+      $('mkRoom').disabled = true; $('joinBtn').disabled = true;
+      $('friendErr').className = 'err ok'; $('friendErr').textContent = saved.host ? '방 ' + saved.code + ' 을(를) 다시 여는 중…' : '방 ' + saved.code + ' 에 다시 들어가는 중…';
+      if (!(await loadPeer())) return friendErr('연결 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.');
+      if (saved.host) hostTry(0, saved.code); else guestJoin(saved.code, Date.now() + 60000);
     }
   }
   show('scMenu');
