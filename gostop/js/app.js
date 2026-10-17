@@ -1,10 +1,10 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017g';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017g';
-import { botMove, botGoStop } from './bot.js?v=20261017g';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017g';
-import { createStore, applyResult } from './store.js?v=20261017g';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017g';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018a';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018a';
+import { botMove, botGoStop } from './bot.js?v=20261018a';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018a';
+import { createStore, applyResult } from './store.js?v=20261018a';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018a';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -165,20 +165,20 @@ function cardLabel(c) {
   const t = c.type === 'gwang' ? '광' : c.type === 'yeol' ? '열끗' : c.type === 'tti' ? RIBBON_NAME[c.ribbon] : c.val >= 2 ? '쌍피' : '피';
   return `${c.month}월 ${MONTHS[c.month]} ${t}`;
 }
+const CARD_IMG = id => `assets/cards/${id}.webp?v=${ASSET_V}`;
+const ASSET_V = '1';
 function cardEl(id, cls = '', tag = 'div', props = {}) {
   if (id === 'BOMB') return h(tag, { class: `card back ${cls}`, 'aria-label': '폭탄 패 (뒤집기만 해요)', ...props }, h('span', { class: 'mo', style: 'color:#fff;z-index:1' }, '폭탄'), h('span', { class: 'ic', style: 'z-index:1' }, '💣'), h('span'));
   const c = CARDS[id];
   if (!c) return h(tag, { class: `card back ${cls}`, 'aria-hidden': 'true', ...props });
-  const k = ['card', c.type, cls];
-  if (c.ribbon) k.push(c.ribbon);
-  if (c.type === 'pi' && c.val >= 2) k.push('ssang');
+  const k = ['card', 'art', c.type, cls];
   if (c.bonus) k.push('bonus');
-  const mo = c.bonus ? '보너스' : `${c.month}월`;
-  const ic = c.bonus ? (c.val === 3 ? '🎁' : '🎀') : (c.icon || MONTH_ICON[c.month]);
-  const t = c.type === 'gwang' ? '광' : c.type === 'yeol' ? (c.godori ? '고도리' : c.gukjin ? '국진' : '열끗')
-    : c.type === 'tti' ? RIBBON_NAME[c.ribbon] : c.bonus ? `${c.val}피` : c.val >= 2 ? '쌍피' : '피';
   return h(tag, { class: k.join(' '), 'aria-label': cardLabel(c), title: cardLabel(c), ...props },
-    h('span', { class: 'mo' }, mo), h('span', { class: 'ic' }, ic), h('span', { class: 'tag' }, t));
+    h('img', { src: CARD_IMG(id), alt: '', draggable: 'false', decoding: 'async' }));
+}
+// 첫 판에 그림이 늦게 뜨지 않게 미리 받아 두기
+function preloadCards() {
+  for (const id of Object.keys(CARDS)) { const im = new Image(); im.decoding = 'async'; im.src = CARD_IMG(id); }
 }
 function groupCaps(caps) {
   const d = scoreDetail(caps);
@@ -386,7 +386,8 @@ function rulesPanel() {
       h('p', { style: 'margin:0' }, '광: 3광 3점(비광 끼면 2점), 4광 4점, 5광 15점. 열끗·띠는 5장부터 1점씩, 피는 10장부터 1점씩. 고도리 5점, 홍단·청단·초단 각 3점.'),
       h('p', { style: 'margin:0' }, '쪽·따닥·싹쓸·뻑 먹기·폭탄이면 상대마다 피 1장씩 뺏어요. 3뻑이면 바로 승리.'),
       h('p', { style: 'margin:0' }, '피박·광박·멍박, 흔들기·폭탄은 각각 두 배. 고 부르고 진 사람은 고박으로 독박. 나가리 다음 판은 두 배.'),
-      h('p', { style: 'margin:0' }, '보너스피는 판마다 0~2장(쌍피·쓰리피) 중에서 골라요.')));
+      h('p', { style: 'margin:0' }, '보너스피는 판마다 0~2장(쌍피·쓰리피) 중에서 골라요.'),
+      h('p', { class: 'muted', style: 'margin:0;font-size:12px' }, '화투 그림: Louie Mantia의 하나후다 그림을 화투에 맞게 고침 (CC BY-SA 4.0)')));
 }
 function changeMyChar() {
   let pick = S.me.char;
@@ -616,11 +617,14 @@ class Game {
     if (open) { this.chat.unread = 0; this.chat.onUnread(0); this.chat.scroll(); }
   }
   seat(i) { return this.state.seats[i]; }
+  key(s = this.state) { return `${this.gid}:${s.ver}`; }
   actor(s = this.state) { return s.phase === 'goStop' ? s.pending : s.phase === 'play' ? s.turn : null; }
 
   // 상태 반영
   setState(s, initial = false) {
     this.prevFloor = this.state ? this.state.floor : [];
+    // 시간 초과는 각 기기가 이 수를 받은 시각으로 잰다 (기기 시계 차이 무시)
+    if (!this.state || this.state.ver !== s.ver || this.arrivedKey !== `${this.gid}:${s.ver}`) { this.arrivedAt = Date.now(); this.arrivedKey = `${this.gid}:${s.ver}`; }
     this.state = s;
     this.json = JSON.stringify(s);
     if (!initial && s.timeout && s.timeout.ver === s.ver) this.chat.sys(`${s.seats[s.timeout.seat].name} 시간 초과 — 자동으로 ${s.timeout.stop ? '스톱했어요' : '냈어요'}`);
@@ -656,21 +660,21 @@ class Game {
     const a = this.actor();
     if (this.mode === 'bot' && s.seats[a].isBot) {
       clearTimeout(this.botTimer);
-      const ver = s.ver;
+      const k = this.key();
       await Taunt.idle();
-      if (!this.alive || this.state.ver !== ver) return;
-      this.botTimer = setTimeout(() => this.botStep(ver), 550 + Math.random() * 500);
+      if (!this.alive || this.key() !== k) return;
+      this.botTimer = setTimeout(() => this.botStep(k), 550 + Math.random() * 500);
       return;
     }
     if (s.phase === 'goStop' && s.pending === this.mySeat) {
-      const ver = s.ver;
+      const k = this.key();
       await Taunt.idle();
-      if (this.alive && this.state.ver === ver) this.askGoStop();
+      if (this.alive && this.key() === k) this.askGoStop();
     }
   }
-  botStep(ver) {
+  botStep(k) {
     const s = this.state;
-    if (!this.alive || s.ver !== ver || s.phase === 'end') return;
+    if (!this.alive || this.key() !== k || s.phase === 'end') return;
     const a = this.actor();
     const lvl = s.seats[a].level || 'normal';
     let ns;
@@ -703,8 +707,11 @@ class Game {
     await this.commit(applyGoStop(s, this.mySeat, go));
   }
   askGoStop() {
-    if (this.goStopShown === this.state.ver) return;
-    this.goStopShown = this.state.ver;
+    const s0 = this.state;
+    if (s0.phase !== 'goStop' || s0.pending !== this.mySeat) return;
+    if (this.goStopShown === this.key() && this.closeGoStop) return;
+    this.closeGoStop?.();
+    this.goStopShown = this.key();
     const s = this.state, me = this.mySeat;
     const d = scoreDetail(s.caps[me]);
     const now = withGo(d.total, s.goCount[me]);
@@ -722,12 +729,12 @@ class Game {
     const s = this.state;
     if (!s || s.phase === 'end') return;
     const a = this.actor();
-    const age = Date.now() - s.ts;
+    const age = Date.now() - (this.arrivedAt || Date.now());
     const limit = TURN_TIMEOUT_SEC * 1000 + (a === this.mySeat ? 0 : 8000);
     const st = $('.status-line', this.tableEl);
     if (st && a === this.mySeat) {
       const left = Math.max(0, Math.ceil((TURN_TIMEOUT_SEC * 1000 - age) / 1000));
-      if (left <= 15) st.textContent = this.statusText() + ` · ${left}초`;
+      st.textContent = this.statusText() + (left <= 15 ? ` · ${left}초` : '');
     }
     if (age > limit && !this.locked) {
       const ns = s.phase === 'goStop' ? applyGoStop(s, a, false) : applyPlay(s, a, botMove(s, a, 'normal'));
@@ -831,6 +838,7 @@ class Game {
     const mult = r.winner == null ? Math.min(8, (s.mult || 1) * 2) : 1;
     const ns = newGame({ seats: s.seats, ppoint: s.ppoint, bonusCount: s.bonusCount, firstSeat, mult });
     ns.gid = rid();
+    clearTimeout(this.botTimer); this.closeGoStop?.(); this.closeGoStop = null; this.goStopShown = null;
     this.gid = ns.gid; this.ended = false; this.seenEv = ns.evSeq; this.state = null;
     this.chat.sys(mult > 1 ? `나가리 판! 이번 판은 ${mult}배예요.` : '새 판을 깔았어요.');
     this.setState(ns, true);
@@ -930,10 +938,16 @@ class Game {
         type: 'button', disabled: !myTurn ? true : null, onclick: () => this.pick(id, moves),
       })));
 
-    this.tableEl.replaceChildren(tbar, oppEls,
+    this.tableEl.replaceChildren(...[tbar, oppEls,
       h('div', { class: 'floor-area' }, floor, deck),
       h('div', { class: `status-line ${a === me ? 'mine' : ''}` }, this.statusText()),
-      h('div', { class: 'stack', style: 'gap:6px' }, meBox, hand));
+      s.phase === 'goStop' && s.pending === me && !this.locked
+        ? h('div', { class: 'gostop-inline' },
+          h('button', { class: 'btn red', onclick: () => this.goStop(true) }, '고!'),
+          h('button', { class: 'btn', onclick: () => this.goStop(false) }, '스톱'),
+          h('button', { class: 'btn ghost small', style: 'color:var(--on-felt)', onclick: () => { this.goStopShown = null; this.askGoStop(); } }, '점수 보기'))
+        : null,
+      h('div', { class: 'stack', style: 'gap:6px' }, meBox, hand)].filter(Boolean));
   }
   pick(id, moves) {
     const mv = moves.find(m => m.card === id);
@@ -1148,6 +1162,7 @@ async function renderAdmin(filter = '') {
 // ───────────────── 시작 ─────────────────
 (async function boot() {
   S.store = await createStore();
+  setTimeout(preloadCards, 300);
   const saved = ls.get('code', null);
   if (saved) {
     try { if (await doLogin(saved)) return; } catch (e) { console.error(e); }

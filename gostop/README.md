@@ -76,4 +76,9 @@ Firebase의 `apiKey`는 공개돼도 되는 값이에요. 입장 코드는 목�
 - `js/config.js` 설정 (Firebase, 게임머니)
 - `database.rules.json` Firebase 보안 규칙
 - `assets/chars/` 캐릭터 그림
+- `assets/cards/` 화투 그림 (CC BY-SA 4.0, 아래 참고)
 - `thumb.jpg` 썸네일 (링크 미리보기·로그인 화면)
+
+## 화투 그림
+
+카드 그림은 Louie Mantia의 하나후다 그림(위키미디어 공용, CC BY-SA 4.0)을 한국 화투에 맞게 고친 것이에요. 11·12월 순서, 홍단·청단 글씨, 光 표시를 바꿨고 보너스 카드는 새로 그렸어요. 자세한 내용은 `assets/cards/LICENSE.md`를 보세요. 그림 파일은 같은 CC BY-SA 4.0 라이선스를 따라요.

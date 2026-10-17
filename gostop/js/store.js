@@ -1,5 +1,5 @@
 // 데이터 계층: Firebase Realtime Database (설정 시) / 이 브라우저 localStorage (미설정 시)
-import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261017g';
+import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261018a';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const PID_CHARS = 'abcdefghijkmnopqrstuvwxyz0123456789';

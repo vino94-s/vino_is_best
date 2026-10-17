@@ -16,9 +16,9 @@
   --cho: #5C7D3A;
   --radius: 10px;
   --cw: clamp(42px, 10.6vw, 62px);
-  --ch: calc(var(--cw) * 1.58);
+  --ch: calc(var(--cw) * 1.64);
   --fw: clamp(40px, 11.2vw, 56px);
-  --fh: calc(var(--fw) * 1.58);
+  --fh: calc(var(--fw) * 1.64);
   --f-body: 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
   --f-stamp: 'Black Han Sans', 'Apple SD Gothic Neo', sans-serif;
   color-scheme: dark;
@@ -156,11 +156,16 @@ img { display: block; }
 .card.back { background: var(--red); box-shadow: inset 0 0 0 3px var(--red-deep), 0 2px 0 rgba(0, 0, 0, .45); }
 .card.back::after { content: ''; position: absolute; inset: 7px; border-radius: 3px; border: 2px solid rgba(255, 255, 255, .25); }
 .card.sm { --cw: var(--fw); --ch: var(--fh); }
-.card.mini { --cw: 24px; --ch: 38px; padding: 2px 0; box-shadow: inset 0 0 0 1.5px var(--red), 0 1px 0 rgba(0, 0, 0, .4); }
+.card.mini { --cw: 26px; --ch: 43px; padding: 2px 0; box-shadow: inset 0 0 0 1.5px var(--red), 0 1px 0 rgba(0, 0, 0, .4); }
 .card.mini .tag { display: none; }
 .card.mini .mo { font-size: 8px; }
 .card.mini .ic { font-size: 13px; }
 .card.fresh { animation: land .35s ease-out; }
+/* 실제 화투 그림 */
+.card.art { padding: 0; display: block; background: #6d1c0e; border-radius: calc(var(--cw) * .07); box-shadow: 0 2px 0 rgba(0, 0, 0, .45), 0 0 0 1px rgba(0, 0, 0, .25); }
+.card.art img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.card.art.mini { box-shadow: 0 1px 0 rgba(0, 0, 0, .4); }
+.card.art.flip-hl { box-shadow: 0 0 0 3px var(--gold), 0 2px 0 rgba(0, 0, 0, .45); }
 .card.flip-hl { box-shadow: inset 0 0 0 2px var(--red), inset 0 0 0 4px var(--cream), 0 0 0 3px var(--gold), 0 2px 0 rgba(0, 0, 0, .45); }
 @keyframes land { from { transform: translateY(-14px) scale(1.12); opacity: .2; } }
 
@@ -199,13 +204,16 @@ img { display: block; }
 .cap-row .lbl { font-size: 11px; color: var(--on-felt-muted); }
 .cap-row .lbl b { color: var(--on-felt); }
 .cap-cards { display: flex; flex-wrap: wrap; min-height: 38px; }
-.cap-cards .card + .card { margin-left: -13px; }
+.cap-cards .card + .card { margin-left: -15px; }
 
 .hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding-top: 2px; }
-.hand .card { border: 0; padding: 4px 2px 3px; transition: transform .1s; }
-.hand .card.match::before { content: ''; position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.hand .card { border: 0; transition: transform .1s; }
+.hand .card.art { padding: 0; }
+.hand .card.match::before { content: ''; position: absolute; z-index: 1; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px var(--felt-deep); }
 .hand.active .card:hover { transform: translateY(-5px); }
 .hand:not(.active) .card { filter: saturate(.6) brightness(.85); }
+.gostop-inline { display: flex; gap: 8px; justify-content: center; align-items: center; }
+.gostop-inline .btn:not(.small) { font-family: var(--f-stamp); font-size: 24px; padding: 8px 26px; }
 .status-line { text-align: center; font-weight: 700; font-size: 15px; min-height: 1.5em; }
 .status-line.mine { color: var(--gold); }
 
