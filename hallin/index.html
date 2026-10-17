@@ -29,7 +29,8 @@ img{max-width:100%}
 body{background-color:var(--table);background-image:radial-gradient(var(--table-dot) 1.6px,transparent 1.7px);background-size:22px 22px;color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--table)}
 .wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+#scr-game{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button:focus-visible,input:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
 h1,h2,h3{margin:0;text-wrap:balance}
 p{margin:0}
@@ -122,7 +123,8 @@ input[type=text]{font-family:var(--f-ui);font-size:20px;border:3px solid var(--i
 .deck{width:calc(var(--cw)*.6);aspect-ratio:3/4;border:3px solid var(--ink);border-radius:10px;background:var(--cobalt) repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.18) 6px 12px);box-shadow:3px 3px 0 var(--paper),6px 6px 0 var(--ink);display:grid;place-items:center;padding:0}
 .deck .dn{font-family:var(--f-display);font-size:calc(var(--cw)*.2);color:var(--paper);text-shadow:2px 2px 0 var(--ink);font-variant-numeric:tabular-nums}
 button.deck:disabled{cursor:default}
-button.deck.can{animation:nudge 1s ease-in-out infinite}
+button.deck.can{outline:4px solid var(--tomato);outline-offset:4px;animation:blink .8s steps(2,jump-none) infinite}
+@keyframes blink{from{outline-color:var(--tomato)}to{outline-color:transparent}}
 .seat-sub{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .flip-hint{font-family:var(--f-ui);font-size:14px}
 .flip-hint.hot{font-family:var(--f-display);font-size:20px;color:var(--tomato)}
@@ -665,7 +667,7 @@ function drawSeats(s){
     seatKey=key;
     $('#opps').innerHTML=order.map(p=>seatHTML(p,false)).join('');
     $('#meWrap').innerHTML=meIdx<0?'<p class="note">관전 중이에요. 다음 판부터 참가할 수 있어요.</p>':seatHTML(s.ps[meIdx],true);
-    const fb=$('#flipBtn');if(fb)fb.onclick=doFlip;
+    const fb=$('#flipBtn');if(fb)press(fb,doFlip);
   }
   for(const p of s.ps){
     const el=document.querySelector(`.seat[data-id="${CSS.escape(p.id)}"]`);if(!el)continue;
@@ -727,7 +729,7 @@ function ringAnim(){const b=$('#bellBtn');b.classList.remove('ring');void b.offs
 
 function doFlip(){
   if(!canFlip())return;
-  if(mode==='guest'){flipSent=cur.tn;sendAct('flip');updateControls()}
+  if(mode==='guest'){flipSent=cur.tn;sendAct('flip',{tn:cur.tn});updateControls()}
   else if(game)game.flip(myId);
 }
 function doBell(){
@@ -738,8 +740,12 @@ function doBell(){
   else if(game)game.bell(myId,cur.seq,r);
   updateControls();
 }
-$('#bellBtn').addEventListener('pointerdown',e=>{e.preventDefault();doBell()});
-$('#bellBtn').addEventListener('click',e=>{if(e.detail===0)doBell()});
+/* 손가락이 닿는 순간 반응해요(클릭이 끝나길 기다리지 않음). 키보드로 누른 경우는 click으로 받아요 */
+function press(el,fn){
+  el.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();fn()});
+  el.addEventListener('click',e=>{if(e.detail===0)fn()});
+}
+press($('#bellBtn'),doBell);
 document.addEventListener('keydown',e=>{
   if(screen!=='game'||e.target.matches('input'))return;
   if(e.code==='Space'){e.preventDefault();doFlip()}
@@ -866,6 +872,7 @@ async function roomNet(c,init,onChange){
    - 친구는 같은 자리(id)로 다시 붙고, 방장은 GRACE 동안 그 자리를 비워두지 않아요
    - 방장보다 먼저 들어온 친구는 방장이 돌아올 때까지 기다려요 */
 const GRACE=45000,JOIN_WAIT=60000,HOST_WAIT=120000;
+const HB_MS=2000,SILENT_MS=8000; // 2초마다 살아있다고 알리고, 8초 동안 아무 소식이 없으면 끊긴 걸로 보고 다시 붙어요
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function openPeer(id){
   return new Promise((res,rej)=>{
@@ -886,8 +893,8 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
   const onVis=()=>{if(document.visibilityState==='visible'&&watch)watch()};
   document.addEventListener('visibilitychange',onVis);
   window.addEventListener('online',onVis);
-  let tick=null;
-  const stopAll=()=>{closed=true;clearInterval(tick);document.removeEventListener('visibilitychange',onVis);window.removeEventListener('online',onVis)};
+  let tick=null,hbT=null;
+  const stopAll=()=>{closed=true;clearInterval(tick);clearInterval(hbT);document.removeEventListener('visibilitychange',onVis);window.removeEventListener('online',onVis)};
 
   if(role==='host'){
     const conns=new Map(); // 친구 id -> {conn,p,on,lostT}
@@ -900,13 +907,20 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
     const wire=conn=>{
       const prev=conns.get(conn.peer);
       if(!prev&&conns.size>=7){setTimeout(()=>{try{conn.close()}catch(e){}},500);return}
-      const o=prev||{p:{},on:false,conn:null,lostT:null};
+      const o=prev||{p:{},on:false,conn:null,lostT:null,seen:0};
       if(prev){clearTimeout(prev.lostT);prev.lostT=null;if(prev.conn&&prev.conn!==conn){const old=prev.conn;prev.conn=null;try{old.close()}catch(e){}}}
-      o.conn=conn;conns.set(conn.peer,o);
+      o.conn=conn;o.seen=Date.now();conns.set(conn.peer,o);
       const seen=()=>{if(!o.on){o.on=true;deliver([conn.peer],[],[])}else deliver([],[],[conn.peer])};
-      conn.on('open',()=>{if(o.conn===conn)seen()});
+      conn.on('open',()=>{if(o.conn===conn){o.seen=Date.now();seen()}});
       conn.on('data',d=>{
-        if(o.conn!==conn||!d)return;
+        if(!d)return;
+        if(o.conn!==conn){ // 끊긴 줄 알았던 연결로 다시 소식이 오면 그 연결을 다시 써요
+          if(!conn.open||conns.get(conn.peer)!==o||closed)return;
+          clearTimeout(o.lostT);o.lostT=null;o.conn=conn;
+          if(o.on)deliver([],[],[conn.peer]);
+        }
+        o.seen=Date.now();
+        if(d.t==='hb')return;
         if(d.t==='bye'){drop(conn.peer);return}
         if(d.t!=='pres'||!d.p||typeof d.p!=='object')return;
         if(d.full)o.p={};merge(o.p,d.p);seen();
@@ -917,7 +931,8 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
         deliver([],[],[conn.peer]);
         clearTimeout(o.lostT);o.lostT=setTimeout(()=>{if(!o.conn)drop(conn.peer)},GRACE);
       };
-      conn.on('close',lost);conn.on('error',lost);
+      conn.on('close',lost);conn.on('error',()=>{if(!conn.open)lost()});
+      o.lose=()=>{if(o.conn===conn){try{conn.close()}catch(e){}lost()}};
     };
     const attach=p=>{
       peer=p;
@@ -949,13 +964,19 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
     }
     watch=()=>{if(closed||reopening||!peer)return;if(peer.destroyed)reopen();else if(peer.disconnected){status('reconnecting');try{peer.reconnect()}catch(e){}}};
     tick=setInterval(watch,4000);
+    hbT=setInterval(()=>{
+      if(closed)return;
+      const now=Date.now();
+      for(const o of conns.values())if(o.conn&&o.conn.open&&o.seen&&now-o.seen>SILENT_MS&&o.lose)o.lose();
+      broadcast(); // 바뀐 게 없어도 2초마다 화면 상태를 다시 보내요
+    },HB_MS);
     deliver([hostId],[],[]);
     return{presence:p=>{merge(mine,p);broadcast()},peers:list,leave:()=>{stopAll();for(const o of conns.values()){if(o.conn&&o.conn.open){try{o.conn.send({t:'bye'})}catch(e){}}}setTimeout(()=>{try{peer&&peer.destroy()}catch(e){}},150)}};
   }
 
   // 친구(참가자)
   const myPid=opts.pid||null;
-  let peer=null,conn=null,connAt=0,roster=[],joined=false,lostAt=0,timer=null,joinRes,joinRej,reopening=false;
+  let peer=null,conn=null,connAt=0,roster=[],joined=false,lostAt=0,timer=null,joinRes,joinRej,reopening=false,heardAt=0;
   const peersNow=()=>roster.map(x=>asPeer(x.id,x.p,x.id===peer?.id));
   const joinP=new Promise((a,b)=>{joinRes=a;joinRej=b});
   const schedule=ms=>{clearTimeout(timer);if(!closed)timer=setTimeout(step,ms||2500)};
@@ -969,12 +990,13 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
   const connect=()=>{
     const cn=peer.connect(hostId,{reliable:true,serialization:'json'});conn=cn;connAt=Date.now();
     cn.on('open',()=>{
-      if(conn!==cn)return;lostAt=0;status('ok');
+      if(conn!==cn)return;lostAt=0;heardAt=Date.now();status('ok');
       try{cn.send({t:'pres',p:mine,full:1})}catch(e){}
       if(!joined){joined=true;joinRes()}
     });
     cn.on('data',d=>{
       if(conn!==cn||!d)return;
+      heardAt=Date.now();
       if(d.t==='bye'){conn=null;try{cn.close()}catch(e){}roster=roster.filter(x=>x.id===peer?.id);giveUpNow();return}
       if(d.t!=='roster'||!Array.isArray(d.l))return;
       const prev=new Map(roster.map(x=>[x.id,JSON.stringify(x.p)]));
@@ -983,7 +1005,8 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
       onChange({peers,joined:peers.filter(p=>!prev.has(p.peer)),updated:peers.filter(p=>prev.has(p.peer)&&prev.get(p.peer)!==JSON.stringify(p.presence)),left:[...prev.keys()].filter(id=>!now.has(id)).map(id=>asPeer(id,{},false))});
     });
     const lost=()=>{if(conn!==cn||closed)return;conn=null;markLost();schedule(1500)};
-    cn.on('close',lost);cn.on('error',lost);
+    cn.on('close',lost);cn.on('error',()=>{if(!cn.open)lost()});
+    cn.lose=()=>{if(conn===cn){try{cn.close()}catch(e){}lost()}};
   };
   const giveUpNow=()=>{lostAt=1;giveUp();stopAll()};
   const attach=p=>{
@@ -1017,6 +1040,11 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
   try{attach(await newPeer())}catch(e){stopAll();throw new Error('연결 서버에 닿지 않아요. 인터넷 연결을 확인하고 다시 해주세요.')}
   watch=()=>{if(!closed&&!(conn&&conn.open))step()};
   tick=setInterval(()=>{if(!closed&&lostAt&&!(conn&&conn.open))step()},5000);
+  hbT=setInterval(()=>{
+    if(closed||!conn||!conn.open)return;
+    if(heardAt&&Date.now()-heardAt>SILENT_MS){conn.lose&&conn.lose();return} // 열려 있는데 소식이 끊김 → 다시 붙기
+    try{conn.send({t:'hb'})}catch(e){}
+  },HB_MS);
   step();
   await joinP;
   return{presence:p=>{merge(mine,p);if(conn&&conn.open){try{conn.send({t:'pres',p})}catch(e){}}},peers:peersNow,
@@ -1160,7 +1188,7 @@ function handleAct(p){
   if(!game||p.sameTab)return;
   const a=p.presence&&p.presence.act;if(!a||typeof a!=='object')return;
   const id=Number(a.id)||0;if(id<=(lastAct[p.peer]||0))return;lastAct[p.peer]=id;
-  if(a.k==='flip')game.flip(p.peer);
+  if(a.k==='flip'){if(a.tn!=null&&Number(a.tn)!==game.tn)return;game.flip(p.peer)} // 그 차례에 누른 것만 인정
   else if(a.k==='bell')game.bell(p.peer,Number(a.s)||0,Number(a.r)||9999);
 }
 function sendAct(k,extra){actId=Math.max(actId+1,Date.now());if(net)net.presence({act:Object.assign({k,id:actId},extra||{})})}
