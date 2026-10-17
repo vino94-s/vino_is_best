@@ -1,10 +1,10 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017e';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017e';
-import { botMove, botGoStop } from './bot.js?v=20261017e';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017e';
-import { createStore, applyResult } from './store.js?v=20261017e';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017e';
+import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017f';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017f';
+import { botMove, botGoStop } from './bot.js?v=20261017f';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017f';
+import { createStore, applyResult } from './store.js?v=20261017f';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017f';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -310,8 +310,13 @@ function showIssuedCode(u, onGo) {
       h('button', { class: 'btn red grow primary', onclick: () => { close(); onGo(); } }, '바로 입장')),
   ], { dismiss: false });
 }
-function adminDoor() {
-  if (!ownerDevice()) return null;
+function leaveAdmin() {
+  if (S.room && S.room.data && !S.game) return renderRoom(S.room.data);
+  if (S.game) return show('scr-game');
+  return S.me ? renderLobby() : renderLogin();
+}
+function adminDoor(always = false) {
+  if (!always && !ownerDevice()) return null;
   return h('button', { class: 'btn ghost small admin-door', style: 'color:var(--on-felt)', onclick: openAdminLogin }, '어드민계정 로그인');
 }
 async function doLogin(code) {
@@ -489,6 +494,7 @@ function onRoom(d) {
   if (!d) { toast('방이 없어졌어요'); renderLobby(); return; }
   if (!d.players || !d.players[S.me.pid]) { toast('방에서 나왔어요'); renderLobby(); return; }
   S.room.data = d;
+  const adminOpen = !$('#scr-admin').classList.contains('hidden');
   const inGame = d.game && d.game.json && (d.status === 'playing' || d.status === 'ended');
   if (inGame) {
     const st = JSON.parse(d.game.json);
@@ -504,6 +510,7 @@ function onRoom(d) {
     }
   }
   if (S.game) { S.game.destroy(); S.game = null; }
+  if (adminOpen) return; // 어드민 화면을 보는 중이면 대기실로 끌고 가지 않음
   renderRoom(d);
 }
 function renderRoom(d) {
@@ -541,6 +548,7 @@ function renderRoom(d) {
           ? h('button', { class: 'btn red grow', disabled: onlineCount < 2, onclick: () => hostStart(d) }, onlineCount < 2 ? '한 명 더 기다리는 중' : `${onlineCount}인으로 시작`)
           : h('span', { class: 'grow muted', style: 'text-align:right' }, '방장이 시작하길 기다려요'))),
     S.room.chat.el,
+    h('div', { class: 'row', style: 'justify-content:center' }, adminDoor(true)),
   ));
   show('scr-room');
   S.room.chat.scroll();
@@ -1061,8 +1069,8 @@ async function renderAdmin(filter = '') {
   const allAmt = h('input', { class: 'field', type: 'number', min: 1, step: 1000, placeholder: '전원 충전 금액' });
   el.replaceChildren(h('div', { class: 'wrap' },
     h('div', { class: 'row' }, h('h2', { class: 'grow', style: 'margin:0;font-family:var(--f-stamp);font-weight:400;font-size:30px' }, '어드민'),
-      h('button', { class: 'btn ghost small', style: 'color:var(--on-felt)', onclick: () => (S.me ? renderLobby() : renderLogin()) }, '돌아가기'),
-      h('button', { class: 'btn ghost small', style: 'color:var(--on-felt)', onclick: () => { S.admin = false; sessionStorage.removeItem('smj_admin'); S.me ? renderLobby() : renderLogin(); } }, '어드민 로그아웃')),
+      h('button', { class: 'btn ghost small', style: 'color:var(--on-felt)', onclick: leaveAdmin }, '돌아가기'),
+      h('button', { class: 'btn ghost small', style: 'color:var(--on-felt)', onclick: () => { S.admin = false; sessionStorage.removeItem('smj_admin'); leaveAdmin(); } }, '어드민 로그아웃')),
     S.store.mode === 'local' ? h('p', { class: 'mode-note' }, 'Firebase 미연결: 이 브라우저의 플레이어만 관리돼요.') : null,
     h('details', { class: 'panel' }, h('summary', { style: 'font-weight:700;cursor:pointer' }, '새 플레이어 코드 발급'),
       h('div', { class: 'stack', style: 'margin-top:10px' }, newNick, charPicker(newChar, v => { newChar = v; }),
@@ -1086,7 +1094,7 @@ async function renderAdmin(filter = '') {
           },
         }, '충전'))),
     h('h3', { class: 'section-title' }, '플레이어'), search, listEl,
-    h('button', { class: 'btn ghost small', style: 'color:var(--on-felt);justify-self:center', onclick: () => { ls.del('owner'); S.admin = false; sessionStorage.removeItem('smj_admin'); toast('이 기기에서 어드민 버튼을 숨겼어요'); S.me ? renderLobby() : renderLogin(); } }, '이 기기에서 어드민 버튼 숨기기'),
+    h('button', { class: 'btn ghost small', style: 'color:var(--on-felt);justify-self:center', onclick: () => { ls.del('owner'); S.admin = false; sessionStorage.removeItem('smj_admin'); toast('이 기기에서 어드민 버튼을 숨겼어요'); leaveAdmin(); } }, '이 기기에서 어드민 버튼 숨기기'),
   ));
   show('scr-admin');
   let users = [];
