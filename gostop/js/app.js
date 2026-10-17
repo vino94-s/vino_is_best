@@ -1,10 +1,10 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017f';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017f';
-import { botMove, botGoStop } from './bot.js?v=20261017f';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017f';
-import { createStore, applyResult } from './store.js?v=20261017f';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017f';
+import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017g';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017g';
+import { botMove, botGoStop } from './bot.js?v=20261017g';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017g';
+import { createStore, applyResult } from './store.js?v=20261017g';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017g';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -296,7 +296,7 @@ function renderLogin(errMsg = '') {
     }, h('h2', {}, '처음 왔어요'),
     h('p', { class: 'muted', style: 'margin:0' }, `닉네임을 정하면 나만의 입장 코드를 드려요. 가입하면 ${won(DAILY_CHARGE)}, 그 뒤로 매일 ${won(DAILY_CHARGE)}씩 충전돼요.`),
     nickIn, h('span', { class: 'label' }, '내 캐릭터'), charPicker(char, v => { char = v; }), regBtn, err2),
-    adminDoor(),
+    adminDoor(true),
   ));
   show('scr-login');
 }
@@ -372,7 +372,7 @@ function renderLobby() {
     online ? S.lobbyChat.el : null,
     rulesPanel(),
     h('div', { class: 'row', style: 'justify-content:center' },
-      adminDoor(),
+      adminDoor(true),
       h('button', { class: 'btn ghost small', style: 'color:var(--on-felt)', onclick: logout }, '로그아웃')),
     modeNote(),
   ));

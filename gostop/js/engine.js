@@ -1,5 +1,5 @@
 // 고스톱 규칙 엔진 (2~4인). 상태는 JSON 직렬화 가능한 순수 객체.
-import { CARDS, BASE_IDS, BONUS_IDS, DAN_SETS, GODORI } from './cards.js?v=20261017f';
+import { CARDS, BASE_IDS, BONUS_IDS, DAN_SETS, GODORI } from './cards.js?v=20261017g';
 
 const C = id => CARDS[id];
 export const clone = o => JSON.parse(JSON.stringify(o));
