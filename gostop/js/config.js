@@ -3,11 +3,11 @@
 // 1) Firebase Realtime Database 설정 (README의 "Firebase 연결" 참고)
 //    비워 두면 온라인 대결 없이 이 브라우저에만 저장되는 모드로 동작해요.
 export const FIREBASE_CONFIG = {
-  apiKey: '',
-  authDomain: '',
-  databaseURL: '',
-  projectId: '',
-  appId: '',
+  apiKey: 'AIzaSyCMl9Ukya3XqIV0BHjKTx1mryvUru0kYXA',
+  authDomain: 'gostop-7c4a2.firebaseapp.com',
+  databaseURL: 'https://gostop-7c4a2-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'gostop-7c4a2',
+  appId: '1:686060440785:web:d5f6445e4bcd2a481b89f0',
 };
 
 // 2) 게임머니
