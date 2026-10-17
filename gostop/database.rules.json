@@ -1,0 +1,43 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      ".read": true,
+      "$code": {
+        ".write": true,
+        ".validate": "!newData.exists() || newData.hasChildren(['code', 'nick', 'money'])",
+        "money": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "nick": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 10" }
+      }
+    },
+    "nicks": {
+      ".read": true,
+      "$k": { ".write": true }
+    },
+    "rooms": {
+      "$room": {
+        ".read": true,
+        ".write": true,
+        "chat": {
+          "$id": { ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 120" }
+        }
+      }
+    },
+    "matches": {
+      ".read": true,
+      ".indexOn": ["ts"],
+      "$id": { ".write": "!data.exists()" }
+    },
+    "lobbyChat": {
+      ".read": true,
+      "$id": {
+        ".write": "!data.exists()",
+        ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 120"
+      }
+    },
+    "adminLog": {
+      "$id": { ".write": "!data.exists()" }
+    }
+  }
+}

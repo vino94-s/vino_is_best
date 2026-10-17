@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#55602F">
+<title>손모가지 조심!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script>
+// 카톡·라인 인앱 브라우저는 채팅방에 다녀오면 게임이 닫혀서, 휴대폰 기본 브라우저로 옮겨 열어요.
+(function () {
+  var ua = navigator.userAgent || '';
+  if (/KAKAOTALK/i.test(ua)) location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+  else if (/\bLine\//.test(ua) && !/openExternalBrowser=1/.test(location.search)) location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
+})();
+</script>
+</head>
+<body>
+<main id="app">
+  <section id="scr-boot" class="screen wrap"><div class="title-stamp">손모가지<br>조심!</div><p class="mode-note">판 까는 중…</p></section>
+  <section id="scr-login" class="screen hidden"></section>
+  <section id="scr-lobby" class="screen hidden"></section>
+  <section id="scr-room" class="screen hidden"></section>
+  <section id="scr-game" class="hidden"></section>
+  <section id="scr-rank" class="screen hidden"></section>
+  <section id="scr-admin" class="screen hidden"></section>
+</main>
+<div id="modal-root"></div>
+<div id="taunt-root" class="taunt-layer hidden" aria-live="polite"></div>
+<div id="toast-root"></div>
+<noscript>자바스크립트를 켜야 게임을 할 수 있어요.</noscript>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
