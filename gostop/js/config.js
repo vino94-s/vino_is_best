@@ -22,7 +22,7 @@ export const ADMIN = {
 };
 
 // 4) 개인코드 기록용 구글 시트 Apps Script 웹 앱 주소 (비워 두면 기록 안 함)
-export const SHEET_API = '';
+export const SHEET_API = 'https://script.google.com/macros/s/AKfycbzVezMHgK0iYp5gQXgqPTSn8sm5_DP_E_Z75kWjLsO2ye1isvzGm_3F5A352ztiRm3P/exec';
 
 // 5) 온라인 대결에서 차례가 오래 멈추면 자동으로 대신 내는 시간(초)
 export const TURN_TIMEOUT_SEC = 40;

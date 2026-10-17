@@ -1,10 +1,10 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017c';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017c';
-import { botMove, botGoStop } from './bot.js?v=20261017c';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017c';
-import { createStore, applyResult } from './store.js?v=20261017c';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017c';
+import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017d';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017d';
+import { botMove, botGoStop } from './bot.js?v=20261017d';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017d';
+import { createStore, applyResult } from './store.js?v=20261017d';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017d';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
