@@ -2,13 +2,25 @@
   "rules": {
     ".read": false,
     ".write": false,
-    "users": {
-      ".read": true,
+    "accounts": {
       "$code": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "players": {
+      ".read": true,
+      "$pid": {
         ".write": true,
-        ".validate": "!newData.exists() || newData.hasChildren(['code', 'nick', 'money'])",
+        ".validate": "!newData.exists() || newData.hasChildren(['pid', 'nick', 'money'])",
         "money": { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "nick": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 10" }
+      }
+    },
+    "users": {
+      "$code": {
+        ".read": true,
+        ".write": true
       }
     },
     "nicks": {
@@ -36,7 +48,7 @@
         ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 120"
       }
     },
-    "adminLog": {
+    "oplog": {
       "$id": { ".write": "!data.exists()" }
     }
   }

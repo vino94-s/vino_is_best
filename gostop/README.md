@@ -39,25 +39,11 @@
 - 한 사람이 40초 동안 안 내면 자동으로 내져요 (고/스톱은 스톱). 연결이 끊겨도 게임은 계속돼요.
 - 카카오톡·라인에서 링크를 열면 휴대폰 기본 브라우저로 옮겨서 열어요.
 
-## 게임머니와 어드민
+## 게임머니
 
 - 가입하면 50,000원. 그 뒤로 **한국 시간 하루 한 번** 첫 로그인 때 50,000원이 더 들어와요.
-- 돈을 다 잃으면 어드민이 얼마든지 충전해 줄 수 있어요.
-- 어드민 버튼은 처음엔 아무에게도 안 보여요. `js/config.js`의 `revealKey`를 붙인 주소로 **한 번** 들어오면 그 기기에서만 보여요.
-
-  ```
-  https://<내 깃허브 주소>/gostop/?owner=<revealKey>
-  ```
-
-- 버튼을 누르고 어드민 비밀번호를 넣으면 플레이어 목록, 코드 발급, 개별·전원 충전(금액 제한 없음), 삭제를 할 수 있어요.
-
-### 어드민 비밀번호 바꾸기
-
-`config.js`에는 비밀번호가 아니라 SHA-256 해시만 들어가요. 브라우저 개발자 도구 콘솔에서 아래를 실행해 나온 값을 `passwordSha256`에 넣으세요.
-
-```js
-[...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('새비밀번호')))].map(b=>b.toString(16).padStart(2,'0')).join('')
-```
+- 돈을 다 잃으면 다음 날 충전을 기다려요.
+- 입장 코드를 잃어버리면 운영자에게 물어보세요.
 
 ## 랭킹
 
@@ -75,7 +61,7 @@
 4. **프로젝트 설정(톱니바퀴) → 내 앱 → 웹(`</>`) 앱 추가**. 나오는 `firebaseConfig`의 `apiKey`, `authDomain`, `databaseURL`, `projectId`, `appId`를 `js/config.js`에 채우기
 5. 커밋하면 GitHub Pages에 반영돼요
 
-Firebase의 `apiKey`는 공개돼도 되는 값이에요. 대신 이 게임은 서버 없이 브라우저가 DB에 직접 쓰기 때문에, 개발자 도구를 다룰 줄 아는 사람은 게임머니나 덱을 들여다보거나 고칠 수 있어요. 친구끼리 노는 용도로 쓰세요.
+Firebase의 `apiKey`는 공개돼도 되는 값이에요. 입장 코드는 목록으로 조회할 수 없게 저장돼요. 다만 서버 없이 브라우저가 DB에 직접 쓰는 구조라, 친구끼리 노는 용도로 쓰세요.
 
 ## 파일
 
@@ -87,6 +73,7 @@ Firebase의 `apiKey`는 공개돼도 되는 값이에요. 대신 이 게임은 �
 - `js/characters.js` 캐릭터 12종과 상황별 조롱 대사
 - `js/store.js` 저장소 (Firebase / 브라우저)
 - `js/app.js` 화면과 게임 진행
-- `js/config.js` 설정 (Firebase, 게임머니, 어드민)
+- `js/config.js` 설정 (Firebase, 게임머니)
 - `database.rules.json` Firebase 보안 규칙
 - `assets/chars/` 캐릭터 그림
+- `thumb.jpg` 썸네일 (링크 미리보기·로그인 화면)

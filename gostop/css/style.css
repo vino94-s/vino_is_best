@@ -82,6 +82,7 @@ img { display: block; }
   text-align: center;
 }
 .title-stamp small { display: block; font-family: var(--f-body); font-weight: 700; font-size: 14px; color: var(--ink); letter-spacing: .02em; }
+.poster { width: 100%; max-width: 440px; justify-self: center; aspect-ratio: 1; border-radius: 16px; border: 5px solid var(--cream); box-shadow: 0 6px 0 var(--felt-deep); transform: rotate(-1.5deg); }
 .mode-note { text-align: center; font-size: 13px; color: var(--on-felt-muted); margin: 0; }
 .admin-door { justify-self: center; }
 

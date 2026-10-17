@@ -4,7 +4,7 @@ import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from
 import { botMove, botGoStop } from './bot.js';
 import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js';
 import { createStore, applyResult } from './store.js';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE } from './config.js';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -41,6 +41,20 @@ async function sha256(text) {
 async function copy(text, msg = '복사했어요') {
   try { await navigator.clipboard.writeText(text); toast(msg); }
   catch { prompt('복사해서 쓰세요', text); }
+}
+
+// 닉네임별 개인코드를 운영 시트에 기록 (Apps Script 웹 앱)
+function logCodeToSheet(u, code) {
+  if (!SHEET_API || !code) return;
+  try {
+    fetch(SHEET_API, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ code, nick: u.nick, char: charById(u.char).name }) }).catch(() => {});
+  } catch { /* 무시 */ }
+}
+async function reissueCode(u) {
+  if (!(await confirmModal(`${u.nick}에게 새 코드를 줄까요?`, '코드를 잃어버렸을 때 써요. 예전 코드도 그대로 쓸 수 있어요.', '발급'))) return;
+  try { const code = await S.store.issueCode(u.pid); logCodeToSheet(u, code); showIssuedCode({ ...u, code }, () => {}); }
+  catch (x) { toast(x.message); }
 }
 
 // ───────────────── 전역 상태 ─────────────────
@@ -257,7 +271,7 @@ function renderLogin(errMsg = '') {
   const regBtn = h('button', { class: 'btn', type: 'submit' }, '내 코드 받기');
 
   $('#scr-login').replaceChildren(h('div', { class: 'wrap' },
-    titleStamp(), modeNote(),
+    h('img', { class: 'poster', src: 'thumb.jpg', alt: '손모가지 조심! 12명의 캐릭터와 함께하는 스릴 만점 고스톱' }), modeNote(),
     h('form', {
       class: 'panel stack', onsubmit: async e => {
         e.preventDefault(); loginBtn.disabled = true;
@@ -274,6 +288,7 @@ function renderLogin(errMsg = '') {
         regBtn.disabled = true;
         try {
           const u = await S.store.register(nick, char);
+          logCodeToSheet(u, u.code);
           showIssuedCode(u, () => doLogin(u.code));
         } catch (x) { err2.textContent = x.message; }
         regBtn.disabled = false;
@@ -289,7 +304,7 @@ function showIssuedCode(u, onGo) {
   const close = openModal([
     h('h3', {}, `${u.nick}님의 입장 코드`),
     h('div', { class: 'room-code' }, u.code),
-    h('p', { class: 'muted', style: 'margin:0' }, '다음에 들어올 때 이 코드만 있으면 돼요. 꼭 저장해 두세요. 잃어버리면 어드민에게 물어보세요.'),
+    h('p', { class: 'muted', style: 'margin:0' }, '다음에 들어올 때 이 코드만 있으면 돼요. 꼭 저장해 두세요. 잃어버리면 운영자에게 물어보세요.'),
     h('div', { class: 'row' },
       h('button', { class: 'btn ghost grow', onclick: () => copy(u.code, '코드를 복사했어요') }, '코드 복사'),
       h('button', { class: 'btn red grow primary', onclick: () => { close(); onGo(); } }, '바로 입장')),
@@ -305,7 +320,8 @@ async function doLogin(code) {
   S.me = res.user;
   ls.set('code', S.me.code);
   S.unsubMe?.();
-  S.unsubMe = S.store.watchUser(S.me.code, u => { if (u) { S.me = u; refreshWallet(); } });
+  S.unsubMe = S.store.watchUser(S.me.pid, u => { if (u && S.me) { S.me = { ...u, code: S.me.code }; refreshWallet(); } });
+  if (res.migrated) logCodeToSheet(S.me, S.me.code);
   if (res.recharged) toastLater(`오늘의 ${won(DAILY_CHARGE)} 충전 완료!`);
   renderLobby();
   if (S.pendingRoom) {
@@ -342,7 +358,7 @@ function renderLobby() {
         h('span', {}, '내 코드 ', h('button', { class: 'icon-btn', style: 'padding:1px 6px;font-size:12px', onclick: () => copy(me.code, '내 코드를 복사했어요') }, me.code))),
       h('div', { class: 'wallet' }, h('span', { class: 'money', 'data-wallet': '' }, won(me.money)), h('small', {}, '보유 자산'))),
     h('div', { id: 'broke', class: `broke ${me.money > 0 ? 'hidden' : ''}` },
-      h('b', {}, '게임머니를 다 잃었어요'), `내일 0시에 ${won(DAILY_CHARGE)}이 충전돼요. 급하면 어드민에게 충전을 부탁하세요.`),
+      h('b', {}, '게임머니를 다 잃었어요'), `내일 0시에 ${won(DAILY_CHARGE)}이 충전돼요.`),
     h('div', { class: 'play-grid' },
       h('button', { class: 'btn red wide', onclick: openBotSetup }, '봇이랑 치기'),
       h('button', { class: 'btn gold', onclick: openCreateRoom }, '방 만들기'),
@@ -372,7 +388,7 @@ function changeMyChar() {
   const close = openModal([
     h('h3', {}, '내 캐릭터'),
     charPicker(pick, v => { pick = v; }),
-    h('button', { class: 'btn red', onclick: async () => { await S.store.setChar(S.me.code, pick); S.me.char = pick; close(); renderLobby(); } }, '이걸로 할래요'),
+    h('button', { class: 'btn red', onclick: async () => { await S.store.setChar(S.me.pid, pick); S.me.char = pick; close(); renderLobby(); } }, '이걸로 할래요'),
   ]);
 }
 
@@ -382,7 +398,7 @@ const ppSeg = (o) => seg(POINT_VALUES.map(v => ({ v, label: `${v}원` })), o.ppo
 const bonusSeg = (o) => seg([0, 1, 2].map(v => ({ v, label: `${v}장` })), o.bonus, v => { o.bonus = v; });
 function needMoney() {
   if ((S.me.money || 0) > 0) return true;
-  toast('게임머니가 없어요. 내일 충전되거나 어드민이 충전해 줘야 해요');
+  toast(`게임머니가 없어요. 내일 0시에 ${won(DAILY_CHARGE)}이 충전돼요`);
   return false;
 }
 function openBotSetup() {
@@ -471,12 +487,12 @@ async function leaveRoom() {
 function onRoom(d) {
   if (!S.room) return;
   if (!d) { toast('방이 없어졌어요'); renderLobby(); return; }
-  if (!d.players || !d.players[S.me.code]) { toast('방에서 나왔어요'); renderLobby(); return; }
+  if (!d.players || !d.players[S.me.pid]) { toast('방에서 나왔어요'); renderLobby(); return; }
   S.room.data = d;
   const inGame = d.game && d.game.json && (d.status === 'playing' || d.status === 'ended');
   if (inGame) {
     const st = JSON.parse(d.game.json);
-    const mySeat = st.seats.findIndex(p => p.id === S.me.code);
+    const mySeat = st.seats.findIndex(p => p.id === S.me.pid);
     if (mySeat >= 0) {
       if (!S.game || S.game.gid !== st.gid) {
         S.game?.destroy();
@@ -492,7 +508,7 @@ function onRoom(d) {
 }
 function renderRoom(d) {
   const code = S.room.code;
-  const isHost = d.host === S.me.code;
+  const isHost = d.host === S.me.pid;
   const players = Object.entries(d.players).sort((a, b) => a[1].joinedAt - b[1].joinedAt);
   const onlineCount = players.filter(([, p]) => p.online !== false).length;
   const link = location.origin + location.pathname + '?room=' + code;
@@ -502,7 +518,7 @@ function renderRoom(d) {
     const [uc, p] = e;
     return h('div', { class: 'slot' }, avatar(p.char),
       h('div', { class: 'nm grow' }, p.nick, h('small', {}, `${charById(p.char).name}${uc === d.host ? ' · 방장' : ''}`, p.online === false ? h('span', { class: 'off' }, ' · 연결 끊김') : null)),
-      isHost && uc !== S.me.code ? h('button', { class: 'btn ghost small', 'aria-label': `${p.nick} 내보내기`, onclick: () => S.store.kick(code, uc) }, '내보내기') : null);
+      isHost && uc !== S.me.pid ? h('button', { class: 'btn ghost small', 'aria-label': `${p.nick} 내보내기`, onclick: () => S.store.kick(code, uc) }, '내보내기') : null);
   });
   const ppoint = d.ppoint, bonus = d.bonus;
   $('#scr-room').replaceChildren(h('div', { class: 'wrap' },
@@ -530,11 +546,11 @@ function renderRoom(d) {
   S.room.chat.scroll();
 }
 function roomCharChange(d) {
-  const taken = Object.entries(d.players).filter(([k]) => k !== S.me.code).map(([, p]) => p.char);
-  let pick = d.players[S.me.code].char;
+  const taken = Object.entries(d.players).filter(([k]) => k !== S.me.pid).map(([, p]) => p.char);
+  let pick = d.players[S.me.pid].char;
   const close = openModal([
     h('h3', {}, '캐릭터 바꾸기'), charPicker(pick, v => { pick = v; }, taken),
-    h('button', { class: 'btn red', onclick: async () => { try { await S.store.changeChar(S.room.code, S.me.code, pick); close(); } catch (x) { toast(x.message); } } }, '바꾸기'),
+    h('button', { class: 'btn red', onclick: async () => { try { await S.store.changeChar(S.room.code, S.me.pid, pick); close(); } catch (x) { toast(x.message); } } }, '바꾸기'),
   ]);
 }
 async function hostStart(d, prev = null) {
@@ -725,7 +741,7 @@ class Game {
       let delta = 0;
       if (r.winner === me) delta = r.pays.reduce((a, b) => a + b, 0) * s.ppoint;
       else if (r.winner != null) delta = -r.pays[me] * s.ppoint;
-      const applied = await applyResult(S.store, S.me.code, { mode: 'bot', win: r.winner === me, delta });
+      const applied = await applyResult(S.store, S.me.pid, { mode: 'bot', win: r.winner === me, delta });
       const deltas = s.seats.map((_, i) => (i === me ? applied : r.winner == null ? 0 : i === r.winner ? r.pays.reduce((a, b) => a + b, 0) * s.ppoint : -r.pays[i] * s.ppoint));
       this.showResult(deltas);
     } else {
@@ -780,7 +796,7 @@ class Game {
       if (r.samppeok) lines.push('3뻑');
       lines.push(...r.mults);
     }
-    const isHost = this.mode === 'online' && this.room?.host === S.me.code;
+    const isHost = this.mode === 'online' && this.room?.host === S.me.pid;
     const close = openModal([
       h('div', { class: 'result-head' },
         h('div', { class: 'stamp' }, w == null ? '나가리!' : w === this.mySeat ? '내가 이겼다!' : `${s.seats[w].name} 승!`),
@@ -818,7 +834,7 @@ class Game {
         const pen = s.threshold * s.ppoint * (s.mult || 1);
         const ok = await confirmModal('판을 접을까요?', `지금 나가면 기본 점수(${s.threshold}점)만큼 ${won(pen)}을 잃고 패배로 기록돼요.`, '나가기', '계속하기');
         if (!ok) return;
-        await applyResult(S.store, S.me.code, { mode: 'bot', win: false, delta: -pen });
+        await applyResult(S.store, S.me.pid, { mode: 'bot', win: false, delta: -pen });
       }
       this.destroy(); S.game = null; renderLobby();
     } else {
@@ -957,7 +973,7 @@ class Game {
 
 function startBotGame(o) {
   const others = CHARACTERS.filter(c => c.id !== o.char).sort(() => Math.random() - .5).slice(0, o.bots);
-  const seats = [{ id: S.me.code, name: S.me.nick, char: o.char, isBot: false },
+  const seats = [{ id: S.me.pid, name: S.me.nick, char: o.char, isBot: false },
     ...others.map(c => ({ id: 'bot-' + c.id, name: c.name, char: c.id, isBot: true, level: o.level }))];
   const st = newGame({ seats, ppoint: o.ppoint, bonusCount: o.bonus, firstSeat: Math.floor(Math.random() * seats.length) });
   st.gid = rid();
@@ -993,7 +1009,7 @@ async function renderRank(tab = 'bot') {
   let users = [];
   try { users = await S.store.listUsers(); } catch { body.replaceChildren(h('p', { class: 'err' }, '랭킹을 불러오지 못했어요')); return; }
   const st = u => u.stats || {};
-  const item = (u, i, main, sub) => h('div', { class: `rank-item ${S.me && u.code === S.me.code ? 'me' : ''}` },
+  const item = (u, i, main, sub) => h('div', { class: `rank-item ${S.me && u.pid === S.me.pid ? 'me' : ''}` },
     h('span', { class: 'no' }, i + 1), avatar(u.char),
     h('div', { class: 'grow' }, h('b', {}, u.nick), h('small', {}, sub)),
     h('span', { class: 'val' }, main));
@@ -1039,7 +1055,7 @@ async function renderAdmin(filter = '') {
   if (!S.admin) return openAdminLogin();
   const el = $('#scr-admin');
   const listEl = h('div', { class: 'stack' }, h('p', { class: 'on-felt-muted' }, '불러오는 중…'));
-  const search = h('input', { class: 'field', placeholder: '닉네임이나 코드로 찾기', value: filter, oninput: () => draw() });
+  const search = h('input', { class: 'field', placeholder: '닉네임으로 찾기', value: filter, oninput: () => draw() });
   const newNick = h('input', { class: 'field', maxlength: 10, placeholder: '새 플레이어 닉네임' });
   let newChar = CHARACTERS[0].id;
   const allAmt = h('input', { class: 'field', type: 'number', min: 1, step: 1000, placeholder: '전원 충전 금액' });
@@ -1052,7 +1068,7 @@ async function renderAdmin(filter = '') {
       h('div', { class: 'stack', style: 'margin-top:10px' }, newNick, charPicker(newChar, v => { newChar = v; }),
         h('button', {
           class: 'btn red', onclick: async () => {
-            try { const u = await S.store.register(newNick.value.trim(), newChar); showIssuedCode(u, () => renderAdmin()); }
+            try { const u = await S.store.register(newNick.value.trim(), newChar); logCodeToSheet(u, u.code); showIssuedCode(u, () => renderAdmin()); }
             catch (x) { toast(x.message); }
           },
         }, '코드 발급'))),
@@ -1064,7 +1080,7 @@ async function renderAdmin(filter = '') {
             if (!(amt > 0)) return toast('충전 금액을 넣어 주세요');
             if (!(await confirmModal('전원에게 충전할까요?', `모든 플레이어에게 ${won(amt)}씩 넣어요.`, '충전'))) return;
             const us = await S.store.listUsers();
-            for (const u of us) await S.store.updateUser(u.code, x => { x.money = (x.money || 0) + amt; return x; });
+            for (const u of us) await S.store.updateUser(u.pid, x => { x.money = (x.money || 0) + amt; return x; });
             await S.store.logCharge({ code: '*', amount: amt, ts: Date.now() });
             toast(`${us.length}명에게 ${won(amt)}씩 충전했어요`); renderAdmin(search.value);
           },
@@ -1078,7 +1094,7 @@ async function renderAdmin(filter = '') {
   users.sort((a, b) => (a.money || 0) - (b.money || 0));
   function draw() {
     const q = search.value.trim().toLowerCase();
-    const list = users.filter(u => !q || u.nick.toLowerCase().includes(q) || u.code.toLowerCase().includes(q));
+    const list = users.filter(u => !q || u.nick.toLowerCase().includes(q));
     listEl.replaceChildren(...(list.length ? list.map(userRow) : [h('p', { class: 'on-felt-muted' }, '플레이어가 없어요')]));
   }
   function userRow(u) {
@@ -1087,20 +1103,20 @@ async function renderAdmin(filter = '') {
     const charge = async v => {
       const n = Math.floor(Number(v));
       if (!(n > 0)) return toast('충전 금액을 넣어 주세요');
-      const nu = await S.store.updateUser(u.code, x => { x.money = (x.money || 0) + n; return x; });
-      await S.store.logCharge({ code: u.code, nick: u.nick, amount: n, ts: Date.now() });
+      const nu = await S.store.updateUser(u.pid, x => { x.money = (x.money || 0) + n; return x; });
+      await S.store.logCharge({ pid: u.pid, nick: u.nick, amount: n, ts: Date.now() });
       u.money = nu?.money ?? u.money + n; moneyEl.textContent = won(u.money); amt.value = '';
       toast(`${u.nick}에게 ${won(n)} 충전`);
     };
     return h('div', { class: 'admin-user' },
-      h('div', { class: 'row' }, avatar(u.char), h('div', { class: 'grow' }, h('b', {}, u.nick), h('div', { class: 'muted', style: 'font-size:13px' }, `코드 ${u.code} · 마지막 충전 ${u.lastDaily || '-'}`)), moneyEl),
+      h('div', { class: 'row' }, avatar(u.char), h('div', { class: 'grow' }, h('b', {}, u.nick), h('div', { class: 'muted', style: 'font-size:13px' }, `가입 ${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ko-KR') : '-'} · 최근 접속 ${u.lastDaily || '-'}`)), moneyEl),
       h('div', { class: 'row' }, [10000, 50000, 100000, 1000000].map(v => h('button', { class: 'btn ghost small', onclick: () => charge(v) }, `+${v >= 10000 ? v / 10000 + '만' : v}`))),
       h('div', { class: 'row' }, amt, h('button', { class: 'btn red small', onclick: () => charge(amt.value) }, '충전'),
-        h('button', { class: 'btn ghost small', onclick: () => copy(u.code, '코드를 복사했어요') }, '코드 복사'),
+        h('button', { class: 'btn ghost small', onclick: () => reissueCode(u) }, '새 코드 발급'),
         h('button', {
           class: 'btn ghost small', onclick: async () => {
             if (!(await confirmModal(`${u.nick}을(를) 지울까요?`, '자산과 기록이 모두 사라지고 되돌릴 수 없어요.', '지우기'))) return;
-            await S.store.deleteUser(u.code); users = users.filter(x => x.code !== u.code); draw();
+            await S.store.deleteUser(u.pid); users = users.filter(x => x.pid !== u.pid); draw();
           },
         }, '삭제')));
   }
