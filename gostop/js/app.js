@@ -1,10 +1,10 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017d';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017d';
-import { botMove, botGoStop } from './bot.js?v=20261017d';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017d';
-import { createStore, applyResult } from './store.js?v=20261017d';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017d';
+import { CARDS, MONTHS, MONTH_ICON, RIBBON_NAME } from './cards.js?v=20261017e';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261017e';
+import { botMove, botGoStop } from './bot.js?v=20261017e';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261017e';
+import { createStore, applyResult } from './store.js?v=20261017e';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261017e';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -1098,20 +1098,34 @@ async function renderAdmin(filter = '') {
     listEl.replaceChildren(...(list.length ? list.map(userRow) : [h('p', { class: 'on-felt-muted' }, '플레이어가 없어요')]));
   }
   function userRow(u) {
-    const amt = h('input', { class: 'field', type: 'number', min: 1, step: 1000, placeholder: '금액', 'aria-label': `${u.nick} 충전 금액` });
+    const amt = h('input', { class: 'field', type: 'number', min: 1, step: 1000, placeholder: '금액', 'aria-label': `${u.nick} 금액` });
     const moneyEl = h('b', { class: 'money' }, won(u.money || 0));
-    const charge = async v => {
-      const n = Math.floor(Number(v));
-      if (!(n > 0)) return toast('충전 금액을 넣어 주세요');
-      const nu = await S.store.updateUser(u.pid, x => { x.money = (x.money || 0) + n; return x; });
-      await S.store.logCharge({ pid: u.pid, nick: u.nick, amount: n, ts: Date.now() });
-      u.money = nu?.money ?? u.money + n; moneyEl.textContent = won(u.money); amt.value = '';
-      toast(`${u.nick}에게 ${won(n)} 충전`);
+    // sign: +1 충전, -1 빼기 (0원 아래로는 안 내려감)
+    const adjust = async (v, sign) => {
+      const all = v === 'all';
+      const n = all ? (u.money || 0) : Math.floor(Number(v));
+      if (!(n > 0)) return toast(sign > 0 ? '충전 금액을 넣어 주세요' : (all ? '뺄 자산이 없어요' : '뺄 금액을 넣어 주세요'));
+      if (sign < 0 && !(await confirmModal(`${u.nick}에게서 ${all ? '자산 전부' : won(n)}를 뺄까요?`, `지금 자산 ${won(u.money || 0)}. 0원 아래로는 내려가지 않아요.`, '빼기'))) return;
+      let applied = 0;
+      const nu = await S.store.updateUser(u.pid, x => {
+        const before = x.money || 0;
+        x.money = Math.max(0, before + sign * (all ? before : n));
+        applied = x.money - before;
+        return x;
+      });
+      await S.store.logCharge({ pid: u.pid, nick: u.nick, amount: applied, ts: Date.now() });
+      u.money = nu?.money ?? Math.max(0, (u.money || 0) + applied); moneyEl.textContent = won(u.money); amt.value = '';
+      toast(applied >= 0 ? `${u.nick}에게 ${won(applied)} 충전` : `${u.nick}에게서 ${won(-applied)} 뺐어요`);
     };
+    const label = v => (v >= 10000 ? v / 10000 + '만' : v);
     return h('div', { class: 'admin-user' },
       h('div', { class: 'row' }, avatar(u.char), h('div', { class: 'grow' }, h('b', {}, u.nick), h('div', { class: 'muted', style: 'font-size:13px' }, `가입 ${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ko-KR') : '-'} · 최근 접속 ${u.lastDaily || '-'}`)), moneyEl),
-      h('div', { class: 'row' }, [10000, 50000, 100000, 1000000].map(v => h('button', { class: 'btn ghost small', onclick: () => charge(v) }, `+${v >= 10000 ? v / 10000 + '만' : v}`))),
-      h('div', { class: 'row' }, amt, h('button', { class: 'btn red small', onclick: () => charge(amt.value) }, '충전'),
+      h('div', { class: 'row' }, [10000, 50000, 100000, 1000000].map(v => h('button', { class: 'btn ghost small', onclick: () => adjust(v, 1) }, `+${label(v)}`))),
+      h('div', { class: 'row' }, [10000, 50000, 100000].map(v => h('button', { class: 'btn ghost small minus', onclick: () => adjust(v, -1) }, `−${label(v)}`)),
+        h('button', { class: 'btn ghost small minus', onclick: () => adjust('all', -1) }, '전액 빼기')),
+      h('div', { class: 'row' }, amt, h('button', { class: 'btn red small', onclick: () => adjust(amt.value, 1) }, '충전'),
+        h('button', { class: 'btn small', onclick: () => adjust(amt.value, -1) }, '빼기')),
+      h('div', { class: 'row' },
         h('button', { class: 'btn ghost small', onclick: () => reissueCode(u) }, '새 코드 발급'),
         h('button', {
           class: 'btn ghost small', onclick: async () => {
