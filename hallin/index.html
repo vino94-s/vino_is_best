@@ -125,6 +125,11 @@ button.deck:disabled{cursor:default}
 button.deck.can{animation:nudge 1s ease-in-out infinite}
 .seat-sub{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .flip-hint{font-family:var(--f-ui);font-size:14px}
+.flip-hint.hot{font-family:var(--f-display);font-size:20px;color:var(--tomato)}
+.tbar{width:100%;height:8px;border:2px solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden;visibility:hidden}
+.seat.turn .tbar{visibility:visible}
+.tbar i{display:block;height:100%;width:100%;background:var(--mint);transform-origin:left center}
+.tbar.hot i{background:var(--tomato)}
 
 .card{width:var(--cw,96px);aspect-ratio:3/4;max-width:100%;background:var(--paper);border:3px solid var(--ink);border-radius:12px;box-shadow:3px 3px 0 var(--ink);display:grid;grid-template:repeat(3,minmax(0,1fr))/repeat(3,minmax(0,1fr));padding:9%;place-items:center;overflow:hidden}
 .card img{width:150%;max-width:none;aspect-ratio:1;border-radius:50%;border:2px solid var(--ink);object-fit:cover;background:var(--paper);position:relative}
@@ -160,7 +165,7 @@ button.deck.can{animation:nudge 1s ease-in-out infinite}
 .standings li{display:flex;align-items:center;gap:10px;font-family:var(--f-ui);font-size:18px;padding:6px 10px;border:2px solid var(--ink);border-radius:10px;background:var(--paper-2)}
 .standings li.w{background:var(--table)}
 .standings .n{margin-left:auto;font-variant-numeric:tabular-nums}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .stat{border:2px solid var(--ink);border-radius:10px;padding:6px;text-align:center}
 .stat b{display:block;font-family:var(--f-display);font-size:22px;font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--muted)}
@@ -247,7 +252,7 @@ tr.mine td{background:var(--paper-2)}
       <div class="panel rules">
         <h2 class="section-h">이렇게 놀아요</h2>
         <ol>
-          <li>차례가 오면 내 카드 더미에서 한 장을 뒤집어요. <b>(Space)</b></li>
+          <li>차례가 오면 <b>3초 안에</b> 내 카드 더미에서 한 장을 뒤집어요. <b>(Space)</b> 3초가 지나면 카드 1장을 잃고 차례가 넘어가요.</li>
           <li>펼쳐진 맨 윗카드들 중 <b>같은 캐릭터가 합쳐서 정확히 5개</b>면 종을 쳐요. <b>(Enter)</b></li>
           <li>제일 빨리 친 사람이 깔린 카드를 전부 가져가요. 헛방이면 다른 사람에게 1장씩 줘요.</li>
           <li>카드가 바닥나면 탈락. 3분이 지나면 카드가 가장 많은 사람이 이겨요.</li>
@@ -390,6 +395,8 @@ const LV={
 };
 const BOT_NAMES=['봇 꼬미','봇 뭉치','봇 호빵'];
 const GAME_MS=180000;
+const TURN_MS=3000;      // 내 차례에 뒤집기까지 주어지는 시간
+const NET_GRACE=400;     // 친구 화면은 인터넷 지연만큼 조금 더 기다려줘요
 const CROWN='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18 L5 7 L10 12 L12 5 L14 12 L19 7 L21 18 Z" fill="currentColor"/></svg>';
 
 /* ---------- sound ---------- */
@@ -401,6 +408,8 @@ function sfx(k){
   else if(k==='flip'){tone(420,.06,'triangle',.12);tone(260,.05,'square',.03,.02)}
   else if(k==='ok'){[523,659,784,1046].forEach((f,i)=>tone(f,.18,'triangle',.12,i*.07))}
   else if(k==='bad'){tone(150,.35,'sawtooth',.1);tone(110,.35,'sawtooth',.08,.12)}
+  else if(k==='tick'){tone(880,.07,'square',.05)}
+  else if(k==='tock'){tone(1320,.12,'square',.07)}
 }
 function syncSound(){const b=$('#soundBtn');b.textContent=muted?'소리 끔':'소리 켬';b.setAttribute('aria-pressed',muted?'true':'false')}
 $('#soundBtn').onclick=()=>{muted=!muted;store.set('hg-mute',muted?'1':'0');syncSound();if(!muted)sfx('flip')};
@@ -459,7 +468,7 @@ function makeDeck(){const d=[];const dist=[[1,5],[2,3],[3,3],[4,2],[5,1]];for(le
 class Game{
   constructor(o){
     this.o=o;this.chars=o.chars;this.mid=o.mid;this.level=o.level?LV[o.level]:null;
-    this.ps=o.players.map(p=>({...p,deck:[],pile:[],out:false,rings:0,wrongs:0,reacts:[]}));
+    this.ps=o.players.map(p=>({...p,deck:[],pile:[],out:false,rings:0,wrongs:0,lates:0,reacts:[]}));this.tn=0;this.turnEnd=0;this.turnGrace=0;
     makeDeck().forEach((c,i)=>this.ps[i%this.ps.length].deck.push(c));
     this.turn=0;this.seq=1;this.ph='play';this.hist={1:{five:false,at:Date.now()}};this.bells=[];this.evs=[];this.evId=0;
     this.timers=new Set();this.turnT=null;this.win=null;this.res=null;
@@ -483,11 +492,29 @@ class Game{
     return false;
   }
   schedTurn(){
-    clearTimeout(this.turnT);
+    clearTimeout(this.turnT);this.turnEnd=0;
     if(this.ph!=='play')return;
     const p=this.ps[this.turn];if(!p)return;
-    const ms=p.kind==='bot'?rnd(...this.level.flip):6000;
-    this.turnT=setTimeout(()=>{if(this.ph==='play'&&this.ps[this.turn]===p)this.flip(p.id)},ms);
+    this.tn++;
+    this.turnGrace=p.kind==='remote'?NET_GRACE:0;
+    this.turnEnd=Date.now()+TURN_MS+this.turnGrace;
+    if(p.kind==='bot'){
+      const ms=Math.min(rnd(...this.level.flip),TURN_MS-300);
+      this.turnT=setTimeout(()=>{if(this.ph==='play'&&this.ps[this.turn]===p)this.flip(p.id)},ms);
+    }else{
+      this.turnT=setTimeout(()=>{if(this.ph==='play'&&this.ps[this.turn]===p)this.late(p.id)},TURN_MS+this.turnGrace);
+    }
+  }
+  // 3초 안에 못 뒤집으면: 카드 1장을 잃고(게임에서 빠짐) 차례가 다음 사람에게 넘어가요
+  late(id){
+    if(this.ph!=='play')return;
+    const p=this.ps[this.turn];if(!p||p.id!==id)return;
+    p.lates++;
+    if(p.deck.length){p.deck.shift();this.event('late',p.id,1)}
+    if(!p.deck.length&&!p.pile.length)this.knockOut(p);
+    if(this.checkEnd()){this.changed();return}
+    if(!this.settleTurn(this.turn+1)){this.finish('stuck');return}
+    this.schedTurn();this.changed();
   }
   flip(id){
     if(this.ph!=='play')return;
@@ -559,7 +586,8 @@ class Game{
     this.changed();
   }
   snap(){
-    return{v:1,mid:this.mid,seq:this.seq,ph:this.ph,turn:this.ps[this.turn]?.id||null,ch:this.chars,
+    return{v:1,mid:this.mid,seq:this.seq,tn:this.tn,ph:this.ph,turn:this.ps[this.turn]?.id||null,ch:this.chars,
+      td:this.ph==='play'&&this.turnEnd?Math.max(0,this.turnEnd-Date.now()-this.turnGrace):null,
       rem:Math.max(0,this.endsAt-Date.now()),
       ps:this.ps.map(p=>({id:p.id,n:p.nick,d:p.deck.length,pc:p.pile.length,t:p.pile[p.pile.length-1]||null,o:p.out?1:0,b:p.kind==='bot'?1:0})),
       ev:this.evs.slice(),win:this.win,why:this.reason||null,res:this.res};
@@ -568,6 +596,7 @@ class Game{
 }
 
 /* ================= CLIENT STATE ================= */
+let turnEnd=0,lastTickSec=-1;
 let mode=null;          // 'bot' | 'host' | 'guest'
 let game=null,myId='me',cur=null,lastEv=0,shownAt=0,rangSeq=-1,flipSent=-1,dingAt=0,localEnd=0,resultFor=null,seatKey='';
 let botCfg={n:Number(store.get('hg-bots'))||2,lv:store.get('hg-lv')||'normal',ch:pick4()};
@@ -599,6 +628,7 @@ function resetView(){cur=null;lastEv=0;rangSeq=-1;flipSent=-1;resultFor=null;sea
 function renderGame(s){
   const prev=cur;cur=s;
   const isNew=!prev||prev.mid!==s.mid;
+  turnEnd=s.td==null?0:Date.now()+s.td;
   if(isNew){lastEv=Math.max(0,...s.ev.map(e=>e.i));rangSeq=-1;flipSent=-1;resultFor=null;seatKey=''}
   if(isNew||prev.seq!==s.seq)shownAt=performance.now();
   localEnd=Date.now()+s.rem;
@@ -617,6 +647,7 @@ function showEvent(e,s){
   const n=e.w===myId?'내가':nameOf(s,e.w)+' 님이';
   if(e.k==='ok'){toast(`${n} 종 치기 성공! 카드 ${e.a}장 획득 · ${e.r}ms`,'ok');sfx('ok')}
   else if(e.k==='bad'){toast(`${n} 헛방! 카드 ${e.a}장을 나눠줬어요`);sfx('bad')}
+  else if(e.k==='late'){if(e.w===myId){toast('3초가 지나서 카드 1장을 잃었어요! 차례가 넘어가요');sfx('bad')}else toast(`${nameOf(s,e.w)} 님 시간 초과 · 카드 1장 잃음`)}
   else if(e.k==='out')toast(e.w===myId?'카드가 바닥나서 탈락했어요':`${nameOf(s,e.w)} 님 탈락`);
   else if(e.k==='left')toast(`${nameOf(s,e.w)} 님이 나갔어요`);
 }
@@ -624,7 +655,7 @@ function seatHTML(p,mine){
   return `<div class="seat${mine?' me':''}" data-id="${esc(p.id)}">
     <div class="seat-top"><span class="who"></span><span class="tag"></span></div>
     <div class="seat-row">${mine?'<button class="deck" id="flipBtn" type="button" aria-label="카드 뒤집기"><span class="dn"></span></button>':'<div class="deck" aria-hidden="true"><span class="dn"></span></div>'}<div class="slot"></div></div>
-    <div class="seat-sub"></div>${mine?'<div class="flip-hint" id="flipHint"></div>':''}</div>`;
+    <div class="tbar" aria-hidden="true"><i></i></div><div class="seat-sub"></div>${mine?'<div class="flip-hint" id="flipHint"></div>':''}</div>`;
 }
 function drawSeats(s){
   const meIdx=s.ps.findIndex(p=>p.id===myId);
@@ -653,13 +684,38 @@ function drawSeats(s){
   }
 }
 function meP(){return cur&&cur.ps.find(p=>p.id===myId)}
-function canFlip(){const m=meP();return !!(cur&&m&&!m.o&&cur.ph==='play'&&cur.turn===myId&&flipSent!==cur.seq)}
+function canFlip(){const m=meP();return !!(cur&&m&&!m.o&&cur.ph==='play'&&cur.turn===myId&&flipSent!==cur.tn)}
 function canBell(){const m=meP();return !!(cur&&m&&!m.o&&(cur.ph==='play'||cur.ph==='ring')&&rangSeq!==cur.seq)}
 function updateControls(){
   const fb=$('#flipBtn');
-  if(fb){const c=canFlip();fb.disabled=!c;fb.classList.toggle('can',c);const h=$('#flipHint');if(h)h.textContent=c?'눌러서 뒤집기 · Space':(meP()?.o?'탈락했어요':'기다리는 중')}
+  if(fb){const c=canFlip();fb.disabled=!c;fb.classList.toggle('can',c)}
   $('#bellBtn').disabled=!canBell();
+  updateTurnUI();
 }
+/* 차례 카운트다운: 차례인 사람 자리에 3·2·1 막대, 내 차례면 큰 숫자와 째깍 소리 */
+function updateTurnUI(){
+  if(!cur)return;
+  const live=cur.ph==='play'&&turnEnd>0;
+  const left=live?Math.max(0,turnEnd-Date.now()):0;
+  const sec=Math.ceil(left/1000);
+  for(const el of document.querySelectorAll('#scr-game .seat')){
+    const on=live&&el.dataset.id===cur.turn;
+    const bar=el.querySelector('.tbar');if(!bar)continue;
+    bar.classList.toggle('hot',on&&left<=1000);
+    bar.firstChild.style.transform=`scaleX(${on?Math.min(1,left/TURN_MS):0})`;
+    const p=cur.ps.find(x=>x.id===el.dataset.id);
+    if(on&&p&&!p.o){el.querySelector('.tag').textContent=`${p.id===myId?'내 차례':'차례'} ${sec}`}
+  }
+  const h=$('#flipHint');
+  if(h){
+    const m=meP();const mineNow=live&&cur.turn===myId&&m&&!m.o;
+    h.classList.toggle('hot',!!mineNow);
+    h.textContent=mineNow?(canFlip()?`${sec}초 안에 뒤집기! · Space`:'뒤집는 중…'):(m?.o?'탈락했어요':'기다리는 중');
+    if(mineNow&&canFlip()&&sec!==lastTickSec&&sec>0){lastTickSec=sec;sfx(sec===1?'tock':'tick')}
+    if(!mineNow)lastTickSec=-1;
+  }
+}
+setInterval(()=>{if(screen==='game')updateTurnUI()},100);
 function updateTimer(){
   if(!cur)return;
   const ms=cur.ph==='over'?0:Math.max(0,localEnd-Date.now());
@@ -671,7 +727,7 @@ function ringAnim(){const b=$('#bellBtn');b.classList.remove('ring');void b.offs
 
 function doFlip(){
   if(!canFlip())return;
-  if(mode==='guest'){flipSent=cur.seq;sendAct('flip');updateControls()}
+  if(mode==='guest'){flipSent=cur.tn;sendAct('flip');updateControls()}
   else if(game)game.flip(myId);
 }
 function doBell(){
@@ -696,7 +752,7 @@ function showResult(s){
   const iWon=s.win===myId;
   const why=s.why==='time'?'시간 종료 · 카드가 가장 많은 사람 승리':s.why==='last'?'마지막까지 살아남은 사람 승리':'게임 종료';
   let stats='';
-  if(mode==='bot'&&lastBotRecord){const r=lastBotRecord;stats=`<div class="stats"><div class="stat"><b>${r.rings}</b><span>종 치기 성공</span></div><div class="stat"><b>${r.wrongs}</b><span>헛방</span></div><div class="stat"><b>${r.best?r.best+'ms':'-'}</b><span>최고 반응</span></div></div>`}
+  if(mode==='bot'&&lastBotRecord){const r=lastBotRecord;stats=`<div class="stats"><div class="stat"><b>${r.rings}</b><span>종 치기 성공</span></div><div class="stat"><b>${r.wrongs}</b><span>헛방</span></div><div class="stat"><b>${r.best?r.best+'ms':'-'}</b><span>최고 반응</span></div><div class="stat"><b>${r.lates||0}</b><span>시간 초과</span></div></div>`}
   const btns=mode==='bot'?'<button class="btn red" id="rAgain" type="button">한 판 더</button><button class="btn" id="rRank" type="button">랭킹 보기</button><button class="btn" id="rHome" type="button">처음으로</button>'
     :mode==='host'?'<button class="btn red" id="rLobby" type="button">대기실로</button><button class="btn" id="rRank" type="button">랭킹 보기</button>'
     :'<button class="btn" id="rLobby" type="button">대기실로</button><button class="btn" id="rRank" type="button">랭킹 보기</button>';
@@ -717,7 +773,7 @@ function setSaveNote(t){saveNote=t;const n=$('#savedNote');if(n)n.textContent=t}
 async function saveBotGame(g){
   const me=g.ps.find(p=>p.id==='me');const won=g.win==='me';
   const L=LV[botCfg.lv];
-  lastBotRecord={u:myUid||null,n:me.nick,win:won,bots:g.ps.length-1,lv:botCfg.lv,pts:won?L.w*(g.ps.length-1):0,
+  lastBotRecord={u:myUid||null,n:me.nick,lates:me.lates,win:won,bots:g.ps.length-1,lv:botCfg.lv,pts:won?L.w*(g.ps.length-1):0,
     rings:me.rings,wrongs:me.wrongs,best:me.reacts.length?Math.min(...me.reacts):null,
     cards:me.deck.length+me.pile.length,dur:Math.round((g.endedAt-g.startedAt)/1000),ts:Date.now()};
   setSaveNote('');
