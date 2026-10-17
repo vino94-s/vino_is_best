@@ -163,7 +163,14 @@ details.rules summary{font-family:var(--f-ui);font-size:18px;cursor:pointer}
 .needle{position:absolute;top:-3px;bottom:-3px;left:0;width:6px;margin-left:-3px;border-radius:3px;background:#fff;box-shadow:0 0 0 2px var(--ink);will-change:transform}
 .glabels{display:flex;font-size:11px;font-family:var(--f-ui);color:#E8D9B8;margin-top:-6px}
 .glabels span:nth-child(1){flex:30}.glabels span:nth-child(2){flex:42}.glabels span:nth-child(3){flex:14;color:var(--gold)}.glabels span:nth-child(4){flex:14;text-align:right;color:#FF9C8F}
-.throwbtn{min-height:62px;font-size:21px;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.throwbtn{min-height:62px;font-size:21px;width:100%;touch-action:none;user-select:none;-webkit-user-select:none;position:relative;overflow:hidden}
+.throwbtn:disabled{opacity:.6}
+.tsec{position:absolute;right:10px;top:50%;translate:0 -50%;min-width:34px;height:34px;border-radius:17px;background:#0005;color:#fff;font-family:var(--f-disp);font-weight:400;font-size:19px;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.tfill{position:absolute;left:0;bottom:0;height:6px;width:100%;background:var(--gold);transform-origin:left center;will-change:transform}
+.throwbtn.hurry .tfill{background:#FFF1EC}
+.throwbtn.hurry .tsec{background:#fff;color:var(--red-d);animation:tpulse .5s ease-in-out infinite alternate}
+@keyframes tpulse{to{transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.throwbtn.hurry .tsec{animation:none}}
 .throwbtn.charging{transform:translateY(4px);box-shadow:0 1px 0 var(--red-d)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;align-items:center}
 .chip{min-height:42px;padding:0 14px;border-radius:21px;background:var(--hanji);color:var(--ink);font-size:18px;box-shadow:0 3px 0 var(--hanji-2);display:inline-flex;gap:6px;align-items:center}
@@ -314,30 +321,6 @@ html.playing .mat .netwarn{position:absolute;left:8px;right:8px;top:32px;z-index
 </style>
 </head>
 <body>
-<!-- 벙참 인앱 탈출: 카톡·라인 안의 브라우저는 채팅방으로 돌아가는 순간 게임 화면이 닫혀서, 대결 방이 사라지지 않게 기본 브라우저로 옮겨 열어요 -->
-<style>#bungInapp{position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;padding:20px;background:rgba(10,14,18,.72);font-family:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}#bungInapp .bi-box{max-width:360px;width:100%;box-sizing:border-box;background:#fff;color:#17202A;border-radius:16px;padding:22px 20px;display:grid;gap:10px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.35)}#bungInapp h2{margin:0;font-size:21px}#bungInapp p{margin:0;font-size:14.5px;line-height:1.55;color:#3c4650}#bungInapp button{font:inherit;font-weight:700;font-size:16px;border-radius:12px;padding:13px;border:1.5px solid #D9DED8;background:#fff;color:#17202A;cursor:pointer}#bungInapp .bi-go{background:#FEE500;border-color:#FEE500;color:#191600}#bungInapp .bi-tip{font-size:12.5px;color:#6b7680}</style>
-<script>(function(){
-var ua=navigator.userAgent||'',href=location.href;
-var kakao=/KAKAOTALK/i.test(ua),line=/\bLine\//.test(ua);
-if(!(kakao||line))return;
-try{if(sessionStorage.getItem('bung-inapp-stay')==='1')return}catch(e){}
-function out(){
-  if(kakao){location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(href);return}
-  try{var x=new URL(href);x.searchParams.set('openExternalBrowser','1');location.href=x.toString()}catch(e){}
-}
-function build(){
-  var d=document.createElement('div');d.id='bungInapp';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','bungInappT');
-  d.innerHTML='<div class="bi-box"><h2 id="bungInappT">브라우저에서 열게요</h2><p>'+(kakao?'카카오톡':'라인')+' 안에서 열면 채팅방에 코드를 보내러 가는 순간 게임 화면이 닫혀서 대결 방이 사라져요. 크롬이나 사파리 새 화면에서 열어 주세요.</p><button type="button" class="bi-go">브라우저로 열기</button><button type="button" class="bi-stay">여기서 그냥 할게요</button><p class="bi-tip">브라우저가 안 열리면 화면 구석의 ⋮ 또는 ⋯ 메뉴에서 ‘다른 브라우저로 열기’를 눌러 주세요.</p></div>';
-  document.body.appendChild(d);
-  d.querySelector('.bi-go').onclick=out;
-  d.querySelector('.bi-stay').onclick=function(){try{sessionStorage.setItem('bung-inapp-stay','1')}catch(e){}d.remove()};
-  d.querySelector('.bi-go').focus();
-  setTimeout(out,300);
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
-})();</script>
-<!-- /벙참 인앱 탈출 -->
-
 
 
 <div class="app">
@@ -442,7 +425,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           <div class="gauge" id="gauge"><i class="z1"></i><i class="z2"></i><i class="z3"></i><i class="z4"></i><i class="z5"></i><div class="needle" id="needle"></div></div>
           <div class="glabels" aria-hidden="true"><span>약하게</span><span>적당히</span><span>황금</span><span>낙 위험</span></div>
         </div>
-        <button class="btn throwbtn" id="throwBtn">꾹 눌렀다 놓으면 던져요</button>
+        <button class="btn throwbtn" id="throwBtn"><span id="tbLabel">꾹 눌렀다 놓으면 던져요</span><b class="tsec" id="tsec" hidden></b><i class="tfill" id="tfill" hidden></i></button>
         <div class="chips" id="chips" aria-label="남은 끗수"></div>
         <div class="msg" id="msg"></div>
         <div class="netwarn" id="netWarn" hidden></div>
@@ -861,12 +844,19 @@ async function applyAction(a){
   if(!G||G.over)return;
   if(G.mode==='net'&&a.g!==G.gid)return;
   if(a.by!=null&&a.by!==G.seat)return;
-  const g0=G;busy=true;updateUI();
+  if(a.t==='skip'&&G.phase!=='throw')return;
+  const g0=G;busy=true;turnDeadline=0;updateUI();
   if(a.t==='throw'){
     const f=Array.isArray(a.f)?a.f.slice(0,4).map(Boolean):[true,true,false,false];const nak=Number.isInteger(a.nak)&&a.nak>=0&&a.nak<4?a.nak:-1;const pw=Math.max(0,Math.min(100,+a.p||50));
     await throwAnim(f,nak,pw);if(G!==g0)return;
     const r=applyThrow(G,{f,nak});
     await showResult(r);if(G!==g0)return;
+  }else if(a.t==='skip'){
+    /* 15초 안에 안 던지면 남은 던지기와 끗수를 버리고 다음 사람에게 */
+    const who=G.seats[G.seat];G.throws=0;G.pending=[];
+    SFX.bad();bannerPop('시간 초과!','small');
+    toast(G.seat===me?'15초가 지나서 차례가 넘어갔어요':`${who.nick}님 시간 초과! 차례가 넘어가요`,1700);
+    await sleep(RM?200:750);if(G!==g0)return;
   }else if(a.t==='move'){
     const m=computeMove(G,G.turn,a.ri|0,a.pid|0);
     if(m)await doMove(m);
@@ -889,6 +879,7 @@ function next(first){
     }else G.phase='move';
   }
   if(first)turnBanner();
+  turnDeadline=(G.phase==='throw'&&!G.seats[G.seat].bot)?Date.now()+TURN_MS:0;lastTick=0;
   if(G.phase==='move'&&myTurn()){selRi=firstUsable()}
   updateUI();
   if(isBotTurn()){clearTimeout(botT);botT=setTimeout(botStep,G.phase==='throw'?750:650)}
@@ -927,7 +918,7 @@ function updateUI(){
   document.querySelectorAll('#sGame .pl .av').forEach(a=>a.classList.toggle('cur',+a.dataset.seat===G.seat&&!G.over));
   $('#plTop .sub').textContent=panelSub(1-mt);$('#plBot .sub').textContent=panelSub(mt);
   const tb=$('#throwBtn');const can=canAct('throw');tb.disabled=!can;
-  tb.textContent=can?'꾹 눌렀다 놓으면 던져요':(G.over?'경기 끝':(G.seat===me?(G.phase==='move'?'말을 움직여요':'잠깐만요…'):(G.turn===mt?'팀원 차례':'상대 차례')));
+  $('#tbLabel').textContent=can?'꾹 눌렀다 놓으면 던져요':(G.over?'경기 끝':(G.seat===me?(G.phase==='move'?'말을 움직여요':'잠깐만요…'):(G.turn===mt?'팀원 차례':'상대 차례')));
   // 칩
   const ch=$('#chips');ch.textContent='';
   if(!G.pending.length)ch.appendChild(el('span','muted',G.throws>1?`던질 기회 ${G.throws}번`:''));
@@ -1047,6 +1038,7 @@ function gaugeSweep(target){
   return new Promise(res=>{const t0=performance.now(),dur=700+rnd()*500;hook((dt,now)=>{const t=Math.min(1,(now-t0)/dur);
     const tri=Math.abs(((t*1.5+.0)%2)-1);setNeedle(t<1?lerp(0,100,tri)*(1-t)+target*t:target);if(t>=1){res();return false}return true})});
 }
+let releaseThrow=()=>{};
 (function(){
   const b=$('#throwBtn');
   const start=e=>{
@@ -1055,7 +1047,7 @@ function gaugeSweep(target){
     charging={t0:performance.now()};b.classList.add('charging');
     hook((dt,now)=>{if(!charging)return false;const ph=((now-charging.t0)/1400)%2;const v=ph<1?ph:2-ph;setNeedle(E.inOut(v)*100);return true});
   };
-  const release=e=>{
+  const release=releaseThrow=e=>{
     if(!charging)return;const pw=Math.round(needleV);charging=null;b.classList.remove('charging');
     if(!canAct('throw'))return;
     act({t:'throw',...rollFaces(pw),p:pw});
@@ -1067,6 +1059,40 @@ function gaugeSweep(target){
   b.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();release(e)}});
   b.addEventListener('contextmenu',e=>e.preventDefault());
 })();
+
+
+/* ================= 15초 던지기 제한 =================
+   사람 차례마다 던질 때마다 15초. 시간이 다 되면 그 사람 기기가 '시간 초과'를 보내 다음 차례로 넘겨요.
+   (꾹 누르고 있던 중이면 그 자리에서 던져요)
+   친구 대전에서 상대 기기가 잠들어 신호가 안 오면, 방장이 8초 더 기다렸다가 대신 넘겨요. */
+const TURN_MS=15000;let turnDeadline=0,lastTick=0;
+function timerTick(){
+  if(!G||G.over||busy||G.phase!=='throw'||!turnDeadline)return;
+  const left=turnDeadline-Date.now();
+  if(G.seat===me&&myTurn()){
+    if(left<=5000&&left>0){const sec=Math.ceil(left/1000);if(sec!==lastTick){lastTick=sec;tone(sec<=2?1100:880,.07,'square',.05)}}
+    if(left<=0){
+      if(charging)releaseThrow();
+      else act({t:'skip'});
+    }
+  }else if(G.mode==='net'&&net.host&&!G.seats[G.seat].bot&&left<=-8000){
+    act({t:'skip'});
+  }
+}
+setInterval(timerTick,200);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)timerTick()});
+/* 남은 시간 표시: 버튼 안 숫자와 아래 막대 */
+function timerView(){
+  const tb=$('#throwBtn'),sec=$('#tsec'),fill=$('#tfill');
+  const on=!!(G&&!G.over&&!busy&&G.phase==='throw'&&turnDeadline&&!$('#sGame').hidden);
+  if(!on){if(!sec.hidden){sec.hidden=true;fill.hidden=true;tb.classList.remove('hurry')}return}
+  const left=Math.max(0,turnDeadline-Date.now());
+  sec.hidden=false;fill.hidden=false;
+  const n=String(Math.ceil(left/1000));if(sec.textContent!==n)sec.textContent=n;
+  fill.style.transform=`scaleX(${left/TURN_MS})`;
+  tb.classList.toggle('hurry',left<=5000);
+}
+(function frame(){timerView();requestAnimationFrame(frame)})();
 
 /* ================= 말 이동 애니메이션 ================= */
 async function hop(els,from,to,dur,lift){
@@ -1331,10 +1357,7 @@ async function openPeer(code){
     }else{
       const peer=new window.Peer();net.peer=peer;
       peer.on('open',()=>{connectGuest();fin('ok')});
-      peer.on('error',e=>{if(e.type==='peer-unavailable'){if(!net.joined&&net.peer===peer){
-        if(Date.now()<(net.waitUntil||0)){fMsg(WAIT_MSG);setTimeout(()=>{if(net.peer===peer&&!peer.destroyed&&!net.joined)connectGuest()},3000)}
-        else{closeNet();sset(null);fMsg('그 코드의 방을 찾지 못했어요. 코드를 확인하거나 친구에게 방을 다시 만들어 달라고 해 주세요.',true);fBusy(false)}}}
-        else if(!done)fin('연결에 실패했어요. 잠시 뒤 다시 시도해 주세요.')});
+      peer.on('error',e=>{if(e.type==='peer-unavailable'){if(!net.joined){closeNet();fMsg('그 코드의 방이 없어요. 코드를 다시 확인해 주세요.',true);fBusy(false)}}else if(!done)fin('연결에 실패했어요. 잠시 뒤 다시 시도해 주세요.')});
     }
     setTimeout(()=>fin('연결 서버가 응답하지 않아요. 잠시 뒤 다시 시도해 주세요.'),12000);
   });
@@ -1356,10 +1379,6 @@ function wireConn(c){
     }
     if(m.t==='welcome'){
       if(net.host)return;
-      if(net.hostSid&&net.hostSid!==m.f){
-        net.links.delete(net.hostSid);net.hostSid=null;net.joined=false;
-        if(G&&G.mode==='net'&&!G.over){G.over=true;clearGhosts();updateUI();showNote('방장 연결이 끊겨서 경기가 끝났어요. 대기실로 돌아가요.')}
-      }
       if(!net.hostSid){net.hostSid=m.f;net.links.set(m.f,newLink(m.f,c))}
       const L=net.links.get(net.hostSid);if(!L||m.f!==net.hostSid)return;
       L.conn=c;L.lastHeard=Date.now();
@@ -1404,7 +1423,7 @@ function linkGone(L){
   if(G&&G.mode==='net'&&!G.over){G.over=true;clearGhosts();updateUI();showNote('방장 연결이 끊겨서 경기가 끝났어요.')}
   else if(G&&G.over){const a=$('#againBtn');if(a){a.disabled=true;a.textContent='방장이 나갔어요'}}
   else if(!$('#sFriend').hidden){backToEntry('방장 연결이 끊겼어요.')}
-  sset(null);closeNet();
+  closeNet();
 }
 function closeNet(){
   clearInterval(net.timer);
@@ -1415,37 +1434,8 @@ function closeNet(){
   Object.assign(net,{on:false,kind:'',links:new Map(),hostSid:null,joined:false,seats:[],room:null,peer:null,again:new Set(),playing:false,lastPres:'',fullShown:false,hostSeen:null});
   netWarn('');
 }
-/* 카톡에 코드를 보내러 다녀오는 사이 방이 사라지지 않게: 이 탭의 방을 기억해 두고, 끊기면 같은 코드로 다시 열어요 */
-const ROOM_KEY='yut_room';
-const WAIT_MSG='방장을 기다리는 중… 방장이 카톡에 코드를 보내고 돌아오면 바로 들어가요.';
-function sget(){try{return JSON.parse(sessionStorage.getItem(ROOM_KEY)||'null')}catch(e){return null}}
-function sset(v){try{if(v==null)sessionStorage.removeItem(ROOM_KEY);else sessionStorage.setItem(ROOM_KEY,JSON.stringify(v))}catch(e){}}
-async function hostOpen(fixed){
-  let r='taken';
-  if(fixed){for(let n=0;n<15&&r==='taken';n++){if(n){await sleep(2000);if(net.code!==fixed)return 'cancel'}r=await openTransport(fixed)}}
-  else for(let n=0;n<5&&r==='taken';n++){net.code=genCode();r=await openTransport(net.code)}
-  return r;
-}
-function hostStarted(){net.on=true;net.timer=setInterval(tickNet,800);sset({code:net.code,host:1,mode:net.mode,at:Date.now()});enterLobby();broadcastLobby()}
-function hostHeal(){
-  if(!net.on||!net.host||net.kind!=='peer'||document.hidden||net.healing)return;
-  const p=net.peer;
-  if(!p||p.destroyed){
-    net.healing=true;const code=net.code;
-    (async()=>{let r='taken';for(let n=0;n<15&&r==='taken'&&net.on&&net.code===code;n++){if(n)await sleep(2000);r=await openPeer(code)}net.healing=false})();
-    return;
-  }
-  if(p.disconnected){try{p.reconnect()}catch(e){}}
-}
-document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){const r=sget();if(r&&r.code===net.code&&net.on)sset({...r,at:Date.now()})}
-  else hostHeal();
-});
-addEventListener('online',hostHeal);addEventListener('pageshow',hostHeal);
-/* 친구가 새로고침하면 방장에게 자리를 비워 달라고 알려서, 다시 들어올 때 '방이 꽉 찼어요'가 안 뜨게 */
-addEventListener('beforeunload',()=>{if(net.on&&!net.host&&net.kind==='peer')toHost({t:'quit'})});
 function leaveNet(){
-  if(!net.on)return;sset(null);
+  if(!net.on)return;
   if(net.host)broadcast({t:'end',n:nick,host:1});else toHost({t:'quit'});
   setTimeout(closeNet,600);
 }
@@ -1545,7 +1535,7 @@ function onNet(L,d){
   if(net.host){
     switch(d.t){
       case 'me':if(!net.playing)hostMe(L,d);break;
-      case 'throw':case 'move':
+      case 'throw':case 'move':case 'skip':
         if(G&&G.mode==='net'&&d.g===G.gid&&!G.over&&Number.isInteger(d.by)&&G.seats[d.by]&&G.seats[d.by].sid===L.sid){broadcast(d,L.sid);enqueue(d)}break;
       case 'again':net.again.add(L.sid);againStatus();break;
       case 'quit':hostDrop(L,seatName(L.sid));break;
@@ -1556,7 +1546,7 @@ function onNet(L,d){
       case 'lobby':guestLobby(d);break;
       case 'reject':net.me.char=null;net.me.ready=false;toast('그 캐릭터는 다른 사람이 먼저 골랐어요. 다른 캐릭터를 골라 주세요.');renderLobby();break;
       case 'start':if(Array.isArray(d.seats))beginNet(d);break;
-      case 'throw':case 'move':if(G&&G.mode==='net'&&d.g===G.gid&&!G.over)enqueue(d);break;
+      case 'throw':case 'move':case 'skip':if(G&&G.mode==='net'&&d.g===G.gid&&!G.over)enqueue(d);break;
       case 'agst':showAgain(d.n|0,d.need|0);break;
       case 'chat':{const x=cleanChat(d.x);if(x)addChat({sid:String(d.sid||''),n:cleanNick(d.n)||'친구',x});break;}
       case 'end':{
@@ -1592,9 +1582,9 @@ $('#mkRoom').onclick=async()=>{
   au();ensureNick();fBusy(true);fMsg('방을 만드는 중…');closeNet();
   net.host=true;net.round=0;net.mode=entryMode;net.me={char:store.get('char',null),ready:false};
   net.seats=Array(seatsMax()).fill(null);net.seats[0]={sid:net.sid};
-  const r=await hostOpen();
+  let r='taken';for(let n=0;n<5&&r==='taken';n++){net.code=genCode();r=await openTransport(net.code)}
   if(r!=='ok'){closeNet();fBusy(false);fMsg(r==='taken'?'방을 만들지 못했어요. 다시 눌러 주세요.':r,true);return}
-  hostStarted();
+  net.on=true;net.timer=setInterval(tickNet,800);enterLobby();broadcastLobby();
 };
 $('#codeIn').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4)});
 $('#joinForm').addEventListener('submit',async e=>{
@@ -1602,7 +1592,6 @@ $('#joinForm').addEventListener('submit',async e=>{
   const code=$('#codeIn').value.toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(code.length!==4){fMsg('방 코드 4자리를 넣어 주세요.',true);return}
   fBusy(true);fMsg('방을 찾는 중…');closeNet();net.host=false;net.code=code;net.me={char:store.get('char',null),ready:false};
-  net.waitUntil=Date.now()+60000;sset({code,host:0,at:Date.now()});
   const r=await openTransport(code);
   if(r!=='ok'){closeNet();fBusy(false);fMsg(r,true);return}
   net.on=true;net.timer=setInterval(tickNet,800);
@@ -1660,19 +1649,8 @@ $('#copyCode').onclick=async()=>{
   catch(e){const r=document.createRange();r.selectNodeContents($('#codeShow'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('코드를 선택해 뒀어요. 길게 눌러 복사해 주세요.')}
 };
 /* 초대 링크로 들어오면 코드 자동 입력 */
-/* 스크립트가 끝까지 읽힌 다음에 실행해야 해요(뒤에서 선언되는 채팅 변수를 openFriend가 써요) */
-setTimeout(function(){try{const q=(new URLSearchParams(location.search).get('room')||location.hash.replace('#','')||'').toUpperCase();
-  if(/^[A-Z0-9]{4}$/.test(q)){if(location.search)history.replaceState(null,'',location.pathname);openFriend();$('#codeIn').value=q;fMsg('초대받은 방이에요. 닉네임을 확인하고 입장을 눌러 주세요.');return}
-  const sv=sget();
-  if(sv&&/^[A-Z0-9]{4}$/.test(sv.code||'')&&Date.now()-(sv.at||0)<30*60*1000){
-    if(sv.host){
-      openFriend();ensureNick();fBusy(true);fMsg('방 '+sv.code+' 을(를) 다시 여는 중…');
-      net.host=true;net.round=0;net.mode=sv.mode==='2v2'?'2v2':'1v1';net.me={char:store.get('char',null),ready:false};
-      net.seats=Array(seatsMax()).fill(null);net.seats[0]={sid:net.sid};net.code=sv.code;
-      hostOpen(sv.code).then(r=>{if(r==='ok')hostStarted();else{closeNet();sset(null);fBusy(false);fMsg('같은 코드로 방을 다시 열지 못했어요. 방을 새로 만들어 주세요.',true)}});
-    }else{openFriend();$('#codeIn').value=sv.code;fMsg('방 '+sv.code+' 에 다시 들어가는 중…');setTimeout(()=>$('#joinForm').requestSubmit(),50)}
-  }
-}catch(e){console.error(e)}},0);
+(function(){try{const q=(new URLSearchParams(location.search).get('room')||location.hash.replace('#','')||'').toUpperCase();
+  if(/^[A-Z0-9]{4}$/.test(q)){if(location.search)history.replaceState(null,'',location.pathname);openFriend();$('#codeIn').value=q;fMsg('초대받은 방이에요. 닉네임을 확인하고 입장을 눌러 주세요.')}}catch(e){}})();
 
 
 /* ================= 친구 채팅 ================= */
