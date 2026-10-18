@@ -275,7 +275,7 @@ tr.mine td{background:var(--paper-2)}
       <div class="panel rules">
         <h2 class="section-h">이렇게 놀아요</h2>
         <ol>
-          <li>차례가 오면 <b>3초 안에</b> 내 카드 더미에서 한 장을 뒤집어요. <b>(Space)</b> 3초가 지나면 카드 1장을 잃고 차례가 넘어가요.</li>
+          <li>차례가 오면 <b>8초 안에</b> 내 카드 더미에서 한 장을 뒤집어요. <b>(Space)</b> 8초가 지나면 카드 1장을 잃고 차례가 넘어가요.</li>
           <li>펼쳐진 맨 윗카드들 중 <b>같은 캐릭터가 합쳐서 정확히 5개</b>면 종을 쳐요. <b>(Enter)</b></li>
           <li>제일 빨리 친 사람이 깔린 카드를 전부 가져가요. 헛방이면 다른 사람에게 1장씩 줘요.</li>
           <li>카드가 바닥나면 탈락. 3분이 지나면 카드가 가장 많은 사람이 이겨요.</li>
@@ -418,7 +418,7 @@ const LV={
 };
 const BOT_NAMES=['봇 꼬미','봇 뭉치','봇 호빵'];
 const GAME_MS=180000;
-const TURN_MS=3000;      // 내 차례에 뒤집기까지 주어지는 시간
+const TURN_MS=8000;      // 내 차례에 뒤집기까지 주어지는 시간
 const NET_GRACE=400;     // 친구 화면은 인터넷 지연만큼 조금 더 기다려줘요
 const CROWN='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18 L5 7 L10 12 L12 5 L14 12 L19 7 L21 18 Z" fill="currentColor"/></svg>';
 
@@ -528,7 +528,7 @@ class Game{
       this.turnT=setTimeout(()=>{if(this.ph==='play'&&this.ps[this.turn]===p)this.late(p.id)},TURN_MS+this.turnGrace);
     }
   }
-  // 3초 안에 못 뒤집으면: 카드 1장을 잃고(게임에서 빠짐) 차례가 다음 사람에게 넘어가요
+  // 8초 안에 못 뒤집으면: 카드 1장을 잃고(게임에서 빠짐) 차례가 다음 사람에게 넘어가요
   late(id){
     if(this.ph!=='play')return;
     const p=this.ps[this.turn];if(!p||p.id!==id)return;
@@ -686,7 +686,7 @@ function showEvent(e,s){
   const n=e.w===myId?'내가':nameOf(s,e.w)+' 님이';
   if(e.k==='ok'){toast(`${n} 종 치기 성공! 카드 ${e.a}장 획득 · ${e.r}ms`,'ok');sfx('ok')}
   else if(e.k==='bad'){toast(`${n} 헛방! 카드 ${e.a}장을 나눠줬어요`);sfx('bad')}
-  else if(e.k==='late'){if(e.w===myId){toast('3초가 지나서 카드 1장을 잃었어요! 차례가 넘어가요');sfx('bad')}else toast(`${nameOf(s,e.w)} 님 시간 초과 · 카드 1장 잃음`)}
+  else if(e.k==='late'){if(e.w===myId){toast('8초가 지나서 카드 1장을 잃었어요! 차례가 넘어가요');sfx('bad')}else toast(`${nameOf(s,e.w)} 님 시간 초과 · 카드 1장 잃음`)}
   else if(e.k==='out')toast(e.w===myId?'카드가 바닥나서 탈락했어요':`${nameOf(s,e.w)} 님 탈락`);
   else if(e.k==='left')toast(`${nameOf(s,e.w)} 님이 나갔어요`);
 }
@@ -750,7 +750,8 @@ function updateTurnUI(){
     const m=meP();const mineNow=live&&cur.turn===myId&&m&&!m.o;
     h.classList.toggle('hot',!!mineNow);
     h.textContent=mineNow?(canFlip()?`${sec}초 안에 뒤집기! · Space`:'뒤집는 중…'):(m?.o?'탈락했어요':'기다리는 중');
-    if(mineNow&&canFlip()&&sec!==lastTickSec&&sec>0){lastTickSec=sec;sfx(sec===1?'tock':'tick')}
+    if(mineNow&&canFlip()&&sec!==lastTickSec&&sec>0&&sec<=3){ // 째깍 소리는 마지막 3초만
+      lastTickSec=sec;sfx(sec===1?'tock':'tick')}
     if(!mineNow)lastTickSec=-1;
   }
 }
