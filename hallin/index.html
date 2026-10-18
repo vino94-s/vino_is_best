@@ -212,6 +212,48 @@ tr.mine td{background:var(--paper-2)}
 .empty-state{padding:22px;text-align:center;color:var(--muted);border:3px dashed var(--ink);border-radius:14px}
 .section-h{font-family:var(--f-ui);font-size:20px;margin-bottom:10px}
 
+
+/* ===== 플레이 화면: 스크롤 없이 한 화면에 고정, 알림창이 남는 공간을 차지 ===== */
+html.playing,html.playing body{height:100%;overflow:hidden;overscroll-behavior:none}
+html.playing .wrap{height:100vh;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;padding-block:4px max(8px,env(safe-area-inset-bottom,0px));overflow:hidden}
+html.playing .top{flex:none;padding-block:2px 6px}
+html.playing #scr-game{flex:1;min-height:0;display:flex;flex-direction:column}
+html.playing #scr-game .gbar{flex:none;margin-bottom:6px}
+html.playing #scr-game .table{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(4px,1.2dvh,14px)}
+html.playing .opps,html.playing .center,html.playing .me-wrap{flex:none}
+html.playing .center{padding-block:0}
+html.playing .feed{flex:1 1 0;height:auto;min-height:56px;margin-top:0;touch-action:pan-y}
+@media (hover:none){html.playing .bell-label{display:none}}
+/* 화면 높이가 낮은 폰(사파리 주소창·툴바 포함): 카드와 종을 조금씩 줄여요 */
+@media (max-height:800px){
+  html.playing .top{padding-block:0 4px}
+  html.playing .seat.me{--cw:92px;padding:8px 12px;gap:4px}
+  html.playing .seat.me .seat-sub{display:none}
+  html.playing .bell{width:calc(150px + 68px)}
+}
+@media (max-height:690px){
+  html.playing .opps .seat{--cw:44px;padding:4px 3px}
+  html.playing .seat.me{--cw:80px;padding:6px 10px}
+  html.playing .bell{width:calc(124px + 68px);padding-block:8px 4px;margin-block:-8px -4px}
+  html.playing .timer{font-size:20px}
+  html.playing .brand svg{display:none}
+}
+@media (max-height:600px){
+  html.playing .top{display:none}
+  html.playing .seat.me{--cw:68px}
+  html.playing .bell{width:calc(104px + 68px)}
+  html.playing .flip-hint{font-size:13px}
+  html.playing .flip-hint.hot{font-size:16px}
+}
+/* 넓은 화면(PC·태블릿): 알림창을 내 자리 오른쪽 아래 구석에 */
+@media (min-width:721px){
+  html.playing #scr-game .table{display:grid;grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto minmax(0,1fr);column-gap:18px}
+  html.playing .opps,html.playing .center{grid-column:1/-1}
+  html.playing .me-wrap{grid-column:2;grid-row:3;align-self:start}
+  html.playing .feed{grid-column:3;grid-row:3;align-self:end;justify-self:end;width:100%;max-width:320px;height:100%;max-height:220px;min-height:80px}
+}
+@media (min-width:431px) and (max-height:800px){html.playing .opps .seat{--cw:70px}}
+@media (min-width:431px) and (max-height:640px){html.playing .opps .seat{--cw:56px}}
 @keyframes flipin{from{transform:rotateY(80deg) scale(.9)}to{transform:none}}
 @keyframes ring{0%{transform:rotate(0)}20%{transform:rotate(-12deg) scale(1.06)}40%{transform:rotate(10deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(3deg)}100%{transform:none}}
 @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
@@ -467,7 +509,7 @@ function legendHTML(ch){return ch.map(i=>`<img src="${FACES[i]}" alt="${NAMES[i]
 
 /* ---------- screens ---------- */
 let screen='home';
-function show(n){screen=n;for(const s of ['home','bot','friend','game','rank'])$('#scr-'+s).hidden=s!==n;window.scrollTo(0,0)}
+function show(n){screen=n;for(const s of ['home','bot','friend','game','rank'])$('#scr-'+s).hidden=s!==n;document.documentElement.classList.toggle('playing',n==='game');window.scrollTo(0,0)}
 
 /* ---------- nickname ---------- */
 const nickIn=$('#nick');
