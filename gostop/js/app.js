@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018f';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018f';
-import { botMove, botGoStop } from './bot.js?v=20261018f';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018f';
-import { botBet, botChoose } from './seotda-bot.js?v=20261018f';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018f';
-import { createStore, applyResult } from './store.js?v=20261018f';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018f';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018g';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018g';
+import { botMove, botGoStop } from './bot.js?v=20261018g';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018g';
+import { botBet, botChoose } from './seotda-bot.js?v=20261018g';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018g';
+import { createStore, applyResult } from './store.js?v=20261018g';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018g';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -469,7 +469,7 @@ const cardsSeg = o => seg([{ v: 2, label: '2장 섯다' }, { v: 3, label: '3장 
 function openSeotdaSetup() {
   if (!needMoney()) return;
   const o = lastSdOpts();
-  const levelHelp = { easy: '아무렇게나 걸고 아무 때나 죽어요.', normal: '패가 좋으면 올리고 나쁘면 죽어요.', hard: '타짜예요. 남의 패를 몰래 보고 걸어요. 손모가지 조심!' };
+  const levelHelp = { easy: '아무렇게나 걸고 아무 때나 죽어요.', normal: '패가 좋으면 올리고 나쁘면 죽어요.', hard: '타짜예요. 열에 일곱 판은 남의 패를 몰래 보고 걸어요. 손모가지 조심!' };
   const help = h('p', { class: 'muted', style: 'margin:0;font-size:13px' }, levelHelp[o.level]);
   const close = openModal([
     h('h3', {}, '봇이랑 섯다'),

@@ -1,5 +1,5 @@
 // 섯다 봇: easy / normal / hard(타짜: 남의 패를 몰래 봄)
-import { SD_DECK, handInfo, bestPair, legalBets, resolve, potOf } from './seotda.js?v=20261018f';
+import { SD_DECK, handInfo, bestPair, legalBets, resolve, potOf } from './seotda.js?v=20261018g';
 
 // 모든 2장 조합 점수 분포 → 백분위
 const ALL = [];
@@ -43,7 +43,17 @@ function cheatEdge(s, seat) {
   return r.winners.includes(seat) ? 0.6 : -0.6;
 }
 
+// 난이도 조절: 판단마다 이 확률로 한 단계 약하게 둠 (어려움→보통, 보통→쉬움, 쉬움→아무 패나 따라감)
+// 2026-10-18: 섯다 난이도 20% 낮춤 (시뮬레이션으로 봇이 따가는 돈이 20% 줄어드는 값)
+export const SLIP = { easy: 0.24, normal: 0.2, hard: 0 };
+// 어려움(타짜)이 그 판에 남의 패를 엿볼 확률. 안 엿보는 판은 보통처럼 침
+export const HARD_PEEK = { p: 0.73 };
+const WEAKER = { hard: 'normal', normal: 'easy', easy: 'loose' };
+function hash01(str) { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; }
+const peeks = (s, seat) => hash01(`${s.gid || ''}|${s.seats[seat].id}|${s.rematch}`) < HARD_PEEK.p;
 export function botBet(s, seat, level = 'normal') {
+  if (level === 'hard' && !peeks(s, seat)) level = 'normal';
+  if (SLIP[level] && Math.random() < SLIP[level]) level = WEAKER[level];
   const acts = legalBets(s, seat);
   if (!acts.length) return null;
   const by = t => acts.find(a => a.type === t);
@@ -53,6 +63,10 @@ export function botBet(s, seat, level = 'normal') {
   const toCall = call ? call.amount : 0;
   const P = potOf(s);
   const r = Math.random();
+  if (level === 'loose') {
+    if (r < 0.25 && raise) return raise.type;
+    return passive.type;
+  }
   if (level === 'easy') {
     if (toCall > 0 && r < 0.22) return 'die';
     if (r > 0.82 && raise) return raise.type;
@@ -76,7 +90,7 @@ export function botBet(s, seat, level = 'normal') {
 
 export function botChoose(s, seat, level = 'normal') {
   const h = s.hands[seat];
-  if (level !== 'hard') return bestPair(h);
+  if (level !== 'hard' || !peeks(s, seat)) return bestPair(h);
   // 타짜: 남의 패를 보고 이기는 조합을 고름
   const others = {};
   for (let i = 0; i < s.n; i++) if (i !== seat && !s.folded[i]) others[i] = s.chosen[i] || bestPair(s.hands[i]);
