@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018h';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018h';
-import { botMove, botGoStop } from './bot.js?v=20261018h';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018h';
-import { botBet, botChoose } from './seotda-bot.js?v=20261018h';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018h';
-import { createStore, applyResult } from './store.js?v=20261018h';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018h';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018i';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018i';
+import { botMove, botGoStop } from './bot.js?v=20261018i';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018i';
+import { botBet, botChoose } from './seotda-bot.js?v=20261018i';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018i';
+import { createStore, applyResult } from './store.js?v=20261018i';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018i';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -257,13 +257,14 @@ class Chat {
   send(text) {
     text = (text || '').trim();
     if (!text || !S.me) return;
-    const m = { nick: S.me.nick, char: S.me.char, text };
+    const m = { nick: S.me.nick, char: S.me.char, pid: S.me.pid, text };
     if (this.path) S.store.sendChat(this.path, m).catch(() => toast('채팅을 보내지 못했어요'));
     else { this.msg({ ...m, ts: Date.now() }); this.onLocalSend?.(text); }
   }
   bump() { if (!this.open) { this.unread++; this.onUnread?.(this.unread); } }
   scroll() { this.log.scrollTop = this.log.scrollHeight; }
   msg(m) {
+    if (!m.ts || Date.now() - m.ts < 15000) this.onSay?.(m);
     this.log.append(h('div', { class: 'm' }, avatar(m.char, ''), h('div', {}, h('b', {}, m.nick), m.text)));
     this.trim(); this.scroll(); this.bump();
   }
@@ -686,6 +687,7 @@ class Game {
     this.chat = chat; this.state = null; this.json = null; this.seenEv = state.evSeq; this.prevFloor = [];
     this.gid = state.gid; this.locked = false; this.ended = false; this.resultShown = null; this.goStopShown = null;
     this.alive = true; this.chatOpen = false;
+    this.chat.onSay = m => this.showBubble(m);
     this.buildShell();
     this.chat.sys(this.introText(state));
     this.setState(state, true);
@@ -694,6 +696,8 @@ class Game {
   }
   destroy() {
     this.alive = false; clearInterval(this.timer); clearTimeout(this.botTimer);
+    Object.values(this.bubbleTimers || {}).forEach(clearTimeout);
+    if (this.chat.onSay) this.chat.onSay = null;
     Taunt.clear();
     this.closeGoStop?.(); this.closeResult?.();
     if (this.mode === 'bot') this.chat.destroy?.();
@@ -717,6 +721,36 @@ class Game {
   }
   introText(s) { return this.mode === 'bot' ? `판을 깔았어요. 점당 ${won(s.ppoint)}, ${s.n}인.` : `온라인 판 시작! ${s.seats.map(x => x.name).join(', ')}`; }
   seat(i) { return this.state.seats[i]; }
+  // ── 채팅 말풍선 ──
+  avWrap(seat, char, cls = '') {
+    return h('span', { class: `av-wrap ${cls}`, 'data-seat': seat }, avatar(char), this.bubbleEl(seat, false));
+  }
+  bubbleEl(seat, fresh) {
+    const b = this.bubbles?.[seat];
+    if (!b || Date.now() > b.until) return null;
+    return h('span', { class: `say ${fresh ? 'pop' : ''}`, role: 'status' }, h('span', { class: 'say-t' }, b.text));
+  }
+  showBubble(m) {
+    const s = this.state;
+    if (!s || !this.alive) return;
+    let seat = s.seats.findIndex(p => m.pid && p.id === m.pid);
+    if (seat < 0) seat = s.seats.findIndex(p => p.name === m.nick);
+    if (seat < 0) return;
+    const text = String(m.text || '').slice(0, 80);
+    this.bubbles = this.bubbles || {};
+    const until = Date.now() + Math.min(7000, 3200 + text.length * 70);
+    this.bubbles[seat] = { text, until };
+    const wrap = this.tableEl.querySelector(`.av-wrap[data-seat="${seat}"]`);
+    if (wrap) { wrap.querySelector('.say')?.remove(); const el = this.bubbleEl(seat, true); if (el) wrap.append(el); }
+    clearTimeout(this.bubbleTimers?.[seat]);
+    this.bubbleTimers = this.bubbleTimers || {};
+    this.bubbleTimers[seat] = setTimeout(() => {
+      if (this.bubbles?.[seat]?.until !== until) return;
+      delete this.bubbles[seat];
+      const el = this.tableEl.querySelector(`.av-wrap[data-seat="${seat}"] .say`);
+      if (el) { el.classList.add('bye'); setTimeout(() => el.remove(), 250); }
+    }, until - Date.now());
+  }
   key(s = this.state) { return `${this.gid}:${s.ver}`; }
   actor(s = this.state) { return s.phase === 'goStop' ? s.pending : s.phase === 'play' ? s.turn : null; }
 
@@ -985,12 +1019,12 @@ class Game {
       h('button', { class: 'icon-btn', 'aria-label': Snd.on ? '소리 끄기' : '소리 켜기', onclick: () => { Snd.toggle(); this.render(); } }, Snd.on ? '🔊' : '🔇'),
       h('button', { id: 'btn-chat', class: 'icon-btn', onclick: () => this.toggleChat() }, '채팅', this.chatBadge));
 
-    const oppEls = h('div', { class: 'opps', style: `--opp-n:${opps.length}` }, opps.map(i => {
+    const oppEls = h('div', { class: 'opps', style: `--opp-n:${opps.length}` }, opps.map((i, k) => {
       const p = s.seats[i];
       const { g, d } = groupCaps(s.caps[i]);
       const piCount = d.piVal;
       return h('button', { class: `opp ${a === i ? 'turn' : ''}`, style: 'text-align:left;color:inherit', onclick: () => this.showCaps(i), 'aria-label': `${p.name} 먹은 패 보기` },
-        h('div', { class: 'head' }, avatar(p.char),
+        h('div', { class: 'head' }, this.avWrap(i, p.char, `down ${k === opps.length - 1 && opps.length > 1 ? 'r' : ''}`),
           h('div', { class: 'nm' }, p.name, h('small', {}, p.isBot ? `봇 · ${{ easy: '쉬움', normal: '보통', hard: '어려움' }[p.level]}` : `손패 ${s.hands[i].length}장`)),
           h('span', { class: 'pts' }, d.total)),
         h('div', { class: 'chips' },
@@ -1016,7 +1050,7 @@ class Game {
       h('div', { class: 'cap-cards' }, ids.map(id => cardEl(id, 'mini'))));
     const myP = s.seats[me];
     const meBox = h('div', { class: `me-box ${a === me ? 'turn' : ''}` },
-      h('div', { class: 'head' }, avatar(myP.char),
+      h('div', { class: 'head' }, this.avWrap(me, myP.char, 'up'),
         h('div', { class: 'grow' }, h('b', {}, myP.name), ' ', h('span', { class: 'on-felt-muted money', 'data-wallet': '' }, won(S.me.money))),
         s.goCount[me] ? h('span', { class: 'chips' }, h('span', { class: 'go' }, `${s.goCount[me]}고`)) : null,
         s.shake[me] ? h('span', { class: 'chips' }, h('span', { class: 'go' }, '흔들')) : null,
@@ -1383,13 +1417,13 @@ class SeotdaGame extends Game {
       h('button', { class: 'icon-btn', 'aria-label': Snd.on ? '소리 끄기' : '소리 켜기', onclick: () => { Snd.toggle(); this.render(); } }, Snd.on ? '🔊' : '🔇'),
       h('button', { id: 'btn-chat', class: 'icon-btn', onclick: () => this.toggleChat() }, '채팅', this.chatBadge));
 
-    const oppEls = h('div', { class: 'opps', style: `--opp-n:${opps.length}` }, opps.map(i => {
+    const oppEls = h('div', { class: 'opps', style: `--opp-n:${opps.length}` }, opps.map((i, k) => {
       const p = s.seats[i];
       const shown = ended && r.hands?.[i];
       const turn = s.phase === 'bet' && s.turn === i;
       const thinking = s.phase === 'choose' && needsChoice(s, i);
       return h('div', { class: `opp sd-opp ${turn || thinking ? 'turn' : ''} ${s.folded[i] ? 'folded' : ''}` },
-        h('div', { class: 'head' }, avatar(p.char),
+        h('div', { class: 'head' }, this.avWrap(i, p.char, `down ${k === opps.length - 1 && opps.length > 1 ? 'r' : ''}`),
           h('div', { class: 'nm' }, p.name, h('small', {}, p.isBot ? `봇 · ${LEVEL_NAME[p.level] || ''}` : `${won(left(i))} 남음`))),
         h('div', { class: 'sd-opp-cards' }, shown ? shown.map(id => sdCard(id, 'mini')) : s.hands[i].map(() => sdBack('mini'))),
         h('div', { class: 'chips' },
@@ -1438,7 +1472,7 @@ class SeotdaGame extends Game {
     }
     const myP = s.seats[me];
     const meBox = h('div', { class: `me-box sd-me ${(s.phase === 'bet' && s.turn === me) || choosing ? 'turn' : ''}` },
-      h('div', { class: 'head' }, avatar(myP.char),
+      h('div', { class: 'head' }, this.avWrap(me, myP.char, 'up'),
         h('div', { class: 'grow' }, h('b', {}, myP.name), ' ', h('span', { class: 'on-felt-muted money' }, `${won(left(me))} 남음 · 낸 돈 ${won(s.contrib[me])}`))),
       cardsEl, jokbo);
 
@@ -1448,6 +1482,11 @@ class SeotdaGame extends Game {
   }
 }
 
+function botSay(p, text) {
+  if (!S.game) return;
+  S.game.chat.taunt(p.char, p.name, text);
+  S.game.showBubble({ pid: p.id, text });
+}
 function botChat() {
   return new Chat({
     onLocalSend: () => {
@@ -1457,7 +1496,7 @@ function botChat() {
         const p = b[Math.floor(Math.random() * b.length)];
         const c = charById(p.char);
         const keys = Object.keys(c.t);
-        setTimeout(() => S.game?.chat.taunt(p.char, p.name, Math.random() < .4 ? c.hi : tauntFor(p.char, keys[Math.floor(Math.random() * keys.length)])), 700 + Math.random() * 900);
+        setTimeout(() => botSay(p, Math.random() < .4 ? c.hi : tauntFor(p.char, keys[Math.floor(Math.random() * keys.length)])), 700 + Math.random() * 900);
       }
     },
   });
@@ -1472,7 +1511,7 @@ function startSeotdaBot(o) {
   S.game?.destroy();
   const chat = botChat();
   S.game = new SeotdaGame({ mode: 'bot', state: st, mySeat: 0, chat, level: o.level });
-  for (const p of seats.slice(1)) chat.taunt(p.char, p.name, charById(p.char).hi);
+  seats.slice(1).forEach((p, k) => { chat.taunt(p.char, p.name, charById(p.char).hi); setTimeout(() => S.game?.showBubble({ pid: p.id, text: charById(p.char).hi }), 400 + k * 700); });
 }
 
 function startBotGame(o) {
@@ -1490,12 +1529,12 @@ function startBotGame(o) {
         const p = b[Math.floor(Math.random() * b.length)];
         const c = charById(p.char);
         const keys = Object.keys(c.t);
-        setTimeout(() => S.game?.chat.taunt(p.char, p.name, Math.random() < .4 ? c.hi : tauntFor(p.char, keys[Math.floor(Math.random() * keys.length)])), 700 + Math.random() * 900);
+        setTimeout(() => botSay(p, Math.random() < .4 ? c.hi : tauntFor(p.char, keys[Math.floor(Math.random() * keys.length)])), 700 + Math.random() * 900);
       }
     },
   });
   S.game = new Game({ mode: 'bot', state: st, mySeat: 0, chat, level: o.level });
-  for (const p of seats.slice(1)) chat.taunt(p.char, p.name, charById(p.char).hi);
+  seats.slice(1).forEach((p, k) => { chat.taunt(p.char, p.name, charById(p.char).hi); setTimeout(() => S.game?.showBubble({ pid: p.id, text: charById(p.char).hi }), 400 + k * 700); });
 }
 
 // ───────────────── 랭킹 ─────────────────
