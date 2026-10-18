@@ -568,6 +568,12 @@ class Game{
       this.bump();this.schedTurn();this.changed();this.botsReact();
     },1300);
   }
+  // 자리 표가 늦게 도착한 플레이어: 연결 id로 잡혀 있던 자리를 표 이름으로 옮겨요
+  renameId(a,b){
+    const p=this.ps.find(x=>x.id===a);if(!p||a===b||this.ps.some(x=>x.id===b))return;
+    p.id=b;for(const x of this.bells)if(x.id===a)x.id=b;for(const e of this.evs)if(e.w===a)e.w=b;if(this.win===a)this.win=b;
+    this.changed();
+  }
   removePlayer(id){
     const p=this.ps[this.idx(id)];if(!p||p.out)return;
     p.deck=[];p.out=true;this.event('left',p.id);
@@ -923,7 +929,10 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
         if(d.t==='hb')return;
         if(d.t==='bye'){drop(conn.peer);return}
         if(d.t!=='pres'||!d.p||typeof d.p!=='object')return;
-        if(d.full)o.p={};merge(o.p,d.p);seen();
+        const before=JSON.stringify(o.p);
+        if(d.full)o.p={};merge(o.p,d.p);
+        if(o.on&&JSON.stringify(o.p)===before)return; // 2초마다 오는 전체 정보가 그대로면 넘어가요
+        seen();
       });
       const lost=()=>{
         if(o.conn!==conn||closed)return;o.conn=null;
@@ -1043,7 +1052,7 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
   hbT=setInterval(()=>{
     if(closed||!conn||!conn.open)return;
     if(heardAt&&Date.now()-heardAt>SILENT_MS){conn.lose&&conn.lose();return} // 열려 있는데 소식이 끊김 → 다시 붙기
-    try{conn.send({t:'hb'})}catch(e){}
+    try{conn.send({t:'pres',p:mine,full:1})}catch(e){} // 살아있다는 신호 겸, 내 이름·자리 표를 다시 알려요
   },HB_MS);
   step();
   await joinP;
@@ -1093,8 +1102,9 @@ async function enterRoom(c,role,opts){
   if(IN_CLAUDE&&!roomNS)return;
   setRoomBusy(true);$('#ownRoom').hidden=true;
   const note=$('#roomNote');note.hidden=false;note.textContent=role==='host'?(opts.reopen?`방 ${c}을(를) 다시 여는 중…`:'방을 여는 중…'):'방에 들어가는 중…';
-  mode=role;joinOrder=[];lastAct={};hostPeerId=null;hostSeen=false;myId=null;lastLob='';
-  const init=()=>({role,nick:myNick(),st:'lobby',g:null,lob:null,act:null});
+  mode=role;joinOrder=[];lastAct={};hostPeerId=null;hostSeen=false;lastLob='';peerTok=new Map();
+  myTok=tokenFor(c,role);myId=myTok;
+  const init=()=>({role,tok:myTok,nick:myNick(),st:'lobby',g:null,lob:null,act:null});
   let cc=c;
   try{
     if(roomNS)net=await roomNet(cc,init(),onNet);
@@ -1127,9 +1137,27 @@ function showLobby(){
   renderLobby();
 }
 let lobBots=Math.min(3,Math.max(0,Number(store.get('hg-lobbots'))||0)),lobLv=LV[store.get('hg-loblv')]?store.get('hg-loblv'):'normal';
+/* 플레이어는 연결 id가 아니라 '자리 표'(tok)로 구분해요.
+   폰이 잠깐 다른 앱에 갔다 오거나 탭이 새로고침돼서 연결 id가 바뀌어도 같은 자리로 돌아오게요.
+   친구 쪽 표는 이 폰에 방 코드별로 저장돼서, 카톡에서 링크를 다시 눌러 새 탭으로 열어도 같은 자리예요. */
+let myTok=null,peerTok=new Map();
+function tokenFor(c,role){
+  const mk=()=>(role==='host'?'h':'t')+Math.random().toString(36).slice(2,12);
+  if(role==='host'){let t=sstore.get('hg-htok-'+c);if(!t){t=mk();sstore.set('hg-htok-'+c,t)}return t}
+  let t=null;try{t=localStorage.getItem('hg-tok-'+c)}catch(e){}
+  if(!t){t=mk();try{localStorage.setItem('hg-tok-'+c,t)}catch(e){}}
+  return t;
+}
+const tokOf=p=>{const t=p&&p.presence&&p.presence.tok;return typeof t==='string'&&/^[a-z0-9]{2,24}$/.test(t)?t:p.peer};
 function lobbyList(){
   if(mode==='host'){
-    const humans=joinOrder.slice(0,4).map(p=>p.presence.off?{id:p.peer,n:String(p.presence.nick||'손님').slice(0,10),off:1}:{id:p.peer,n:String(p.presence.nick||'손님').slice(0,10)});
+    const humans=[];
+    for(const p of joinOrder){ // 같은 표로 두 번 붙어 있으면(예전 연결 + 새 연결) 살아 있는 쪽 하나만
+      const e={id:tokOf(p),n:String(p.presence.nick||'손님').slice(0,10)};if(p.presence.off)e.off=1;if(!p.sameTab&&!p.presence.tok)e.wait=1;
+      const i=humans.findIndex(h=>h.id===e.id);
+      if(i<0)humans.push(e);else if(humans[i].off&&!e.off)humans[i]=e;
+    }
+    humans.splice(4);
     const nb=Math.min(lobBots,4-humans.length);
     for(let i=0;i<nb;i++)humans.push({id:'bot'+i,n:BOT_NAMES[i],b:1});
     return humans;
@@ -1141,7 +1169,7 @@ function renderLobby(){
   const list=lobbyList();
   let html='';
   const lvName=LV[mode==='host'?lobLv:hostLv()]?.name||'보통';
-  for(let i=0;i<4;i++){const p=list[i];html+=p?`<li class="${p.b?'bot':''}"><span>${esc(p.n)}${p.id===myId?' (나)':''}${p.off?'<span class="off">연결 끊김 · 기다리는 중</span>':''}</span>${i===0?'<span class="badge">방장</span>':p.b?`<span class="badge bot">봇 · ${esc(lvName)}</span>`:''}</li>`:'<li class="empty">빈 자리</li>'}
+  for(let i=0;i<4;i++){const p=list[i];html+=p?`<li class="${p.b?'bot':''}"><span>${esc(p.n)}${p.id===myId?' (나)':''}${p.off?'<span class="off">연결 끊김 · 기다리는 중</span>':p.wait?'<span class="off">연결 중…</span>':''}</span>${i===0?'<span class="badge">방장</span>':p.b?`<span class="badge bot">봇 · ${esc(lvName)}</span>`:''}</li>`:'<li class="empty">빈 자리</li>'}
   $('#plist').innerHTML=html;
   $('#botCtl').hidden=mode!=='host';
   if(mode==='host'){
@@ -1150,7 +1178,7 @@ function renderLobby(){
   }
   const extra=mode==='host'?Math.max(0,joinOrder.length-4):0;
   const sb=$('#startOnline');
-  if(mode==='host'){sb.hidden=false;sb.disabled=list.length<2;const nb=list.filter(p=>p.b).length;$('#lobbyNote').textContent=(list.length<2?'친구가 들어오거나 봇을 넣으면 시작할 수 있어요.':`${list.length-nb}명${nb?` + 봇 ${nb}`:''} 준비 완료. 시작을 누르면 바로 카드가 돌아가요.`)+(extra?` (5번째부터 ${extra}명은 관전)`:'')}
+  if(mode==='host'){sb.hidden=false;const waiting=list.some(p=>p.wait);sb.disabled=list.length<2||waiting;const nb=list.filter(p=>p.b).length;$('#lobbyNote').textContent=(list.length<2?'친구가 들어오거나 봇을 넣으면 시작할 수 있어요.':waiting?'방금 들어온 친구와 연결을 맞추는 중이에요. 1~2초만 기다려 주세요.':`${list.length-nb}명${nb?` + 봇 ${nb}`:''} 준비 완료. 시작을 누르면 바로 카드가 돌아가요.`)+(extra?` (5번째부터 ${extra}명은 관전)`:'')}
   else{sb.hidden=true;if(hostSeen)$('#lobbyNote').textContent='방장이 시작하면 게임이 열려요.'}
 }
 function pushLob(){const l=lobbyList();const s=JSON.stringify(l)+lobLv;if(s!==lastLob&&net){lastLob=s;net.presence({lob:l,lv:lobLv})}}
@@ -1159,13 +1187,18 @@ $('#lobBots').onclick=e=>{const b=e.target.closest('button');if(!b||mode!=='host
 $('#lobLevel').onclick=e=>{const b=e.target.closest('button');if(!b||mode!=='host')return;lobLv=b.dataset.v;store.set('hg-loblv',lobLv);pushLob();renderLobby()};
 function onPeers(ch){
   const all=ch.peers;
-  const mine=all.find(p=>p.sameTab);if(mine)myId=mine.peer;
+  for(const p of all)peerTok.set(p.peer,tokOf(p));
+  if(myTok)myId=myTok;
   if(mode==='host'){
     for(const p of ch.joined)if(!joinOrder.some(x=>x.peer===p.peer)){if(p.sameTab)joinOrder.unshift(p);else joinOrder.push(p)}
     joinOrder=joinOrder.filter(x=>all.some(p=>p.peer===x.peer)).map(x=>all.find(p=>p.peer===x.peer));
     const self=joinOrder.findIndex(p=>p.sameTab);if(self>0)joinOrder.unshift(...joinOrder.splice(self,1));
+    if(game)for(const p of all){const t=tokOf(p);if(t!==p.peer&&game.ps.some(x=>x.id===p.peer)){game.renameId(p.peer,t);if(lastAct[p.peer]){lastAct[t]=Math.max(lastAct[t]||0,lastAct[p.peer])}}}
     for(const p of [...ch.joined,...ch.updated])handleAct(p);
-    for(const p of ch.left)if(game&&game.ph!=='over')game.removePlayer(p.peer);
+    for(const p of ch.left){
+      const t=peerTok.get(p.peer)||p.peer;peerTok.delete(p.peer);
+      if(game&&game.ph!=='over'&&!joinOrder.some(x=>tokOf(x)===t))game.removePlayer(t); // 같은 자리 표로 다시 붙은 연결이 있으면 그대로 둬요
+    }
     if(!game){pushLob();if(screen==='friend')renderLobby()}
     return;
   }
@@ -1187,16 +1220,17 @@ function onPeers(ch){
 function handleAct(p){
   if(!game||p.sameTab)return;
   const a=p.presence&&p.presence.act;if(!a||typeof a!=='object')return;
-  const id=Number(a.id)||0;if(id<=(lastAct[p.peer]||0))return;lastAct[p.peer]=id;
-  if(a.k==='flip'){if(a.tn!=null&&Number(a.tn)!==game.tn)return;game.flip(p.peer)} // 그 차례에 누른 것만 인정
-  else if(a.k==='bell')game.bell(p.peer,Number(a.s)||0,Number(a.r)||9999);
+  const who=tokOf(p);
+  const id=Number(a.id)||0;if(id<=(lastAct[who]||0))return;lastAct[who]=id;
+  if(a.k==='flip'){if(a.tn!=null&&Number(a.tn)!==game.tn)return;game.flip(who)} // 그 차례에 누른 것만 인정
+  else if(a.k==='bell')game.bell(who,Number(a.s)||0,Number(a.r)||9999);
 }
 function sendAct(k,extra){actId=Math.max(actId+1,Date.now());if(net)net.presence({act:Object.assign({k,id:actId},extra||{})})}
 $('#startOnline').onclick=()=>{
   if(mode!=='host'||!net)return;
-  const list=lobbyList();if(list.length<2)return;
-  const byPeer=Object.fromEntries(joinOrder.map(p=>[p.peer,p]));
-  for(const p of joinOrder)lastAct[p.peer]=Number(p.presence.act&&p.presence.act.id)||0;
+  const list=lobbyList();if(list.length<2||list.some(p=>p.wait))return;
+  const byPeer=Object.fromEntries(joinOrder.map(p=>[tokOf(p),p]));
+  for(const p of joinOrder)lastAct[tokOf(p)]=Math.max(lastAct[tokOf(p)]||0,Number(p.presence.act&&p.presence.act.id)||0);
   const players=list.map(x=>x.b?{id:x.id,nick:x.n,kind:'bot',uid:null}:{id:x.id,nick:x.n,kind:x.id===myId?'me':'remote',uid:x.id===myId?myUid:(byPeer[x.id]&&byPeer[x.id].by)||null});
   const mid=code+'-'+Date.now().toString(36);
   endLocalGame();resetView();show('game');
@@ -1216,7 +1250,7 @@ function leaveRoom(){
   $('#netBanner').hidden=true;
   if(!IN_CLAUDE){
     if(mode==='host'){sstore.del('hg-host');let h=null;try{h=JSON.parse(store.get('hg-hosted')||'null')}catch(e){}if(h&&h.code===code)store.set('hg-hosted','')}
-    else if(code){sstore.del('hg-guest');sstore.del('hg-pid-'+code)}
+    else if(code){sstore.del('hg-guest');sstore.del('hg-pid-'+code);try{localStorage.removeItem('hg-tok-'+code)}catch(e){}}
     try{if(location.search)history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
   }
   clearTimeout(hostLeftT);hostLeftT=null;
