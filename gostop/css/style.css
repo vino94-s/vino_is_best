@@ -319,3 +319,51 @@ img { display: block; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
+
+/* ── 게임 고르기 ── */
+.select-hi { text-align: center; margin: 0; font-size: 17px; font-weight: 700; }
+.pick-game { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.game-pick { border: 0; border-radius: 14px; background: var(--cream); color: var(--ink); padding: 18px 10px 16px; display: grid; justify-items: center; gap: 4px; box-shadow: 0 5px 0 var(--felt-deep); transition: transform .08s; }
+.game-pick:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--felt-deep); }
+.game-pick b { font-family: var(--f-stamp); font-weight: 400; font-size: clamp(30px, 9vw, 40px); color: var(--red); line-height: 1.1; margin-top: 8px; }
+.game-pick span { font-size: 13px; color: var(--muted); text-align: center; }
+.fan { display: flex; justify-content: center; height: 108px; align-items: flex-end; }
+.fan img { width: 58px; height: 95px; border-radius: 5px; box-shadow: 0 3px 0 rgba(0, 0, 0, .3); }
+.fan img + img { margin-left: -26px; }
+.fan img:nth-child(1) { transform: rotate(-12deg) translateY(4px); }
+.fan img:nth-last-child(1) { transform: rotate(12deg) translateY(4px); }
+.fan img:nth-child(2):not(:last-child) { transform: translateY(-6px); z-index: 1; }
+.kind-bar { display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, .25); border-radius: 10px; padding: 8px 12px; }
+.kind-bar b { font-family: var(--f-stamp); font-weight: 400; font-size: 24px; color: var(--gold); flex: 1; }
+.kind-bar .btn { color: var(--on-felt); }
+
+/* ── 섯다 판 ── */
+.card.sd .mnum { position: absolute; z-index: 1; left: 3px; top: 3px; min-width: 1.55em; height: 1.55em; padding: 0 .2em; border-radius: .8em; display: grid; place-items: center; background: var(--ink); color: var(--cream); font-family: var(--f-stamp); font-size: calc(var(--cw) * .2); line-height: 1; box-shadow: 0 0 0 2px var(--cream); }
+.card.sd.mini .mnum { font-size: 10px; left: 1px; top: 1px; box-shadow: 0 0 0 1px var(--cream); }
+.card.sd.big { --cw: clamp(70px, 21vw, 104px); }
+.card.back.sd.mini::after { inset: 4px; }
+.sd-hand { display: flex; gap: 10px; justify-content: center; padding: 10px 0 2px; }
+.sd-hand .card { border: 0; transition: transform .12s, box-shadow .12s, opacity .12s; }
+.sd-hand button.card { cursor: pointer; }
+.sd-hand .card.picked { transform: translateY(-10px); box-shadow: 0 0 0 4px var(--gold), 0 6px 0 rgba(0, 0, 0, .35); }
+.sd-hand .card.dim { opacity: .4; }
+.jokbo { display: grid; justify-items: center; gap: 0; text-align: center; min-height: 54px; }
+.jokbo b { font-family: var(--f-stamp); font-weight: 400; font-size: clamp(26px, 8vw, 34px); color: var(--gold); line-height: 1.15; }
+.jokbo small { font-size: 13px; color: var(--on-felt-muted); }
+.sd-center { display: grid; justify-items: center; align-content: center; gap: 4px; }
+.sd-pot { display: grid; justify-items: center; }
+.sd-pot small { font-size: 13px; color: var(--on-felt-muted); }
+.sd-pot b { font-family: var(--f-stamp); font-weight: 400; font-size: clamp(32px, 10vw, 48px); color: var(--gold); line-height: 1.05; }
+.sd-sub { font-size: 14px; color: var(--on-felt); }
+.sd-opp .head .avatar { width: 34px; height: 34px; }
+.sd-opp-cards { display: flex; gap: 3px; min-height: 43px; }
+.opp.folded { opacity: .5; }
+.sd-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; }
+.sd-actions .btn { padding: 10px 4px; display: grid; justify-items: center; line-height: 1.15; font-size: 17px; }
+.sd-actions .btn small { font-weight: 400; font-size: 12px; opacity: .9; }
+.sd-res-cards { display: flex; gap: 2px; }
+
+.slot { position: relative; min-width: 0; }
+.slot .nm { min-width: 0; overflow-wrap: anywhere; }
+.slot .kick { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: var(--cream-2); color: var(--ink); font-size: 13px; line-height: 1; }
+.tabs button { font-size: 14px; padding: 10px 2px; white-space: nowrap; }

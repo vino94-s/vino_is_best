@@ -1,11 +1,11 @@
 // 데이터 계층: Firebase Realtime Database (설정 시) / 이 브라우저 localStorage (미설정 시)
-import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261018a';
+import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261018c';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const PID_CHARS = 'abcdefghijkmnopqrstuvwxyz0123456789';
 const genCode = (len = 6, chars = CODE_CHARS) => Array.from(crypto.getRandomValues(new Uint32Array(len)), v => chars[v % chars.length]).join('');
 const nickKey = nick => nick.trim().toLowerCase().replace(/[.#$\[\]\/\s]/g, '_');
-const emptyStats = () => ({ botGames: 0, botWins: 0, botProfit: 0, onGames: 0, onWins: 0, onProfit: 0, best: 0 });
+const emptyStats = () => ({ botGames: 0, botWins: 0, botProfit: 0, sdGames: 0, sdWins: 0, sdProfit: 0, onGames: 0, onWins: 0, onProfit: 0, best: 0 });
 
 /** 한국 시간 기준 오늘 날짜 */
 export function todayKST() {
@@ -137,7 +137,7 @@ class FirebaseStore {
     for (let i = 0; i < 20; i++) {
       code = genCode(5, '0123456789');
       const r = await this.ref('rooms/' + code).transaction(cur => (cur && Date.now() - (cur.updatedAt || 0) < 6 * 3600e3 ? undefined : {
-        host: me.pid, ppoint: opts.ppoint, bonus: opts.bonus, status: 'waiting', createdAt: Date.now(), updatedAt: Date.now(),
+        host: me.pid, kind: opts.kind || 'gostop', ppoint: opts.ppoint, bonus: opts.bonus, ante: opts.ante || 1000, cards: opts.cards || 2, status: 'waiting', createdAt: Date.now(), updatedAt: Date.now(),
         players: { [me.pid]: { nick: me.nick, char: opts.char, joinedAt: Date.now(), online: true } },
       }));
       if (r.committed) break;
@@ -283,6 +283,7 @@ export async function applyResult(store, code, { mode, win, delta }) {
     u.money = Math.max(0, before + delta);
     applied = u.money - before;
     if (mode === 'bot') { u.stats.botGames++; if (win) u.stats.botWins++; u.stats.botProfit += applied; }
+    else if (mode === 'seotda') { u.stats.sdGames++; if (win) u.stats.sdWins++; u.stats.sdProfit += applied; }
     else { u.stats.onGames++; if (win) u.stats.onWins++; u.stats.onProfit += applied; }
     if (win) u.stats.best = Math.max(u.stats.best || 0, applied);
     return u;

@@ -1,6 +1,6 @@
 // 봇 AI: easy / normal / hard
-import { CARDS, DAN_SETS, GODORI } from './cards.js?v=20261018a';
-import { legalMoves, scoreDetail, scoreOf, cardRank, applyPlay } from './engine.js?v=20261018a';
+import { CARDS, DAN_SETS, GODORI } from './cards.js?v=20261018c';
+import { legalMoves, scoreDetail, scoreOf, cardRank, applyPlay } from './engine.js?v=20261018c';
 
 const C = id => CARDS[id];
 const rand = a => a[Math.floor(Math.random() * a.length)];
