@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018g';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018g';
-import { botMove, botGoStop } from './bot.js?v=20261018g';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018g';
-import { botBet, botChoose } from './seotda-bot.js?v=20261018g';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018g';
-import { createStore, applyResult } from './store.js?v=20261018g';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018g';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018h';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018h';
+import { botMove, botGoStop } from './bot.js?v=20261018h';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018h';
+import { botBet, botChoose } from './seotda-bot.js?v=20261018h';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018h';
+import { createStore, applyResult } from './store.js?v=20261018h';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018h';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -126,6 +126,19 @@ function openModal(content, { dismiss = true } = {}) {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && modalStack.length && modalStack[modalStack.length - 1].dismiss) modalStack[modalStack.length - 1]();
 });
+// 게임 채팅창이 떠 있을 때 바깥 아무 데나 누르면 닫힘 (그 터치로 뒤의 패·버튼은 안 눌림)
+let chatEat = 0;
+window.addEventListener('pointerdown', e => {
+  chatEat = 0;
+  const g = S.game;
+  if (!g || !g.alive || !g.chatOpen || !g.chatWrap || window.matchMedia('(min-width: 980px)').matches) return;
+  const t = e.target;
+  if (!t || !t.closest || g.chatWrap.contains(t) || t.closest('#modal-root, #bungBack')) return;
+  g.toggleChat(false); chatEat = Date.now(); e.stopPropagation();
+}, true);
+['pointerup', 'mousedown', 'mouseup', 'touchstart', 'touchend', 'click'].forEach(type => window.addEventListener(type, e => {
+  if (chatEat && Date.now() - chatEat < 700) { e.stopPropagation(); if (type === 'click') e.preventDefault(); }
+}, true));
 function confirmModal(title, body, okText = '확인', cancelText = '취소') {
   return new Promise(res => {
     const close = openModal([
