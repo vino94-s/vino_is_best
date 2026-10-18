@@ -376,6 +376,8 @@ img { display: block; }
 .jokbo-tab { position: fixed; z-index: 39; right: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; letter-spacing: .2em;
   border: 0; border-radius: 10px 0 0 10px; padding: 14px 7px; background: var(--red); color: #fff; font-family: var(--f-stamp); font-size: 17px; box-shadow: -2px 2px 0 var(--red-deep); }
 .jokbo-tab[aria-expanded="true"] { opacity: 0; pointer-events: none; }
+.jokbo-shade { position: fixed; inset: 0; z-index: 38; display: none; background: rgba(20, 22, 10, .3); }
+.jokbo-shade.open { display: block; animation: dim .2s ease-out; }
 .jk-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
 .jk-head b { font-family: var(--f-stamp); font-weight: 400; font-size: 22px; color: var(--red); }
 .jk-head small { color: var(--muted); font-size: 12px; flex: 1; }
@@ -396,5 +398,5 @@ img { display: block; }
 @media (min-width: 980px) {
   #scr-game.sd-mode { grid-template-columns: 250px minmax(0, 1fr) 320px; }
   .sd-mode .jokbo-panel { position: static; transform: none; width: auto; margin: 8px 0 8px 8px; border-radius: 12px; box-shadow: none; transition: none; }
-  .sd-mode .jokbo-tab, .sd-mode .jk-close { display: none; }
+  .sd-mode .jokbo-tab, .sd-mode .jk-close, .sd-mode .jokbo-shade { display: none !important; }
 }

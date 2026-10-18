@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018e';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018e';
-import { botMove, botGoStop } from './bot.js?v=20261018e';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018e';
-import { botBet, botChoose } from './seotda-bot.js?v=20261018e';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018e';
-import { createStore, applyResult } from './store.js?v=20261018e';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018e';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018f';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018f';
+import { botMove, botGoStop } from './bot.js?v=20261018f';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018f';
+import { botBet, botChoose } from './seotda-bot.js?v=20261018f';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018f';
+import { createStore, applyResult } from './store.js?v=20261018f';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018f';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -1136,13 +1136,22 @@ class SeotdaGame extends Game {
     super.buildShell();
     this.jokboEl = h('aside', { class: 'jokbo-panel', 'aria-label': '섯다 족보' });
     this.jokboTab = h('button', { class: 'jokbo-tab', 'aria-expanded': 'false', onclick: () => this.toggleJokbo() }, '족보');
+    // 족보창 바깥 아무 데나 누르면 닫힘 (뒤에 있는 버튼은 안 눌림)
+    this.jokboShade = h('div', { class: 'jokbo-shade', 'aria-hidden': 'true', onclick: () => this.toggleJokbo(false) });
     $('#scr-game').prepend(this.jokboEl);
-    $('#scr-game').append(this.jokboTab);
+    $('#scr-game').append(this.jokboShade, this.jokboTab);
     $('#scr-game').classList.add('sd-mode');
+    this.onJokboKey = e => { if (e.key === 'Escape' && this.jokboOpen) this.toggleJokbo(false); };
+    document.addEventListener('keydown', this.onJokboKey);
+  }
+  destroy() {
+    document.removeEventListener('keydown', this.onJokboKey);
+    super.destroy();
   }
   toggleJokbo(open = !this.jokboOpen) {
     this.jokboOpen = open;
     this.jokboEl.classList.toggle('open', open);
+    this.jokboShade.classList.toggle('open', open);
     this.jokboTab.setAttribute('aria-expanded', String(open));
   }
   renderJokbo(info) {
