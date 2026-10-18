@@ -2,7 +2,7 @@
 // 이벤트 키: go, godori, dan, gwang, sseul, ppeok, steal(쪽·따닥·뻑먹기), bomb(폭탄·흔들기), stop, win, bak(피박·광박), samppeok, lose
 export const CHARACTERS = [
   {
-    id: 'eomji', name: '엄지', img: 'assets/chars/eomji.jpg', fx: 'zoom', parts: ['👍', '⭐', '✨'], hi: '따봉!',
+    id: 'eomji', name: '엄지', img: 'assets/chars/eomji.png?v=2', fx: 'zoom', parts: ['👍', '⭐', '✨'], hi: '따봉!',
     t: {
       go: ['고! 엄지척 받고 한 번 더!', '따봉 한 번 더 간다잉~'],
       godori: ['새 세 마리 따봉~ 고도리!', '엄지로 새 잡았다! 고도리!'],
@@ -23,7 +23,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'yeoni', name: '여니', img: 'assets/chars/yeoni.jpg', fx: 'slide', parts: ['💦', '🥲', '🐾'], hi: '끄응…',
+    id: 'yeoni', name: '여니', img: 'assets/chars/yeoni.png?v=2', fx: 'slide', parts: ['💦', '🥲', '🐾'], hi: '끄응…',
     t: {
       go: ['어… 고… 해도 되지…?', '미안… 고 할게…'],
       godori: ['어… 고도리 됐네… 미안…', '새들이 나한테 왔어… 끄응'],
@@ -44,7 +44,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'yeongjun', name: '영준', img: 'assets/chars/yeongjun.jpg', fx: 'flap', parts: ['🪶', '🎉', '🎊'], hi: '만세! 짹짹!',
+    id: 'yeongjun', name: '영준', img: 'assets/chars/yeongjun.png?v=2', fx: 'flap', parts: ['🪶', '🎉', '🎊'], hi: '만세! 짹짹!',
     t: {
       go: ['고! 만세! 고! 짹!', '만세 부르고 한 번 더 짹!'],
       godori: ['새는 새끼리! 고도리 만세 짹!', '친구들아 모여라 짹짹! 고도리!'],
@@ -65,7 +65,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'yongwang', name: '용왕', img: 'assets/chars/yongwang.jpg', fx: 'drop', parts: ['👑', '🌊', '✨'], hi: '에헴!',
+    id: 'yongwang', name: '용왕', img: 'assets/chars/yongwang.png?v=2', fx: 'drop', parts: ['👑', '🌊', '✨'], hi: '에헴!',
     t: {
       go: ['과인이 고를 명하노라!', '여봐라~ 판을 더 키워라! 고!'],
       godori: ['하늘의 새도 용왕 것이로다! 고도리!', '에헴, 새 세 마리 진상 받았노라'],
@@ -86,7 +86,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'juntak', name: '준탁', img: 'assets/chars/juntak.jpg', fx: 'bow', parts: ['🌹', '💐', '🎩'], hi: '네 아가씨',
+    id: 'juntak', name: '준탁', img: 'assets/chars/juntak.png?v=2', fx: 'bow', parts: ['🌹', '💐', '🎩'], hi: '네 아가씨',
     t: {
       go: ['네 아가씨, 고 하겠습니다', '실례지만… 한 번 더 고'],
       godori: ['네 아가씨, 새 세 마리 모셔왔습니다', '고도리를 장미 대신 드리지요'],
@@ -107,7 +107,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'haetsal', name: '햇살', img: 'assets/chars/haetsal.jpg', fx: 'spin', parts: ['☀️', '✨', '🌟'], hi: '안물안궁? ㅇㅋ',
+    id: 'haetsal', name: '햇살', img: 'assets/chars/haetsal.png?v=2', fx: 'spin', parts: ['☀️', '✨', '🌟'], hi: '안물안궁? ㅇㅋ',
     t: {
       go: ['안물안궁? ㅇㅋ 고', '눈부셔서 못 멈춤 ㅋ 고'],
       godori: ['고도리 ㅇㅋ 안물안궁?', '새들도 햇살 따라옴 ㅋ'],
@@ -128,7 +128,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'goran', name: '고란', img: 'assets/chars/goran.jpg', fx: 'drip', parts: ['💧', '🤤', '💦'], hi: '주르륵…',
+    id: 'goran', name: '고란', img: 'assets/chars/goran.png?v=2', fx: 'drip', parts: ['💧', '🤤', '💦'], hi: '주르륵…',
     t: {
       go: ['츄릅… 고… 더 먹을래…', '침 닦고… 고…'],
       godori: ['새… 세 마리… 맛있겠다… 츄릅', '고도리… 꿀꺽…'],
@@ -149,7 +149,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'kkaegul', name: '깨굴', img: 'assets/chars/kkaegul.jpg', fx: 'bounce', parts: ['🐸', '💚', '🪷'], hi: '깨굴!',
+    id: 'kkaegul', name: '깨굴', img: 'assets/chars/kkaegul.png?v=2', fx: 'bounce', parts: ['🐸', '💚', '🪷'], hi: '깨굴!',
     t: {
       go: ['고 간다굴~ 깨굴깨굴!', '한 번 더 점프다굴! 고!'],
       godori: ['새 잡아먹었다굴! 고도리!', '혀로 새 세 마리 낚았다굴~'],
@@ -170,7 +170,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'mandu', name: '만두', img: 'assets/chars/mandu.jpg', fx: 'wiggle', parts: ['🐾', '👍', '🥟'], hi: '냥~ 엄지척',
+    id: 'mandu', name: '만두', img: 'assets/chars/mandu.png?v=2', fx: 'wiggle', parts: ['🐾', '👍', '🥟'], hi: '냥~ 엄지척',
     t: {
       go: ['고 한다냥 👍', '냥냥~ 한 번 더 간다냥'],
       godori: ['새는 고양이 거다냥! 고도리!', '사냥 완료다냥 👍'],
@@ -191,7 +191,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'myongradak', name: '묭라닥', img: 'assets/chars/myongradak.jpg', fx: 'shake', parts: ['🪶', '🥚', '🍗'], hi: '꼬끼오!',
+    id: 'myongradak', name: '묭라닥', img: 'assets/chars/myongradak.png?v=2', fx: 'shake', parts: ['🪶', '🥚', '🍗'], hi: '꼬끼오!',
     t: {
       go: ['꼬끼오! 고! 고! 고!', '꼬꼬댁~ 한 번 더!'],
       godori: ['새는 새를 알아본다! 고도리 꼬끼오!', '꼬꼬! 고도리 부화 완료!'],
@@ -212,7 +212,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'bongchum', name: '봉춤', img: 'assets/chars/bongchum.jpg', fx: 'shake', parts: ['🐶', '💢', '🦴'], hi: '왈왈!',
+    id: 'bongchum', name: '봉춤', img: 'assets/chars/bongchum.png?v=2', fx: 'shake', parts: ['🐶', '💢', '🦴'], hi: '왈왈!',
     t: {
       go: ['왈왈왈!! 고다 고!!', '멍! 멍! 한 번 더!!'],
       godori: ['새다!! 왈왈!! 고도리!!', '새 세 마리 물어왔다 왈!!'],
@@ -233,7 +233,7 @@ export const CHARACTERS = [
     },
   },
   {
-    id: 'bino', name: '비노', img: 'assets/chars/bino.jpg', fx: 'deadpan', parts: [], hi: '…',
+    id: 'bino', name: '비노', img: 'assets/chars/bino.png?v=2', fx: 'deadpan', parts: [], hi: '…',
     t: {
       go: ['…고.', '(무표정으로 고)'],
       godori: ['…고도리.', '(새 세 마리를 조용히 가져감)'],
