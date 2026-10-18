@@ -418,3 +418,4 @@ img { display: block; }
 .say.bye { animation: say-bye .25s ease-in forwards; }
 @keyframes say-pop { from { transform: scale(.5) translateY(6px); opacity: 0; } }
 @keyframes say-bye { to { transform: scale(.85); opacity: 0; } }
+.seg button { white-space: nowrap; font-size: clamp(13px, 3.7vw, 16px); padding-inline: 2px; }

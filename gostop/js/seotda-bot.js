@@ -1,5 +1,5 @@
 // 섯다 봇: easy / normal / hard(타짜: 남의 패를 몰래 봄)
-import { SD_DECK, handInfo, bestPair, legalBets, resolve, potOf } from './seotda.js?v=20261018i';
+import { SD_DECK, handInfo, bestPair, legalBets, resolve, potOf } from './seotda.js?v=20261018j';
 
 // 모든 2장 조합 점수 분포 → 백분위
 const ALL = [];
