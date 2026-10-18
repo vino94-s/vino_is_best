@@ -122,8 +122,9 @@ input[type=text]{font-family:var(--f-ui);font-size:20px;border:3px solid var(--i
 .seat-row{display:flex;align-items:flex-end;gap:10px}
 .deck{width:calc(var(--cw)*.6);aspect-ratio:3/4;border:3px solid var(--ink);border-radius:10px;background:var(--cobalt) repeating-linear-gradient(45deg,transparent 0 6px,rgba(255,255,255,.18) 6px 12px);box-shadow:3px 3px 0 var(--paper),6px 6px 0 var(--ink);display:grid;place-items:center;padding:0}
 .deck .dn{font-family:var(--f-display);font-size:calc(var(--cw)*.2);color:var(--paper);text-shadow:2px 2px 0 var(--ink);font-variant-numeric:tabular-nums}
-button.deck:disabled{cursor:default}
-button.deck.can{outline:4px solid var(--tomato);outline-offset:4px;animation:blink .8s steps(2,jump-none) infinite}
+.seat.me{cursor:pointer;touch-action:none}
+.seat.me .deck{cursor:pointer}
+.deck.can{outline:4px solid var(--tomato);outline-offset:4px;animation:blink .8s steps(2,jump-none) infinite}
 @keyframes blink{from{outline-color:var(--tomato)}to{outline-color:transparent}}
 .seat-sub{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .flip-hint{font-family:var(--f-ui);font-size:14px}
@@ -143,9 +144,10 @@ button.deck.can{outline:4px solid var(--tomato);outline-offset:4px;animation:bli
 .card.flipin{animation:flipin .28s ease-out}
 
 .center{display:flex;flex-direction:column;align-items:center;gap:4px;padding-block:4px}
-.bell{background:none;border:0;padding:0;width:150px;max-width:40vw;touch-action:manipulation;filter:drop-shadow(4px 5px 0 var(--ink))}
+.bell{background:none;border:0;padding:14px 34px 8px;margin:-14px -34px -8px;width:calc(190px + 68px);max-width:calc(52vw + 68px);touch-action:none;filter:drop-shadow(4px 5px 0 var(--ink));-webkit-tap-highlight-color:transparent}
 .bell svg{width:100%;height:auto;display:block}
-.bell:disabled{opacity:.5;cursor:default}
+.bell.off svg{opacity:.5}
+.bell.hit svg{transform:scale(.94);transition:transform .05s}
 .bell.ring{animation:ring .45s ease-out}
 .bell-label{font-family:var(--f-ui);font-size:15px}
 .me-wrap{display:flex;justify-content:center}
@@ -218,6 +220,25 @@ tr.mine td{background:var(--paper-2)}
   .seat{--cw:66px}
   .seat-row{gap:6px}
 }
+/* 좁은 폰(아이폰 등 390px 안팎): 상대 3명을 한 줄에, 내 자리와 종이 한 화면에 들어오게 */
+@media (max-width:430px){
+  .gbar{flex-wrap:nowrap;gap:6px;margin-bottom:8px}
+  .gbar .legend{gap:4px;flex-wrap:nowrap;min-width:0}
+  .gbar .legend img{width:28px;height:28px}
+  .timer{font-size:22px;min-width:66px;padding:0 6px}
+  #quitGame{padding:6px 10px;font-size:15px;white-space:nowrap}
+  .table{gap:8px}
+  .opps{flex-wrap:nowrap;gap:5px}
+  .opps .seat{--cw:52px;flex:1 1 0;min-width:0;padding:6px 4px;gap:4px}
+  .opps .seat-row{gap:4px}
+  .opps .seat-sub{display:none}
+  .opps .card.empty span{display:none}
+  .opps .who{max-width:64px}
+  .opps .seat-top{font-size:14px;gap:3px;flex-wrap:wrap;justify-content:center}
+  .seat.me{--cw:104px}
+  .bell{width:calc(160px + 68px)}
+}
+
 </style>
 </head>
 <body>
@@ -498,7 +519,7 @@ class Game{
     if(this.ph!=='play')return;
     const p=this.ps[this.turn];if(!p)return;
     this.tn++;
-    this.turnGrace=p.kind==='remote'?NET_GRACE:0;
+    this.turnGrace=this.graceOf(p);
     this.turnEnd=Date.now()+TURN_MS+this.turnGrace;
     if(p.kind==='bot'){
       const ms=Math.min(rnd(...this.level.flip),TURN_MS-300);
@@ -537,16 +558,25 @@ class Game{
       }
     }
   }
+  // 친구 화면은 인터넷 왕복 시간만큼 늦게 보고 늦게 보내요. 그만큼 더 기다려줘요(최대 1.5초)
+  graceOf(p){if(!p||p.kind!=='remote')return 0;const g=this.o.graceFor?this.o.graceFor(p.id):null;return g==null?NET_GRACE:g}
   bell(id,seen,react){
     if(this.ph!=='play'&&this.ph!=='ring')return;
     const p=this.ps[this.idx(id)];if(!p||p.out)return;
     if(this.bells.some(b=>b.id===id))return;
     let s=seen;
-    const fresh=s===this.seq||(s===this.seq-1&&this.hist[s]&&Date.now()-this.hist[this.seq].at<450);
+    // 그 사람이 보고 친 카드 상태로 판정해요. 이미 다음 카드가 나왔어도 (0.45초 + 그 사람 인터넷 지연) 안이면 인정
+    const nx=this.hist[s+1];
+    const fresh=s===this.seq||(this.hist[s]&&s<this.seq&&s>=this.seq-3&&nx&&Date.now()-nx.at<450+this.graceOf(p));
     if(!fresh)s=this.seq;
     react=Math.max(60,Math.min(Number(react)||9999,9999));
     this.bells.push({id,s,react});
-    if(this.ph==='play'){this.ph='ring';clearTimeout(this.turnT);this.later(()=>this.resolve(),260);this.changed()}
+    if(this.ph==='play'){
+      this.ph='ring';clearTimeout(this.turnT);
+      const lag=Math.max(0,...this.ps.filter(q=>!q.out).map(q=>this.graceOf(q)));
+      this.later(()=>this.resolve(),lag?Math.min(800,260+lag/2):260); // 늦게 도착하는 친구의 종도 같이 비교
+      this.changed();
+    }
   }
   resolve(){
     const b=this.bells.sort((x,y)=>x.react-y.react)[0];this.bells=[];
@@ -647,6 +677,7 @@ function renderGame(s){
   }
   for(const e of s.ev)if(e.i>lastEv){lastEv=e.i;showEvent(e,s)}
   drawSeats(s);updateTimer();updateControls();
+  if(earlyTap&&performance.now()-earlyTap<400&&canFlip()){earlyTap=0;doFlip()}
   if(s.ph==='over'&&resultFor!==s.mid){resultFor=s.mid;setTimeout(()=>showResult(s),700)}
   if(s.res)saveMatch(s.res);
 }
@@ -662,7 +693,7 @@ function showEvent(e,s){
 function seatHTML(p,mine){
   return `<div class="seat${mine?' me':''}" data-id="${esc(p.id)}">
     <div class="seat-top"><span class="who"></span><span class="tag"></span></div>
-    <div class="seat-row">${mine?'<button class="deck" id="flipBtn" type="button" aria-label="카드 뒤집기"><span class="dn"></span></button>':'<div class="deck" aria-hidden="true"><span class="dn"></span></div>'}<div class="slot"></div></div>
+    <div class="seat-row">${mine?'<div class="deck" id="flipBtn" role="button" tabindex="0" aria-label="카드 뒤집기"><span class="dn"></span></div>':'<div class="deck" aria-hidden="true"><span class="dn"></span></div>'}<div class="slot"></div></div>
     <div class="tbar" aria-hidden="true"><i></i></div><div class="seat-sub"></div>${mine?'<div class="flip-hint" id="flipHint"></div>':''}</div>`;
 }
 function drawSeats(s){
@@ -673,7 +704,7 @@ function drawSeats(s){
     seatKey=key;
     $('#opps').innerHTML=order.map(p=>seatHTML(p,false)).join('');
     $('#meWrap').innerHTML=meIdx<0?'<p class="note">관전 중이에요. 다음 판부터 참가할 수 있어요.</p>':seatHTML(s.ps[meIdx],true);
-    const fb=$('#flipBtn');if(fb)press(fb,doFlip);
+    const ms=document.querySelector('#meWrap .seat.me');if(ms)press(ms,doFlip); // 내 자리 어디를 눌러도 뒤집혀요
   }
   for(const p of s.ps){
     const el=document.querySelector(`.seat[data-id="${CSS.escape(p.id)}"]`);if(!el)continue;
@@ -696,8 +727,8 @@ function canFlip(){const m=meP();return !!(cur&&m&&!m.o&&cur.ph==='play'&&cur.tu
 function canBell(){const m=meP();return !!(cur&&m&&!m.o&&(cur.ph==='play'||cur.ph==='ring')&&rangSeq!==cur.seq)}
 function updateControls(){
   const fb=$('#flipBtn');
-  if(fb){const c=canFlip();fb.disabled=!c;fb.classList.toggle('can',c)}
-  $('#bellBtn').disabled=!canBell();
+  if(fb){const c=canFlip();fb.setAttribute('aria-disabled',String(!c));fb.classList.toggle('can',c)}
+  const bb=$('#bellBtn'),cb=canBell();bb.classList.toggle('off',!cb);bb.setAttribute('aria-disabled',String(!cb));
   updateTurnUI();
 }
 /* 차례 카운트다운: 차례인 사람 자리에 3·2·1 막대, 내 차례면 큰 숫자와 째깍 소리 */
@@ -733,14 +764,21 @@ function updateTimer(){
 setInterval(()=>{if(screen==='game')updateTimer()},250);
 function ringAnim(){const b=$('#bellBtn');b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring')}
 
+let earlyTap=0;
 function doFlip(){
-  if(!canFlip())return;
+  if(!canFlip()){ // 내 차례가 막 오려는 순간 누른 것도 0.4초 안이면 인정해요
+    const m=meP();if(cur&&m&&!m.o&&cur.ph!=='over')earlyTap=performance.now();
+    return;
+  }
+  earlyTap=0;
   if(mode==='guest'){flipSent=cur.tn;sendAct('flip',{tn:cur.tn});updateControls()}
   else if(game)game.flip(myId);
 }
 function doBell(){
+  const b=$('#bellBtn');b.classList.add('hit');setTimeout(()=>b.classList.remove('hit'),90);
   if(!canBell())return;
   rangSeq=cur.seq;dingAt=performance.now();sfx('ding');ringAnim();
+  try{navigator.vibrate&&navigator.vibrate(18)}catch(e){}
   const r=Math.round(performance.now()-shownAt);
   if(mode==='guest')sendAct('bell',{s:cur.seq,r});
   else if(game)game.bell(myId,cur.seq,r);
@@ -748,8 +786,12 @@ function doBell(){
 }
 /* 손가락이 닿는 순간 반응해요(클릭이 끝나길 기다리지 않음). 키보드로 누른 경우는 click으로 받아요 */
 function press(el,fn){
-  el.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();fn()});
-  el.addEventListener('click',e=>{if(e.detail===0)fn()});
+  let last=0;
+  const go=()=>{const t=performance.now();if(t-last<200)return;last=t;fn()};
+  el.addEventListener('pointerdown',e=>{if(e.button>0)return;if(e.cancelable)e.preventDefault();go()});
+  el.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault();go()},{passive:false}); // 일부 폰 브라우저용 예비
+  el.addEventListener('click',e=>{if(e.detail===0)go()});
+  el.addEventListener('keydown',e=>{if(e.target===el&&e.key==='Enter'&&el.getAttribute('role')==='button'){e.preventDefault();go()}});
 }
 press($('#bellBtn'),doBell);
 document.addEventListener('keydown',e=>{
@@ -927,6 +969,7 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
         }
         o.seen=Date.now();
         if(d.t==='hb')return;
+        if(d.t==='pong'){const r=Date.now()-Number(d.ts);if(r>=0&&r<5000)o.rtt=o.rtt==null?r:Math.round(o.rtt*.7+r*.3);return}
         if(d.t==='bye'){drop(conn.peer);return}
         if(d.t!=='pres'||!d.p||typeof d.p!=='object')return;
         const before=JSON.stringify(o.p);
@@ -977,10 +1020,11 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
       if(closed)return;
       const now=Date.now();
       for(const o of conns.values())if(o.conn&&o.conn.open&&o.seen&&now-o.seen>SILENT_MS&&o.lose)o.lose();
+      for(const o of conns.values())if(o.conn&&o.conn.open){try{o.conn.send({t:'ping',ts:now})}catch(e){}} // 인터넷 왕복 시간 재기
       broadcast(); // 바뀐 게 없어도 2초마다 화면 상태를 다시 보내요
     },HB_MS);
     deliver([hostId],[],[]);
-    return{presence:p=>{merge(mine,p);broadcast()},peers:list,leave:()=>{stopAll();for(const o of conns.values()){if(o.conn&&o.conn.open){try{o.conn.send({t:'bye'})}catch(e){}}}setTimeout(()=>{try{peer&&peer.destroy()}catch(e){}},150)}};
+    return{presence:p=>{merge(mine,p);broadcast()},peers:list,rttOf:id=>{const o=conns.get(id);return o&&o.conn&&o.rtt!=null?o.rtt:null},leave:()=>{stopAll();for(const o of conns.values()){if(o.conn&&o.conn.open){try{o.conn.send({t:'bye'})}catch(e){}}}setTimeout(()=>{try{peer&&peer.destroy()}catch(e){}},150)}};
   }
 
   // 친구(참가자)
@@ -1006,6 +1050,7 @@ async function peerNet(c,role,init,onChange,opts,onStatus){
     cn.on('data',d=>{
       if(conn!==cn||!d)return;
       heardAt=Date.now();
+      if(d.t==='ping'){try{cn.send({t:'pong',ts:d.ts})}catch(e){}return}
       if(d.t==='bye'){conn=null;try{cn.close()}catch(e){}roster=roster.filter(x=>x.id===peer?.id);giveUpNow();return}
       if(d.t!=='roster'||!Array.isArray(d.l))return;
       const prev=new Map(roster.map(x=>[x.id,JSON.stringify(x.p)]));
@@ -1217,6 +1262,13 @@ function onPeers(ch){
     hostLeftT=setTimeout(()=>{toast('방장과 연결이 끊어져서 방을 나왔어요');leaveRoom()},3000);
   }
 }
+// 친구별 추가 대기 시간 = 측정한 왕복 시간 × 1.25 + 0.2초 (0.4~1.5초)
+function graceFor(id){
+  if(!net||!net.rttOf)return null;
+  let best=null;
+  for(const p of joinOrder){if(tokOf(p)!==id||p.presence.off)continue;const r=net.rttOf(p.peer);if(r!=null)best=best==null?r:Math.min(best,r)}
+  return best==null?null:Math.max(NET_GRACE,Math.min(1500,Math.round(best*1.25+200)));
+}
 function handleAct(p){
   if(!game||p.sameTab)return;
   const a=p.presence&&p.presence.act;if(!a||typeof a!=='object')return;
@@ -1234,7 +1286,7 @@ $('#startOnline').onclick=()=>{
   const players=list.map(x=>x.b?{id:x.id,nick:x.n,kind:'bot',uid:null}:{id:x.id,nick:x.n,kind:x.id===myId?'me':'remote',uid:x.id===myId?myUid:(byPeer[x.id]&&byPeer[x.id].by)||null});
   const mid=code+'-'+Date.now().toString(36);
   endLocalGame();resetView();show('game');
-  game=new Game({players,chars:pick4(),mid,level:lobLv,
+  game=new Game({players,chars:pick4(),mid,level:lobLv,graceFor,
     onChange:s=>{renderGame(s);if(net)net.presence({st:'game',g:s})},
     onEnd:g=>{const w=g.ps.find(p=>p.id===g.win);g.res={mid:g.mid,code,ts:Date.now(),dur:Math.round((g.endedAt-g.startedAt)/1000),
       ps:g.ps.map(p=>({n:p.nick,u:p.uid||null,c:p.deck.length+p.pile.length,b:p.kind==='bot'?1:0})),wi:g.ps.indexOf(w),w:{n:w.nick,u:w.uid||null}}}});
