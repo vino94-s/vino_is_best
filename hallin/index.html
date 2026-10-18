@@ -151,6 +151,19 @@ input[type=text]{font-family:var(--f-ui);font-size:20px;border:3px solid var(--i
 .bell.ring{animation:ring .45s ease-out}
 .bell-label{font-family:var(--f-ui);font-size:15px}
 .me-wrap{display:flex;justify-content:center}
+/* 게임 알림창: 플레이 영역 아래 구석에 채팅처럼 한 줄씩 쌓여요. 화면을 가리지 않아요 */
+.feed{width:100%;max-width:440px;margin:2px auto 0;height:92px;overflow-y:auto;overscroll-behavior:contain;border:2px solid var(--ink);border-radius:12px;background:var(--paper-2);padding:6px 10px;font-size:13px;line-height:1.45;-webkit-user-select:text;user-select:text}
+.feed ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;min-height:100%;justify-content:flex-end}
+.feed li{display:flex;gap:7px;align-items:baseline;color:var(--ink);animation:feedin .22s ease-out;font-variant-numeric:tabular-nums}
+.feed li::before{content:"";flex:none;width:7px;height:7px;border-radius:50%;background:var(--muted);transform:translateY(-1px)}
+.feed li.ok::before{background:var(--mint)}
+.feed li.bad::before,.feed li.late::before,.feed li.out::before{background:var(--tomato)}
+.feed li.mine{font-weight:800}
+.feed li.old{opacity:.5}
+.feed li.hint{color:var(--muted)}
+@keyframes feedin{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+.seat.won{outline:4px solid var(--mint);outline-offset:3px}
+.seat.miss{outline:4px dashed var(--tomato);outline-offset:3px}
 
 /* toast */
 .net-banner{position:fixed;left:0;right:0;top:0;z-index:35;padding:calc(env(safe-area-inset-top,0px) + 8px) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));background:var(--ink);color:var(--paper);font-family:var(--f-ui);font-size:15px;text-align:center}
@@ -370,6 +383,7 @@ tr.mine td{background:var(--paper-2)}
         <div class="bell-label">종 치기 · Enter</div>
       </div>
       <div class="me-wrap" id="meWrap"></div>
+      <div class="feed" id="feed" role="log" aria-live="polite" aria-label="게임 알림"><ol id="feedList"></ol></div>
     </div>
   </section>
 
@@ -667,7 +681,7 @@ function renderGame(s){
   const prev=cur;cur=s;
   const isNew=!prev||prev.mid!==s.mid;
   turnEnd=s.td==null?0:Date.now()+s.td;
-  if(isNew){lastEv=Math.max(0,...s.ev.map(e=>e.i));rangSeq=-1;flipSent=-1;resultFor=null;seatKey=''}
+  if(isNew){lastEv=Math.max(0,...s.ev.map(e=>e.i));rangSeq=-1;flipSent=-1;resultFor=null;seatKey='';feedReset()}
   if(isNew||prev.seq!==s.seq)shownAt=performance.now();
   localEnd=Date.now()+s.rem;
   $('#gLegend').innerHTML!==legendHTML(s.ch)&&($('#gLegend').innerHTML=legendHTML(s.ch));
@@ -682,13 +696,28 @@ function renderGame(s){
   if(s.res)saveMatch(s.res);
 }
 function nameOf(s,id){const p=s.ps.find(x=>x.id===id);return p?p.n:'누군가'}
+/* 게임 알림은 가운데 팝업 대신 아래 알림창에 한 줄씩 쌓고, 해당 자리에 잠깐 테두리만 반짝여요 */
+function feedReset(){$('#feedList').innerHTML='<li class="hint">종 성공·헛방·시간 초과 알림이 여기에 쌓여요</li>'}
+function feedPush(kind,text,mine){
+  const box=$('#feed'),list=$('#feedList');
+  const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<24;
+  const h=list.querySelector('.hint');if(h)h.remove();
+  for(const li of list.querySelectorAll('li:not(.old)'))li.classList.add('old');
+  const li=document.createElement('li');li.className=kind+(mine?' mine':'');li.textContent=text;list.appendChild(li);
+  while(list.children.length>40)list.firstChild.remove();
+  if(atBottom)box.scrollTop=box.scrollHeight;
+}
+function flashSeat(id,cls){
+  const el=document.querySelector(`#scr-game .seat[data-id="${CSS.escape(id)}"]`);if(!el)return;
+  el.classList.remove('won','miss');void el.offsetWidth;el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),900);
+}
 function showEvent(e,s){
-  const n=e.w===myId?'내가':nameOf(s,e.w)+' 님이';
-  if(e.k==='ok'){toast(`${n} 종 치기 성공! 카드 ${e.a}장 획득 · ${e.r}ms`,'ok');sfx('ok')}
-  else if(e.k==='bad'){toast(`${n} 헛방! 카드 ${e.a}장을 나눠줬어요`);sfx('bad')}
-  else if(e.k==='late'){if(e.w===myId){toast('8초가 지나서 카드 1장을 잃었어요! 차례가 넘어가요');sfx('bad')}else toast(`${nameOf(s,e.w)} 님 시간 초과 · 카드 1장 잃음`)}
-  else if(e.k==='out')toast(e.w===myId?'카드가 바닥나서 탈락했어요':`${nameOf(s,e.w)} 님 탈락`);
-  else if(e.k==='left')toast(`${nameOf(s,e.w)} 님이 나갔어요`);
+  const me=e.w===myId,n=me?'나':nameOf(s,e.w);
+  if(e.k==='ok'){feedPush('ok',`${n} · 종 성공 +${e.a}장 (${e.r}ms)`,me);flashSeat(e.w,'won');sfx('ok')}
+  else if(e.k==='bad'){feedPush('bad',`${n} · 헛방, ${e.a}장 나눠줌`,me);flashSeat(e.w,'miss');sfx('bad')}
+  else if(e.k==='late'){feedPush('late',`${n} · 시간 초과, 1장 잃음`,me);flashSeat(e.w,'miss');if(me)sfx('bad')}
+  else if(e.k==='out')feedPush('out',me?'나 · 카드가 바닥나서 탈락':`${n} · 탈락`,me);
+  else if(e.k==='left')feedPush('left',`${n} · 나감`,me);
 }
 function seatHTML(p,mine){
   return `<div class="seat${mine?' me':''}" data-id="${esc(p.id)}">
