@@ -367,3 +367,34 @@ img { display: block; }
 .slot .nm { min-width: 0; overflow-wrap: anywhere; }
 .slot .kick { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border: 0; border-radius: 50%; background: var(--cream-2); color: var(--ink); font-size: 13px; line-height: 1; }
 .tabs button { font-size: 14px; padding: 10px 2px; white-space: nowrap; }
+
+/* ── 섯다 족보창 ── */
+.jokbo-panel { position: fixed; z-index: 40; top: 56px; right: 0; bottom: 12px; width: min(300px, 86vw); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--cream); color: var(--ink); border-radius: 14px 0 0 14px; padding: 12px 12px 14px; box-shadow: -6px 0 24px rgba(0, 0, 0, .4);
+  transform: translateX(105%); transition: transform .22s ease-out; }
+.jokbo-panel.open { transform: none; }
+.jokbo-tab { position: fixed; z-index: 39; right: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; letter-spacing: .2em;
+  border: 0; border-radius: 10px 0 0 10px; padding: 14px 7px; background: var(--red); color: #fff; font-family: var(--f-stamp); font-size: 17px; box-shadow: -2px 2px 0 var(--red-deep); }
+.jokbo-tab[aria-expanded="true"] { opacity: 0; pointer-events: none; }
+.jk-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.jk-head b { font-family: var(--f-stamp); font-weight: 400; font-size: 22px; color: var(--red); }
+.jk-head small { color: var(--muted); font-size: 12px; flex: 1; }
+.jk-close { background: var(--cream-2); color: var(--ink); }
+.jk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.jk-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 8px; }
+.jk-row:nth-child(odd) { background: rgba(0, 0, 0, .035); }
+.jk-row.mine { background: var(--gold); box-shadow: 0 0 0 2px var(--red); }
+.jk-cards { display: flex; flex: none; }
+.jk-cards .card + .card { margin-left: 2px; }
+.card.tiny { --cw: 27px; --ch: 44px; box-shadow: 0 1px 0 rgba(0, 0, 0, .35); }
+.jk-txt { display: grid; min-width: 0; line-height: 1.2; }
+.jk-txt b { font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.jk-txt b em { font-style: normal; font-size: 11px; background: var(--red); color: #fff; border-radius: 6px; padding: 1px 6px; }
+.jk-txt small { font-size: 11.5px; color: var(--muted); }
+.jk-sub { margin: 10px 0 4px; font-weight: 700; font-size: 13px; color: var(--red); }
+.jk-foot { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+@media (min-width: 980px) {
+  #scr-game.sd-mode { grid-template-columns: 250px minmax(0, 1fr) 320px; }
+  .sd-mode .jokbo-panel { position: static; transform: none; width: auto; margin: 8px 0 8px 8px; border-radius: 12px; box-shadow: none; transition: none; }
+  .sd-mode .jokbo-tab, .sd-mode .jk-close { display: none; }
+}

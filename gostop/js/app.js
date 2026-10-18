@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018c';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018c';
-import { botMove, botGoStop } from './bot.js?v=20261018c';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018c';
-import { botBet, botChoose } from './seotda-bot.js?v=20261018c';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018c';
-import { createStore, applyResult } from './store.js?v=20261018c';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018c';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018e';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018e';
+import { botMove, botGoStop } from './bot.js?v=20261018e';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018e';
+import { botBet, botChoose } from './seotda-bot.js?v=20261018e';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018e';
+import { createStore, applyResult } from './store.js?v=20261018e';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018e';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -694,6 +694,7 @@ class Game {
     this.chat.open = window.matchMedia('(min-width: 980px)').matches;
     this.chat.onUnread = n => { this.chatBadge.textContent = n; this.chatBadge.classList.toggle('hidden', n === 0); };
     $('#scr-game').replaceChildren(this.tableEl, this.chatWrap);
+    $('#scr-game').classList.remove('sd-mode');
   }
   toggleChat(open = !this.chatOpen) {
     this.chatOpen = open;
@@ -1088,9 +1089,72 @@ function sdCard(id, cls = '', tag = 'div', props = {}) {
   return el;
 }
 const sdBack = (cls = '') => h('div', { class: `card back sd ${cls}`, 'aria-hidden': 'true' });
+// 족보표 (높은 순)
+const JOKBO_ROWS = [
+  { k: '38', name: '38광땡', cards: ['03a', '08a'], desc: '3광 + 8광' },
+  { k: 'gw', name: '13·18광땡', cards: ['01a', '08a'], desc: '1광 + 3광 또는 8광' },
+  { k: 'jang', name: '장땡', cards: ['10a', '10b'], desc: '10 + 10' },
+  { k: 'ttaeng', name: '9땡 ~ 삥땡', cards: ['09a', '09b'], desc: '같은 달 두 장, 높은 달이 이김' },
+  { k: '알리', name: '알리', cards: ['01a', '02a'], desc: '1 + 2' },
+  { k: '독사', name: '독사', cards: ['01b', '04b'], desc: '1 + 4' },
+  { k: '구삥', name: '구삥', cards: ['01b', '09b'], desc: '1 + 9' },
+  { k: '장삥', name: '장삥', cards: ['01b', '10b'], desc: '1 + 10' },
+  { k: '장사', name: '장사', cards: ['04b', '10b'], desc: '4 + 10' },
+  { k: '세륙', name: '세륙', cards: ['04b', '06b'], desc: '4 + 6' },
+  { k: '갑오', name: '갑오', cards: ['02a', '07b'], desc: '두 장 합의 끝자리 9' },
+  { k: 'kkeut', name: '8끗 ~ 1끗', cards: ['03b', '05b'], desc: '합의 끝자리가 클수록 높음' },
+  { k: '망통', name: '망통', cards: ['02b', '08b'], desc: '합의 끝자리 0' },
+];
+const JOKBO_SPECIAL = [
+  { k: 'amhaeng', name: '암행어사', cards: ['04a', '07a'], desc: '4·7 열끗. 13·18광땡을 잡아요, 아니면 1끗' },
+  { k: 'ttaengjabi', name: '땡잡이', cards: ['03a', '07a'], desc: '3광·7 열끗. 1~9땡을 잡아요, 아니면 망통' },
+  { k: 'gusa', name: '구사', cards: ['04b', '09b'], desc: '4·9. 상대가 알리 이하면 재경기' },
+  { k: 'mgusa', name: '멍텅구리구사', cards: ['04a', '09a'], desc: '4·9 열끗. 상대가 9땡 이하면 재경기' },
+];
+function jokboKey(info) {
+  if (!info || info.score == null) return null;
+  if (info.special) return info.special;
+  const s = info.score;
+  if (s === 1000) return '38';
+  if (s === 900) return 'gw';
+  if (s === 810) return 'jang';
+  if (s >= 801 && s <= 809) return 'ttaeng';
+  if (s >= 650 && s <= 700) return info.name;
+  if (s === 509) return '갑오';
+  if (s >= 501) return 'kkeut';
+  return '망통';
+}
+function jokboRows(rows, mine) {
+  return rows.map(r => h('li', { class: `jk-row ${mine === r.k ? 'mine' : ''}` },
+    h('span', { class: 'jk-cards' }, r.cards.map(id => cardEl(id, 'tiny'))),
+    h('span', { class: 'jk-txt' }, h('b', {}, r.name, mine === r.k ? h('em', {}, '내 패') : null), h('small', {}, r.desc))));
+}
 const botStack = (ante, mine) => Math.max(ante * 100, Math.min((mine || 0) * 2, ante * 400));
 
 class SeotdaGame extends Game {
+  buildShell() {
+    super.buildShell();
+    this.jokboEl = h('aside', { class: 'jokbo-panel', 'aria-label': '섯다 족보' });
+    this.jokboTab = h('button', { class: 'jokbo-tab', 'aria-expanded': 'false', onclick: () => this.toggleJokbo() }, '족보');
+    $('#scr-game').prepend(this.jokboEl);
+    $('#scr-game').append(this.jokboTab);
+    $('#scr-game').classList.add('sd-mode');
+  }
+  toggleJokbo(open = !this.jokboOpen) {
+    this.jokboOpen = open;
+    this.jokboEl.classList.toggle('open', open);
+    this.jokboTab.setAttribute('aria-expanded', String(open));
+  }
+  renderJokbo(info) {
+    const mine = jokboKey(info);
+    this.jokboEl.replaceChildren(
+      h('div', { class: 'jk-head' }, h('b', {}, '섯다 족보'), h('small', {}, '위가 높아요'),
+        h('button', { class: 'icon-btn jk-close', 'aria-label': '족보 닫기', onclick: () => this.toggleJokbo(false) }, '✕')),
+      h('ol', { class: 'jk-list' }, jokboRows(JOKBO_ROWS, mine)),
+      h('div', { class: 'jk-sub' }, '특수패'),
+      h('ul', { class: 'jk-list' }, jokboRows(JOKBO_SPECIAL, mine)),
+      h('p', { class: 'jk-foot' }, '같은 족보끼리는 재경기예요.'));
+  }
   introText(s) { return `섯다 판을 깔았어요. 기본 판돈 ${won(s.ante)}, ${s.cardsMode}장 섯다, ${s.n}인.`; }
   actor(s = this.state) {
     if (s.phase === 'bet') return s.turn;
@@ -1335,6 +1399,8 @@ class SeotdaGame extends Game {
         choosing ? { type: 'button', 'aria-pressed': String(isPicked), onclick: () => this.togglePick(id) } : {});
     }));
     const jokbo = h('div', { class: 'jokbo' }, h('b', {}, info.name || ''), h('small', {}, [info.desc, note].filter(Boolean).join(' · ')));
+    const jkInfo = s.folded[me] ? null : choosing ? handInfo(pick.length === 2 ? pick : bestPair(mine)) : info;
+    this.renderJokbo(jkInfo && jkInfo.score != null ? jkInfo : null);
 
     let actions = null;
     if (choosing) {
