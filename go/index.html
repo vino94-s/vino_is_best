@@ -30,6 +30,8 @@ var GAMES = {
 };
 var id = new URLSearchParams(location.search).get('g') || '';
 var to = Object.prototype.hasOwnProperty.call(GAMES, id) ? GAMES[id] : '../';
+// '혹시 월루중이신가요?' 버튼으로 오면 엑셀처럼 보이는 화면 안에서 게임을 열어요
+if (to !== '../' && new URLSearchParams(location.search).get('skin') === 'excel') to = '../excel/?g=' + encodeURIComponent(id);
 function go() { location.replace(to); }
 function start() {
   if (PLAY_API && to !== '../') {

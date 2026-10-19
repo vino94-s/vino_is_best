@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1F6E43">
+<title>2026_4분기_매출분석_최종.xlsx</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='4' width='26' height='24' rx='3' fill='%231F6E43'/%3E%3Cpath d='M3 12h26M3 20h26M12 4v24M21 4v24' stroke='%23fff' stroke-width='1.6' opacity='.85'/%3E%3C/svg%3E">
+<style>
+/* 엑셀처럼 보이는 껍데기 안에 게임을 '삽입된 개체'로 띄워요. '매출_원본' 시트나 Esc로 순식간에 업무 화면으로 바뀌어요. */
+:root{
+  --green:#1F6E43;--green-d:#185C37;--green-l:#E9F3EC;--sel:#107C41;
+  --chrome:#F3F3F3;--ribbon:#F8F8F8;--line:#E1E1E1;--grid:#E2E2E2;--hdr:#F0F0F0;--hdr-ink:#444;
+  --ink:#1F1F1F;--muted:#616161;--cell:#FFFFFF;
+  --f:"맑은 고딕","Malgun Gothic","Apple SD Gothic Neo","Segoe UI",system-ui,sans-serif;
+  --rh:32px;--cw:72px;--rowh:22px;--colh:20px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--chrome);color:var(--ink);font:12px/1.3 var(--f);overflow:hidden;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+.app{height:100dvh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* 제목 표시줄 */
+.titlebar{flex:none;height:40px;background:var(--green);color:#fff;display:flex;align-items:center;gap:10px;padding:0 0 0 max(10px,env(safe-area-inset-left,0px));padding-top:env(safe-area-inset-top,0px);height:calc(40px + env(safe-area-inset-top,0px))}
+.tb-auto{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.95;white-space:nowrap}
+.tog{width:30px;height:14px;border-radius:7px;border:1px solid #fff;position:relative;opacity:.9}
+.tog::after{content:"";position:absolute;left:2px;top:2px;width:8px;height:8px;border-radius:50%;background:#fff}
+.tb-ico{display:flex;gap:12px;font-size:14px;opacity:.95}
+.tb-name{flex:1;min-width:0;text-align:center;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-search{width:min(30vw,300px);height:26px;border-radius:5px;background:rgba(255,255,255,.18);display:flex;align-items:center;gap:6px;padding:0 10px;font-size:12px;color:rgba(255,255,255,.85)}
+.tb-user{width:26px;height:26px;border-radius:50%;background:#C8E6D2;color:var(--green-d);display:grid;place-items:center;font-weight:700;font-size:11px;flex:none}
+.wc{display:flex;align-self:stretch}
+.wc button{width:46px;display:grid;place-items:center;font-size:15px;color:#fff}
+.wc button:hover{background:rgba(255,255,255,.14)}
+.wc .x:hover{background:#C42B1C}
+
+/* 메뉴 탭 + 리본 */
+.menubar{flex:none;background:var(--chrome);display:flex;gap:2px;padding:0 8px;height:30px;align-items:flex-end;overflow-x:auto;scrollbar-width:none}
+.menubar::-webkit-scrollbar{display:none}
+.menubar button{padding:6px 10px 6px;font-size:12.5px;white-space:nowrap;border-radius:4px 4px 0 0;color:#333}
+.menubar button:hover{background:#E6E6E6}
+.menubar button.on{color:var(--sel);font-weight:600;box-shadow:inset 0 -2px 0 var(--sel)}
+.menubar .file{color:#fff;background:var(--sel);border-radius:4px;margin:0 4px 3px 0;padding:4px 12px}
+.menubar .file:hover{background:var(--green-d)}
+.menubar .sp{flex:1}
+.menubar .share{margin-bottom:3px;padding:4px 12px;border-radius:4px;background:var(--sel);color:#fff;font-weight:600}
+.ribbon{flex:none;background:var(--ribbon);border-top:1px solid var(--line);border-bottom:1px solid var(--line);height:96px;display:flex;align-items:stretch;padding:4px 6px 0;overflow:hidden;gap:0}
+.grp{display:flex;flex-direction:column;padding:0 8px;border-right:1px solid var(--line);min-width:0}
+.grp-b{flex:1;display:flex;align-items:flex-start;gap:4px}
+.grp-n{text-align:center;font-size:11px;color:var(--muted);padding:2px 0 4px;white-space:nowrap}
+.big{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px;border-radius:3px;font-size:11.5px;white-space:nowrap}
+.big i{font-style:normal;font-size:24px;line-height:28px}
+.big:hover,.sm:hover,.ib:hover{background:#E5E5E5}
+.big.on{background:#D6E8DC}
+.col{display:flex;flex-direction:column;gap:3px}
+.row{display:flex;gap:2px;align-items:center}
+.sm{display:flex;align-items:center;gap:4px;padding:2px 6px;border-radius:3px;font-size:11.5px;white-space:nowrap;height:22px}
+.ib{width:24px;height:22px;display:grid;place-items:center;border-radius:3px;font-size:12px}
+.dd{height:22px;border:1px solid #C8C8C8;background:#fff;border-radius:2px;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 6px;font-size:11.5px;gap:6px}
+.dd::after{content:"⌄";font-size:10px;color:#666;line-height:1;margin-top:-4px}
+
+/* 수식 입력줄 */
+.fbar{flex:none;height:30px;display:flex;align-items:center;gap:6px;padding:0 6px;background:#fff;border-bottom:1px solid var(--line)}
+.namebox{width:88px;height:22px;border:1px solid #C8C8C8;display:flex;align-items:center;padding:0 6px;font-size:12px;flex:none}
+.fx{color:#777;font-style:italic;font-family:Georgia,serif;font-size:13px;padding:0 6px;border-left:1px solid var(--line);border-right:1px solid var(--line);flex:none;display:flex;gap:10px}
+.fx b{font-style:normal;color:#999;font-family:var(--f);font-weight:400}
+.formula{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Consolas,"D2Coding",ui-monospace,monospace;font-size:12px;color:#222}
+
+/* 시트 영역 */
+.sheet{flex:1;min-height:0;position:relative;background:var(--cell);overflow:hidden}
+.colhdr{position:absolute;left:var(--rh);right:0;top:0;height:var(--colh);display:flex;background:var(--hdr);border-bottom:1px solid #C6C6C6;overflow:hidden}
+.colhdr span{flex:none;width:var(--cw);border-right:1px solid #D4D4D4;text-align:center;line-height:var(--colh);color:var(--hdr-ink);font-size:11.5px}
+.colhdr span.on{background:#D3E7DA;color:var(--sel);font-weight:700;box-shadow:inset 0 -2px 0 var(--sel)}
+.rowhdr{position:absolute;left:0;top:var(--colh);bottom:0;width:var(--rh);background:var(--hdr);border-right:1px solid #C6C6C6;overflow:hidden}
+.rowhdr span{display:block;height:var(--rowh);line-height:var(--rowh);text-align:center;border-bottom:1px solid #D4D4D4;color:var(--hdr-ink);font-size:11px}
+.rowhdr span.on{background:#D3E7DA;color:var(--sel);font-weight:700;box-shadow:inset -2px 0 0 var(--sel)}
+.corner{position:absolute;left:0;top:0;width:var(--rh);height:var(--colh);background:var(--hdr);border-right:1px solid #C6C6C6;border-bottom:1px solid #C6C6C6}
+.corner::after{content:"";position:absolute;right:3px;bottom:3px;border:5px solid transparent;border-right-color:#B5B5B5;border-bottom-color:#B5B5B5}
+.cells{position:absolute;left:var(--rh);top:var(--colh);right:0;bottom:0;overflow:hidden;
+  background-image:linear-gradient(to right,var(--grid) 1px,transparent 1px),linear-gradient(to bottom,var(--grid) 1px,transparent 1px);
+  background-size:var(--cw) var(--rowh);background-position:-1px -1px}
+.c{position:absolute;height:var(--rowh);line-height:var(--rowh);padding:0 4px;white-space:nowrap;overflow:hidden;font-size:12px}
+.c.r{text-align:right;font-variant-numeric:tabular-nums}
+.c.b{font-weight:700}
+.c.h{background:#DDEBF7;font-weight:700;border:1px solid #9BC2E6;margin:-1px 0 0 -1px}
+.c.t{font-size:15px;font-weight:700;color:#1F3864;overflow:visible}
+.c.tot{background:#FFF2CC;font-weight:700}
+.c.neg{color:#C00000}
+.selbox{position:absolute;border:2px solid var(--sel);pointer-events:none;z-index:3}
+.selbox::after{content:"";position:absolute;right:-4px;bottom:-4px;width:6px;height:6px;background:var(--sel);border:1px solid #fff}
+
+/* 삽입된 개체 (게임) */
+.obj{position:absolute;z-index:4;background:#fff;border:1px solid #B9B9B9;box-shadow:0 0 0 1px rgba(16,124,65,.0)}
+.obj.focus{outline:1.5px solid #7A7A7A;outline-offset:2px}
+.obj .hd{position:absolute;width:8px;height:8px;background:#fff;border:1px solid #7A7A7A;border-radius:50%;z-index:2}
+.obj iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+.obj.gray iframe{filter:grayscale(1) contrast(.95)}
+.objname{position:absolute;left:0;top:-18px;font-size:11px;color:var(--muted);white-space:nowrap}
+.extnote{position:absolute;z-index:5;right:6px;bottom:6px;background:#FFFFE1;border:1px solid #A0A0A0;box-shadow:2px 2px 4px rgba(0,0,0,.18);padding:6px 8px;font-size:11.5px;max-width:240px}
+.extnote a{color:#0563C1}
+.memo{position:absolute;z-index:6;background:#FFFFE1;border:1px solid #A0A0A0;box-shadow:2px 2px 5px rgba(0,0,0,.2);padding:7px 9px;font-size:12px;line-height:1.45;max-width:250px;transition:opacity .4s}
+.memo::before{content:"";position:absolute;left:-7px;top:8px;border:6px solid transparent;border-right-color:#A0A0A0;border-left:0}
+.memo b{display:block;margin-bottom:2px}
+.memo.hide{opacity:0;pointer-events:none}
+
+/* 시트 탭 + 상태 표시줄 */
+.tabs{flex:none;height:30px;display:flex;align-items:stretch;background:var(--chrome);border-top:1px solid #C6C6C6;padding-left:6px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs .nav{color:#999;padding:0 6px;font-size:11px}
+.tabs .st{padding:0 16px;font-size:12px;white-space:nowrap;color:#333;border-right:1px solid #DADADA}
+.tabs .st:hover{background:#E8E8E8}
+.tabs .st.on{background:#fff;color:var(--sel);font-weight:700;box-shadow:inset 0 -3px 0 var(--sel);margin-top:-1px}
+.tabs .add{padding:0 12px;font-size:16px;color:#666}
+.status{flex:none;height:24px;display:flex;align-items:center;gap:16px;padding:0 10px;background:var(--chrome);border-top:1px solid #DADADA;font-size:11.5px;color:#444;white-space:nowrap;overflow:hidden}
+.status .sp{flex:1}
+.status .zoom{display:flex;align-items:center;gap:6px}
+.status .bar{width:90px;height:2px;background:#999;position:relative}
+.status .bar::after{content:"";position:absolute;left:44px;top:-4px;width:3px;height:10px;background:#444}
+.toast{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:4px;font-size:12px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+
+/* 휴대폰: 엑셀 모바일처럼 리본을 접어요 */
+@media (max-width:760px){
+  :root{--rh:26px;--cw:64px;--rowh:21px;--colh:18px}
+  .titlebar{height:calc(42px + env(safe-area-inset-top,0px));gap:8px}
+  .tb-auto,.tb-search,.wc .mn,.wc .mx,.tb-ico .hide-m{display:none}
+  .tb-name{text-align:left;font-size:13px;font-weight:600}
+  .ribbon{display:none}
+  .menubar{height:32px}
+  .menubar .share,.menubar .sp{display:none}
+  .mtools{display:flex!important}
+  .fbar{height:28px}
+  .namebox{width:56px}
+  .status .hide-m{display:none}
+  .objname{display:none}
+}
+.mtools{display:none;flex:none;height:34px;align-items:center;gap:2px;padding:0 6px;background:var(--ribbon);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.mtools::-webkit-scrollbar{display:none}
+.mtools .ib{width:30px;height:28px;font-size:14px}
+@media (max-width:1100px){.ribbon .opt{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="titlebar">
+    <div class="tb-auto">자동 저장 <span class="tog" aria-hidden="true"></span> 끔</div>
+    <div class="tb-ico" aria-hidden="true"><span>💾</span><span class="hide-m">↶</span><span class="hide-m">↷</span></div>
+    <div class="tb-name" id="docName">2026_4분기_매출분석_최종.xlsx</div>
+    <div class="tb-search" aria-hidden="true">🔍 검색</div>
+    <div class="tb-user" aria-hidden="true">김</div>
+    <div class="wc">
+      <button class="mn" type="button" aria-label="최소화" data-toast="최소화는 안 돼요. 업무 화면은 Esc!">—</button>
+      <button class="mx" type="button" aria-label="최대화" id="fullBtn">▢</button>
+      <button class="x" type="button" aria-label="닫기" id="closeBtn">✕</button>
+    </div>
+  </header>
+
+  <nav class="menubar" aria-label="메뉴">
+    <button class="file" type="button" data-toast="저장할 게 없어요. 일한 게 없으니까요.">파일</button>
+    <button class="on" type="button">홈</button>
+    <button type="button" data-toast="삽입할 시간에 한 판 더!">삽입</button>
+    <button type="button">페이지 레이아웃</button>
+    <button type="button">수식</button>
+    <button type="button">데이터</button>
+    <button type="button">검토</button>
+    <button type="button">보기</button>
+    <button type="button">도움말</button>
+    <span class="sp"></span>
+    <button class="share" type="button" data-toast="공유는 벙참 보드에서 해 주세요">공유</button>
+  </nav>
+
+  <div class="ribbon" aria-hidden="true">
+    <div class="grp"><div class="grp-b"><button class="big" type="button" tabindex="-1"><i>📋</i>붙여넣기</button><div class="col"><span class="sm">✂ 잘라내기</span><span class="sm">⧉ 복사</span><span class="sm">🖌 서식 복사</span></div></div><div class="grp-n">클립보드</div></div>
+    <div class="grp"><div class="grp-b"><div class="col"><div class="row"><span class="dd" style="width:110px">맑은 고딕</span><span class="dd" style="width:44px">11</span><span class="ib">가<sup>+</sup></span><span class="ib">가<sup>-</sup></span></div><div class="row"><span class="ib"><b>가</b></span><span class="ib"><i>가</i></span><span class="ib"><u>가</u></span><span class="ib">▦</span><span class="ib" style="color:#C00000">A</span><span class="ib">🪣</span></div></div></div><div class="grp-n">글꼴</div></div>
+    <div class="grp"><div class="grp-b"><div class="col"><div class="row"><span class="ib">≡</span><span class="ib">≣</span><span class="ib">☰</span><span class="sm">↩ 텍스트 줄 바꿈</span></div><div class="row"><span class="ib">⫷</span><span class="ib">⫶</span><span class="ib">⫸</span><span class="sm">⊞ 병합하고 가운데 맞춤</span></div></div></div><div class="grp-n">맞춤</div></div>
+    <div class="grp"><div class="grp-b"><div class="col"><span class="dd" style="width:100px">회계</span><div class="row"><span class="ib">₩</span><span class="ib">%</span><span class="ib">,</span><span class="ib">.0</span><span class="ib">.00</span></div></div></div><div class="grp-n">표시 형식</div></div>
+    <div class="grp"><div class="grp-b"><button class="big" type="button" tabindex="-1"><i>▤</i>조건부<br>서식</button><button class="big" type="button" tabindex="-1"><i>▦</i>표<br>서식</button><button class="big" type="button" tabindex="-1" id="grayBtn"><i>◐</i>셀<br>스타일</button></div><div class="grp-n">스타일</div></div>
+    <div class="grp opt"><div class="grp-b"><div class="col"><span class="sm">⊕ 삽입</span><span class="sm">⊖ 삭제</span><span class="sm">▥ 서식</span></div></div><div class="grp-n">셀</div></div>
+    <div class="grp opt" style="border-right:0"><div class="grp-b"><div class="col"><span class="sm">Σ 자동 합계</span><span class="sm">⬇ 채우기</span><span class="sm">◇ 지우기</span></div><button class="big" type="button" tabindex="-1"><i>⇅</i>정렬 및<br>필터</button><button class="big" type="button" tabindex="-1"><i>🔍</i>찾기 및<br>선택</button></div><div class="grp-n">편집</div></div>
+  </div>
+  <div class="mtools" aria-hidden="true"><span class="ib"><b>가</b></span><span class="ib"><i>가</i></span><span class="ib"><u>가</u></span><span class="ib" style="color:#C00000">A</span><span class="ib">🪣</span><span class="ib">≡</span><span class="ib">Σ</span><span class="ib">₩</span><span class="ib">%</span><span class="ib">⇅</span><span class="ib">▦</span></div>
+
+  <div class="fbar">
+    <div class="namebox" id="nameBox">B3</div>
+    <div class="fx"><b>✕</b><b>✓</b>fx</div>
+    <div class="formula" id="formula"></div>
+  </div>
+
+  <main class="sheet" id="sheet">
+    <div class="corner"></div>
+    <div class="colhdr" id="colHdr"></div>
+    <div class="rowhdr" id="rowHdr"></div>
+    <div class="cells" id="cells"></div>
+  </main>
+
+  <div class="tabs" role="tablist" aria-label="시트">
+    <span class="nav" aria-hidden="true">◀ ▶</span>
+    <button class="st on" role="tab" type="button" data-sheet="game">요약</button>
+    <button class="st" role="tab" type="button" data-sheet="work">매출_원본</button>
+    <button class="st" role="tab" type="button" data-sheet="pivot">피벗_지역별</button>
+    <button class="add" type="button" aria-label="새 시트" data-toast="시트는 이 정도면 충분해요">＋</button>
+  </div>
+  <footer class="status">
+    <span id="stLeft">준비</span><span class="hide-m">♿ 접근성: 계속 진행 가능</span>
+    <span class="sp"></span>
+    <span id="stCalc" class="hide-m"></span>
+    <span class="zoom hide-m">▦ ▤ ▥ <span>−</span><span class="bar"></span><span>+</span> 100%</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+var GAMES = {
+  'gorani-survival': ['https://gorani-survival.bababi.chatgpt.site/', '고라니 서바이벌'],
+  'gorani-run': ['https://gorani-twieo-2026.bababi.chatgpt.site/', '고라니 뛰어!'],
+  'mandu-defense': ['https://mandu-mayhem-play.bababi.chatgpt.site/', '만두를 지켜라'],
+  'yongwang-land': ['https://yongwang-land.bababi.chatgpt.site/', '용왕랜드'],
+  'frog': ['https://beotyeo-kkaegulssi-2026.bababi.chatgpt.site/', '올라가자! 깨굴씨!'],
+  'ruru': ['https://urururu-ruru-play-2026.bababi.chatgpt.site/', 'urururu,ruru'],
+  'golf': ['../golf/', '골프'], 'gonake': ['../gonake/', '고네이크'], 'yongwang': ['../yongwang/', '용왕'],
+  'ddomeok': ['../ddomeok/', '또먹'], 'muldae': ['../muldae/', '천하제일 무술대회'], 'badukbung': ['../badukbung/', '대환장 바둑벙'],
+  'siren': ['../siren/', '수염은 스타벅스만 잡아'], 'circus': ['../circus/', '서커스'], 'yutjabi': ['../yutjabi/', '내가바로 윷잡이'],
+  'hallin': ['../hallin/', '할린데예 갈린데예'], 'gostop': ['../gostop/', '손모가지 조심!']
+};
+// 게임마다 그럴듯한 파일 이름
+var DOCS = ['2026_4분기_매출분석_최종.xlsx','거래처별_정산내역_v3(수정).xlsx','2027_사업계획_초안_검토용.xlsx','10월_비용정산_취합.xlsx','KPI_달성현황_팀별.xlsx'];
+
+var qs = new URLSearchParams(location.search);
+var id = qs.get('g') || '';
+var g = Object.prototype.hasOwnProperty.call(GAMES, id) ? GAMES[id] : null;
+var ext = g && /^https?:/.test(g[0]);
+var $ = function(s){ return document.querySelector(s); };
+
+var hash = 0; for (var i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+var docName = DOCS[hash % DOCS.length];
+$('#docName').textContent = docName + (window.innerWidth > 760 ? ' - 저장됨' : '');
+document.title = docName;
+
+/* ── 가짜 업무 데이터 ── */
+var rnd = (function(seed){ return function(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }; })(hash + 7);
+var CLIENTS = ['(주)한빛물산','대성유통','미래테크','동방상사','청솔F&B','우리정밀','세진로지스','태양에너지','누리커머스','하나식품','금강산업','은하전자'];
+var ITEMS = ['A-200 부품','B-15 모듈','정기 유지보수','라이선스(연)','C-7 센서','물류대행','컨설팅','D-90 패키지'];
+var STAFF = ['김민준','이서연','박지훈','최유진','정우성','한소희'];
+var REGION = ['서울','경기','부산','대구','광주','대전'];
+var rows = [];
+for (var r = 0; r < 60; r++) {
+  var q = 1 + Math.floor(rnd() * 40), p = (5 + Math.floor(rnd() * 95)) * 1000;
+  var d = new Date(2026, 9, 1 + Math.floor(r / 2.2));
+  rows.push([r + 1, (d.getMonth() + 1) + '/' + d.getDate(), CLIENTS[Math.floor(rnd() * CLIENTS.length)], ITEMS[Math.floor(rnd() * ITEMS.length)], q, p, q * p, STAFF[Math.floor(rnd() * STAFF.length)], REGION[Math.floor(rnd() * REGION.length)]]);
+}
+var won = function(n){ return n.toLocaleString('ko-KR'); };
+var total = rows.reduce(function(a, x){ return a + x[6]; }, 0);
+var COLS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+/* ── 시트 그리기 ── */
+var sheet = 'game', sel = { c: 1, r: 2 }, obj = null, frame = null, memoT = 0;
+var cssNum = function(n){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(n)); };
+
+function cellXY(c, r){ var cw = cssNum('--cw'), rh = cssNum('--rowh'); return { x: c * cw, y: r * rh, w: cw, h: rh }; }
+function put(host, c, r, text, cls, span){
+  var p = cellXY(c, r), el = document.createElement('div');
+  el.className = 'c' + (cls ? ' ' + cls : ''); el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; el.style.width = (p.w * (span || 1)) + 'px';
+  el.textContent = text; el.dataset.c = c; el.dataset.r = r; host.appendChild(el); return el;
+}
+function headers(){
+  var cw = cssNum('--cw'), rh = cssNum('--rowh');
+  var cells = $('#cells'), W = cells.clientWidth, H = cells.clientHeight;
+  var nc = Math.ceil(W / cw) + 1, nr = Math.ceil(H / rh) + 1;
+  var ch = ''; for (var c = 0; c < Math.min(nc, 26); c++) ch += '<span data-c="' + c + '">' + COLS[c] + '</span>';
+  $('#colHdr').innerHTML = ch;
+  var rhh = ''; for (var r = 0; r < nr; r++) rhh += '<span data-r="' + r + '">' + (r + 1) + '</span>';
+  $('#rowHdr').innerHTML = rhh;
+  return { nc: nc, nr: nr, W: W, H: H, cw: cw, rh: rh };
+}
+function markSel(){
+  document.querySelectorAll('.colhdr span.on,.rowhdr span.on').forEach(function(e){ e.classList.remove('on'); });
+  var a = document.querySelector('.colhdr span[data-c="' + sel.c + '"]'), b = document.querySelector('.rowhdr span[data-r="' + sel.r + '"]');
+  if (a) a.classList.add('on'); if (b) b.classList.add('on');
+  $('#nameBox').textContent = COLS[sel.c] + (sel.r + 1);
+  var box = $('#selbox'); if (box) { var p = cellXY(sel.c, sel.r); box.style.cssText = 'left:' + (p.x - 1) + 'px;top:' + (p.y - 1) + 'px;width:' + (p.w + 1) + 'px;height:' + (p.h + 1) + 'px'; }
+}
+function render(){
+  var m = headers(), cells = $('#cells');
+  [].slice.call(cells.children).forEach(function(n){ if (n !== obj) n.remove(); });
+  var box = document.createElement('div'); box.className = 'selbox'; box.id = 'selbox'; cells.appendChild(box);
+  if (sheet === 'game') drawGame(m, cells);
+  else if (sheet === 'work') drawWork(m, cells);
+  else drawPivot(m, cells);
+  if (obj) { var wasHidden = obj.hidden; obj.hidden = sheet !== 'game'; if (wasHidden !== obj.hidden) frameHidden(obj.hidden); }
+  markSel();
+}
+function drawGame(m, cells){
+  var mobile = window.innerWidth <= 760;
+  put(cells, 0, 0, '2026년 4분기 영업실적 요약 (대외비)', 't', 6);
+  var top = mobile ? 2 : 3, left = mobile ? 0 : 1;
+  if (!mobile) { ['구분','목표','실적','달성률'].forEach(function(t, i){ put(cells, 1 + i * 2, 1, t, 'h', 2); }); }
+  else { put(cells, 0, 1, '※ 전년 동기 대비 +12.4%', '', 5); }
+  // 개체를 셀 눈금에 맞춰 붙여요 (오른쪽·아래는 한두 칸 남겨서 표처럼 보이게)
+  var x = left * m.cw, y = top * m.rh;
+  var right = mobile ? 0 : m.cw, bottom = mobile ? 0 : m.rh * 2;
+  var w = mobile ? m.W - x - 1 : Math.floor((m.W - x - right) / m.cw) * m.cw;
+  var h = mobile ? m.H - y - 1 : Math.floor((m.H - y - bottom) / m.rh) * m.rh;
+  if (!obj) makeObj();
+  obj.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px';
+  // 개체 오른쪽·아래로 살짝 보이는 숫자들
+  if (!mobile) {
+    var lastR = top + Math.round(h / m.rh);
+    put(cells, 1, lastR, '합계', 'tot b'); put(cells, 2, lastR, won(total), 'tot r', 2);
+    put(cells, 4, lastR, '평균', 'tot b'); put(cells, 5, lastR, won(Math.round(total / rows.length)), 'tot r', 2);
+  }
+  sel = { c: left + 1, r: top }; $('#formula').textContent = '=SUMIFS(매출_원본!G:G,매출_원본!I:I,"서울")';
+  $('#stCalc').textContent = '';
+}
+function drawWork(m, cells){
+  var H = ['No','일자','거래처','품목','수량','단가','금액','담당','지역'];
+  put(cells, 0, 0, '10월 매출 원장 (원본)', 't', 5);
+  H.forEach(function(t, i){ put(cells, i, 1, t, 'h'); });
+  var nr = Math.min(rows.length, m.nr - 3);
+  for (var r = 0; r < nr; r++) {
+    var x = rows[r];
+    x.forEach(function(v, i){ put(cells, i, r + 2, typeof v === 'number' && i >= 4 ? won(v) : String(v), (i >= 4 && i <= 6) || i === 0 ? 'r' : ''); });
+  }
+  if (nr + 2 < m.nr) { put(cells, 5, nr + 2, '합계', 'tot b'); put(cells, 6, nr + 2, won(rows.slice(0, nr).reduce(function(a, x){ return a + x[6]; }, 0)), 'tot r'); }
+  if (sel.r < 2) sel = { c: 6, r: 2 };
+  showCell();
+}
+function drawPivot(m, cells){
+  put(cells, 0, 0, '지역별 · 담당자별 매출 (피벗)', 't', 5);
+  var H = ['지역'].concat(STAFF.slice(0, 4), ['총합계']);
+  H.forEach(function(t, i){ put(cells, i, 2, t, 'h'); });
+  var grand = 0;
+  REGION.forEach(function(rg, ri){
+    put(cells, 0, 3 + ri, rg, 'b'); var sum = 0;
+    STAFF.slice(0, 4).forEach(function(st, si){
+      var v = rows.filter(function(x){ return x[8] === rg && x[7] === st; }).reduce(function(a, x){ return a + x[6]; }, 0);
+      sum += v; put(cells, 1 + si, 3 + ri, v ? won(v) : '', 'r');
+    });
+    grand += sum; put(cells, 5, 3 + ri, won(sum), 'r b');
+  });
+  put(cells, 0, 9, '총합계', 'tot'); put(cells, 5, 9, won(grand), 'tot r');
+  put(cells, 0, 11, '전월 대비', 'b'); put(cells, 1, 11, '-3.2%', 'r neg');
+  if (sel.r < 3) sel = { c: 5, r: 3 };
+  showCell();
+}
+function showCell(){
+  var el = document.querySelector('.c[data-c="' + sel.c + '"][data-r="' + sel.r + '"]');
+  var v = el ? el.textContent : '';
+  if (sheet === 'work' && sel.c === 6 && sel.r >= 2) v = '=E' + (sel.r + 1) + '*F' + (sel.r + 1);
+  if (sheet === 'pivot' && sel.c === 5 && sel.r >= 3 && sel.r <= 8) v = '=SUM(B' + (sel.r + 1) + ':E' + (sel.r + 1) + ')';
+  $('#formula').textContent = v;
+  var n = parseFloat(((el && el.textContent) || '').replace(/,/g, ''));
+  $('#stCalc').textContent = isNaN(n) ? '' : '합계: ' + won(n);
+}
+
+/* ── 게임 개체 ── */
+function makeObj(){
+  obj = document.createElement('div'); obj.className = 'obj';
+  ['0,0','50%,0','100%,0','0,50%','100%,50%','0,100%','50%,100%','100%,100%'].forEach(function(p){
+    var d = document.createElement('span'), xy = p.split(','); d.className = 'hd';
+    d.style.left = 'calc(' + xy[0] + ' - 5px)'; d.style.top = 'calc(' + xy[1] + ' - 5px)'; obj.appendChild(d);
+  });
+  var nm = document.createElement('div'); nm.className = 'objname'; nm.textContent = '개체 1'; obj.appendChild(nm);
+  if (!g) {
+    var e = document.createElement('div'); e.style.cssText = 'display:grid;place-items:center;height:100%;color:#888';
+    e.textContent = '#REF! 게임을 찾을 수 없어요'; obj.appendChild(e);
+  } else {
+    frame = document.createElement('iframe');
+    frame.title = g[1];
+    frame.allow = 'autoplay; fullscreen; clipboard-read; clipboard-write; web-share; gamepad';
+    var extra = new URLSearchParams(location.search); extra.delete('g');
+    var src = g[0] + (extra.toString() ? (g[0].indexOf('?') < 0 ? '?' : '&') + extra.toString() : '');
+    frame.src = src;
+    frame.addEventListener('load', tidyFrame);
+    obj.appendChild(frame);
+    if (ext) {
+      var n = document.createElement('div'); n.className = 'extnote';
+      n.innerHTML = '화면이 안 나오면 이 게임은 엑셀 안에 못 들어가요. <a href="' + src + '" target="_blank" rel="noopener">새 창으로 열기</a> · <a href="#" data-x>닫기</a>';
+      n.querySelector('[data-x]').onclick = function(ev){ ev.preventDefault(); n.remove(); };
+      obj.appendChild(n); setTimeout(function(){ if (n.parentNode) n.remove(); }, 9000);
+    }
+  }
+  obj.addEventListener('pointerdown', function(){ obj.classList.add('focus'); $('#nameBox').textContent = '개체 1'; });
+  $('#cells').appendChild(obj);
+}
+// 같은 주소의 게임이면 게임 안의 '나가기' 버튼은 숨기고, 게임 안에서 Esc를 눌러도 업무 화면으로 바뀌게 해요
+function tidyFrame(){
+  try {
+    var d = frame.contentDocument; if (!d) return;
+    if (!d.getElementById('bungExcelStyle')) {
+      var s = d.createElement('style'); s.id = 'bungExcelStyle';
+      s.textContent = '#bungBack,#bungInapp{display:none!important}';
+      (d.head || d.documentElement).appendChild(s);
+    }
+    if (!frame.contentWindow.__bungExcel) {
+      frame.contentWindow.__bungExcel = 1;
+      d.addEventListener('keydown', function(e){ if (e.key === 'Escape') toggleBoss(); }, true);
+    }
+  } catch (e) {}
+}
+
+/* ── 업무 화면 전환 ── */
+function setSheet(name){
+  sheet = name;
+  document.querySelectorAll('.tabs .st').forEach(function(t){ var on = t.dataset.sheet === name; t.classList.toggle('on', on); t.setAttribute('aria-selected', on); });
+  render();
+  if (name !== 'game') { try { frame && frame.blur(); document.activeElement && document.activeElement.blur(); } catch (e) {} }
+}
+var lastSheet = 'work';
+// 업무 화면으로 바꾸면 게임에는 '화면이 가려졌다'고 알려서, 멈춤·소리 끄기를 지원하는 게임은 알아서 쉬게 해요
+function frameHidden(h){
+  try {
+    var w = frame && frame.contentWindow, d = w && w.document; if (!d) return;
+    Object.defineProperty(d, 'hidden', { configurable: true, get: function(){ return h; } });
+    Object.defineProperty(d, 'visibilityState', { configurable: true, get: function(){ return h ? 'hidden' : 'visible'; } });
+    d.dispatchEvent(new w.Event('visibilitychange'));
+    d.querySelectorAll('audio,video').forEach(function(m){ if (h) { m.dataset.bungMuted = m.muted ? '1' : ''; m.muted = true; } else if (m.dataset.bungMuted === '') m.muted = false; });
+  } catch (e) {}
+}
+function toggleBoss(){ if (sheet === 'game') setSheet(lastSheet); else { setSheet('game'); } }
+document.querySelectorAll('.tabs .st').forEach(function(t){
+  t.addEventListener('click', function(){ if (t.dataset.sheet !== 'game') lastSheet = t.dataset.sheet; setSheet(t.dataset.sheet); });
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') { e.preventDefault(); toggleBoss(); }
+});
+$('#cells').addEventListener('pointerdown', function(e){
+  if (obj && obj.contains(e.target)) return;
+  if (obj) obj.classList.remove('focus');
+  var r = $('#cells').getBoundingClientRect();
+  sel = { c: Math.max(0, Math.floor((e.clientX - r.left) / cssNum('--cw'))), r: Math.max(0, Math.floor((e.clientY - r.top) / cssNum('--rowh'))) };
+  markSel(); if (sheet !== 'game') showCell(); else { var el = document.querySelector('.c[data-c="' + sel.c + '"][data-r="' + sel.r + '"]'); $('#formula').textContent = el ? el.textContent : ''; }
+});
+
+/* ── 기타 버튼 ── */
+var tt = 0;
+function toast(m){ var t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 1800); }
+document.querySelectorAll('[data-toast]').forEach(function(b){ b.addEventListener('click', function(){ toast(b.dataset.toast); }); });
+$('#grayBtn').addEventListener('click', function(){ if (!obj) return; obj.classList.toggle('gray'); $('#grayBtn').classList.toggle('on', obj.classList.contains('gray')); toast(obj.classList.contains('gray') ? '게임을 무채색으로 바꿨어요' : '게임 색을 되돌렸어요'); });
+$('#fullBtn').addEventListener('click', function(){ try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} });
+$('#closeBtn').addEventListener('click', function(){
+  if (!confirm('통합 문서를 닫을까요? (게임을 나가요)')) return;
+  var ref = document.referrer, same = false; try { same = !!ref && new URL(ref).origin === location.origin; } catch (e) {}
+  if (same && history.length > 1) { history.back(); return; }
+  try { window.close(); } catch (e) {}
+  setTimeout(function(){ location.href = '../'; }, 300);
+});
+
+var rt = 0;
+window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(render, 80); });
+render();
+
+// 처음 한 번만 사용법 메모를 띄워요
+try {
+  if (!localStorage.getItem('bung_excel_memo')) {
+    var memo = document.createElement('div'); memo.className = 'memo';
+    memo.innerHTML = '<b>김대리:</b>Esc 키나 아래 <u>매출_원본</u> 시트를 누르면 바로 업무 화면이 돼요. <u>요약</u> 시트를 누르면 게임으로 돌아와요.';
+    var tab = document.querySelector('.tabs .st[data-sheet="work"]').getBoundingClientRect();
+    memo.style.left = Math.min(window.innerWidth - 260, tab.left + 10) + 'px'; memo.style.bottom = (window.innerHeight - tab.top + 8) + 'px';
+    memo.style.position = 'fixed'; document.body.appendChild(memo);
+    setTimeout(function(){ memo.classList.add('hide'); setTimeout(function(){ memo.remove(); }, 500); }, 6500);
+    memo.addEventListener('click', function(){ memo.remove(); });
+    localStorage.setItem('bung_excel_memo', '1');
+  }
+} catch (e) {}
+})();
+</script>
+</body>
+</html>
