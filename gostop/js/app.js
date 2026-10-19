@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261018j';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261018j';
-import { botMove, botGoStop } from './bot.js?v=20261018j';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261018j';
-import { botBet, botChoose } from './seotda-bot.js?v=20261018j';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261018j';
-import { createStore, applyResult } from './store.js?v=20261018j';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261018j';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261019a';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261019a';
+import { botMove, botGoStop } from './bot.js?v=20261019a';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261019a';
+import { botBet, botChoose } from './seotda-bot.js?v=20261019a';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261019a';
+import { createStore, applyResult } from './store.js?v=20261019a';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261019a';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -477,8 +477,9 @@ function openBotSetup() {
   ]);
 }
 const lastSdOpts = () => ({ char: S.me.char, bots: 2, level: 'normal', ante: 1000, cards: 2, ...ls.get('sdopts', {}) });
-const ANTES = [1000, 5000, 10000];
-const anteSeg = o => seg(ANTES.map(v => ({ v, label: won(v) })), o.ante, v => { o.ante = v; });
+const ANTES = [1000, 5000, 10000, 50000, 100000];
+const anteLabel = v => (v >= 10000 ? `${v / 10000}만원` : won(v));
+const anteSeg = o => seg(ANTES.map(v => ({ v, label: anteLabel(v) })), o.ante, v => { o.ante = v; });
 const cardsSeg = o => seg([{ v: 2, label: '2장 섯다' }, { v: 3, label: '3장 섯다' }], o.cards, v => { o.cards = v; });
 function openSeotdaSetup() {
   if (!needMoney()) return;
@@ -615,7 +616,7 @@ function renderRoom(d) {
     ? h('div', { class: 'stack' },
       h('span', { class: 'label' }, '게임'), seg([{ v: 'gostop', label: '고스톱' }, { v: 'seotda', label: '섯다' }], kind, v => S.store.patchRoom(code, { kind: v })),
       ...(kind === 'seotda'
-        ? [h('span', { class: 'label' }, '기본 판돈'), seg(ANTES.map(v => ({ v, label: won(v) })), ante, v => S.store.patchRoom(code, { ante: v })),
+        ? [h('span', { class: 'label' }, '기본 판돈'), seg(ANTES.map(v => ({ v, label: anteLabel(v) })), ante, v => S.store.patchRoom(code, { ante: v })),
           h('span', { class: 'label' }, '패 수'), seg([{ v: 2, label: '2장 섯다' }, { v: 3, label: '3장 섯다' }], cards, v => S.store.patchRoom(code, { cards: v }))]
         : [h('span', { class: 'label' }, '점당'), seg(POINT_VALUES.map(v => ({ v, label: won(v) })), ppoint, v => S.store.patchRoom(code, { ppoint: v })),
           h('span', { class: 'label' }, '보너스피'), seg([0, 1, 2].map(v => ({ v, label: `${v}장` })), bonus, v => S.store.patchRoom(code, { bonus: v }))]))
