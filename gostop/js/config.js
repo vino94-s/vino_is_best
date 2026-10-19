@@ -13,7 +13,6 @@ export const FIREBASE_CONFIG = {
 // 2) 게임머니
 export const START_MONEY = 50000;   // 가입 시 지급
 export const DAILY_CHARGE = 50000;  // 하루 1번(한국 시간 자정 기준) 첫 로그인 때 충전
-export const POINT_VALUES = [50, 100, 500, 1000, 5000]; // 점당 금액 선택지
 
 // 3) 운영자 전용 (주소·비밀번호는 운영자만 알고 있어요)
 export const ADMIN = {
