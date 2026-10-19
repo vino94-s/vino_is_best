@@ -98,6 +98,18 @@ button:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
 .obj .hd{position:absolute;width:8px;height:8px;background:#fff;border:1px solid #7A7A7A;border-radius:50%;z-index:2}
 .obj iframe{display:block;width:100%;height:100%;border:0;background:#fff}
 .obj.gray iframe{filter:grayscale(1) contrast(.95)}
+/* 시트 스킨: 개체 테두리를 없애고 게임 위에 셀 눈금을 깔아서, 게임이 시트에 그려진 것처럼 보여요 */
+.obj .gridov{position:absolute;inset:0;z-index:1;pointer-events:none;display:none;mix-blend-mode:multiply;
+  background-image:linear-gradient(to right,#D4D4D4 1px,transparent 1px),linear-gradient(to bottom,#D4D4D4 1px,transparent 1px);
+  background-size:var(--cw) var(--rowh);background-position:-1px -1px}
+.obj.skin{border:0;background:#fff}
+.obj.skin .hd,.obj.skin .objname{display:none}
+.obj.skin .gridov{display:block}
+.obj.skin iframe{filter:saturate(.55) contrast(.97)}
+.obj.skin.inv iframe{filter:invert(1) hue-rotate(180deg) saturate(.45) contrast(.9) brightness(1.04)}
+.obj.skin.gray iframe{filter:grayscale(1) contrast(.95)}
+.obj.skin.inv.gray iframe{filter:invert(1) hue-rotate(180deg) grayscale(1) contrast(.9) brightness(1.04)}
+.cells.skin .selbox{z-index:6}
 .objname{position:absolute;left:0;top:-18px;font-size:11px;color:var(--muted);white-space:nowrap}
 .extnote{position:absolute;z-index:5;right:6px;bottom:6px;background:#FFFFE1;border:1px solid #A0A0A0;box-shadow:2px 2px 4px rgba(0,0,0,.18);padding:6px 8px;font-size:11.5px;max-width:240px}
 .extnote a{color:#0563C1}
@@ -172,7 +184,7 @@ button:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
     <button class="share" type="button" data-toast="공유는 벙참 보드에서 해 주세요">공유</button>
   </nav>
 
-  <div class="ribbon" aria-hidden="true">
+  <div class="ribbon">
     <div class="grp"><div class="grp-b"><button class="big" type="button" tabindex="-1"><i>📋</i>붙여넣기</button><div class="col"><span class="sm">✂ 잘라내기</span><span class="sm">⧉ 복사</span><span class="sm">🖌 서식 복사</span></div></div><div class="grp-n">클립보드</div></div>
     <div class="grp"><div class="grp-b"><div class="col"><div class="row"><span class="dd" style="width:110px">맑은 고딕</span><span class="dd" style="width:44px">11</span><span class="ib">가<sup>+</sup></span><span class="ib">가<sup>-</sup></span></div><div class="row"><span class="ib"><b>가</b></span><span class="ib"><i>가</i></span><span class="ib"><u>가</u></span><span class="ib">▦</span><span class="ib" style="color:#C00000">A</span><span class="ib">🪣</span></div></div></div><div class="grp-n">글꼴</div></div>
     <div class="grp"><div class="grp-b"><div class="col"><div class="row"><span class="ib">≡</span><span class="ib">≣</span><span class="ib">☰</span><span class="sm">↩ 텍스트 줄 바꿈</span></div><div class="row"><span class="ib">⫷</span><span class="ib">⫶</span><span class="ib">⫸</span><span class="sm">⊞ 병합하고 가운데 맞춤</span></div></div></div><div class="grp-n">맞춤</div></div>
@@ -181,7 +193,7 @@ button:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
     <div class="grp opt"><div class="grp-b"><div class="col"><span class="sm">⊕ 삽입</span><span class="sm">⊖ 삭제</span><span class="sm">▥ 서식</span></div></div><div class="grp-n">셀</div></div>
     <div class="grp opt" style="border-right:0"><div class="grp-b"><div class="col"><span class="sm">Σ 자동 합계</span><span class="sm">⬇ 채우기</span><span class="sm">◇ 지우기</span></div><button class="big" type="button" tabindex="-1"><i>⇅</i>정렬 및<br>필터</button><button class="big" type="button" tabindex="-1"><i>🔍</i>찾기 및<br>선택</button></div><div class="grp-n">편집</div></div>
   </div>
-  <div class="mtools" aria-hidden="true"><span class="ib"><b>가</b></span><span class="ib"><i>가</i></span><span class="ib"><u>가</u></span><span class="ib" style="color:#C00000">A</span><span class="ib">🪣</span><span class="ib">≡</span><span class="ib">Σ</span><span class="ib">₩</span><span class="ib">%</span><span class="ib">⇅</span><span class="ib">▦</span></div>
+  <div class="mtools"><button class="ib" type="button" id="skinBtnM" aria-label="셀 스타일 바꾸기" title="셀 스타일">◐</button><span class="ib"><b>가</b></span><span class="ib"><i>가</i></span><span class="ib"><u>가</u></span><span class="ib" style="color:#C00000">A</span><span class="ib">🪣</span><span class="ib">≡</span><span class="ib">Σ</span><span class="ib">₩</span><span class="ib">%</span><span class="ib">⇅</span><span class="ib">▦</span></div>
 
   <div class="fbar">
     <div class="namebox" id="nameBox">B3</div>
@@ -364,6 +376,7 @@ function makeObj(){
     d.style.left = 'calc(' + xy[0] + ' - 5px)'; d.style.top = 'calc(' + xy[1] + ' - 5px)'; obj.appendChild(d);
   });
   var nm = document.createElement('div'); nm.className = 'objname'; nm.textContent = '개체 1'; obj.appendChild(nm);
+  var gv = document.createElement('div'); gv.className = 'gridov'; obj.appendChild(gv);
   if (!g) {
     var e = document.createElement('div'); e.style.cssText = 'display:grid;place-items:center;height:100%;color:#888';
     e.textContent = '#REF! 게임을 찾을 수 없어요'; obj.appendChild(e);
@@ -398,8 +411,102 @@ function tidyFrame(){
     if (!frame.contentWindow.__bungExcel) {
       frame.contentWindow.__bungExcel = 1;
       d.addEventListener('keydown', function(e){ if (e.key === 'Escape') toggleBoss(); }, true);
+      // 게임 안을 눌러도 엑셀처럼 그 칸에 초록 선택 테두리가 따라가요
+      d.addEventListener('pointerdown', function(e){
+        if (!obj || !obj.classList.contains('skin')) return;
+        var cw = cssNum('--cw'), rh = cssNum('--rowh');
+        sel = { c: Math.floor((obj.offsetLeft + e.clientX) / cw), r: Math.floor((obj.offsetTop + e.clientY) / rh) };
+        markSel(); $('#formula').textContent = FORMULAS[(sel.c * 7 + sel.r) % FORMULAS.length].replace(/#/g, sel.r + 1);
+      }, true);
     }
+    applySkin();
   } catch (e) {}
+}
+
+/* ── 시트 스킨 ── */
+// 배경이 어두운 게임은 색을 뒤집어서 흰 시트처럼, 밝은 게임은 채도만 낮춰요. 글꼴은 맑은 고딕, 모서리는 각지게.
+var DARK = { golf: 1, yongwang: 1, ddomeok: 1, muldae: 1, badukbung: 1, siren: 1, circus: 1, yutjabi: 1, gostop: 1 };
+var FORMULAS = ['=VLOOKUP(B#,매출_원본!A:I,7,FALSE)', '=SUMIFS(매출_원본!G:G,매출_원본!H:H,C#)', '=IFERROR(D#/C#,0)', '=ROUND(AVERAGE(E3:E#),0)', '=COUNTIF(매출_원본!I:I,"서울")', '=XLOOKUP(A#,피벗_지역별!A:A,피벗_지역별!F:F)'];
+var SKINS = ['auto', 'flip', 'off'], skin = 'auto';
+try { skin = localStorage.getItem('bung_excel_skin') || 'auto'; if (SKINS.indexOf(skin) < 0) skin = 'auto'; } catch (e) {}
+function skinCss(){
+  return '*:not(svg):not(svg *){font-family:"맑은 고딕","Malgun Gothic","Apple SD Gothic Neo",Calibri,sans-serif!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;letter-spacing:normal!important;-webkit-text-stroke:0!important}'
+    + 'html,body{background:#fff!important;color:#1F1F1F!important}'
+    + '*::before,*::after{box-shadow:none!important;text-shadow:none!important}'
+    // 색이 서서히 바뀌는 효과가 있으면 다시 칠할 때 중간색을 읽어 버려서, 색 전환 효과만 꺼요 (움직임 효과는 그대로)
+    + '*,*::before,*::after{transition-property:transform,opacity,translate,scale,rotate,left,top,right,bottom,width,height,max-height,flex-basis!important}';
+}
+// 게임 화면을 한 칸씩 다시 칠해요: 어두운 배경 → 흰 칸, 장식용 그라데이션 → 없앰, 밝은 글자 → 검은 글자.
+// 빨강·파랑 같은 진한 색(팀 색, 버튼)은 그대로 둬서 게임이 헷갈리지 않게 해요. 게임이 화면을 바꿀 때마다 바뀐 부분만 다시 칠해요.
+var painter = null;
+function makePainter(w){
+  var d = w.document, touched = new Set(), mo = null, queue = new Set(), timer = 0, busy = false;
+  var PROPS = ['background-color', 'background-image', 'color', 'border-color', 'filter'];
+  function rgb(str){ var m = /rgba?\(([^)]+)\)/.exec(str || ''); if (!m) return null; var p = m[1].split(/[ ,\/]+/).map(parseFloat); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; }
+  function lum(c){ var f = function(v){ v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }; return .2126 * f(c.r) + .7152 * f(c.g) + .0722 * f(c.b); }
+  function chroma(c){ var mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b); return (mx - mn) / 255; }
+  function darkBg(c){ if (!c || c.a < .15) return false; var L = lum(c), C = chroma(c); return L < .1 || (L < .22 && C < .3); }
+  function clear(el){ PROPS.forEach(function(p){ el.style.removeProperty(p); }); touched.delete(el); }
+  function set(el, p, v){ el.style.setProperty(p, v, 'important'); touched.add(el); }
+  function paint(el){
+    if (el.nodeType !== 1) return;
+    var tag = el.tagName;
+    if (tag === 'IMG' || tag === 'VIDEO' || tag === 'SCRIPT' || tag === 'STYLE' || tag === 'svg' || tag === 'IFRAME' || el.closest('svg')) return;
+    if (touched.has(el)) clear(el);
+    var cs = w.getComputedStyle(el);
+    if (tag === 'CANVAS') { if (DARK[id]) set(el, 'filter', 'invert(1) hue-rotate(180deg) saturate(.6)'); return; }
+    var bg = rgb(cs.backgroundColor), bi = cs.backgroundImage || 'none';
+    var hasUrl = bi.indexOf('url(') >= 0;
+    if (bi !== 'none' && !hasUrl) { set(el, 'background-image', 'none'); }
+    if (darkBg(bg) || (bi !== 'none' && !hasUrl && (!bg || bg.a < .15) && el.clientWidth > w.innerWidth * .5)) set(el, 'background-color', el === d.body || el === d.documentElement ? '#fff' : 'transparent');
+    var fg = rgb(cs.color);
+    if (fg && lum(fg) > .45) {
+      // 글자 뒤 배경이 남아 있는 진한 색이면 흰 글자를 그대로 두고, 아니면 검게
+      var keep = false, p = el;
+      while (p && p.nodeType === 1) { var pb = rgb(w.getComputedStyle(p).backgroundColor); if (pb && pb.a > .5) { keep = lum(pb) < .3 && !darkBg(pb); break; } p = p.parentElement; }
+      if (!keep) set(el, 'color', '#1F1F1F');
+    }
+    var bc = rgb(cs.borderTopColor); if (bc && lum(bc) > .6 && cs.borderTopWidth !== '0px') set(el, 'border-color', '#BFBFBF');
+  }
+  function paintTree(root){ if (root.nodeType !== 1) return; paint(root); var all = root.getElementsByTagName('*'); for (var i = 0; i < all.length; i++) paint(all[i]); }
+  function flush(){ timer = 0; busy = true; var list = Array.from(queue); queue.clear(); list.forEach(function(n){ if (n.isConnected) paintTree(n); }); busy = false; mo && mo.takeRecords(); }
+  function onMut(recs){
+    if (busy) return;
+    recs.forEach(function(r){
+      if (r.type === 'attributes') { if (r.attributeName === 'style' && touched.has(r.target)) return; queue.add(r.target); }
+      else r.addedNodes.forEach(function(n){ if (n.nodeType === 1) queue.add(n); });
+    });
+    if (queue.size && !timer) timer = w.setTimeout(flush, 60);
+  }
+  return {
+    start: function(){ busy = true; paintTree(d.documentElement); busy = false; mo = new w.MutationObserver(onMut); mo.observe(d.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'style', 'hidden', 'disabled', 'aria-pressed', 'aria-selected'] }); },
+    stop: function(){ if (mo) mo.disconnect(); mo = null; Array.from(touched).forEach(clear); }
+  };
+}
+function applySkin(){
+  if (!obj) return;
+  var on = skin !== 'off';
+  var sameOrigin = false; try { sameOrigin = !!(frame && frame.contentDocument && frame.contentDocument.body); } catch (e) {}
+  obj.classList.toggle('skin', on);
+  // 다른 사이트 게임은 안을 못 칠하니 화면 전체 색을 뒤집거나(밝기 반대로) 채도만 낮춰요
+  obj.classList.toggle('inv', on && !sameOrigin && skin === 'flip');
+  $('#cells').classList.toggle('skin', on);
+  if (!sameOrigin) return;
+  try {
+    var d = frame.contentDocument, w = frame.contentWindow;
+    var st = d.getElementById('bungExcelSkin');
+    if (!st) { st = d.createElement('style'); st.id = 'bungExcelSkin'; (d.head || d.documentElement).appendChild(st); }
+    st.textContent = on ? skinCss() : '';
+    if (painter) { painter.stop(); painter = null; }
+    if (on && skin === 'auto') { painter = makePainter(w); painter.start(); }
+    else if (on && skin === 'flip') { st.textContent = ''; obj.classList.add('inv'); }
+  } catch (e) {}
+}
+function cycleSkin(){
+  skin = SKINS[(SKINS.indexOf(skin) + 1) % SKINS.length];
+  try { localStorage.setItem('bung_excel_skin', skin); } catch (e) {}
+  applySkin();
+  toast(skin === 'auto' ? '셀 스타일: 시트처럼 (기본)' : skin === 'flip' ? '셀 스타일: 색 뒤집기' : '셀 스타일: 게임 원래 화면');
 }
 
 /* ── 업무 화면 전환 ── */
@@ -439,7 +546,9 @@ $('#cells').addEventListener('pointerdown', function(e){
 var tt = 0;
 function toast(m){ var t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(function(){ t.classList.remove('on'); }, 1800); }
 document.querySelectorAll('[data-toast]').forEach(function(b){ b.addEventListener('click', function(){ toast(b.dataset.toast); }); });
-$('#grayBtn').addEventListener('click', function(){ if (!obj) return; obj.classList.toggle('gray'); $('#grayBtn').classList.toggle('on', obj.classList.contains('gray')); toast(obj.classList.contains('gray') ? '게임을 무채색으로 바꿨어요' : '게임 색을 되돌렸어요'); });
+$('#grayBtn').addEventListener('click', cycleSkin);
+$('#skinBtnM').addEventListener('click', cycleSkin);
+$('#grayBtn').removeAttribute('tabindex');
 $('#fullBtn').addEventListener('click', function(){ try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} });
 $('#closeBtn').addEventListener('click', function(){
   if (!confirm('통합 문서를 닫을까요? (게임을 나가요)')) return;
@@ -452,6 +561,7 @@ $('#closeBtn').addEventListener('click', function(){
 var rt = 0;
 window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(render, 80); });
 render();
+applySkin();
 
 // 처음 한 번만 사용법 메모를 띄워요
 try {
