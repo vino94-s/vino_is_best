@@ -419,10 +419,3 @@ img { display: block; }
 @keyframes say-pop { from { transform: scale(.5) translateY(6px); opacity: 0; } }
 @keyframes say-bye { to { transform: scale(.85); opacity: 0; } }
 .seg button { white-space: nowrap; font-size: clamp(13px, 3.7vw, 16px); padding-inline: 2px; }
-
-/* ── 금액 직접 입력 ── */
-.amount-box { display: grid; gap: 3px; }
-.amount-row { display: flex; align-items: center; gap: 8px; }
-.amount-row .field.amount { flex: 1; min-width: 0; font-family: var(--f-stamp); font-size: 22px; text-align: right; letter-spacing: .02em; }
-.amount-won { font-weight: 700; font-size: 18px; }
-.amount-say { color: var(--muted); font-size: 13px; text-align: right; }

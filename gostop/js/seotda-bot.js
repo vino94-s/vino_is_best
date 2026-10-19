@@ -1,5 +1,5 @@
 // 섯다 봇: easy / normal / hard(타짜: 남의 패를 몰래 봄)
-import { SD_DECK, handInfo, bestPair, legalBets, resolve, potOf } from './seotda.js?v=20261019b';
+import { SD_DECK, handInfo, bestPair, legalBets, resolve, potOf } from './seotda.js?v=20261019c';
 
 // 모든 2장 조합 점수 분포 → 백분위
 const ALL = [];
@@ -44,10 +44,10 @@ function cheatEdge(s, seat) {
 }
 
 // 난이도 조절: 판단마다 이 확률로 한 단계 약하게 둠 (어려움→보통, 보통→쉬움, 쉬움→아무 패나 따라감)
-// 2026-10-18: 섯다 난이도 20% 낮춤 (시뮬레이션으로 봇이 따가는 돈이 20% 줄어드는 값)
-export const SLIP = { easy: 0.24, normal: 0.2, hard: 0 };
+// 0이면 원래 실력 그대로 (2026-10-19: 20% 낮춘 값을 원래대로 되돌림)
+export const SLIP = { easy: 0, normal: 0, hard: 0 };
 // 어려움(타짜)이 그 판에 남의 패를 엿볼 확률. 안 엿보는 판은 보통처럼 침
-export const HARD_PEEK = { p: 0.73 };
+export const HARD_PEEK = { p: 1 };
 const WEAKER = { hard: 'normal', normal: 'easy', easy: 'loose' };
 function hash01(str) { let x = 2166136261; for (let i = 0; i < str.length; i++) { x ^= str.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; }
 const peeks = (s, seat) => hash01(`${s.gid || ''}|${s.seats[seat].id}|${s.rematch}`) < HARD_PEEK.p;

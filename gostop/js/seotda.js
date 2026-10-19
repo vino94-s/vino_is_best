@@ -1,5 +1,5 @@
 // 섯다 규칙 엔진 (2~4인, 2장/3장). 상태는 JSON 직렬화 가능한 순수 객체.
-import { CARDS } from './cards.js?v=20261019b';
+import { CARDS } from './cards.js?v=20261019c';
 
 // 1~10월, 달마다 2장 (광·열끗·띠). 화투 그림 ID를 그대로 씀
 export const SD_DECK = ['01a', '01b', '02a', '02b', '03a', '03b', '04a', '04b', '05a', '05b',
@@ -87,9 +87,7 @@ const pot = s => s.contrib.reduce((a, b) => a + b, 0) + (s.carry || 0);
 export const potOf = pot;
 const ev = (s, type, seat, extra = {}) => s.events.push({ type, seat, ...extra });
 const log = (s, msg) => { s.log.push(msg); if (s.log.length > 60) s.log.shift(); };
-// 하프 금액 반올림 단위: 판돈 규모에 맞춤 (1,000원 → 100원 단위, 50원 → 1원 단위)
-const unitFor = ante => Math.max(1, 10 ** (Math.floor(Math.log10(Math.max(1, ante))) - 1));
-const roundUnit = (v, ante) => { const u = unitFor(ante); return Math.max(u, Math.round(v / u) * u); };
+const round100 = v => Math.max(100, Math.round(v / 100) * 100);
 
 /**
  * seats: [{id,name,char,isBot,level}], stacks: [가진 돈], ante: 기본 판돈, cardsMode: 2|3
@@ -146,7 +144,7 @@ export function legalBets(s, seat) {
   }
   if (s.curBet === 0 && cap >= s.ante) acts.push({ type: 'bbing', amount: s.ante - s.roundBet[seat], target: s.ante });
   if (s.raises < MAX_RAISES && cap > s.curBet) {
-    const half = Math.min(cap, s.curBet + roundUnit((P + Math.max(0, toCall)) / 2, s.ante));
+    const half = Math.min(cap, s.curBet + round100((P + Math.max(0, toCall)) / 2));
     if (half > s.curBet) acts.push({ type: 'half', amount: half - s.roundBet[seat], target: half });
     if (s.curBet > 0) {
       const dd = Math.min(cap, s.curBet * 2);

@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261019b';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261019b';
-import { botMove, botGoStop } from './bot.js?v=20261019b';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261019b';
-import { botBet, botChoose } from './seotda-bot.js?v=20261019b';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261019b';
-import { createStore, applyResult } from './store.js?v=20261019b';
-import { ADMIN, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261019b';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261019c';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261019c';
+import { botMove, botGoStop } from './bot.js?v=20261019c';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261019c';
+import { botBet, botChoose } from './seotda-bot.js?v=20261019c';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261019c';
+import { createStore, applyResult } from './store.js?v=20261019c';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261019c';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -453,36 +453,7 @@ function changeMyChar() {
 
 // ───────────────── 게임 설정 모달 ─────────────────
 const lastOpts = () => ({ char: S.me.char, bots: 1, level: 'normal', ppoint: 100, bonus: 2, ...ls.get('opts', {}) });
-// ── 금액 직접 입력 ──
-const MAX_STAKE = 1e12; // 1조원 (계산이 넘치지 않게)
-/** 12500000 → '1,250만원', 120000000 → '1억 2,000만원' */
-function korWon(n) {
-  n = Math.floor(n || 0);
-  if (n < 10000) return `${n.toLocaleString('ko-KR')}원`;
-  const jo = Math.floor(n / 1e12), eok = Math.floor((n % 1e12) / 1e8), man = Math.floor((n % 1e8) / 1e4), rest = n % 1e4;
-  return [jo && `${jo.toLocaleString('ko-KR')}조`, eok && `${eok.toLocaleString('ko-KR')}억`, man && `${man.toLocaleString('ko-KR')}만`, rest && rest.toLocaleString('ko-KR')]
-    .filter(Boolean).join(' ') + '원';
-}
-/** 숫자만 받는 금액 칸. onCommit은 다 쓰고 나갈 때(또는 Enter) 한 번 */
-function amountInput(value, { onInput, onCommit, label = '금액' } = {}) {
-  const show = h('small', { class: 'amount-say' });
-  const inp = h('input', { class: 'field amount', inputmode: 'numeric', autocomplete: 'off', 'aria-label': label, placeholder: '금액을 입력하세요' });
-  const set = v => {
-    inp.value = v ? Number(v).toLocaleString('ko-KR') : '';
-    show.textContent = v ? `= ${korWon(v)}` : '1원 이상 얼마든지 쓸 수 있어요';
-  };
-  const read = () => Math.min(MAX_STAKE, Number(inp.value.replace(/\D/g, '')) || 0);
-  inp.addEventListener('input', () => { const v = read(); set(v); onInput?.(v); });
-  inp.addEventListener('change', () => { const v = read(); set(v); onCommit?.(v); });
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
-  set(value);
-  return h('div', { class: 'amount-box' }, h('div', { class: 'amount-row' }, inp, h('span', { class: 'amount-won' }, '원')), show);
-}
-const okStake = v => {
-  if (!(v >= 1)) { toast('금액을 1원 이상 넣어 주세요'); return false; }
-  return true;
-};
-const ppSeg = (o) => amountInput(o.ppoint, { label: '점당 금액', onInput: v => { o.ppoint = v; } });
+const ppSeg = (o) => seg(POINT_VALUES.map(v => ({ v, label: won(v) })), o.ppoint, v => { o.ppoint = v; });
 const bonusSeg = (o) => seg([0, 1, 2].map(v => ({ v, label: `${v}장` })), o.bonus, v => { o.bonus = v; });
 function needMoney() {
   if ((S.me.money || 0) > 0) return true;
@@ -502,16 +473,18 @@ function openBotSetup() {
     h('span', { class: 'label' }, '난이도'), seg([{ v: 'easy', label: '쉬움' }, { v: 'normal', label: '보통' }, { v: 'hard', label: '어려움' }], o.level, v => { o.level = v; help.textContent = levelHelp[v]; }), help,
     h('span', { class: 'label' }, '점당'), ppSeg(o),
     h('span', { class: 'label' }, '보너스피'), bonusSeg(o),
-    h('button', { class: 'btn red primary', onclick: () => { if (!okStake(o.ppoint)) return; ls.set('opts', o); close(); startBotGame(o); } }, '패 돌리기'),
+    h('button', { class: 'btn red primary', onclick: () => { ls.set('opts', o); close(); startBotGame(o); } }, '패 돌리기'),
   ]);
 }
 const lastSdOpts = () => ({ char: S.me.char, bots: 2, level: 'normal', ante: 1000, cards: 2, ...ls.get('sdopts', {}) });
-const anteSeg = o => amountInput(o.ante, { label: '기본 판돈', onInput: v => { o.ante = v; } });
+const ANTES = [1000, 5000, 10000, 50000, 100000];
+const anteLabel = v => (v >= 10000 ? `${v / 10000}만원` : won(v));
+const anteSeg = o => seg(ANTES.map(v => ({ v, label: anteLabel(v) })), o.ante, v => { o.ante = v; });
 const cardsSeg = o => seg([{ v: 2, label: '2장 섯다' }, { v: 3, label: '3장 섯다' }], o.cards, v => { o.cards = v; });
 function openSeotdaSetup() {
   if (!needMoney()) return;
   const o = lastSdOpts();
-  const levelHelp = { easy: '아무렇게나 걸고 아무 때나 죽어요.', normal: '패가 좋으면 올리고 나쁘면 죽어요.', hard: '타짜예요. 열에 일곱 판은 남의 패를 몰래 보고 걸어요. 손모가지 조심!' };
+  const levelHelp = { easy: '아무렇게나 걸고 아무 때나 죽어요.', normal: '패가 좋으면 올리고 나쁘면 죽어요.', hard: '타짜예요. 남의 패를 몰래 보고 걸어요. 손모가지 조심!' };
   const help = h('p', { class: 'muted', style: 'margin:0;font-size:13px' }, levelHelp[o.level]);
   const close = openModal([
     h('h3', {}, '봇이랑 섯다'),
@@ -522,7 +495,7 @@ function openSeotdaSetup() {
     h('span', { class: 'label' }, '패 수'), cardsSeg(o),
     h('button', {
       class: 'btn red primary', onclick: () => {
-        if (!okStake(o.ante)) return;
+        if ((S.me.money || 0) < o.ante) { toast(`기본 판돈 ${won(o.ante)}보다 가진 돈이 적어요`); return; }
         ls.set('sdopts', o); close(); startSeotdaBot(o);
       },
     }, '패 돌리기'),
@@ -537,7 +510,6 @@ function openCreateRoom() {
   const err = h('p', { class: 'err' });
   const btn = h('button', {
     class: 'btn red primary', onclick: async () => {
-      if (!okStake(kind === 'seotda' ? sd.ante : o.ppoint)) return;
       btn.disabled = true;
       try {
         ls.set('opts', o); ls.set('sdopts', { ...sd, char: o.char });
@@ -644,9 +616,9 @@ function renderRoom(d) {
     ? h('div', { class: 'stack' },
       h('span', { class: 'label' }, '게임'), seg([{ v: 'gostop', label: '고스톱' }, { v: 'seotda', label: '섯다' }], kind, v => S.store.patchRoom(code, { kind: v })),
       ...(kind === 'seotda'
-        ? [h('span', { class: 'label' }, '기본 판돈'), amountInput(ante, { label: '기본 판돈', onCommit: v => v >= 1 && S.store.patchRoom(code, { ante: v }) }),
+        ? [h('span', { class: 'label' }, '기본 판돈'), seg(ANTES.map(v => ({ v, label: anteLabel(v) })), ante, v => S.store.patchRoom(code, { ante: v })),
           h('span', { class: 'label' }, '패 수'), seg([{ v: 2, label: '2장 섯다' }, { v: 3, label: '3장 섯다' }], cards, v => S.store.patchRoom(code, { cards: v }))]
-        : [h('span', { class: 'label' }, '점당'), amountInput(ppoint, { label: '점당 금액', onCommit: v => v >= 1 && S.store.patchRoom(code, { ppoint: v }) }),
+        : [h('span', { class: 'label' }, '점당'), seg(POINT_VALUES.map(v => ({ v, label: won(v) })), ppoint, v => S.store.patchRoom(code, { ppoint: v })),
           h('span', { class: 'label' }, '보너스피'), seg([0, 1, 2].map(v => ({ v, label: `${v}장` })), bonus, v => S.store.patchRoom(code, { bonus: v }))]))
     : h('p', { class: 'muted', style: 'margin:0' }, kind === 'seotda' ? `섯다 · 기본 판돈 ${won(ante)} · ${cards}장 섯다` : `고스톱 · 점당 ${won(ppoint)} · 보너스피 ${bonus}장`);
   $('#scr-room').replaceChildren(h('div', { class: 'wrap' },
@@ -688,9 +660,11 @@ async function hostStart(d, prev = null) {
   const seats = players.map(([uc, p]) => ({ id: uc, name: p.nick, char: p.char, isBot: false }));
   if ((d.kind || 'gostop') === 'seotda') {
     const ante = d.ante || 1000;
+    const poor = users.filter(u => (u.money || 0) < ante).map(u => u.nick);
+    if (poor.length) { toast(`기본 판돈 ${won(ante)}보다 돈이 적은 사람이 있어요: ${poor.join(', ')}`); return; }
     let first = 0;
     if (prev && prev.kind === 'seotda' && prev.result) { const wid = prev.seats[prev.result.winners[0]].id; first = Math.max(0, seats.findIndex(s => s.id === wid)); }
-    const sst = newSeotda({ seats, stacks: users.map(u => Math.max(u.money || 0, ante)), ante, cardsMode: d.cards || 2, firstSeat: first });
+    const sst = newSeotda({ seats, stacks: users.map(u => u.money || 0), ante, cardsMode: d.cards || 2, firstSeat: first });
     sst.gid = rid();
     await S.store.resetGame(code, sst);
     await S.store.patchRoom(code, { status: 'playing' });
@@ -1391,9 +1365,9 @@ class SeotdaGame extends Game {
   }
   again() {
     const s = this.state, r = s.result;
-    if (!needMoney()) { this.quit(true); return; }
+    if ((S.me.money || 0) < s.ante) { toast(`기본 판돈 ${won(s.ante)}보다 가진 돈이 적어요`); this.quit(true); return; }
     const stacks = s.seats.map((p, i) => {
-      if (i === this.mySeat) return Math.max(S.me.money, s.ante);
+      if (i === this.mySeat) return S.me.money;
       const left = s.stacks[i] + r.deltas[i];
       return left < s.ante * 10 ? botStack(s.ante, S.me.money) : left;
     });
@@ -1532,7 +1506,7 @@ function startSeotdaBot(o) {
   const others = CHARACTERS.filter(c => c.id !== o.char).sort(() => Math.random() - .5).slice(0, o.bots);
   const seats = [{ id: S.me.pid, name: S.me.nick, char: o.char, isBot: false },
     ...others.map(c => ({ id: 'bot-' + c.id, name: c.name, char: c.id, isBot: true, level: o.level }))];
-  const stacks = seats.map((p, i) => (i === 0 ? Math.max(S.me.money, o.ante) : botStack(o.ante, S.me.money)));
+  const stacks = seats.map((p, i) => (i === 0 ? S.me.money : botStack(o.ante, S.me.money)));
   const st = newSeotda({ seats, stacks, ante: o.ante, cardsMode: o.cards, firstSeat: Math.floor(Math.random() * seats.length) });
   st.gid = rid();
   S.game?.destroy();
