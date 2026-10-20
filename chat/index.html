@@ -24,8 +24,28 @@ button{cursor:pointer}
 header{flex:none;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
 header h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em;flex:1;min-width:0}
 header h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
-.who{display:flex;align-items:center;gap:6px}
+.who{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px 3px 5px}
+.who:hover{border-color:var(--accent)}
+.whoic{font-size:13px;color:var(--muted)}
+.sys.join::before{content:"👋 "}
+.sys.leave{opacity:.8}
+.sys.leave::before{content:"🚪 "}
+/* 참여자 목록 창 */
+.people{position:fixed;inset:0;z-index:9;background:rgba(10,14,18,.35);display:flex;justify-content:flex-end;align-items:flex-start;padding:calc(env(safe-area-inset-top,0px) + 58px) 12px 12px}
+.pcard{width:min(100%,320px);max-height:70vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:6px 0 8px}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px 8px 16px;border-bottom:1px solid var(--line);position:sticky;top:-6px;background:var(--surface)}
+.phead b{font-size:15px}
+.phead b small{font-weight:600;color:var(--accent);margin-left:4px}
+.phead button{border:0;background:none;font-size:18px;line-height:1;width:32px;height:32px;border-radius:8px;color:var(--muted)}
+.plist{list-style:none;margin:0;padding:4px 0;display:grid}
+.plist li{display:grid;grid-template-columns:36px 1fr;gap:2px 10px;align-items:center;padding:7px 16px}
+.plist img{grid-row:span 2;width:36px;height:36px;border-radius:50%;background:var(--bg);object-fit:contain;border:1px solid var(--line)}
+.plist b{font-size:14.5px;overflow-wrap:anywhere}
+.plist b i{font-style:normal;font-size:11px;font-weight:700;color:var(--bg);background:var(--accent);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:1px}
+.plist span{font-size:12px;color:var(--muted)}
+.plist .none{display:block;text-align:center;color:var(--muted);font-size:13px;padding:14px}
 .faces{display:flex}
+.faces:empty{display:none}
 .faces img{width:26px;height:26px;border-radius:50%;background:var(--surface);border:2px solid var(--bg);object-fit:contain;margin-left:-8px}
 .faces img:first-child{margin-left:0}
 .cnt{font-size:12.5px;color:var(--accent);font-weight:700;white-space:nowrap}
@@ -85,9 +105,23 @@ body.xl header h1{grid-column:1/4;font-size:12px;font-weight:700;padding:0 4px;l
 body.xl header h1 small{display:none}
 body.xl .xh{display:contents}
 body.xl .xh span{background:#DDEBF7;border:1px solid #9BC2E6;margin:-1px 0 0 -1px;font-weight:700;padding:0 4px;line-height:calc(var(--rh) - 1px);white-space:nowrap;overflow:hidden}
-body.xl .who{grid-column:4;grid-row:1;padding:0 6px;font-size:11px}
+body.xl .who{grid-column:4;grid-row:1;padding:0 6px;font-size:11px;border:0;border-radius:0;background:none;text-decoration:underline;color:#0563C1}
+body.xl .whoic{display:none}
+body.xl .sys.join::before,body.xl .sys.leave::before{content:none}
+body.xl .people{background:transparent;padding:calc(var(--rh) * 2) 4px 0 0}
+body.xl .pcard{border-radius:0;border:1px solid #A0A0A0;box-shadow:2px 2px 6px rgba(0,0,0,.2);padding:0;width:min(100%,280px);background:#fff;color:#1F1F1F}
+body.xl .phead{padding:0 0 0 6px;height:var(--rh);background:#107C41;color:#fff;border:0;top:0}
+body.xl .phead b{font-size:12px}
+body.xl .phead b small{color:#fff;font-weight:400}
+body.xl .phead button{color:#fff;width:var(--rh);height:var(--rh);font-size:12px;border-radius:0}
+body.xl .plist{padding:0}
+body.xl .plist li{grid-template-columns:1fr auto;padding:0 6px;height:var(--rh);border-bottom:1px solid #E2E2E2;gap:0 8px}
+body.xl .plist img{display:none}
+body.xl .plist b{font-size:12px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.xl .plist b i{background:none;color:#107C41;padding:0;font-weight:400}
+body.xl .plist span{font-size:11px}
 body.xl .faces{display:none}
-body.xl .cnt{color:#1F1F1F;font-weight:400}
+body.xl .cnt{color:#0563C1;font-weight:400}
 body.xl .cnt::before{display:none}
 body.xl .me-btn{grid-column:4;grid-row:2;border:0;border-radius:0;background:none;padding:0 6px;font-size:11px;font-weight:400;color:#595959}
 body.xl .me-btn img{display:none}
@@ -122,7 +156,7 @@ body.xl .status{background:#FFF2CC;color:#7F6000}
   <header>
     <h1 id="title">💬 수다방<small>벙참 멤버 실시간 채팅</small></h1>
     <span class="xh" hidden id="xh"><span>시각</span><span>작성자</span><span>내용</span></span>
-    <div class="who"><div class="faces" id="faces"></div><span class="cnt" id="cnt">연결 중…</span></div>
+    <button class="who" type="button" id="whoBtn" aria-haspopup="dialog" aria-controls="people" title="지금 있는 사람 보기"><span class="faces" id="faces"></span><span class="cnt" id="cnt">연결 중…</span><span class="whoic" aria-hidden="true">👥</span></button>
     <button class="me-btn" type="button" id="meBtn" hidden><img id="meFace" alt=""><span id="meName"></span></button>
   </header>
   <div class="status" id="status" role="status" hidden></div>
@@ -133,6 +167,13 @@ body.xl .status{background:#FFF2CC;color:#7F6000}
     <span class="left" id="left"></span>
     <button type="submit" id="sendBtn" disabled>보내기</button>
   </form>
+</div>
+
+<div class="people" id="people" hidden role="dialog" aria-modal="true" aria-labelledby="peopleT">
+  <div class="pcard">
+    <div class="phead"><b id="peopleT">지금 수다방에 있는 사람<small id="peopleN"></small></b><button type="button" id="peopleX" aria-label="닫기">✕</button></div>
+    <ul class="plist" id="plist"></ul>
+  </div>
 </div>
 
 <div class="setup" id="setup" hidden>
@@ -178,6 +219,8 @@ if (XL) {
   $('setupLead').textContent = '회신 로그에 표시될 이름을 입력하세요.';
   $('nick').placeholder = '이름 (2~10자)';
   $('setupForm').querySelector('.go').textContent = '확인';
+  $('peopleT').firstChild.textContent = '접속자 목록 ';
+  $('whoBtn').title = '접속자 목록';
 }
 if (EMBED) document.body.classList.add('embed');
 
@@ -210,8 +253,8 @@ $('setupForm').onsubmit = function(e){
   var first = !me;
   me = { nick: n, char: picked };
   try { localStorage.setItem('bung-chat-me', JSON.stringify(me)); } catch (err) {}
-  $('setup').hidden = true; showMe(); goOnline();
-  if (first) say('', true);
+  $('setup').hidden = true; showMe();
+  if (connected) arm(first);
   $('text').focus();
 };
 $('meBtn').onclick = openSetup;
@@ -224,6 +267,7 @@ function showMe(){
 
 /* ── 화면 ── */
 var log = $('log'), lastDay = '', lastWho = '', lastTs = 0, atBottom = true, count = 0;
+var leaves = {}, lastSys = {}, onlineUids = {}, onlineList = [], connected = false;
 function pad(n){ return n < 10 ? '0' + n : '' + n; }
 function dayLabel(d){ var w = '일월화수목금토'[d.getDay()]; return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + w + ')'; }
 function timeLabel(d){ var h = d.getHours(); return XL ? pad(h) + ':' + pad(d.getMinutes()) : (h < 12 ? '오전 ' : '오후 ') + ((h + 11) % 12 + 1) + ':' + pad(d.getMinutes()); }
@@ -239,7 +283,23 @@ function addMsg(m){
   var d = new Date(typeof m.ts === 'number' ? m.ts : Date.now());
   var dk = d.toDateString();
   if (dk !== lastDay) { var dl = document.createElement('div'); dl.className = 'day'; dl.textContent = dayLabel(d); log.appendChild(dl); lastDay = dk; lastWho = ''; }
-  if (m.sys) { var s = document.createElement('div'); s.className = 'sys'; s.textContent = m.text; log.appendChild(s); lastWho = ''; }
+  if (m.sys) {
+    // 입장·퇴장: 잠깐 끊겼다 다시 들어온 건(새로고침, 화면 꺼짐) 둘 다 지워서 알림이 도배되지 않게 해요
+    var k = m.kind, u = m.uid || '';
+    if (k === 'join') {
+      var L = leaves[u];
+      if (L && L.el.isConnected && d - L.ts < 2 * 60e3) { L.el.remove(); delete leaves[u]; lastSys[u] = 'join'; return; }
+      if (lastSys[u] === 'join') return;
+    }
+    if (k === 'leave' && lastSys[u] === 'leave') return;
+    var s = document.createElement('div'); s.className = 'sys' + (k ? ' ' + k : ''); s.textContent = m.text; log.appendChild(s); lastWho = '';
+    if (k) lastSys[u] = k;
+    if (k === 'leave') {
+      leaves[u] = { el: s, ts: d };
+      // 다른 창으로 아직 남아 있는 사람이면 퇴장 알림을 거둬요
+      if (Date.now() - d < 30e3) setTimeout(function(){ if (onlineUids[u] && s.isConnected) { s.remove(); lastSys[u] = 'join'; } }, 2500);
+    }
+  }
   else {
     var mine = me && m.uid === uid;
     var who = (m.uid || '') + '|' + (m.nick || '');
@@ -289,34 +349,67 @@ $('send').onsubmit = function(e){
   if (!v || !db) return;
   if (Date.now() - lastSend < 700) return;
   lastSend = Date.now();
-  say(v, false);
+  say(v);
   ta.value = ''; syncSend(); ta.focus();
 };
-function say(text, join){
+function say(text){
   if (!db) return;
-  var msg = join
-    ? { sys: true, text: me.nick + ' 님이 들어왔어요', uid: uid, nick: me.nick, char: me.char, ts: firebase.database.ServerValue.TIMESTAMP }
-    : { text: text, uid: uid, nick: me.nick, char: me.char, ts: firebase.database.ServerValue.TIMESTAMP };
+  var msg = { text: text, uid: uid, nick: me.nick, char: me.char, ts: firebase.database.ServerValue.TIMESTAMP };
   db.ref(ROOM + '/chat').push(msg).catch(function(){ status('메시지를 보내지 못했어요. 인터넷 연결을 확인해 주세요.'); setTimeout(function(){ status(''); }, 3000); });
 }
 
-/* ── 접속 중 ── */
-var onlineRef = null;
-function goOnline(){
+/* ── 접속 중 · 입장/퇴장 ── */
+var onlineRef = null, leaveRef = null;
+// 접속할 때마다: 접속 표시 + "들어왔어요" 알림, 그리고 연결이 끊기면 서버가 대신 "나갔어요"를 남기도록 걸어 둬요
+function arm(announce){
   if (!db || !me) return;
+  var TS = firebase.database.ServerValue.TIMESTAMP;
   onlineRef = db.ref(ROOM + '/online/' + sid);
   onlineRef.onDisconnect().remove();
-  onlineRef.set({ nick: me.nick, char: me.char, uid: uid, ts: firebase.database.ServerValue.TIMESTAMP });
+  onlineRef.set({ nick: me.nick, char: me.char, uid: uid, ts: TS });
+  if (leaveRef) { try { leaveRef.onDisconnect().cancel(); } catch (e) {} }
+  leaveRef = db.ref(ROOM + '/chat').push();
+  leaveRef.onDisconnect().set({ sys: true, kind: 'leave', text: me.nick + ' 님이 나갔어요', uid: uid, nick: me.nick, char: me.char, ts: TS });
+  if (announce) db.ref(ROOM + '/chat').push({ sys: true, kind: 'join', text: me.nick + ' 님이 들어왔어요', uid: uid, nick: me.nick, char: me.char, ts: TS });
 }
 function watchOnline(){
   db.ref(ROOM + '/online').on('value', function(s){
     var v = s.val() || {}, seen = {}, list = [];
-    Object.keys(v).forEach(function(k){ var p = v[k]; if (!p || !p.uid || seen[p.uid]) return; if (Date.now() - (p.ts || 0) > 12 * 3600e3) return; seen[p.uid] = 1; list.push(p); });
+    Object.keys(v).forEach(function(k){ var p = v[k]; if (!p || !p.uid) return; if (Date.now() - (p.ts || 0) > 12 * 3600e3) return; if (seen[p.uid]) { if ((p.ts || 0) < seen[p.uid].ts) seen[p.uid].ts = p.ts; return; } seen[p.uid] = { uid: p.uid, nick: String(p.nick || '익명').slice(0, 10), char: p.char, ts: p.ts || Date.now() }; list.push(seen[p.uid]); });
+    list.sort(function(a, b){ return (a.uid === uid ? -1 : 0) - (b.uid === uid ? -1 : 0) || a.ts - b.ts; });
+    onlineList = list; onlineUids = {}; list.forEach(function(p){ onlineUids[p.uid] = 1; });
     $('cnt').textContent = XL ? '접속: ' + list.length + '명' : '지금 ' + list.length + '명';
     var f = $('faces'); f.innerHTML = '';
-    list.slice(0, 6).forEach(function(p){ var i = document.createElement('img'); i.src = face(p.char); i.alt = ''; i.title = String(p.nick || ''); f.appendChild(i); });
+    list.slice(0, 4).forEach(function(p){ var i = document.createElement('img'); i.src = face(p.char); i.alt = ''; f.appendChild(i); });
+    if (!$('people').hidden) renderPeople();
   });
 }
+function ago(ts){
+  var m = Math.floor((Date.now() - ts) / 60e3);
+  if (XL) { var d = new Date(ts); return '입장 ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  return m < 1 ? '방금 들어옴' : m < 60 ? m + '분 전 들어옴' : Math.floor(m / 60) + '시간 전 들어옴';
+}
+function renderPeople(){
+  var ul = $('plist'); ul.innerHTML = '';
+  $('peopleN').textContent = onlineList.length + '명';
+  if (!onlineList.length) { var e = document.createElement('li'); e.className = 'none'; e.textContent = XL ? '접속자 없음' : '지금은 아무도 없어요'; ul.appendChild(e); return; }
+  onlineList.forEach(function(p){
+    var li = document.createElement('li');
+    var img = document.createElement('img'); img.alt = ''; img.src = face(p.char); li.appendChild(img);
+    var b = document.createElement('b'); b.textContent = p.nick;
+    if (p.uid === uid) { var i = document.createElement('i'); i.textContent = '나'; b.appendChild(i); }
+    li.appendChild(b);
+    var sp = document.createElement('span'); sp.textContent = ago(p.ts) + (XL ? '' : ' · ' + C.get(p.char).name); li.appendChild(sp);
+    ul.appendChild(li);
+  });
+}
+var peopleTimer = 0;
+function openPeople(){ renderPeople(); $('people').hidden = false; $('whoBtn').setAttribute('aria-expanded', 'true'); $('peopleX').focus(); clearInterval(peopleTimer); peopleTimer = setInterval(renderPeople, 30e3); }
+function closePeople(){ $('people').hidden = true; $('whoBtn').setAttribute('aria-expanded', 'false'); clearInterval(peopleTimer); }
+$('whoBtn').onclick = function(){ $('people').hidden ? openPeople() : closePeople(); };
+$('peopleX').onclick = function(){ closePeople(); $('whoBtn').focus(); };
+$('people').addEventListener('click', function(e){ if (e.target === $('people')) closePeople(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('people').hidden) closePeople(); });
 
 /* ── 시작 ── */
 function load(src){ return new Promise(function(ok, no){ var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
@@ -326,14 +419,19 @@ function start(){
     .then(function(){
       firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database();
       db.ref('.info/connected').on('value', function(s){
-        if (s.val() === true) { status(''); if (onlineRef) goOnline(); }
-        else if (db) status('연결이 끊겼어요. 다시 연결하는 중…');
+        if (s.val() === true) { connected = true; status(''); if (me) arm(true); }
+        else if (connected) status('연결이 끊겼어요. 다시 연결하는 중…');
       });
-      var first = true;
-      setTimeout(function(){ if (first) { first = false; showEmpty(); } }, 2500);
-      db.ref(ROOM + '/chat').limitToLast(KEEP).on('child_added', function(s){ if (first) { first = false; } addMsg(s.val()); });
+      // 처음 불러온 대화는 보낸 시각 순서로 정렬해서 그려요 (퇴장 알림은 미리 자리를 잡아 두기 때문)
+      var q = db.ref(ROOM + '/chat').limitToLast(KEEP), buf = [], loading = true;
+      q.on('child_added', function(s){ if (loading) buf.push(s.val()); else addMsg(s.val()); });
+      q.once('value').then(function(){
+        loading = false;
+        buf.sort(function(a, b){ return ((a && a.ts) || 0) - ((b && b.ts) || 0); }).forEach(addMsg); buf = [];
+        showEmpty();
+      });
       watchOnline();
-      if (me) { showMe(); goOnline(); } else if (!XL) openSetup(); else openSetup();
+      if (me) showMe(); else openSetup();
       syncSend();
     })
     .catch(function(){ status('채팅 서버에 연결하지 못했어요. 회사·학교 와이파이라면 휴대폰 데이터로 바꿔 보세요.'); showEmpty(); });
