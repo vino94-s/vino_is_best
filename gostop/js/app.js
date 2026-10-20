@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261020a';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261020a';
-import { botMove, botGoStop } from './bot.js?v=20261020a';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261020a';
-import { botBet, botChoose } from './seotda-bot.js?v=20261020a';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261020a';
-import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261020a';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261020a';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261020b';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261020b';
+import { botMove, botGoStop } from './bot.js?v=20261020b';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261020b';
+import { botBet, botChoose } from './seotda-bot.js?v=20261020b';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261020b';
+import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261020b';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261020b';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -467,7 +467,9 @@ function changeMyChar() {
 
 // ───────────────── 게임 설정 모달 ─────────────────
 const lastOpts = () => ({ char: S.me.char, bots: 1, level: 'normal', ppoint: 100, bonus: 2, ...ls.get('opts', {}) });
-const ppSeg = (o) => seg(POINT_VALUES.map(v => ({ v, label: won(v) })), o.ppoint, v => { o.ppoint = v; });
+// 점당 버튼이 6개라 좁은 화면에서도 한 줄에 들어가게 짧게: 50원 100원 500원 1천원 5천원 1만원
+const ppLabel = v => (v >= 10000 && v % 10000 === 0 ? `${v / 10000}만원` : v >= 1000 && v % 1000 === 0 ? `${v / 1000}천원` : won(v));
+const ppSeg = (o) => seg(POINT_VALUES.map(v => ({ v, label: ppLabel(v) })), o.ppoint, v => { o.ppoint = v; });
 const bonusSeg = (o) => seg([0, 1, 2].map(v => ({ v, label: `${v}장` })), o.bonus, v => { o.bonus = v; });
 function needMoney() {
   if ((S.me.money || 0) > 0) return true;
@@ -632,7 +634,7 @@ function renderRoom(d) {
       ...(kind === 'seotda'
         ? [h('span', { class: 'label' }, '기본 판돈'), seg(ANTES.map(v => ({ v, label: anteLabel(v) })), ante, v => S.store.patchRoom(code, { ante: v })),
           h('span', { class: 'label' }, '패 수'), seg([{ v: 2, label: '2장 섯다' }, { v: 3, label: '3장 섯다' }], cards, v => S.store.patchRoom(code, { cards: v }))]
-        : [h('span', { class: 'label' }, '점당'), seg(POINT_VALUES.map(v => ({ v, label: won(v) })), ppoint, v => S.store.patchRoom(code, { ppoint: v })),
+        : [h('span', { class: 'label' }, '점당'), seg(POINT_VALUES.map(v => ({ v, label: ppLabel(v) })), ppoint, v => S.store.patchRoom(code, { ppoint: v })),
           h('span', { class: 'label' }, '보너스피'), seg([0, 1, 2].map(v => ({ v, label: `${v}장` })), bonus, v => S.store.patchRoom(code, { bonus: v }))]))
     : h('p', { class: 'muted', style: 'margin:0' }, kind === 'seotda' ? `섯다 · 기본 판돈 ${won(ante)} · ${cards}장 섯다` : `고스톱 · 점당 ${won(ppoint)} · 보너스피 ${bonus}장`);
   $('#scr-room').replaceChildren(h('div', { class: 'wrap' },
@@ -1682,6 +1684,7 @@ async function renderAdmin(filter = '') {
   const newNick = h('input', { class: 'field', maxlength: 10, placeholder: '새 플레이어 닉네임' });
   let newChar = CHARACTERS[0].id;
   const allAmt = h('input', { class: 'field', type: 'number', min: 1, step: 1000, placeholder: '전원 충전 금액' });
+  const capAmt = h('input', { class: 'field', type: 'number', min: 0, step: 1000000, value: 100000000, 'aria-label': '자산 상한' });
   el.replaceChildren(h('div', { class: 'wrap' },
     h('div', { class: 'row' }, h('h2', { class: 'grow', style: 'margin:0;font-family:var(--f-stamp);font-weight:400;font-size:30px' }, '어드민'),
       h('button', { class: 'btn ghost small', style: 'color:var(--on-felt)', onclick: leaveAdmin }, '돌아가기'),
@@ -1708,6 +1711,26 @@ async function renderAdmin(filter = '') {
             toast(`${us.length}명에게 ${won(amt)}씩 충전했어요`); renderAdmin(search.value);
           },
         }, '충전'))),
+    h('details', { class: 'panel' }, h('summary', { style: 'font-weight:700;cursor:pointer' }, '자산 상한 맞추기'),
+      h('p', { class: 'muted', style: 'margin:8px 0 0' }, '이 금액보다 많이 가진 사람을 모두 이 금액으로 맞춰요.'),
+      h('div', { class: 'row', style: 'margin-top:8px' }, h('div', { class: 'grow' }, capAmt),
+        h('button', {
+          class: 'btn red', onclick: async () => {
+            const cap = Math.floor(Number(capAmt.value));
+            if (!(cap >= 0) || capAmt.value === '') return toast('상한 금액을 넣어 주세요');
+            const us = (await S.store.listUsers()).filter(u => (u.money || 0) > cap).sort((a, b) => b.money - a.money);
+            if (!us.length) return toast(`${won(cap)}보다 많이 가진 사람이 없어요`);
+            const names = us.slice(0, 12).map(u => `${u.nick} ${won(u.money)}`).join(', ') + (us.length > 12 ? ` 외 ${us.length - 12}명` : '');
+            if (!(await confirmModal(`${us.length}명을 ${won(cap)}으로 맞출까요?`, names, '맞추기'))) return;
+            let cut = 0;
+            for (const u of us) {
+              let d = 0;
+              await S.store.updateUser(u.pid, x => { const b = x.money || 0; x.money = Math.min(b, cap); d = b - x.money; return x; });
+              if (d) { cut += d; await S.store.logCharge({ pid: u.pid, nick: u.nick, amount: -d, ts: Date.now(), note: 'cap ' + cap }); }
+            }
+            toast(`${us.length}명을 ${won(cap)}으로 맞췄어요 (총 ${won(cut)} 회수)`); renderAdmin(search.value);
+          },
+        }, '맞추기'))),
     h('h3', { class: 'section-title' }, '플레이어'), search, listEl,
     h('button', { class: 'btn ghost small', style: 'color:var(--on-felt);justify-self:center', onclick: () => { ls.del('owner'); S.admin = false; sessionStorage.removeItem('smj_admin'); toast('이 기기에서 어드민 버튼을 숨겼어요'); leaveAdmin(); } }, '이 기기에서 어드민 버튼 숨기기'),
   ));
