@@ -236,7 +236,8 @@ var GAMES = {
   'golf': ['../golf/', '골프'], 'gonake': ['../gonake/', '고네이크'], 'yongwang': ['../yongwang/', '용왕'],
   'ddomeok': ['../ddomeok/', '또먹'], 'muldae': ['../muldae/', '천하제일 무술대회'], 'badukbung': ['../badukbung/', '대환장 바둑벙'],
   'siren': ['../siren/', '수염은 스타벅스만 잡아'], 'circus': ['../circus/', '서커스'], 'yutjabi': ['../yutjabi/', '내가바로 윷잡이'],
-  'hallin': ['../hallin/', '할린데예 갈린데예'], 'gostop': ['../gostop/', '손모가지 조심!']
+  'hallin': ['../hallin/', '할린데예 갈린데예'], 'gostop': ['../gostop/', '손모가지 조심!'],
+  'chat': ['../chat/', '수다방']
 };
 // 게임마다 그럴듯한 파일 이름
 var DOCS = ['2026_4분기_매출분석_최종.xlsx','거래처별_정산내역_v3(수정).xlsx','2027_사업계획_초안_검토용.xlsx','10월_비용정산_취합.xlsx','KPI_달성현황_팀별.xlsx'];
@@ -307,7 +308,7 @@ function render(){
 }
 function drawGame(m, cells){
   var mobile = window.innerWidth <= 760;
-  put(cells, 0, 0, '2026년 4분기 영업실적 요약 (대외비)', 't', 6);
+  put(cells, 0, 0, id === 'chat' ? '부서 간 업무 협조 요청 현황 (회신 취합)' : '2026년 4분기 영업실적 요약 (대외비)', 't', 6);
   var top = mobile ? 2 : 3, left = mobile ? 0 : 1;
   if (!mobile) { ['구분','목표','실적','달성률'].forEach(function(t, i){ put(cells, 1 + i * 2, 1, t, 'h', 2); }); }
   else { put(cells, 0, 1, '※ 전년 동기 대비 +12.4%', '', 5); }
@@ -385,6 +386,8 @@ function makeObj(){
     frame.title = g[1];
     frame.allow = 'autoplay; fullscreen; clipboard-read; clipboard-write; web-share; gamepad';
     var extra = new URLSearchParams(location.search); extra.delete('g');
+    // 수다방은 엑셀 행 모양으로 그려지게, 셀 크기를 같이 알려줘요
+    if (id === 'chat') { extra.set('in', 'excel'); extra.set('cw', String(cssNum('--cw'))); extra.set('rh', String(cssNum('--rowh'))); }
     var src = g[0] + (extra.toString() ? (g[0].indexOf('?') < 0 ? '?' : '&') + extra.toString() : '');
     frame.src = src;
     frame.addEventListener('load', tidyFrame);

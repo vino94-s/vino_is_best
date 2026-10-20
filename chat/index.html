@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0D6B5F">
+<title>벙참 수다방</title>
+<meta property="og:title" content="벙참 수다방">
+<meta property="og:description" content="벙참 멤버끼리 실시간으로 떠드는 방">
+<meta property="og:image" content="https://vino94-s.github.io/vino_is_best/characters/img/mandu.png">
+<link rel="icon" href="../characters/img/mandu.png">
+<style>
+/* 수다방: 위에 접속 중인 얼굴, 가운데 말풍선, 아래 입력창. ?in=excel 이면 엑셀 행처럼, ?embed=1 이면 보드 안에 들어가는 작은 모양. */
+:root{--bg:#F1F3EF;--surface:#FFFFFF;--ink:#17202A;--muted:#5B6770;--line:#D9DED8;--accent:#0D6B5F;--accent-soft:#DCEBE6;--mine:#0D6B5F;--mine-ink:#fff;--mark:#F2D04A;--hot:#B4410E;
+  --f:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#10151A;--surface:#182029;--ink:#E6ECE9;--muted:#95A2A8;--line:#29333C;--accent:#55C4B2;--accent-soft:#18332F;--mine:#2D8A7C;--mine-ink:#fff;--mark:#E0C23C;--hot:#F58A4F}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.5 var(--f);-webkit-text-size-adjust:100%}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{height:100dvh;display:flex;flex-direction:column;max-width:720px;margin:0 auto}
+header{flex:none;display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+header h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.01em;flex:1;min-width:0}
+header h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+.who{display:flex;align-items:center;gap:6px}
+.faces{display:flex}
+.faces img{width:26px;height:26px;border-radius:50%;background:var(--surface);border:2px solid var(--bg);object-fit:contain;margin-left:-8px}
+.faces img:first-child{margin-left:0}
+.cnt{font-size:12.5px;color:var(--accent);font-weight:700;white-space:nowrap}
+.cnt::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px;vertical-align:1px}
+.me-btn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px 3px 4px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.me-btn img{width:24px;height:24px;object-fit:contain}
+.log{flex:1;min-height:0;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:4px;overscroll-behavior:contain}
+.day{align-self:center;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:2px 12px;margin:10px 0 6px}
+.m{display:grid;grid-template-columns:36px minmax(0,1fr);gap:0 8px;max-width:88%}
+.m .fc{grid-row:span 2;width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--line);object-fit:contain;align-self:start}
+.m .nm{font-size:12.5px;color:var(--muted);font-weight:600}
+.m .row{display:flex;align-items:flex-end;gap:6px;min-width:0}
+.m .b{background:var(--surface);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:7px 12px;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.m .t{font-size:11px;color:var(--muted);white-space:nowrap;flex:none}
+.m.cont{margin-top:-2px}
+.m.cont .fc{visibility:hidden;height:0}
+.m.cont .nm{display:none}
+.m.mine{align-self:flex-end;grid-template-columns:minmax(0,1fr)}
+.m.mine .fc,.m.mine .nm{display:none}
+.m.mine .row{flex-direction:row-reverse}
+.m.mine .b{background:var(--mine);color:var(--mine-ink);border-color:transparent;border-radius:16px 4px 16px 16px}
+.sys{align-self:center;font-size:12.5px;color:var(--muted);text-align:center;margin:6px 0}
+.empty{margin:auto;text-align:center;color:var(--muted);padding:24px}
+.empty img{width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 8px}
+.newbtn{position:absolute;left:50%;transform:translateX(-50%);bottom:84px;background:var(--ink);color:var(--bg);border:0;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+form.send{flex:none;display:flex;gap:8px;align-items:flex-end;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);border-top:1px solid var(--line);background:var(--bg)}
+form.send textarea{flex:1;min-width:0;resize:none;height:44px;max-height:120px;border:1.5px solid var(--line);border-radius:22px;background:var(--surface);padding:10px 16px;font-size:16px;line-height:1.4}
+form.send textarea:focus-visible{outline:none;border-color:var(--accent)}
+form.send button{flex:none;height:44px;border:0;border-radius:22px;padding:0 18px;background:var(--accent);color:var(--bg);font-weight:700}
+form.send button:disabled{opacity:.45;cursor:default}
+.left{font-size:11.5px;color:var(--muted);align-self:center;min-width:28px;text-align:right}
+.status{flex:none;font-size:12.5px;text-align:center;padding:4px;color:var(--bg);background:var(--hot)}
+/* 처음 들어올 때 이름·캐릭터 고르기 */
+.setup{position:fixed;inset:0;z-index:10;background:rgba(10,14,18,.55);display:grid;place-items:center;padding:16px}
+.setup .card{width:min(100%,420px);max-height:100%;overflow:auto;background:var(--surface);border-radius:18px;padding:20px;display:grid;gap:12px}
+.setup h2{margin:0;font-size:20px}
+.setup p{margin:0;color:var(--muted);font-size:13.5px}
+.setup input{width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--bg);padding:11px 14px;font-size:16px}
+.setup input:focus-visible{outline:none;border-color:var(--accent)}
+.picks{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.picks button{border:2px solid transparent;background:var(--bg);border-radius:12px;padding:4px 2px 2px;display:grid;justify-items:center;font-size:11px;gap:0}
+.picks button img{width:100%;aspect-ratio:1;object-fit:contain}
+.picks button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);font-weight:700}
+.setup .go{border:0;border-radius:12px;padding:12px;background:var(--accent);color:var(--bg);font-weight:800;font-size:16px}
+.setup .err{color:var(--hot);font-size:13px;min-height:1.2em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 보드 안에 들어갈 때 */
+body.embed header{padding-top:10px}
+body.embed .app{height:100vh}
+
+/* 엑셀 행 모양: 엑셀 화면 셀 크기(--cw, --rh)에 맞춰 한 줄 = 한 행 */
+body.xl{--cw:72px;--rh:22px;background:#fff;color:#1F1F1F;font:12px/var(--rh) "맑은 고딕","Malgun Gothic","Apple SD Gothic Neo",Calibri,sans-serif}
+body.xl .app{max-width:none;height:100vh}
+body.xl header{padding:0;height:calc(var(--rh) * 2);border:0;background:#fff;gap:0;align-items:stretch;display:grid;grid-template-columns:var(--cw) var(--cw) 1fr auto;grid-template-rows:var(--rh) var(--rh)}
+body.xl header h1{grid-column:1/4;font-size:12px;font-weight:700;padding:0 4px;line-height:var(--rh);color:#1F3864}
+body.xl header h1 small{display:none}
+body.xl .xh{display:contents}
+body.xl .xh span{background:#DDEBF7;border:1px solid #9BC2E6;margin:-1px 0 0 -1px;font-weight:700;padding:0 4px;line-height:calc(var(--rh) - 1px);white-space:nowrap;overflow:hidden}
+body.xl .who{grid-column:4;grid-row:1;padding:0 6px;font-size:11px}
+body.xl .faces{display:none}
+body.xl .cnt{color:#1F1F1F;font-weight:400}
+body.xl .cnt::before{display:none}
+body.xl .me-btn{grid-column:4;grid-row:2;border:0;border-radius:0;background:none;padding:0 6px;font-size:11px;font-weight:400;color:#595959}
+body.xl .me-btn img{display:none}
+body.xl .log{padding:0;gap:0;display:block}
+body.xl .day,body.xl .sys{display:block;margin:0;padding:0 4px;border:0;border-radius:0;background:#F2F2F2;height:var(--rh);line-height:var(--rh);font-size:11px;color:#595959;text-align:left;white-space:nowrap;overflow:hidden}
+body.xl .m,body.xl .m.mine{display:grid;grid-template-columns:var(--cw) var(--cw) minmax(0,1fr);max-width:none;gap:0;height:auto;min-height:var(--rh);align-items:start}
+body.xl .m .fc{display:none}
+body.xl .m .nm,body.xl .m.cont .nm,body.xl .m.mine .nm{display:block;grid-column:2;grid-row:1;padding:0 4px;color:#1F1F1F;font-weight:400;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.xl .m .row,body.xl .m.mine .row{display:contents}
+body.xl .m .t{grid-column:1;grid-row:1;padding:0 4px;color:#1F1F1F;font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+body.xl .m .b,body.xl .m.mine .b{grid-column:3;grid-row:1;background:none;border:0;border-radius:0;padding:0 4px;color:#1F1F1F;line-height:var(--rh)}
+body.xl .m.mine .b{color:#1F3864}
+body.xl .m.mine .nm{color:#1F3864}
+body.xl .empty{margin:0;padding:0 4px;text-align:left;color:#595959;line-height:var(--rh)}
+body.xl .empty img{display:none}
+body.xl form.send{padding:0;border:0;border-top:2px solid #107C41;background:#fff;gap:0;align-items:stretch;height:calc(var(--rh) + 2px)}
+body.xl form.send::before{content:"입력";width:var(--cw);flex:none;padding:0 4px;background:#E9F3EC;color:#107C41;font-weight:700;line-height:var(--rh)}
+body.xl form.send textarea{height:var(--rh);border:0;border-radius:0;background:#fff;padding:0 4px;font-size:16px;line-height:var(--rh);max-height:var(--rh)}
+body.xl form.send button{height:var(--rh);border-radius:0;padding:0 10px;background:#F3F3F3;color:#1F1F1F;border-left:1px solid #D4D4D4;font-weight:400;font-size:12px}
+body.xl .left{display:none}
+body.xl .newbtn{bottom:calc(var(--rh) + 8px);border-radius:0;background:#107C41;font-weight:400;font-size:11px;padding:2px 10px}
+body.xl .setup{background:rgba(255,255,255,.7)}
+body.xl .setup .card{border-radius:0;border:1px solid #A0A0A0;box-shadow:2px 2px 6px rgba(0,0,0,.2);font-size:12px;line-height:1.4}
+body.xl .setup h2{font-size:14px}
+body.xl .setup .go{border-radius:2px;background:#107C41;font-size:13px;padding:8px}
+body.xl .picks{display:none}
+body.xl .status{background:#FFF2CC;color:#7F6000}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1 id="title">💬 수다방<small>벙참 멤버 실시간 채팅</small></h1>
+    <span class="xh" hidden id="xh"><span>시각</span><span>작성자</span><span>내용</span></span>
+    <div class="who"><div class="faces" id="faces"></div><span class="cnt" id="cnt">연결 중…</span></div>
+    <button class="me-btn" type="button" id="meBtn" hidden><img id="meFace" alt=""><span id="meName"></span></button>
+  </header>
+  <div class="status" id="status" role="status" hidden></div>
+  <main class="log" id="log" aria-live="polite" aria-label="채팅 내용"></main>
+  <button class="newbtn" type="button" id="newBtn" hidden>새 메시지 ↓</button>
+  <form class="send" id="send" autocomplete="off">
+    <textarea id="text" rows="1" maxlength="120" placeholder="메시지 보내기" aria-label="메시지"></textarea>
+    <span class="left" id="left"></span>
+    <button type="submit" id="sendBtn" disabled>보내기</button>
+  </form>
+</div>
+
+<div class="setup" id="setup" hidden>
+  <form class="card" id="setupForm">
+    <h2 id="setupTitle">수다방 입장</h2>
+    <p id="setupLead">닉네임과 내 얼굴이 될 캐릭터를 골라 주세요. 이 기기에 기억돼요.</p>
+    <input id="nick" maxlength="10" placeholder="닉네임 (2~10자)" autocomplete="nickname" aria-label="닉네임">
+    <div class="picks" id="picks" role="radiogroup" aria-label="캐릭터 고르기"></div>
+    <div class="err" id="setupErr" role="alert"></div>
+    <button class="go" type="submit">입장하기</button>
+  </form>
+</div>
+
+<script src="../characters/bung-chars.js"></script>
+<script>
+(function(){
+// 손모가지 조심!과 같은 Firebase를 써요. rooms/<방>/chat 에 메시지, rooms/<방>/online 에 접속 중인 사람.
+var FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyCMl9Ukya3XqIV0BHjKTx1mryvUru0kYXA',
+  authDomain: 'gostop-7c4a2.firebaseapp.com',
+  databaseURL: 'https://gostop-7c4a2-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'gostop-7c4a2',
+  appId: '1:686060440785:web:d5f6445e4bcd2a481b89f0'
+};
+var ROOM = 'rooms/bung-sudabang';
+var FB_V = '10.12.2';
+var KEEP = 150;
+
+var qs = new URLSearchParams(location.search);
+var XL = qs.get('in') === 'excel', EMBED = qs.get('embed') === '1';
+var $ = function(id){ return document.getElementById(id); };
+var C = window.BUNG_CHARS;
+if (XL) {
+  document.body.classList.add('xl');
+  var cw = parseFloat(qs.get('cw')), rh = parseFloat(qs.get('rh'));
+  if (cw > 20 && cw < 200) document.body.style.setProperty('--cw', cw + 'px');
+  if (rh > 12 && rh < 60) document.body.style.setProperty('--rh', rh + 'px');
+  $('xh').hidden = false;
+  $('title').firstChild.textContent = '업무 협조 요청 회신 로그';
+  $('text').placeholder = '회신 내용 입력 후 Enter';
+  $('sendBtn').textContent = '입력';
+  $('setupTitle').textContent = '작성자 등록';
+  $('setupLead').textContent = '회신 로그에 표시될 이름을 입력하세요.';
+  $('nick').placeholder = '이름 (2~10자)';
+  $('setupForm').querySelector('.go').textContent = '확인';
+}
+if (EMBED) document.body.classList.add('embed');
+
+/* ── 나 ── */
+var me = null;
+try { me = JSON.parse(localStorage.getItem('bung-chat-me') || 'null'); } catch (e) {}
+var sid = (function(){ try { var s = sessionStorage.getItem('bung-chat-sid'); if (!s) { s = Math.random().toString(36).slice(2, 10); sessionStorage.setItem('bung-chat-sid', s); } return s; } catch (e) { return Math.random().toString(36).slice(2, 10); } })();
+var uid = (function(){ try { var u = localStorage.getItem('bung-chat-uid'); if (!u) { u = Math.random().toString(36).slice(2, 12); localStorage.setItem('bung-chat-uid', u); } return u; } catch (e) { return sid; } })();
+var picked = (me && me.char) || C.list[Math.floor(Math.random() * C.list.length)].id;
+function face(id){ return '../characters/' + C.get(id).file; }
+
+function buildPicks(){
+  var box = $('picks'); box.innerHTML = '';
+  C.list.forEach(function(c){
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio');
+    b.setAttribute('aria-pressed', String(c.id === picked)); b.setAttribute('aria-checked', String(c.id === picked));
+    b.innerHTML = '<img alt="" src="' + face(c.id) + '">'; var s = document.createElement('span'); s.textContent = c.name; b.appendChild(s);
+    b.onclick = function(){ picked = c.id; buildPicks(); };
+    box.appendChild(b);
+  });
+}
+function openSetup(){
+  buildPicks(); $('nick').value = (me && me.nick) || ''; $('setupErr').textContent = '';
+  $('setup').hidden = false; setTimeout(function(){ $('nick').focus(); }, 30);
+}
+$('setupForm').onsubmit = function(e){
+  e.preventDefault();
+  var n = $('nick').value.trim().replace(/\s+/g, ' ');
+  if (n.length < 2 || n.length > 10) { $('setupErr').textContent = '닉네임은 2~10자로 적어 주세요.'; return; }
+  var first = !me;
+  me = { nick: n, char: picked };
+  try { localStorage.setItem('bung-chat-me', JSON.stringify(me)); } catch (err) {}
+  $('setup').hidden = true; showMe(); goOnline();
+  if (first) say('', true);
+  $('text').focus();
+};
+$('meBtn').onclick = openSetup;
+$('setup').addEventListener('click', function(e){ if (e.target === $('setup') && me) $('setup').hidden = true; });
+function showMe(){
+  if (!me) return;
+  $('meBtn').hidden = false; $('meFace').src = face(me.char); $('meName').textContent = XL ? '작성자: ' + me.nick : me.nick;
+  syncSend();
+}
+
+/* ── 화면 ── */
+var log = $('log'), lastDay = '', lastWho = '', lastTs = 0, atBottom = true, count = 0;
+function pad(n){ return n < 10 ? '0' + n : '' + n; }
+function dayLabel(d){ var w = '일월화수목금토'[d.getDay()]; return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + w + ')'; }
+function timeLabel(d){ var h = d.getHours(); return XL ? pad(h) + ':' + pad(d.getMinutes()) : (h < 12 ? '오전 ' : '오후 ') + ((h + 11) % 12 + 1) + ':' + pad(d.getMinutes()); }
+function nearBottom(){ return log.scrollHeight - log.scrollTop - log.clientHeight < 80; }
+function toBottom(){ log.scrollTop = log.scrollHeight; $('newBtn').hidden = true; }
+log.addEventListener('scroll', function(){ atBottom = nearBottom(); if (atBottom) $('newBtn').hidden = true; });
+$('newBtn').onclick = toBottom;
+function clearEmpty(){ var e = log.querySelector('.empty'); if (e) e.remove(); }
+function addMsg(m){
+  if (!m || typeof m.text !== 'string') return;
+  clearEmpty();
+  var stick = nearBottom() || (me && m.uid === uid);
+  var d = new Date(typeof m.ts === 'number' ? m.ts : Date.now());
+  var dk = d.toDateString();
+  if (dk !== lastDay) { var dl = document.createElement('div'); dl.className = 'day'; dl.textContent = dayLabel(d); log.appendChild(dl); lastDay = dk; lastWho = ''; }
+  if (m.sys) { var s = document.createElement('div'); s.className = 'sys'; s.textContent = m.text; log.appendChild(s); lastWho = ''; }
+  else {
+    var mine = me && m.uid === uid;
+    var who = (m.uid || '') + '|' + (m.nick || '');
+    var cont = who === lastWho && (d - lastTs) < 3 * 60e3;
+    var el = document.createElement('div'); el.className = 'm' + (mine ? ' mine' : '') + (cont ? ' cont' : '');
+    var img = document.createElement('img'); img.className = 'fc'; img.alt = ''; img.src = face(m.char); el.appendChild(img);
+    var nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = String(m.nick || '익명').slice(0, 10); el.appendChild(nm);
+    var row = document.createElement('div'); row.className = 'row';
+    var b = document.createElement('div'); b.className = 'b'; b.textContent = m.text.slice(0, 120);
+    var t = document.createElement('span'); t.className = 't'; t.textContent = timeLabel(d);
+    row.appendChild(b); row.appendChild(t); el.appendChild(row); log.appendChild(el);
+    lastWho = who; lastTs = d;
+    if (!mine && document.hidden && !XL) { unread++; document.title = '(' + unread + ') 벙참 수다방'; }
+  }
+  count++;
+  while (log.children.length > KEEP * 1.3) log.removeChild(log.firstChild);
+  if (stick) toBottom(); else $('newBtn').hidden = false;
+}
+var unread = 0;
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) { unread = 0; document.title = '벙참 수다방'; } });
+function showEmpty(){
+  if (log.children.length) return;
+  var e = document.createElement('div'); e.className = 'empty';
+  e.innerHTML = '<img alt="" src="' + face('mandu') + '">';
+  e.appendChild(document.createTextNode(XL ? '회신 내역이 없습니다.' : '아직 조용해요. 첫 마디를 남겨 보세요!'));
+  log.appendChild(e);
+}
+function status(t){ $('status').textContent = t || ''; $('status').hidden = !t; }
+
+/* ── 보내기 ── */
+var ta = $('text'), lastSend = 0, db = null;
+function syncSend(){
+  var v = ta.value.trim();
+  $('sendBtn').disabled = !v || !db;
+  $('left').textContent = ta.value.length > 90 ? (120 - ta.value.length) : '';
+  if (!XL) { ta.style.height = '44px'; ta.style.height = Math.min(120, ta.scrollHeight + 2) + 'px'; }
+}
+ta.addEventListener('input', syncSend);
+ta.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('send').requestSubmit ? $('send').requestSubmit() : $('send').dispatchEvent(new Event('submit', { cancelable: true })); }
+});
+ta.addEventListener('focus', function(){ if (!me) openSetup(); });
+$('send').onsubmit = function(e){
+  e.preventDefault();
+  if (!me) { openSetup(); return; }
+  var v = ta.value.trim().replace(/\n{3,}/g, '\n\n').slice(0, 120);
+  if (!v || !db) return;
+  if (Date.now() - lastSend < 700) return;
+  lastSend = Date.now();
+  say(v, false);
+  ta.value = ''; syncSend(); ta.focus();
+};
+function say(text, join){
+  if (!db) return;
+  var msg = join
+    ? { sys: true, text: me.nick + ' 님이 들어왔어요', uid: uid, nick: me.nick, char: me.char, ts: firebase.database.ServerValue.TIMESTAMP }
+    : { text: text, uid: uid, nick: me.nick, char: me.char, ts: firebase.database.ServerValue.TIMESTAMP };
+  db.ref(ROOM + '/chat').push(msg).catch(function(){ status('메시지를 보내지 못했어요. 인터넷 연결을 확인해 주세요.'); setTimeout(function(){ status(''); }, 3000); });
+}
+
+/* ── 접속 중 ── */
+var onlineRef = null;
+function goOnline(){
+  if (!db || !me) return;
+  onlineRef = db.ref(ROOM + '/online/' + sid);
+  onlineRef.onDisconnect().remove();
+  onlineRef.set({ nick: me.nick, char: me.char, uid: uid, ts: firebase.database.ServerValue.TIMESTAMP });
+}
+function watchOnline(){
+  db.ref(ROOM + '/online').on('value', function(s){
+    var v = s.val() || {}, seen = {}, list = [];
+    Object.keys(v).forEach(function(k){ var p = v[k]; if (!p || !p.uid || seen[p.uid]) return; if (Date.now() - (p.ts || 0) > 12 * 3600e3) return; seen[p.uid] = 1; list.push(p); });
+    $('cnt').textContent = XL ? '접속: ' + list.length + '명' : '지금 ' + list.length + '명';
+    var f = $('faces'); f.innerHTML = '';
+    list.slice(0, 6).forEach(function(p){ var i = document.createElement('img'); i.src = face(p.char); i.alt = ''; i.title = String(p.nick || ''); f.appendChild(i); });
+  });
+}
+
+/* ── 시작 ── */
+function load(src){ return new Promise(function(ok, no){ var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+function start(){
+  load('https://www.gstatic.com/firebasejs/' + FB_V + '/firebase-app-compat.js')
+    .then(function(){ return load('https://www.gstatic.com/firebasejs/' + FB_V + '/firebase-database-compat.js'); })
+    .then(function(){
+      firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database();
+      db.ref('.info/connected').on('value', function(s){
+        if (s.val() === true) { status(''); if (onlineRef) goOnline(); }
+        else if (db) status('연결이 끊겼어요. 다시 연결하는 중…');
+      });
+      var first = true;
+      setTimeout(function(){ if (first) { first = false; showEmpty(); } }, 2500);
+      db.ref(ROOM + '/chat').limitToLast(KEEP).on('child_added', function(s){ if (first) { first = false; } addMsg(s.val()); });
+      watchOnline();
+      if (me) { showMe(); goOnline(); } else if (!XL) openSetup(); else openSetup();
+      syncSend();
+    })
+    .catch(function(){ status('채팅 서버에 연결하지 못했어요. 회사·학교 와이파이라면 휴대폰 데이터로 바꿔 보세요.'); showEmpty(); });
+}
+start();
+if (me) showMe();
+// 보드 안에 들어가 있으면 "잘 열렸다"고 알려서, 보드가 이 화면을 보여 주게 해요
+if (EMBED && window.parent !== window) { try { window.parent.postMessage({ bungChat: 'ready' }, '*'); } catch (e) {} }
+})();
+</script>
+</body>
+</html>
