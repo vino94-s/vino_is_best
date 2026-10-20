@@ -1,5 +1,5 @@
 // 섯다 규칙 엔진 (2~4인, 2장/3장). 상태는 JSON 직렬화 가능한 순수 객체.
-import { CARDS } from './cards.js?v=20261019c';
+import { CARDS } from './cards.js?v=20261020a';
 
 // 1~10월, 달마다 2장 (광·열끗·띠). 화투 그림 ID를 그대로 씀
 export const SD_DECK = ['01a', '01b', '02a', '02b', '03a', '03b', '04a', '04b', '05a', '05b',

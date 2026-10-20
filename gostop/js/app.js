@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261019c';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261019c';
-import { botMove, botGoStop } from './bot.js?v=20261019c';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261019c';
-import { botBet, botChoose } from './seotda-bot.js?v=20261019c';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261019c';
-import { createStore, applyResult } from './store.js?v=20261019c';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261019c';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261020a';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261020a';
+import { botMove, botGoStop } from './bot.js?v=20261020a';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261020a';
+import { botBet, botChoose } from './seotda-bot.js?v=20261020a';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261020a';
+import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261020a';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261020a';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -342,7 +342,7 @@ async function doLogin(code) {
   S.me = res.user;
   ls.set('code', S.me.code);
   S.unsubMe?.();
-  S.unsubMe = S.store.watchUser(S.me.pid, u => { if (u && S.me) { S.me = { ...u, code: S.me.code }; refreshWallet(); } });
+  S.unsubMe = S.store.watchUser(S.me.pid, u => { if (u && S.me) { S.rawMoney = u.money || 0; S.me = { ...u, code: S.me.code }; syncMoney(); } });
   if (res.migrated) logCodeToSheet(S.me, S.me.code);
   if (res.recharged) toastLater(`오늘의 ${won(DAILY_CHARGE)} 충전 완료!`);
   if (S.pendingRoom) renderLobby(); else renderSelect();
@@ -358,6 +358,20 @@ function logout() {
   S.unsubMe?.(); S.unsubMe = null; S.me = null; ls.del('code');
   renderLogin();
 }
+// 봇 판 중에는 먼저 걷어 둔 '선패배' 금액(S.held)을 더해서 판 시작 때 돈으로 보여준다
+function syncMoney() {
+  if (!S.me) return;
+  if (S.rawMoney == null) S.rawMoney = S.me.money || 0;
+  S.me.money = S.rawMoney + (S.held || 0);
+  refreshWallet();
+}
+// 벙참 뒤로가기(<)·새로고침·창 닫기 경고
+const inLiveGame = () => !!(S.game && S.game.alive && S.game.state && S.game.state.phase !== 'end');
+window.smjLeaveWarn = () => (inLiveGame() ? '지금 나가면 이번 판은 패배로 기록돼요.\n게임을 나가서 게임 목록으로 돌아갈까요?' : null);
+window.addEventListener('beforeunload', e => {
+  if (window.smjLeaving || !inLiveGame()) return;
+  e.preventDefault(); e.returnValue = '';
+});
 function refreshWallet() {
   document.querySelectorAll('[data-wallet]').forEach(el => { el.textContent = won(S.me?.money || 0); });
   if (!$('#scr-lobby').classList.contains('hidden')) {
@@ -696,6 +710,8 @@ class Game {
     show('scr-game');
   }
   destroy() {
+    // 정산 없이 판이 사라지면(중간 이탈) 먼저 걷어 둔 패배가 그대로 남는다
+    if (this.mode === 'bot' && !this.holdDone) { this.holdDone = true; S.held = 0; syncMoney(); }
     this.alive = false; clearInterval(this.timer); clearTimeout(this.botTimer);
     Object.values(this.bubbleTimers || {}).forEach(clearTimeout);
     if (this.chat.onSay) this.chat.onSay = null;
@@ -753,6 +769,41 @@ class Game {
     }, until - Date.now());
   }
   key(s = this.state) { return `${this.gid}:${s.ver}`; }
+
+  // ── 봇 판 선패배: 판이 시작되면 바로 '1판 패배'로 기록하고 잃을 돈을 먼저 걷는다 ──
+  get statMode() { return 'bot'; }
+  holdTarget(s) { return s.threshold * s.ppoint * (s.mult || 1); }
+  syncHold() {
+    if (this.mode !== 'bot' || !S.me || !this.state) return;
+    const s = this.state, gid = this.gid;
+    const fresh = this.holdGid !== gid;
+    if (s.phase === 'end' && fresh) return;
+    if (!fresh && (this.holdDone || s.phase === 'end')) return;
+    const want = Math.max(0, Math.round(this.holdTarget(s) || 0));
+    const extra = fresh ? want : want - this.holdWant;
+    if (!fresh && extra <= 0) return;
+    if (fresh) { this.holdGid = gid; this.held = 0; this.holdDone = false; }
+    this.holdWant = want;
+    S.held = (S.held || 0) + extra; syncMoney();
+    const pid = S.me.pid, mode = this.statMode;
+    this.holdQ = (this.holdQ || Promise.resolve()).then(async () => {
+      const taken = await holdLoss(S.store, pid, { mode, amount: extra, count: fresh });
+      if (this.holdGid !== gid || this.holdDone) return;
+      this.held += taken;
+      if (taken < extra) { S.held = Math.max(0, (S.held || 0) - (extra - taken)); syncMoney(); }
+    }).catch(e => console.error(e));
+  }
+  /** 정상 종료·인게임 나가기: 걷어 둔 돈을 돌려주고 실제 결과 반영 */
+  settleHold({ win, delta }) {
+    const gid = this.holdGid, mode = this.statMode, pid = S.me.pid;
+    const p = (this.holdQ || Promise.resolve()).then(() => {
+      const held = this.holdGid === gid && !this.holdDone ? (this.held || 0) : 0;
+      this.holdDone = true; this.held = 0; S.held = 0;
+      return settleHeld(S.store, pid, { mode, win, delta, held });
+    });
+    this.holdQ = p.catch(e => console.error(e));
+    return p;
+  }
   actor(s = this.state) { return s.phase === 'goStop' ? s.pending : s.phase === 'play' ? s.turn : null; }
 
   // 상태 반영
@@ -762,6 +813,7 @@ class Game {
     if (!this.state || this.state.ver !== s.ver || this.arrivedKey !== `${this.gid}:${s.ver}`) { this.arrivedAt = Date.now(); this.arrivedKey = `${this.gid}:${s.ver}`; }
     this.state = s;
     this.json = JSON.stringify(s);
+    this.syncHold();
     if (!initial && s.timeout && s.timeout.ver === s.ver) this.chat.sys(`${s.seats[s.timeout.seat].name} 시간 초과 — 자동으로 ${s.timeout.label || (s.timeout.stop ? '스톱했어요' : '냈어요')}`);
     if (!initial && s.evSeq > this.seenEv) this.handleEvents(s);
     this.seenEv = Math.max(this.seenEv, s.evSeq);
@@ -891,7 +943,7 @@ class Game {
       let delta = 0;
       if (r.winner === me) delta = r.pays.reduce((a, b) => a + b, 0) * s.ppoint;
       else if (r.winner != null) delta = -r.pays[me] * s.ppoint;
-      const applied = await applyResult(S.store, S.me.pid, { mode: 'bot', win: r.winner === me, delta });
+      const applied = await this.settleHold({ win: r.winner === me, delta });
       const deltas = s.seats.map((_, i) => (i === me ? applied : r.winner == null ? 0 : i === r.winner ? r.pays.reduce((a, b) => a + b, 0) * s.ppoint : -r.pays[i] * s.ppoint));
       this.showResult(deltas);
     } else {
@@ -899,12 +951,28 @@ class Game {
       this.maybeShowResult();
     }
   }
+  /** 온라인 판 도중 나간 사람(접속 끊김)은 자동으로 이겨도 승리로 치지 않는다 */
+  gone(i) { const p = this.room?.players?.[this.state.seats[i].id]; return !p || p.online === false; }
+  /** 나간 사람이 자동 진행으로 이긴 판: 무효(돈 안 오감). 나간 사람만 패배 1판으로 기록 */
+  async settleVoid() {
+    const s = this.state, code = this.roomCode, sd = s.kind === 'seotda' || !!s.contrib;
+    const deltas = s.seats.map(() => 0);
+    for (let i = 0; i < s.n; i++) if (this.gone(i)) await applyResult(S.store, s.seats[i].id, { mode: 'online', win: false, delta: 0 });
+    await S.store.addMatch({
+      ts: Date.now(), ...(sd ? { kind: 'seotda', ante: s.ante, cards: s.cardsMode, pot: s.result.pot } : { ppoint: s.ppoint, points: 0 }),
+      nagari: true, void: true, winner: null,
+      players: s.seats.map((p, i) => ({ nick: p.name, char: p.char, delta: 0, win: false, left: this.gone(i) })),
+    });
+    await S.store.patchRoom(code, { status: 'ended', lastSettle: { gid: s.gid, deltas, void: true } });
+  }
+  isVoid() { const l = this.room?.lastSettle; return this.mode === 'online' && !!l && l.gid === this.gid && !!l.void; }
   async settleOnline() {
     const s = this.state, code = this.roomCode;
     try {
       if (!(await S.store.claimSettle(code, s.gid))) return;
       const r = s.result;
       const deltas = s.seats.map(() => 0);
+      if (r.winner != null && this.gone(r.winner)) return this.settleVoid();
       if (r.winner != null) {
         let pot = 0;
         for (let i = 0; i < s.n; i++) {
@@ -912,7 +980,7 @@ class Game {
           const applied = await applyResult(S.store, s.seats[i].id, { mode: 'online', win: false, delta: -r.pays[i] * s.ppoint });
           deltas[i] = applied; pot += -applied;
         }
-        deltas[r.winner] = await applyResult(S.store, s.seats[r.winner].id, { mode: 'online', win: true, delta: pot });
+        deltas[r.winner] = await applyResult(S.store, s.seats[r.winner].id, { mode: 'online', win: !this.gone(r.winner), delta: pot });
       } else {
         for (let i = 0; i < s.n; i++) await applyResult(S.store, s.seats[i].id, { mode: 'online', win: false, delta: 0 });
       }
@@ -949,8 +1017,9 @@ class Game {
     const isHost = this.mode === 'online' && this.room?.host === S.me.pid;
     const close = openModal([
       h('div', { class: 'result-head' },
-        h('div', { class: 'stamp' }, w == null ? '나가리!' : w === this.mySeat ? '내가 이겼다!' : `${s.seats[w].name} 승!`),
-        w != null ? h('p', { class: 'muted', style: 'margin:4px 0 0' }, `${r.points}점 · ${lines.join(' · ')}`) : h('p', { class: 'muted', style: 'margin:4px 0 0' }, '다음 판은 두 배로 갑니다')),
+        h('div', { class: 'stamp' }, this.isVoid() ? '무효 판!' : w == null ? '나가리!' : w === this.mySeat ? '내가 이겼다!' : `${s.seats[w].name} 승!`),
+        this.isVoid() ? h('p', { class: 'muted', style: 'margin:4px 0 0' }, '중간에 나간 사람이 자동으로 이긴 판이라 돈이 오가지 않아요. 나간 사람은 패배로 기록돼요.')
+          : w != null ? h('p', { class: 'muted', style: 'margin:4px 0 0' }, `${r.points}점 · ${lines.join(' · ')}`) : h('p', { class: 'muted', style: 'margin:4px 0 0' }, '다음 판은 두 배로 갑니다')),
       h('div', { class: 'pay-list' }, s.seats.map((p, i) => h('div', { class: 'p' }, avatar(p.char),
         h('div', { class: 'grow' }, h('b', {}, p.name + (i === w ? ' 👑' : '')), h('small', {}, [`${scoreDetail(s.caps[i]).total}점`, ...((r.flags && r.flags[i]) || [])].join(' · '))),
         h('span', { class: `money ${deltas[i] > 0 ? 'plus' : deltas[i] < 0 ? 'minus' : ''}` }, p.isBot && this.mode === 'bot' && i !== this.mySeat ? signed(deltas[i]) : signed(deltas[i]))))),
@@ -985,12 +1054,12 @@ class Game {
         const pen = s.threshold * s.ppoint * (s.mult || 1);
         const ok = await confirmModal('판을 접을까요?', `지금 나가면 기본 점수(${s.threshold}점)만큼 ${won(pen)}을 잃고 패배로 기록돼요.`, '나가기', '계속하기');
         if (!ok) return;
-        await applyResult(S.store, S.me.pid, { mode: 'bot', win: false, delta: -pen });
+        await this.settleHold({ win: false, delta: -pen });
       }
       this.destroy(); S.game = null; renderLobby();
     } else {
       if (!afterEnd && s.phase !== 'end') {
-        const ok = await confirmModal('방에서 나갈까요?', `게임은 계속돼요. 내 차례는 ${TURN_TIMEOUT_SEC}초가 지나면 자동으로 내져요.`, '나가기', '계속하기');
+        const ok = await confirmModal('방에서 나갈까요?', `게임은 계속되고 이번 판은 패배로 기록돼요. 내 차례는 ${TURN_TIMEOUT_SEC}초가 지나면 자동으로 내져요.`, '나가기', '계속하기');
         if (!ok) return;
       }
       leaveRoom();
@@ -1180,6 +1249,9 @@ function jokboRows(rows, mine) {
 const botStack = (ante, mine) => Math.max(ante * 100, Math.min((mine || 0) * 2, ante * 400));
 
 class SeotdaGame extends Game {
+  get statMode() { return 'seotda'; }
+  // 섯다는 내가 지금까지 판에 낸 돈(기본 판돈 + 배팅)만큼 걷어 둔다 — 배팅이 늘면 같이 늘어남
+  holdTarget(s) { return s.contrib[this.mySeat]; }
   buildShell() {
     super.buildShell();
     this.jokboEl = h('aside', { class: 'jokbo-panel', 'aria-label': '섯다 족보' });
@@ -1302,7 +1374,7 @@ class SeotdaGame extends Game {
     if (!this.alive) return;
     if (r.deltas[me] > 0) Snd.win();
     if (this.mode === 'bot') {
-      const applied = await applyResult(S.store, S.me.pid, { mode: 'seotda', win: r.deltas[me] > 0, delta: r.deltas[me] });
+      const applied = await this.settleHold({ win: r.deltas[me] > 0, delta: r.deltas[me] });
       const deltas = r.deltas.slice(); deltas[me] = applied;
       this.showResult(deltas);
     } else {
@@ -1316,6 +1388,7 @@ class SeotdaGame extends Game {
       if (!(await S.store.claimSettle(code, s.gid))) return;
       const r = s.result;
       const deltas = s.seats.map(() => 0);
+      if (r.winners.some(i => this.gone(i))) return this.settleVoid();
       const idx = s.seats.map((_, i) => i);
       let expected = 0, got = 0;
       for (const i of idx.filter(i => r.deltas[i] < 0)) {
@@ -1324,7 +1397,7 @@ class SeotdaGame extends Game {
       }
       const ratio = expected ? got / expected : 1;
       for (const i of idx.filter(i => r.deltas[i] >= 0)) {
-        deltas[i] = await applyResult(S.store, s.seats[i].id, { mode: 'online', win: r.deltas[i] > 0, delta: Math.round(r.deltas[i] * ratio) });
+        deltas[i] = await applyResult(S.store, s.seats[i].id, { mode: 'online', win: r.deltas[i] > 0 && !this.gone(i), delta: Math.round(r.deltas[i] * ratio) });
       }
       const w = r.winners[0];
       await S.store.addMatch({
@@ -1340,8 +1413,8 @@ class SeotdaGame extends Game {
     this.resultShown = this.gid;
     const s = this.state, r = s.result, me = this.mySeat;
     const w = r.winners[0];
-    const title = r.split ? '무승부!' : r.winners.includes(me) ? '내가 먹었다!' : `${s.seats[w].name} 승!`;
-    const sub = r.byFold ? `다들 다이해서 판돈 ${won(r.pot)}을 가져가요` : r.split ? `재경기가 계속돼 판돈 ${won(r.pot)}을 나눠요` : `${r.info[w]?.name || ''}${r.caught?.[w] ? ' (잡았다!)' : ''} · 판돈 ${won(r.pot)}`;
+    const title = this.isVoid() ? '무효 판!' : r.split ? '무승부!' : r.winners.includes(me) ? '내가 먹었다!' : `${s.seats[w].name} 승!`;
+    const sub = this.isVoid() ? '중간에 나간 사람이 자동으로 이긴 판이라 판돈을 돌려줘요. 나간 사람은 패배로 기록돼요.' : r.byFold ? `다들 다이해서 판돈 ${won(r.pot)}을 가져가요` : r.split ? `재경기가 계속돼 판돈 ${won(r.pot)}을 나눠요` : `${r.info[w]?.name || ''}${r.caught?.[w] ? ' (잡았다!)' : ''} · 판돈 ${won(r.pot)}`;
     const isHost = this.mode === 'online' && this.room?.host === S.me.pid;
     const close = openModal([
       h('div', { class: 'result-head' }, h('div', { class: 'stamp' }, title), h('p', { class: 'muted', style: 'margin:4px 0 0' }, sub)),
@@ -1383,15 +1456,15 @@ class SeotdaGame extends Game {
     if (this.mode === 'bot') {
       if (!afterEnd && s.phase !== 'end') {
         const lose = s.contrib[this.mySeat];
-        const ok = await confirmModal('판을 접을까요?', `지금 나가면 다이로 처리돼서 낸 돈 ${won(lose)}을 잃어요.`, '나가기', '계속하기');
+        const ok = await confirmModal('판을 접을까요?', `지금 나가면 다이로 처리돼서 낸 돈 ${won(lose)}을 잃고 패배로 기록돼요.`, '나가기', '계속하기');
         if (!ok) return;
-        await applyResult(S.store, S.me.pid, { mode: 'seotda', win: false, delta: -lose });
+        await this.settleHold({ win: false, delta: -lose });
       }
       this.destroy(); S.game = null; renderLobby();
       return;
     }
     if (!afterEnd && s.phase !== 'end') {
-      const ok = await confirmModal('방에서 나갈까요?', `게임은 계속돼요. 내 차례는 ${TURN_TIMEOUT_SEC}초가 지나면 자동으로 체크하거나 다이해요.`, '나가기', '계속하기');
+      const ok = await confirmModal('방에서 나갈까요?', `게임은 계속되고 이번 판은 패배로 기록돼요. 내 차례는 ${TURN_TIMEOUT_SEC}초가 지나면 자동으로 체크하거나 다이해요.`, '나가기', '계속하기');
       if (!ok) return;
     }
     leaveRoom();
@@ -1576,10 +1649,10 @@ async function renderRank(tab = 'bot') {
       h('h3', { class: 'section-title' }, '최근 대결'),
       ...(matches.length ? matches.map(m => h('div', { class: 'match' },
         h('div', { class: 'meta' }, `${new Date(m.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${m.kind === 'seotda'
-          ? `섯다 · 판돈 ${won(m.ante)} · ${m.nagari ? '무승부' : `${m.winner} ${m.hand ? m.hand + ' ' : ''}승`}`
-          : `고스톱 · 점당 ${won(m.ppoint)} · ${m.nagari ? '나가리' : `${m.winner} ${m.points}점 승`}`}`),
+          ? `섯다 · 판돈 ${won(m.ante)} · ${m.void ? '무효(나간 사람 승)' : m.nagari ? '무승부' : `${m.winner} ${m.hand ? m.hand + ' ' : ''}승`}`
+          : `고스톱 · 점당 ${won(m.ppoint)} · ${m.void ? '무효(나간 사람 승)' : m.nagari ? '나가리' : `${m.winner} ${m.points}점 승`}`}`),
         h('div', { class: 'ps' }, (m.players || []).map(p => h('span', { class: p.win ? 'win' : '' },
-          h('img', { src: charById(p.char).img, alt: '' }), `${p.win ? '👑 ' : ''}${p.nick}${p.hand ? ` (${p.hand})` : ''} `, h('small', { class: p.delta > 0 ? 'plus' : p.delta < 0 ? 'minus' : '' }, signed(p.delta))))))) : [empty('최근 대결이 없어요.')]));
+          h('img', { src: charById(p.char).img, alt: '' }), `${p.win ? '👑 ' : ''}${p.nick}${p.left ? ' (나감)' : ''}${p.hand ? ` (${p.hand})` : ''} `, h('small', { class: p.delta > 0 ? 'plus' : p.delta < 0 ? 'minus' : '' }, signed(p.delta))))))) : [empty('최근 대결이 없어요.')]));
   } else {
     const list = users.sort((a, b) => (b.money || 0) - (a.money || 0));
     body.replaceChildren(h('div', { class: 'rank-list' }, list.length ? list.slice(0, 100).map((u, i) => item(u, i, won(u.money || 0),

@@ -1,5 +1,5 @@
 // 데이터 계층: Firebase Realtime Database (설정 시) / 이 브라우저 localStorage (미설정 시)
-import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261019c';
+import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261020a';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const PID_CHARS = 'abcdefghijkmnopqrstuvwxyz0123456789';
@@ -166,9 +166,23 @@ class FirebaseStore {
     return r.snapshot.val();
   }
   markPresence(code, uc) {
+    this._presOff?.();
     const p = this.ref(`rooms/${code}/players/${uc}/online`);
     p.set(true);
     p.onDisconnect().set(false);
+    // 잠깐 끊겼다 다시 붙으면 다시 '접속 중'으로 (방에 아직 있을 때만)
+    try {
+      const c = this.ref('.info/connected');
+      let wasOff = false;
+      const f = snap => {
+        if (snap.val() !== true) { wasOff = true; return; }
+        if (!wasOff) return;
+        wasOff = false;
+        this.ref(`rooms/${code}/players/${uc}`).once('value').then(x => { if (x.exists()) { p.onDisconnect().set(false); p.set(true); } }).catch(() => {});
+      };
+      c.on('value', f);
+      this._presOff = () => { c.off('value', f); this._presOff = null; };
+    } catch { /* 무시 */ }
   }
   async leaveRoom(code, me) {
     await this.ref('rooms/' + code).transaction(cur => {
@@ -181,6 +195,7 @@ class FirebaseStore {
       cur.updatedAt = Date.now();
       return cur;
     });
+    this._presOff?.();
     this.ref(`rooms/${code}/players/${me.pid}/online`).onDisconnect().cancel();
   }
   async kick(code, uc) { await this.ref(`rooms/${code}/players/${uc}`).remove(); }
@@ -275,6 +290,42 @@ export async function createStore() {
 }
 
 /** 게임 결과 반영 (돈은 0 아래로 내려가지 않음). 실제 변동액 반환 */
+const STAT_KEYS = { bot: ['botGames', 'botWins', 'botProfit'], seotda: ['sdGames', 'sdWins', 'sdProfit'], online: ['onGames', 'onWins', 'onProfit'] };
+/**
+ * 봇 판 선(先)패배: 판을 시작하자마자 '1판·패배'로 기록하고 잃을 돈을 먼저 걷어 둔다.
+ * 판이 정상으로 끝나면 settleHeld 로 돌려주고 실제 결과를 반영 → 중간에 어떤 식으로 나가도 패배가 남는다.
+ * count=false 면 판 수는 그대로 두고 돈만 더 걷는다(섯다 배팅이 늘 때).
+ */
+export async function holdLoss(store, pid, { mode, amount, count = true }) {
+  const [g, , p] = STAT_KEYS[mode] || STAT_KEYS.online;
+  let taken = 0;
+  await store.updateUser(pid, u => {
+    u.stats = { ...emptyStats(), ...(u.stats || {}) };
+    const before = u.money || 0;
+    u.money = Math.max(0, before - Math.max(0, amount));
+    taken = before - u.money;
+    if (count) u.stats[g]++;
+    u.stats[p] -= taken;
+    return u;
+  });
+  return taken;
+}
+/** 걷어 둔 held 를 돌려주고 실제 결과 delta 를 반영. 판 수는 holdLoss 때 이미 셌다. 반환값은 판 시작 대비 실제 증감 */
+export async function settleHeld(store, pid, { mode, win, delta, held }) {
+  const [, w, p] = STAT_KEYS[mode] || STAT_KEYS.online;
+  let applied = 0;
+  await store.updateUser(pid, u => {
+    u.stats = { ...emptyStats(), ...(u.stats || {}) };
+    const before = u.money || 0, base = before + held;
+    u.money = Math.max(0, base + delta);
+    applied = u.money - base;
+    u.stats[p] += u.money - before;
+    if (win) { u.stats[w]++; u.stats.best = Math.max(u.stats.best || 0, applied); }
+    return u;
+  });
+  return applied;
+}
+
 export async function applyResult(store, code, { mode, win, delta }) {
   let applied = 0;
   await store.updateUser(code, u => {
