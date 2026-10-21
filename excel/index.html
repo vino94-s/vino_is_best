@@ -125,6 +125,14 @@ button:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
 .tabs .st{padding:0 16px;font-size:12px;white-space:nowrap;color:#333;border-right:1px solid #DADADA}
 .tabs .st:hover{background:#E8E8E8}
 .tabs .st.on{background:#fff;color:var(--sel);font-weight:700;box-shadow:inset 0 -3px 0 var(--sel);margin-top:-1px}
+/* 파일 이름·시트 이름 바꾸기 (각자 기기에만 저장) */
+.tb-name{cursor:text;border-radius:4px;padding:2px 6px}
+.tb-name:hover{background:rgba(255,255,255,.14)}
+.nm-edit{font:inherit;color:#1F1F1F;background:#fff;border:1px solid #fff;border-radius:3px;outline:2px solid #9FD5B4;padding:2px 6px;min-width:0}
+.tb-name .nm-edit{width:min(100%,420px);text-align:center;font-size:12.5px;height:24px}
+.tabs .st .nm-edit{width:110px;font-size:12px;height:22px;text-align:center;outline-color:var(--sel)}
+.rename-hint{position:fixed;z-index:20;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 46px);background:#FFFFE1;border:1px solid #A0A0A0;box-shadow:2px 2px 5px rgba(0,0,0,.2);padding:7px 10px;font-size:12px;line-height:1.45;max-width:min(92vw,320px);transition:opacity .4s}
+.rename-hint.hide{opacity:0;pointer-events:none}
 .tabs .add{padding:0 12px;font-size:16px;color:#666}
 .status{flex:none;height:24px;display:flex;align-items:center;gap:16px;padding:0 10px;background:var(--chrome);border-top:1px solid #DADADA;font-size:11.5px;color:#444;white-space:nowrap;overflow:hidden}
 .status .sp{flex:1}
@@ -250,8 +258,49 @@ var $ = function(s){ return document.querySelector(s); };
 
 var hash = 0; for (var i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
 var docName = DOCS[hash % DOCS.length];
-$('#docName').textContent = docName + (window.innerWidth > 760 ? ' - 저장됨' : '');
-document.title = docName;
+// 파일 이름과 시트 탭 이름은 각자 바꿔 쓸 수 있어요 (이 기기에만 저장, 모든 월루 화면에 같이 적용)
+var NAMES_KEY = 'bung_excel_names', DEF_TABS = { game: '요약', work: '매출_원본', pivot: '피벗_지역별' }, names = {};
+try { names = JSON.parse(localStorage.getItem(NAMES_KEY) || '{}') || {}; } catch (e) { names = {}; }
+if (!names.tabs || typeof names.tabs !== 'object') names.tabs = {};
+function saveNames(){ try { localStorage.setItem(NAMES_KEY, JSON.stringify(names)); } catch (e) {} }
+function curDoc(){ return typeof names.doc === 'string' && names.doc ? names.doc : docName; }
+function tabName(k){ return (typeof names.tabs[k] === 'string' && names.tabs[k]) || DEF_TABS[k]; }
+function showDoc(){ var d = curDoc(); $('#docName').textContent = d + (window.innerWidth > 760 ? ' - 저장됨' : ''); $('#docName').title = '눌러서 파일 이름 바꾸기'; document.title = d; }
+function showTabs(){ document.querySelectorAll('.tabs .st').forEach(function(t){ if (!t.querySelector('.nm-edit')) t.textContent = tabName(t.dataset.sheet); t.title = '선택된 시트를 한 번 더 누르면 이름 바꾸기'; }); }
+showDoc(); showTabs();
+// 글자를 그 자리에서 고치는 입력칸: Enter·바깥 누르기 = 저장, Esc = 취소
+function inlineEdit(host, value, max, done){
+  if (host.querySelector('.nm-edit')) return;
+  var inp = document.createElement('input'); inp.className = 'nm-edit'; inp.value = value; inp.maxLength = max; inp.setAttribute('aria-label', '이름 바꾸기');
+  host.textContent = ''; host.appendChild(inp); inp.focus(); inp.select();
+  var over = false;
+  function end(save){ if (over) return; over = true; var v = inp.value; inp.remove(); done(save ? v : null); }
+  inp.addEventListener('keydown', function(e){ e.stopPropagation(); if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); end(true); } else if (e.key === 'Escape') { e.preventDefault(); end(false); } });
+  inp.addEventListener('blur', function(){ end(true); });
+  inp.addEventListener('click', function(e){ e.stopPropagation(); });
+}
+$('#docName').addEventListener('click', function(){
+  inlineEdit($('#docName'), curDoc(), 60, function(v){
+    if (v !== null) {
+      v = v.replace(/[\\/:*?"<>|]/g, '').trim();
+      if (!v) delete names.doc;
+      else { if (!/\.(xlsx|xlsm|xls|csv)$/i.test(v)) v += '.xlsx'; names.doc = v; }
+      saveNames(); if (v !== null) toast(names.doc ? '파일 이름을 바꿨어요' : '파일 이름을 처음대로 돌렸어요');
+    }
+    showDoc();
+  });
+});
+function renameTab(t){
+  var k = t.dataset.sheet;
+  inlineEdit(t, tabName(k), 31, function(v){
+    if (v !== null) {
+      v = v.replace(/[\[\]:*?\/\\]/g, '').trim();
+      if (!v || v === DEF_TABS[k]) delete names.tabs[k]; else names.tabs[k] = v;
+      saveNames();
+    }
+    showTabs();
+  });
+}
 
 /* ── 가짜 업무 데이터 ── */
 var rnd = (function(seed){ return function(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }; })(hash + 7);
@@ -532,9 +581,15 @@ function frameHidden(h){
 }
 function toggleBoss(){ if (sheet === 'game') setSheet(lastSheet); else { setSheet('game'); } }
 document.querySelectorAll('.tabs .st').forEach(function(t){
-  t.addEventListener('click', function(){ if (t.dataset.sheet !== 'game') lastSheet = t.dataset.sheet; setSheet(t.dataset.sheet); });
+  t.addEventListener('click', function(){
+    if (t.querySelector('.nm-edit')) return;
+    if (t.classList.contains('on')) { renameTab(t); return; }   // 이미 선택된 시트를 한 번 더 누르면 이름 바꾸기
+    if (t.dataset.sheet !== 'game') lastSheet = t.dataset.sheet; setSheet(t.dataset.sheet);
+  });
+  t.addEventListener('dblclick', function(e){ e.preventDefault(); renameTab(t); });
 });
 document.addEventListener('keydown', function(e){
+  if (e.target && e.target.classList && e.target.classList.contains('nm-edit')) return;
   if (e.key === 'Escape') { e.preventDefault(); toggleBoss(); }
 });
 $('#cells').addEventListener('pointerdown', function(e){
@@ -570,13 +625,20 @@ applySkin();
 try {
   if (!localStorage.getItem('bung_excel_memo')) {
     var memo = document.createElement('div'); memo.className = 'memo';
-    memo.innerHTML = '<b>김대리:</b>Esc 키나 아래 <u>매출_원본</u> 시트를 누르면 바로 업무 화면이 돼요. <u>요약</u> 시트를 누르면 게임으로 돌아와요.';
+    memo.innerHTML = '<b>김대리:</b>Esc 키나 아래 <u>매출_원본</u> 시트를 누르면 바로 업무 화면이 돼요. <u>요약</u> 시트를 누르면 게임으로 돌아와요. 파일 이름과 시트 이름은 눌러서 내 업무에 맞게 바꿀 수 있어요.';
     var tab = document.querySelector('.tabs .st[data-sheet="work"]').getBoundingClientRect();
     memo.style.left = Math.min(window.innerWidth - 260, tab.left + 10) + 'px'; memo.style.bottom = (window.innerHeight - tab.top + 8) + 'px';
     memo.style.position = 'fixed'; document.body.appendChild(memo);
     setTimeout(function(){ memo.classList.add('hide'); setTimeout(function(){ memo.remove(); }, 500); }, 6500);
     memo.addEventListener('click', function(){ memo.remove(); });
-    localStorage.setItem('bung_excel_memo', '1');
+    localStorage.setItem('bung_excel_memo', '1'); localStorage.setItem('bung_excel_rename_hint', '1');
+  } else if (!localStorage.getItem('bung_excel_rename_hint')) {
+    // 예전에 사용법 메모를 본 사람에게는 이름 바꾸기만 한 번 알려줘요
+    var hint = document.createElement('div'); hint.className = 'rename-hint';
+    hint.innerHTML = '<b>새 기능</b> · 위쪽 <u>파일 이름</u>을 누르거나, 선택된 <u>시트 탭</u>을 한 번 더 누르면 내 업무에 맞게 이름을 바꿀 수 있어요.';
+    document.body.appendChild(hint); hint.addEventListener('click', function(){ hint.remove(); });
+    setTimeout(function(){ hint.classList.add('hide'); setTimeout(function(){ hint.remove(); }, 500); }, 7000);
+    localStorage.setItem('bung_excel_rename_hint', '1');
   }
 } catch (e) {}
 })();
