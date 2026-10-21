@@ -67,6 +67,8 @@ header h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
 .m.mine .fc,.m.mine .nm{display:none}
 .m.mine .row{flex-direction:row-reverse}
 .m.mine .b{background:var(--mine);color:var(--mine-ink);border-color:transparent;border-radius:16px 4px 16px 16px}
+.m .b a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere;word-break:break-all}
+.m.mine .b a{color:inherit}
 .sys{align-self:center;font-size:12.5px;color:var(--muted);text-align:center;margin:6px 0}
 .empty{margin:auto;text-align:center;color:var(--muted);padding:24px}
 .empty img{width:72px;height:72px;object-fit:contain;display:block;margin:0 auto 8px}
@@ -134,6 +136,7 @@ body.xl .m .row,body.xl .m.mine .row{display:contents}
 body.xl .m .t{grid-column:1;grid-row:1;padding:0 4px;color:#1F1F1F;font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
 body.xl .m .b,body.xl .m.mine .b{grid-column:3;grid-row:1;background:none;border:0;border-radius:0;padding:0 4px;color:#1F1F1F;line-height:var(--rh)}
 body.xl .m.mine .b{color:#1F3864}
+body.xl .m .b a,body.xl .m.mine .b a{color:#0563C1;text-decoration:underline}
 body.xl .m.mine .nm{color:#1F3864}
 body.xl .empty{margin:0;padding:0 4px;text-align:left;color:#595959;line-height:var(--rh)}
 body.xl .empty img{display:none}
@@ -275,6 +278,28 @@ function nearBottom(){ return log.scrollHeight - log.scrollTop - log.clientHeigh
 function toBottom(){ log.scrollTop = log.scrollHeight; $('newBtn').hidden = true; }
 log.addEventListener('scroll', function(){ atBottom = nearBottom(); if (atBottom) $('newBtn').hidden = true; });
 $('newBtn').onclick = toBottom;
+// 메시지 속 링크(http://, https://, www.)는 눌러서 새 창으로 열리게 해요. 나머지 글자는 그대로 글자로만 넣어요.
+var URL_RE = /((?:https?:\/\/|www\.)[^\s<>"']+)/gi;
+function linkify(el, text){
+  var last = 0, m;
+  URL_RE.lastIndex = 0;
+  while ((m = URL_RE.exec(text))) {
+    var raw = m[1], tail = '';
+    // 문장 끝 마침표·괄호·물음표 같은 건 링크에서 빼요
+    while (/[.,!?;:)\]}'"…~]$/.test(raw) && !(raw.slice(-1) === ')' && raw.indexOf('(') > -1)) { tail = raw.slice(-1) + tail; raw = raw.slice(0, -1); }
+    if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+    var href = /^www\./i.test(raw) ? 'https://' + raw : raw;
+    var ok = false; try { var u = new URL(href); ok = u.protocol === 'http:' || u.protocol === 'https:'; } catch (e) {}
+    if (ok) {
+      var a = document.createElement('a'); a.href = href; a.textContent = raw;
+      a.target = '_blank'; a.rel = 'noopener noreferrer nofollow';
+      el.appendChild(a);
+    } else el.appendChild(document.createTextNode(raw));
+    if (tail) el.appendChild(document.createTextNode(tail));
+    last = m.index + m[1].length;
+  }
+  if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
+}
 function clearEmpty(){ var e = log.querySelector('.empty'); if (e) e.remove(); }
 function addMsg(m){
   if (!m || typeof m.text !== 'string') return;
@@ -308,7 +333,7 @@ function addMsg(m){
     var img = document.createElement('img'); img.className = 'fc'; img.alt = ''; img.src = face(m.char); el.appendChild(img);
     var nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = String(m.nick || '익명').slice(0, 10); el.appendChild(nm);
     var row = document.createElement('div'); row.className = 'row';
-    var b = document.createElement('div'); b.className = 'b'; b.textContent = m.text.slice(0, 120);
+    var b = document.createElement('div'); b.className = 'b'; linkify(b, m.text.slice(0, 120));
     var t = document.createElement('span'); t.className = 't'; t.textContent = timeLabel(d);
     row.appendChild(b); row.appendChild(t); el.appendChild(row); log.appendChild(el);
     lastWho = who; lastTs = d;
