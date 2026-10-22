@@ -167,7 +167,11 @@ img.sil{filter:brightness(0) opacity(.42)}
 #btnGrab{font-size:30px}
 #btnHit{font-size:17px;line-height:1.1;white-space:nowrap}
 #btnHit .anger{display:block;font:800 12px var(--f);margin-top:4px;letter-spacing:.15em}
-.hint{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);background:rgba(0,0,0,.55);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;pointer-events:none;white-space:nowrap;transition:opacity .4s}
+.hint{position:absolute;left:50%;bottom:14%;transform:translateX(-50%);background:rgba(18,6,40,.86);border:1.5px solid rgba(127,239,255,.6);border-radius:18px;padding:10px 16px;font-size:13px;line-height:1.5;pointer-events:none;white-space:nowrap;transition:opacity .4s;display:grid;gap:2px;text-align:left;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.hint b{font-family:var(--d);font-weight:400}
+.hint .hand{display:inline-block;animation:drag 1.6s ease-in-out infinite}
+@keyframes drag{0%,100%{transform:translateX(-10px)}50%{transform:translateX(10px)}}
+.hint i{font-style:normal;display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin:0 2px}
 .count{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font:400 120px/1 var(--d);color:#fff;text-shadow:0 0 30px var(--pink),0 6px 0 #A41F63}
 .count span{animation:pop .9s ease-out both}
 @keyframes pop{0%{transform:scale(2.2);opacity:0}25%{transform:scale(1);opacity:1}80%{opacity:1}100%{transform:scale(.8);opacity:0}}
@@ -241,7 +245,7 @@ body.playing #bungBack{display:none}
   </div>
   <div class="g-stage" id="gStage">
     <canvas id="cv"></canvas>
-    <div class="hint" id="gHint">화면을 드래그해서 집게를 옮겨요</div>
+    <div class="hint" id="gHint"><span><span class="hand">👆</span> 화면을 <b>드래그</b>해서 집게를 옮기고</span><span>과녁이 <i style="background:#5BE3A6"></i><b style="color:#5BE3A6">초록색</b>일 때 <b style="color:#FF86C3">잡기!</b></span></div>
     <div class="count" id="gCount"></div>
     <div class="bubble" id="gBubble"><span class="face" id="gBubbleFace"></span><span id="gBubbleText"></span></div>
     <div class="banner" id="gBanner"></div>
@@ -1772,14 +1776,9 @@ function draw() {
   // 그림자
   for (const d of G.dolls) if (d.st === 'rest' && d.y < 1) drawShadow(d.x, d.z, 0, 1);
   for (const d of G.dolls) if (d.st === 'fall' && !inChute(d.x, d.z, 0.5)) { const g = surface(d.x, d.z, d); drawShadow(d.x, d.z, g, clamp(1 - (d.y - g) / 60, 0.4, 1)); }
-  // 집게 조준점
-  if (c.st === 'idle' && (G.phase === 'play' || G.phase === 'count')) {
-    const sy = inChute(c.x, c.z) ? 0 : surface(c.x, c.z);
-    const [sx, py, s] = P(c.x, sy, c.z), rr = R * 0.95 * G.u * s, pul = 1 + Math.sin(performance.now() / 160) * 0.08;
-    ctx.strokeStyle = 'rgba(79,227,255,.9)'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
-    ctx.beginPath(); ctx.ellipse(sx, py, rr * pul, rr * 0.42 * pul, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(79,227,255,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sx, py); ctx.lineTo(P(c.x, c.y, c.z)[0], P(c.x, c.y, c.z)[1]); ctx.stroke();
-  }
+  // 조준 가이드 (바닥 십자선은 인형 아래에, 레이저·과녁·화살표는 인형 위에)
+  const aim = c.st === 'idle' && (G.phase === 'play' || G.phase === 'count') && !G.kicked ? aimInfo() : null;
+  if (aim) drawFloorGuide();
   const list = G.dolls.filter(d => d.st === 'rest' || d.st === 'fall').sort((a, b) => b.z - a.z || a.y - b.y);
   let clawDrawn = false;
   for (const d of list) {
@@ -1787,6 +1786,7 @@ function draw() {
     drawDoll(d);
   }
   if (!clawDrawn) drawClaw();
+  if (aim) drawAim(aim);
   // 앞 유리·패널
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(fgC, 0, 0); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   // 상품 나오는 문
@@ -1796,6 +1796,82 @@ function draw() {
     ctx.drawImage(SPR[G.mtype][p.id], G.door.x - size / 2, G.door.y - size * 0.95 - (t < 0.35 ? 0 : 6 * Math.sin(t * 8) * (1.2 - Math.min(t, 1.2))), size, size);
   }
   for (const p of G.parts) { ctx.save(); ctx.globalAlpha = clamp(p.life * 1.5, 0, 1); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); }
+}
+/* ── 조준 가이드 ── */
+const AIM_LOOK = {
+  good:   { col: '#5BE3A6', text: '정중앙! 지금 잡아요' },
+  ok:     { col: '#FFD54A', text: '조금 옆이에요' },
+  edge:   { col: '#FF8A3D', text: '가장자리라 미끄러워요' },
+  buried: { col: '#FF8A3D', text: '다른 인형에 깔려 있어요' },
+  none:   { col: '#C9C2DD', text: '빈자리예요' },
+  chute:  { col: '#C9C2DD', text: '구멍 위예요' },
+};
+function aimInfo() {
+  const c = G.claw;
+  if (inChute(c.x, c.z)) return { q: 'chute', sy: 0, d: null };
+  let best = null;
+  for (const d of G.dolls) {
+    if (d.st !== 'rest') continue;
+    const dist = Math.hypot(d.x - c.x, d.z - c.z);
+    if (dist > R * 1.3) continue;
+    if (!best || d.y > best.d.y + 1 || (Math.abs(d.y - best.d.y) <= 1 && dist < best.dist)) best = { d, dist };
+  }
+  const sy = surface(c.x, c.z);
+  if (!best) return { q: 'none', sy, d: null };
+  const d = best.d;
+  const covered = G.dolls.some(o => o !== d && o.st === 'rest' && o.y > d.y + R * 0.5 && Math.hypot(o.x - d.x, o.z - d.z) < R * 1.5);
+  const cf = clamp(1.2 - (best.dist / (R * 1.3)) ** 2, 0, 1);
+  return { q: covered ? 'buried' : cf > 0.8 ? 'good' : cf > 0.45 ? 'ok' : 'edge', sy, d };
+}
+function drawFloorGuide() {
+  const c = G.claw;
+  ctx.save(); ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(127,239,255,.38)';
+  line(ctx, P(0, 0.4, c.z), P(W, 0.4, c.z)); line(ctx, P(c.x, 0.4, 0), P(c.x, 0.4, D));
+  ctx.setLineDash([]);
+  // 레일 눈금: 앞쪽 바닥 가장자리와 왼쪽 벽에 현재 위치 표시
+  ctx.fillStyle = 'rgba(127,239,255,.85)';
+  const fx = P(c.x, 0, 0), lz = P(0, 0, c.z);
+  ctx.beginPath(); ctx.moveTo(fx[0], fx[1] + 2); ctx.lineTo(fx[0] - 6, fx[1] + 10); ctx.lineTo(fx[0] + 6, fx[1] + 10); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(lz[0] + 2, lz[1]); ctx.lineTo(lz[0] - 7, lz[1] - 6); ctx.lineTo(lz[0] - 7, lz[1] + 6); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawAim(a) {
+  const c = G.claw, L = AIM_LOOK[a.q], t = performance.now();
+  const [sx, py, s] = P(c.x, a.sy, c.z), head = P(c.x, c.y, c.z), k = G.u * s;
+  const hx = head[0] + c.sway * 9 * k;
+  ctx.save();
+  // 레이저 (위에서 아래로 흐르는 점선)
+  ctx.globalAlpha = .22; ctx.strokeStyle = L.col; ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(hx, head[1]); ctx.lineTo(sx, py); ctx.stroke();
+  ctx.globalAlpha = .95; ctx.lineWidth = 2; ctx.setLineDash([7, 6]); ctx.lineDashOffset = -t / 40;
+  ctx.beginPath(); ctx.moveTo(hx, head[1]); ctx.lineTo(sx, py); ctx.stroke(); ctx.setLineDash([]);
+  // 과녁
+  const pul = 1 + Math.sin(t / 170) * 0.07, rx = R * 0.95 * k * pul, ry = rx * 0.42;
+  ctx.globalAlpha = .2; ctx.fillStyle = L.col; ctx.beginPath(); ctx.ellipse(sx, py, rx, ry, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1; ctx.lineWidth = 2.5; ctx.strokeStyle = L.col;
+  ctx.beginPath(); ctx.ellipse(sx, py, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(sx - rx - 4, py); ctx.lineTo(sx - rx * 0.55, py); ctx.moveTo(sx + rx * 0.55, py); ctx.lineTo(sx + rx + 4, py);
+  ctx.moveTo(sx, py - ry - 3); ctx.lineTo(sx, py - ry * 0.45); ctx.moveTo(sx, py + ry * 0.45); ctx.lineTo(sx, py + ry + 3); ctx.stroke();
+  ctx.fillStyle = L.col; ctx.beginPath(); ctx.arc(sx, py, 2.2, 0, Math.PI * 2); ctx.fill();
+  // 잡힐 인형 위 화살표 + 안내
+  let ax = sx, ay = py - ry - 8;
+  if (a.d) {
+    const top = P(a.d.x, a.d.y + 2 * R * 1.3, a.d.z);
+    ax = top[0]; ay = top[1] - 4 - Math.abs(Math.sin(t / 220)) * 6;
+    ctx.fillStyle = L.col; ctx.strokeStyle = '#2A1240'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(ax, ay + 9); ctx.lineTo(ax - 8, ay - 3); ctx.lineTo(ax + 8, ay - 3); ctx.closePath(); ctx.stroke(); ctx.fill();
+    ay -= 8;
+  }
+  const label = a.d ? `${CHAR(a.d.id).name} · ${L.text}` : L.text;
+  ctx.font = `400 ${clamp(G.u * 3.6, 12, 15)}px "Black Han Sans","Apple SD Gothic Neo",sans-serif`;
+  const tw = ctx.measureText(label).width + 18, th = clamp(G.u * 6, 20, 26);
+  const lx = clamp(ax - tw / 2, 6, G.w - tw - 6), ly = Math.max(6, ay - th);
+  roundRect(ctx, lx, ly, tw, th, th / 2, 'rgba(18,6,40,.82)');
+  ctx.strokeStyle = L.col; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = L.col; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, lx + tw / 2, ly + th / 2 + 1);
+  ctx.textBaseline = 'alphabetic';
+  ctx.restore();
 }
 const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2; };
 
