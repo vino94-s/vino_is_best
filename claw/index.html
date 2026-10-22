@@ -856,7 +856,7 @@ function renderFuse() {
   const nm = id => (known(id) ? esc(CHAR(id).name) : '???');
   const pic = id => (known(id) ? itemImg('doll', id) : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`);
   const can = f => has(f.a) > 0 && has(f.b) > 0;
-  const genName = { 1: '1세대 합성 (기본 + 기본)', 2: '2세대 합성 ✦ 왕관', 3: '3세대 최종 합성 ★' };
+  const genName = { 1: '1세대 합성 (기본 + 기본)', 2: '2세대 합성 ⭐ 금별', 3: '3세대 최종 합성 ★' };
   const rows = gen => FUSE_LIST.filter(f => f.gen === gen && (!fuseOnlyCan || can(f))).map(f => `
     <div class="li recipe ${can(f) ? 'can' : ''}">
       <div class="rc">${pic(f.a)}<small>${nm(f.a)}<br><b>×${has(f.a)}</b></small></div><span class="op">+</span>
