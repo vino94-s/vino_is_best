@@ -301,8 +301,8 @@ const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'c
 // 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.5% 확률로 이 인형이 돼요 (한 판 21개 기준 약 10%)
 const HIDDEN = {
   id: 'sp_yongwang', chance: 0.005, img: 'special-yongwang.png',
-  card: { id: 'sp_yongwang', name: '특별한 용왕', color: '#D4AF37', hi: '에헴!',
-    lines: { good: ['과인의 진짜 모습을 보았느냐!', '에헴… 이 몸이 특별한 용왕이로다'], bad: ['어허! 쉽게 잡힐 과인이 아니로다', '여봐라, 다시 해 보거라'], start: ['용궁의 보물이 납시었노라'], win: ['온 바다가 특별한 용왕 것이로다!'], lose: ['어허… 물때가 아니로다'], taunt: ['감히 과인을 넘보느냐?'] } },
+  card: { id: 'sp_yongwang', name: '히든용왕', color: '#D4AF37', hi: '에헴!',
+    lines: { good: ['과인의 진짜 모습을 보았느냐!', '에헴… 이 몸이 히든용왕이로다'], bad: ['어허! 쉽게 잡힐 과인이 아니로다', '여봐라, 다시 해 보거라'], start: ['용궁의 보물이 납시었노라'], win: ['온 바다가 히든용왕 것이로다!'], lose: ['어허… 물때가 아니로다'], taunt: ['감히 과인을 넘보느냐?'] } },
 };
 // 오락실 기계 4대 (모두 같은 캐릭터 12명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
 const MACH = {
@@ -812,7 +812,7 @@ function renderShop() {
     <div class="tabs">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit} ${typeCount(me, t)}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
       <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => id !== HIDDEN.id).length}/12${T === 'doll' ? ` · 히든 ${hasHidden ? '1' : '?'}/1` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
-      <div class="dex">${CH.map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? (hasHidden ? `<span title="특별한 용왕">${itemImg(T, HIDDEN.id)}</span>` : '<span class="q" title="히든 인형">?</span>') : ''}</div>
+      <div class="dex">${CH.map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? (hasHidden ? `<span title="히든용왕">${itemImg(T, HIDDEN.id)}</span>` : '<span class="q" title="히든 인형">?</span>') : ''}</div>
     </div>
     <div class="list">${own.length ? own.map(id => {
       const t = tierOf(id), pr = priceOf(T, id), n = inv[id];
