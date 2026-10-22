@@ -968,9 +968,9 @@ async function renderAdmin() {
     <div class="list" id="adList"></div>`;
   $('#adBack').onclick = () => { sessionStorage.removeItem('claw-admin'); show(me ? 'lobby' : 'login'); };
   $('#adRe').onclick = renderAdmin;
-  // 돈이 0원인 사람을 맨 위로, 나머지는 최근 가입 순
+  // 보유자산이 적은 순 (0원이 맨 위), 같으면 최근 가입 순
   const ps = Object.values((await db.get(PATH.players)) || {}).filter(p => p && p.pid)
-    .sort((a, b) => ((a.money || 0) > 0) - ((b.money || 0) > 0) || (b.createdAt || 0) - (a.createdAt || 0));
+    .sort((a, b) => (a.money || 0) - (b.money || 0) || (b.createdAt || 0) - (a.createdAt || 0));
   if (cur !== 'admin') return;
   const now = db.now();
   const found = () => { const q = adminQ.trim().toLowerCase(); return q ? ps.filter(p => String(p.nick || '').toLowerCase().includes(q)) : ps; };
