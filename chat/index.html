@@ -202,6 +202,13 @@ var FIREBASE_CONFIG = {
   appId: '1:686060440785:web:d5f6445e4bcd2a481b89f0'
 };
 var ROOM = 'rooms/bung-sudabang';
+// 별도 방: 주소 뒤에 ?room=영문id (&name=보여줄이름) 를 붙이면 대화가 섞이지 않는 새 방이 열려요. 예) chat/?room=boardgame&name=보드게임방
+var RQ = new URLSearchParams(location.search);
+var RID = (RQ.get('room') || '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 24);
+var RNAME = (RQ.get('name') || '').replace(/[<>]/g, '').trim().slice(0, 20) || (RID ? RID : '');
+if (RID) ROOM = 'rooms/bung-sudabang-' + RID;
+var PAGE_TITLE = RNAME ? '벙참 수다방 · ' + RNAME : '벙참 수다방';
+document.title = PAGE_TITLE;
 var FB_V = '10.12.2';
 var KEEP = 150;
 
@@ -226,6 +233,8 @@ if (XL) {
   $('whoBtn').title = '접속자 목록';
 }
 if (EMBED) document.body.classList.add('embed');
+if (RNAME && !XL) { $('title').firstChild.textContent = '💬 ' + RNAME; $('title').querySelector('small').textContent = '벙참 수다방 · 별도 방'; }
+if (RNAME && XL) $('title').firstChild.textContent = '업무 협조 요청 회신 로그 (' + RNAME + ')';
 
 /* ── 나 ── */
 var me = null;
@@ -337,14 +346,14 @@ function addMsg(m){
     var t = document.createElement('span'); t.className = 't'; t.textContent = timeLabel(d);
     row.appendChild(b); row.appendChild(t); el.appendChild(row); log.appendChild(el);
     lastWho = who; lastTs = d;
-    if (!mine && document.hidden && !XL) { unread++; document.title = '(' + unread + ') 벙참 수다방'; }
+    if (!mine && document.hidden && !XL) { unread++; document.title = '(' + unread + ') ' + PAGE_TITLE; }
   }
   count++;
   while (log.children.length > KEEP * 1.3) log.removeChild(log.firstChild);
   if (stick) toBottom(); else $('newBtn').hidden = false;
 }
 var unread = 0;
-document.addEventListener('visibilitychange', function(){ if (!document.hidden) { unread = 0; document.title = '벙참 수다방'; } });
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) { unread = 0; document.title = PAGE_TITLE; } });
 function showEmpty(){
   if (log.children.length) return;
   var e = document.createElement('div'); e.className = 'empty';
