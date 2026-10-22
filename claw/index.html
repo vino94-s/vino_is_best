@@ -298,9 +298,9 @@ const TIERS = {
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
   eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden' };
-// 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.05% 확률로 이 인형이 돼요 (한 판 21개 기준 약 1%)
+// 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.5% 확률로 이 인형이 돼요 (한 판 21개 기준 약 10%)
 const HIDDEN = {
-  id: 'sp_yongwang', chance: 0.0005, img: 'special-yongwang.png',
+  id: 'sp_yongwang', chance: 0.005, img: 'special-yongwang.png',
   card: { id: 'sp_yongwang', name: '특별한 용왕', color: '#D4AF37', hi: '에헴!',
     lines: { good: ['과인의 진짜 모습을 보았느냐!', '에헴… 이 몸이 특별한 용왕이로다'], bad: ['어허! 쉽게 잡힐 과인이 아니로다', '여봐라, 다시 해 보거라'], start: ['용궁의 보물이 납시었노라'], win: ['온 바다가 특별한 용왕 것이로다!'], lose: ['어허… 물때가 아니로다'], taunt: ['감히 과인을 넘보느냐?'] } },
 };
