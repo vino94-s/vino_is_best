@@ -273,8 +273,11 @@ const CFG = {
     appId: '1:686060440785:web:d5f6445e4bcd2a481b89f0',
   },
   // 지금 DB 규칙에서 읽기·쓰기가 열려 있는 rooms/ 아래에 'claw-' 이름으로 저장해요 (README 참고)
-  prefix: 'rooms/claw-',
-  startMoney: 20000,          // 가입하면 주는 돈 (그날 충전분)
+  // 2026-10-22 회원 리셋: 새 시즌은 rooms/claw2-* 에 저장. 예전 데이터(rooms/claw-*)는 지우지 않고 보관해서,
+  // 같은 닉네임으로 다시 가입하면 인형·키캡·키링·클리커·컬렉션을 돌려줘요.
+  prefix: 'rooms/claw2-',
+  oldPrefix: 'rooms/claw-',
+  startMoney: 100000,         // 가입하면 주는 돈 (리셋 후 재가입 보상 10만원)
   daily: 20000,               // 한국 시간 하루 한 번 첫 접속 때 충전
   packs: [{ n: 1, price: 1000 }, { n: 6, price: 5000 }, { n: 13, price: 10000 }],
   roundSec: 20,               // 한 판 제한시간
@@ -463,7 +466,9 @@ class FireDB {
   set(p, v) { return this.ref(p).set(v); }
   update(p, o) { return this.ref(p).update(o); }
   remove(p) { return this.ref(p).remove(); }
-  async tx(p, fn) { const r = await this.ref(p).transaction(cur => fn(cur)); return { committed: r.committed, value: r.snapshot.val() }; }
+  // applyLocally=false: 서버에서 확정되기 전의 임시값(특히 캐시가 비어 있을 때의 null)을 리스너에 보내지 않아요.
+  // 예전에는 이 임시 null 때문에 '계정이 삭제됐어요'로 오인해서 로그아웃됐어요.
+  async tx(p, fn) { const r = await this.ref(p).transaction(cur => fn(cur), undefined, false); return { committed: r.committed, value: r.snapshot.val() }; }
   async push(p, v) { return (await this.ref(p).push(v)).key; }
   on(p, cb) { const r = this.ref(p), f = s => cb(s.val()); r.on('value', f); return () => r.off('value', f); }
   now() { return Date.now() + this.offset; }
@@ -495,8 +500,37 @@ async function register(nick, char) {
   const pid = genCode(12, 'abcdefghijkmnopqrstuvwxyz0123456789');
   const r = await db.tx(PATH.nicks + '/' + k, cur => (cur ? undefined : pid));
   if (!r.committed || r.value !== pid) throw new Error('이미 있는 닉네임이에요');
-  await db.set(PATH.player(pid), emptyPlayer(pid, nick, char));
-  return newCode(pid);
+  const player = emptyPlayer(pid, nick, char);
+  const old = await oldAccount(nick);
+  let restored = null;
+  if (old) {
+    player.dolls = clone(old.dolls) || {};
+    player.goods = clone(old.goods) || {};
+    player.dex = { ...(old.dex || {}) };
+    for (const [id, n] of Object.entries(player.dolls)) if (n > 0) player.dex[id] = true;
+    player.restored = { from: old.pid || '', at: Date.now() };
+    restored = { dolls: dollCount(player), coll: collCount(player) };
+  }
+  await db.set(PATH.player(pid), player);
+  return { code: await newCode(pid), restored };
+}
+// 리셋 전 계정(같은 닉네임) 찾기
+async function oldAccount(nick) {
+  try {
+    const oldPid = await db.get(CFG.oldPrefix + 'nicks/' + nickKey(nick));
+    if (!oldPid) return null;
+    return await db.get(CFG.oldPrefix + 'players/' + oldPid);
+  } catch (e) { return null; }
+}
+async function isOldCode(code) {
+  code = String(code || '').trim().toUpperCase();
+  if (!/^[A-Z2-9]{6}$/.test(code)) return false;
+  try { return !!(await db.get(CFG.oldPrefix + 'acc-' + code)); } catch (e) { return false; }
+}
+function resetNotice() {
+  modal(`<h2>회원 리셋 안내</h2><p>오류를 고치면서 모든 계정을 새로 시작하게 됐어요. <b>다시 가입</b>해 주세요.</p>
+    <div class="card small" style="display:grid;gap:6px"><span>🎁 다시 가입하면 <b class="money">${won(CFG.startMoney)}</b>을 넣어 드려요.</span><span>🧸 <b>예전과 같은 닉네임</b>으로 가입하면 갖고 있던 인형·키캡·키링·클리커와 컬렉션이 그대로 돌아와요.</span></div>
+    <button class="btn pink" data-close>다시 가입하러 가기</button>`, s => { s.querySelector('[data-close]').addEventListener('click', () => { const b = document.querySelector('.tabs [data-t="new"]'); if (b) b.click(); }); });
 }
 async function login(code) {
   code = String(code || '').trim().toUpperCase();
@@ -527,16 +561,31 @@ async function enter(code, player, recharged) {
   myCode = code; localStorage.setItem('claw-code', code);
   me = player; me.dolls = me.dolls || {};
   meOff && meOff();
-  meOff = db.on(PATH.player(me.pid), v => {
-    if (!v) { if (me) { toast('계정이 삭제됐어요'); logout(); } return; }
-    setMe(v);
+  let gotFirst; const first = new Promise(r => { gotFirst = r; });
+  const pid = me.pid;
+  meOff = db.on(PATH.player(pid), v => {
+    if (!v) { confirmGone(pid); return; }
+    gotFirst(); setMe(v);
   });
   show('lobby');
+  await Promise.race([first, sleep(6000)]);
+  if (!me || me.pid !== pid) return;
   // 예전에 뽑아 둔 인형도 컬렉션에 기록
   txMe(c => { let ch = false; c.dex = c.dex || {}; for (const [id, n] of Object.entries(c.dolls || {})) if (n > 0 && !c.dex[id]) { c.dex[id] = true; ch = true; } return ch ? c : undefined; });
   if (recharged) setTimeout(() => toast(`오늘의 ${won(CFG.daily)} 충전 완료! 💰`), 300);
   const q = new URLSearchParams(location.search).get('room');
   if (q) joinRoom(q);
+}
+// 계정이 정말 지워졌는지 서버에 다시 물어보고, 확실할 때만 로그아웃해요
+let goneT = 0;
+function confirmGone(pid) {
+  clearTimeout(goneT);
+  goneT = setTimeout(async () => {
+    if (!me || me.pid !== pid) return;
+    let v;
+    try { v = await db.get(PATH.player(pid)); } catch (e) { return; }
+    if (v === null && me && me.pid === pid) { toast('계정이 삭제됐어요'); logout(); }
+  }, 1500);
 }
 function logout() {
   meOff && meOff(); meOff = null; me = null; myCode = null;
@@ -640,9 +689,10 @@ function renderLogin() {
   $('#lgGo').onclick = async () => {
     const nick = $('#lgNick').value; const btn = $('#lgGo'); btn.disabled = true;
     try {
-      const code = await register(nick, pickChar);
+      const { code, restored } = await register(nick, pickChar);
       const r = await login(code);
       modal(`<h2>내 입장 코드</h2><div class="bigcode">${code}</div>
+        ${restored ? `<div class="card small" style="border-color:var(--green)">🎉 예전 계정을 찾았어요! 인형 등 <b>${restored.dolls}개</b>와 컬렉션 <b>${restored.coll}종</b>을 되찾았고, <b class="money">${won(CFG.startMoney)}</b>도 넣어 드렸어요.</div>` : `<div class="card small">🎁 가입 선물로 <b class="money">${won(CFG.startMoney)}</b>을 넣어 드렸어요.</div>`}
         <p class="muted small">다음부터 이 코드로 들어와요. 캡처해 두거나 복사해 두세요. 잃어버리면 운영자에게 새 코드를 받아요.</p>
         <div class="grid2"><button class="btn ghost" id="cpy">코드 복사</button><button class="btn pink" data-close>시작하기</button></div>`,
         (s, close, m) => { m.dataset.lock = '1'; $('#cpy', s).onclick = () => { navigator.clipboard?.writeText(code); toast('복사했어요'); }; s.querySelector('[data-close]').onclick = () => { close(); enter(code, r.player, false); }; });
@@ -651,7 +701,7 @@ function renderLogin() {
   };
   const doLogin = async code => {
     const r = await login(code).catch(() => null);
-    if (!r) { toast('없는 코드예요'); return; }
+    if (!r) { if (await isOldCode(code)) resetNotice(); else toast('없는 코드예요'); return; }
     enter(code.trim().toUpperCase(), r.player, r.recharged);
   };
   $('#lgEnter').onclick = () => doLogin($('#lgCodeIn').value);
@@ -1932,6 +1982,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
   if (saved) {
     const r = await login(saved).catch(() => null);
     if (r) return enter(saved, r.player, r.recharged);
+    if (await isOldCode(saved)) { localStorage.removeItem('claw-code'); show('login'); resetNotice(); return; }
   }
   show('login');
 })();
