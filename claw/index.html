@@ -2099,8 +2099,29 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
   document.addEventListener('visibilitychange', () => { if (!document.hidden && me) dailyCheck(); });
 })();
 
+/* ══════════ 새 버전 자동 반영 ══════════ */
+// 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
+// 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
+const APP_VERSION = '20261022-2302';
+async function checkVersion() {
+  try {
+    const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const v = (await r.text()).trim();
+    if (!v || v === APP_VERSION) return;
+    if (G.running) return; // 판 하는 중에는 끊지 않아요
+    if (sessionStorage.getItem('claw-reloaded') === v) return; // 같은 버전으로 계속 새로고침하지 않게
+    sessionStorage.setItem('claw-reloaded', v);
+    const u = new URL(location.href); u.searchParams.set('v', v);
+    location.replace(u.toString());
+  } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
+setInterval(checkVersion, 5 * 60 * 1000);
+
 /* ══════════ 시작 ══════════ */
 (async function boot() {
+  checkVersion();
   const force = new URLSearchParams(location.search).get('local') === '1';
   const sprites = loadSprites();
   if (!force) {
