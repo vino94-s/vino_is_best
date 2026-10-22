@@ -52,6 +52,11 @@ p{margin:0}
 .tier-fuse1{color:#FFB3DA}.tier-fuse2{color:#FFD54A}.tier-fuse3{color:#fff;background:linear-gradient(90deg,#FF4FA3,#C89BFF,#4FE3FF)!important}
 .coll{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
 .coll img{width:100%;aspect-ratio:1;object-fit:contain}
+.coll [data-zoom]{cursor:zoom-in;border-radius:12px;transition:transform .12s}
+.coll [data-zoom]:active{transform:scale(.92)}
+.zoom{display:grid;place-items:center;background:radial-gradient(circle,#5B2BB0 0%,rgba(91,43,176,0) 70%);border-radius:20px}
+.zoom img{width:min(72vw,300px);aspect-ratio:1;object-fit:contain;animation:zoomin .3s cubic-bezier(.3,1.5,.5,1)}
+@keyframes zoomin{from{transform:scale(.5);opacity:0}}
 img.sil{filter:brightness(0) opacity(.42)}
 .gen-h{font:400 17px var(--d);margin:6px 0 0;display:flex;justify-content:space-between;align-items:center}
 .recipe{gap:6px;padding:8px 10px}
@@ -159,7 +164,10 @@ img.sil{filter:brightness(0) opacity(.42)}
 .g-sub{width:100%;max-width:560px;padding:2px 12px 4px;display:flex;gap:6px;align-items:center;min-height:30px}
 .g-score{font:400 18px/1 var(--d);display:flex;gap:6px;align-items:center}
 .g-score b{color:var(--cyan);font-size:24px}
-.opps{display:flex;gap:6px;margin-left:auto}
+.opps{position:absolute;right:10px;top:8px;z-index:2;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:60%;pointer-events:none}
+.keep{margin-left:auto;border:0;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.12);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);color:var(--ink);font:800 13px var(--f);cursor:pointer;white-space:nowrap;touch-action:manipulation}
+.keep:active{transform:scale(.96)}
+.keep[disabled]{opacity:.4}
 .opp{display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.3);border-radius:999px;padding:3px 9px 3px 3px;font:400 15px/1 var(--d)}
 .opp.lead{box-shadow:0 0 0 2px var(--yellow)}
 .opp .face{width:24px;height:24px}
@@ -245,11 +253,12 @@ body.playing #bungBack{display:none}
   </div>
   <div class="g-sub">
     <div class="g-score"><span id="gUnit">뽑은 인형</span> <b id="gScore">0</b></div>
-    <div class="opps" id="gOpps"></div>
+    <button class="keep" id="gKeep" type="button">🎁 뽑은 것만 가져가기</button>
   </div>
   <div class="g-stage" id="gStage">
     <canvas id="cv"></canvas>
-    <div class="hint" id="gHint"><span><span class="hand">👆</span> 화면을 <b>드래그</b>해서 집게를 옮기고</span><span>과녁이 <i style="background:#5BE3A6"></i><b style="color:#5BE3A6">초록색</b>일 때 <b style="color:#FF86C3">잡기!</b></span><span>⏱ 잡을 때마다 <b style="color:#FFD54A">20초</b>가 다시 채워져요</span></div>
+    <div class="opps" id="gOpps"></div>
+    <div class="hint" id="gHint"><span><span class="hand">👆</span> 화면을 <b>드래그</b>해서 집게를 옮기고</span><span>과녁이 <i style="background:#5BE3A6"></i><b style="color:#5BE3A6">초록색</b>일 때 <b style="color:#FF86C3">잡기!</b></span><span>⏱ <b style="color:#FFD54A">20초</b> 안에 최대한 많이!</span></div>
     <div class="count" id="gCount"></div>
     <div class="bubble" id="gBubble"><span class="face" id="gBubbleFace"></span><span id="gBubbleText"></span></div>
     <div class="banner" id="gBanner"></div>
@@ -284,7 +293,7 @@ const CFG = {
   startMoney: 100000,         // 가입하면 주는 돈 (리셋 후 재가입 보상 10만원)
   daily: 20000,               // 한국 시간 하루 한 번 첫 접속 때 충전
   packs: [{ n: 1, price: 1000 }, { n: 6, price: 5000 }, { n: 13, price: 10000 }],
-  roundSec: 20,               // 제한시간. 잡기를 누를 때마다 다시 20초로 채워지고, 다 떨어지면 판이 끝나요
+  roundSec: 20,               // 한 판 제한시간 (20초 안에 최대한 많이)
   freeHits: 2,                // 기계는 2번까지 때릴 수 있어요
   banSec: 120,                // 3번째에 쫓겨나는 시간 (2분)
   maxPlayers: 4,
@@ -292,9 +301,9 @@ const CFG = {
 };
 const TIERS = {
   common: { name: '일반', price: 700, grip: 0.68, slip: 0.30, w: 45 },
-  rare:   { name: '레어', price: 1200, grip: 0.58, slip: 0.40, w: 30 },
-  epic:   { name: '에픽', price: 2500, grip: 0.48, slip: 0.50, w: 18 },
-  legend: { name: '전설', price: 6000, grip: 0.38, slip: 0.60, w: 7 },
+  rare:   { name: '레어', price: 1200, grip: 0.61, slip: 0.37, w: 30 },   // 잡기 성공 약 +10%
+  epic:   { name: '에픽', price: 2500, grip: 0.52, slip: 0.46, w: 18 },   // 약 +17%
+  legend: { name: '전설', price: 6000, grip: 0.42, slip: 0.56, w: 7 },    // 약 +22%
   hidden: { name: '히든', price: 50000, grip: 0.34, slip: 0.62, w: 0 },
   fuse1:  { name: '합성', price: 0, grip: 0.5, slip: 0.5, w: 0 },
   fuse2:  { name: '합성+', price: 0, grip: 0.5, slip: 0.5, w: 0 },
@@ -766,7 +775,7 @@ function renderLobby() {
     ${left ? `<div class="ban">${faceEl(OWNER.id)}<div><b>쫓겨났어요 <span id="banLeft">${fmtLeft(left)}</span></b><p class="small">기계를 세 번 때려서 사장님이 화났어요. 시간이 지나면 다시 할 수 있어요.</p></div></div>` : ''}
     <h3 style="margin-top:2px">오락실 기계 고르기</h3>
     ${machinePicker(selMachine, 'm')}
-    <button class="btn pink big" id="lbSolo" ${left ? 'disabled' : ''}>${MACH[selMachine].emoji} 혼자 ${MACH[selMachine].name}<small>잡을 때마다 ${CFG.roundSec}초 다시 충전!</small></button>
+    <button class="btn pink big" id="lbSolo" ${left ? 'disabled' : ''}>${MACH[selMachine].emoji} 혼자 ${MACH[selMachine].name}<small>${CFG.roundSec}초 동안 몇 개나 뽑을까?</small></button>
     <div class="grid2">
       <button class="btn cyan" id="lbMake" ${left ? 'disabled' : ''}>방 만들기<small>최대 ${CFG.maxPlayers}명 대결</small></button>
       <button class="btn cyan" id="lbJoin" ${left ? 'disabled' : ''}>코드로 입장<small>친구 방 들어가기</small></button>
@@ -895,7 +904,7 @@ function renderFuse() {
     <div class="toprow"><button class="back" id="fuBack">← 로비</button><h2>🧪 합성소</h2><span class="chip" style="font-size:13px">📖 ${collCount(me)}/${ALL_DOLLS.length}</span></div>
     <div class="card" style="display:grid;gap:10px">
       <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 ${CH.length + 1} · 합성 ${FUSE_LIST.length}</span></div>
-      <div class="coll">${ALL_DOLLS.map(id => `<span title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : id === HIDDEN.id ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
+      <div class="coll">${ALL_DOLLS.map(id => `<span ${known(id) ? `data-zoom="${id}" role="button" tabindex="0"` : ''} title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : id === HIDDEN.id ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
     </div>
     <p class="small muted">레시피 ${RECIPES.length}개 · 같은 인형을 만드는 <b style="color:var(--ink)">다른 조합</b>도 있어요. 인형 2개를 넣으면 <b style="color:var(--ink)">${Math.round(FUSE_RATE * 100)}%</b> 확률로 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
     <div class="tabs" id="fuFilter"><button data-v="0">전체 레시피</button><button data-v="1">지금 만들 수 있는 것만</button></div>
@@ -904,6 +913,19 @@ function renderFuse() {
   $('#fuBack').onclick = () => show('lobby');
   el.querySelectorAll('#fuFilter button').forEach(b => { b.classList.toggle('on', (b.dataset.v === '1') === fuseOnlyCan); b.onclick = () => { fuseOnlyCan = b.dataset.v === '1'; renderFuse(); }; });
   el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => doFuse(b.dataset.f, +b.dataset.r || 0));
+  el.querySelector('.coll').onclick = e => { const z = e.target.closest('[data-zoom]'); if (z) zoomDoll(z.dataset.zoom); else if (e.target.closest('span')) toast('아직 못 모은 인형이에요'); };
+}
+function zoomDoll(id) {
+  const n = (me.dolls || {})[id] || 0, t = tierOf(id), F = FUSE[id];
+  const how = F ? F.recipes.map(r => `${esc(CHAR(r.a).name)} + ${esc(CHAR(r.b).name)}`).join(' · ') : '';
+  modal(`<div class="zoom"><img src="${itemSrc('doll', id)}" alt="${esc(CHAR(id).name)}"></div>
+    <h2 style="text-align:center">${esc(CHAR(id).name)} <span class="chip tier-${t}" style="vertical-align:middle">${TIERS[t].name}</span></h2>
+    <p class="muted" style="text-align:center">“${esc(say(id, 'good'))}”</p>
+    <div class="card small" style="display:grid;gap:4px;text-align:center">
+      <span>보유 <b>${n}개</b> · 판매가 <b class="money">${won(priceOf('doll', id))}</b></span>
+      ${F ? `<span class="muted">만드는 법: ${how}</span>` : id === HIDDEN.id ? '<span class="muted">인형뽑기 기계에서 0.5% 확률로 나타나는 히든 인형</span>' : '<span class="muted">인형뽑기 기계에서 뽑을 수 있어요</span>'}
+    </div>
+    <button class="btn ghost" data-close>닫기</button>`);
 }
 async function doFuse(fid, ri = 0) {
   const F = FUSE[fid], f = { ...F, ...F.recipes[ri] };
@@ -1167,10 +1189,10 @@ function renderRoom() {
       return `<div class="seat">${faceEl(p.char)}<div style="min-width:0"><div class="nm" style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.nick)}${id === v.host ? ' 👑' : ''}</div><div class="small muted"><span class="dot ${p.online ? '' : 'off'}"></span> ${id === me.pid ? '나' : p.online ? '접속 중' : '자리 비움'}</div></div></div>`; }).join('')}</div>
     ${last ? `<div class="card"><b>지난 판 결과</b><div class="list" style="margin-top:8px">${last.list.map((p, i) => `<div class="li">${p.win ? '👑' : `<span class="rk">${i + 1}</span>`}${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}${p.kicked ? ' 🚫' : ''}</div><b class="num">${p.score}개</b></div>`).join('')}</div></div>` : ''}
     <div class="card" style="display:grid;gap:10px"><b>${isHost ? '대결할 기계 고르기' : '이번 판 기계'}</b>${machinePicker(v.machine || 'doll', 'rm')}</div>
-    ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || v.status === 'playing' ? 'disabled' : ''}>${v.status === 'playing' ? '게임 중…' : ids.length < 2 ? '친구를 기다리는 중…' : '대결 시작!'}</button>`
+    ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || v.status === 'playing' ? 'disabled' : ''}>${v.status === 'playing' ? '게임 중…' : ids.length < 2 ? '친구를 기다리는 중…' : `${CFG.roundSec}초 대결 시작!`}</button>`
       : `<div class="card" style="text-align:center">${v.status === 'playing' ? '게임 중…' : '방장이 시작하길 기다리는 중…'}</div>`}
     <div class="grid2"><button class="btn" id="rmBuy">🎟 크레딧 충전 (${me.credits || 0}회)</button><button class="btn ghost" id="rmRank">🏆 랭킹</button></div>
-    <p class="mode-note">잡기를 누를 때마다 타이머가 ${CFG.roundSec}초로 다시 채워져요. 시간이 다 떨어지면 끝! 가장 많이 뽑은 사람이 이겨요. 잡을 때마다 크레딧 1회가 써져요.</p>`;
+    <p class="mode-note">${CFG.roundSec}초 안에 가장 많이 뽑은 사람이 이겨요. 잡을 때마다 크레딧 1회가 써져요.</p>`;
   $('#rmBack').onclick = async () => { await leaveRoom(); show('lobby'); };
   $('#rmCopy').onclick = () => { navigator.clipboard?.writeText(link); toast('초대 링크를 복사했어요'); };
   $('#rmShare').onclick = () => { if (navigator.share) navigator.share({ title: '술안먹고 뽑을수있지?', text: `인형뽑기 대결! 방 코드 ${room.code}`, url: link }).catch(() => {}); else { navigator.clipboard?.writeText(link); toast('초대 링크를 복사했어요'); } };
@@ -1200,7 +1222,7 @@ async function startOnline() {
 function checkFinalize(v) {
   const ids = Object.keys(v.inRound || {});
   const now = db.now();
-  // 각자 잡을 때마다 타이머가 다시 채워지니, 사람마다 마감(deadline)이 달라요. 마감 + 12초가 지나도 소식이 없으면 끝난 걸로 봐요.
+  // 모두 같은 20초. 마감 + 12초가 지나도 소식이 없으면 끝난 걸로 봐요.
   const finished = id => { const p = v.players[id]; return !p || p.done || !p.online || now > (p.deadline || v.startAt + CFG.roundSec * 1000) + 12000; };
   if (ids.every(finished) && now > v.startAt + 1500) finalize(v.round);
 }
@@ -1657,7 +1679,7 @@ function update(dt) {
   if (G.phase === 'count') {
     const n = Math.ceil((G.startAt - now) / 1000);
     if (n !== G.lastCount) { G.lastCount = n; $('#gCount').innerHTML = n > 0 && n <= 3 ? `<span>${n}</span>` : ''; if (n > 0 && n <= 3) Sound.play('tick'); }
-    if (now >= G.startAt) { G.phase = G.kicked ? 'over' : 'play'; $('#gCount').innerHTML = '<span>GO!</span>'; Sound.play('go'); setTimeout(() => { if (G.phase !== 'count') $('#gCount').innerHTML = ''; }, 800); }
+    if (now >= G.startAt) { G.phase = G.kicked ? 'over' : 'play'; hudGrab(); $('#gCount').innerHTML = '<span>GO!</span>'; Sound.play('go'); setTimeout(() => { if (G.phase !== 'count') $('#gCount').innerHTML = ''; }, 800); }
   } else if (G.phase === 'play' && now >= G.endAt) {
     G.phase = 'end'; G.endWait = now; banner('끝!'); Sound.play('end'); hudGrab();
   }
@@ -1795,10 +1817,6 @@ async function grab() {
   me.credits--; hudMoney();
   txMe(p => { if ((p.credits || 0) <= 0) return undefined; p.credits--; return p; });
   Sound.play('coin');
-  // 잡기를 누를 때마다 남은 시간을 다시 20초로
-  G.endAt = nowMs() + CFG.roundSec * 1000; G.lastSec = -1;
-  $('#gTime').classList.add('refill'); setTimeout(() => $('#gTime').classList.remove('refill'), 400);
-  if (G.mode === 'online' && room.code) db.set(PATH.room(room.code) + '/players/' + me.pid + '/deadline', G.endAt).catch(() => {});
   G.canHit = false; hudHit();
   $('#gHint').style.opacity = 0;
   c.tx = c.x; c.tz = c.z; c.vx = c.vz = 0; c.open = 1;
@@ -1842,6 +1860,7 @@ async function hitMachine() {
 }
 function hudMoney() { if (!me) return; $('#gCred').textContent = me.credits || 0; hudGrab(); }
 function hudGrab() {
+  const k = $('#gKeep'); if (k) k.disabled = G.phase === 'over' || G.phase === 'count';
   const b = $('#btnGrab');
   const noCred = (me && (me.credits || 0) <= 0);
   b.textContent = G.phase === 'over' || G.phase === 'end' ? '끝!' : noCred ? '충전하기' : '잡기!';
@@ -1868,6 +1887,16 @@ function renderOpps() {
   const top = Math.max(G.score, ...ids.map(id => v.players[id].score || 0));
   const html = ids.map(id => { const p = v.players[id]; return `<span class="opp ${(p.score || 0) === top && top > 0 ? 'lead' : ''}">${faceEl(p.char)}${p.score || 0}${p.kicked ? '🚫' : ''}</span>`; }).join('');
   const el = $('#gOpps'); if (el.innerHTML !== html) el.innerHTML = html;
+}
+// 판을 여기서 끝내고 지금까지 뽑은 것만 가지고 나가요 (뽑은 건 뽑는 순간 이미 저장돼 있어요)
+function keepAndLeave() {
+  if (G.ended || G.phase === 'count') return;
+  const n = G.score, unit = G.M.unit;
+  if (!confirm(n ? `지금까지 뽑은 ${unit} ${n}개만 가지고 나갈까요?` : '아직 뽑은 게 없어요. 그래도 나갈까요?')) return;
+  if (G.claw.held) { G.claw.held.st = 'gone'; G.claw.held = null; } // 들고 오던 건 놓쳐요
+  finishRound();
+  if (G.mode === 'online' && room.code) show('room'); else show('lobby');
+  toast(n ? `🎁 ${unit} ${n}개를 가지고 나왔어요` : '판을 끝냈어요');
 }
 function finishRound() {
   if (G.ended) return; G.ended = true; G.phase = 'over'; G.canHit = false; hudGrab(); hudHit();
@@ -2093,6 +2122,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
   }, 16);
   $('#btnGrab').addEventListener('click', () => { if ((me.credits || 0) <= 0 && G.phase !== 'over') openBuy(() => hudMoney()); else grab(); });
   $('#btnHit').addEventListener('click', hitMachine);
+  $('#gKeep').addEventListener('click', keepAndLeave);
   $('#gBuy').addEventListener('click', () => openBuy(() => hudMoney()));
   $('#gSnd').addEventListener('click', () => { Sound.on = !Sound.on; localStorage.setItem('claw-mute', Sound.on ? '0' : '1'); $('#gSnd').textContent = Sound.on ? '🔊' : '🔇'; });
   $('#gSnd').textContent = Sound.on ? '🔊' : '🔇';
@@ -2102,7 +2132,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261022-2302';
+const APP_VERSION = '20261022-2326';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
