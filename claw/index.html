@@ -335,8 +335,8 @@ const FUSE_LIST = [
   ['h01', '침묵의 신', 'g01', 'f15'], ['h02', '동물농장 대표', 'g03', 'f21'], ['h03', '바다의 지배자', 'g05', 'g10'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 직접 그린 그림으로 바꾼 합성 인형 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
-const FUSE_ART = [...Array.from({ length: 24 }, (_, i) => 'f' + String(i + 1).padStart(2, '0')), 'g01', 'g02', 'g03', 'g04', 'g05', 'g06']; // 1~30번
 const FUSE = {};
+const FUSE_ART = FUSE_LIST.map(f => f.id); // 37종 모두 직접 그린 그림 (fusion/<id>.png)
 for (const f of FUSE_LIST) {
   f.gen = Math.max(FUSE[f.a] ? FUSE[f.a].gen : 0, FUSE[f.b] ? FUSE[f.b].gen : 0) + 1;
   FUSE[f.id] = f; TIER_OF[f.id] = 'fuse' + f.gen;
@@ -858,7 +858,7 @@ function renderFuse() {
   const nm = id => (known(id) ? esc(CHAR(id).name) : '???');
   const pic = id => (known(id) ? itemImg('doll', id) : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`);
   const can = f => has(f.a) > 0 && has(f.b) > 0;
-  const genName = { 1: '1세대 합성 (기본 + 기본)', 2: '2세대 합성 ⭐ 금별', 3: '3세대 최종 합성 ★' };
+  const genName = { 1: '1세대 합성 (기본 + 기본)', 2: '2세대 합성 (합성 인형이 재료)', 3: '3세대 최종 합성 ★' };
   const rows = gen => FUSE_LIST.filter(f => f.gen === gen && (!fuseOnlyCan || can(f))).map(f => `
     <div class="li recipe ${can(f) ? 'can' : ''}">
       <div class="rc">${pic(f.a)}<small>${nm(f.a)}<br><b>×${has(f.a)}</b></small></div><span class="op">+</span>
