@@ -148,6 +148,8 @@ img.sil{filter:brightness(0) opacity(.42)}
 #game{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);background:radial-gradient(120% 60% at 50% 0%,#3E1784,#170A33 70%)}
 .g-hud{width:100%;max-width:560px;padding:8px 12px 4px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
 .g-time{font:400 30px/1 var(--d);min-width:62px;text-align:center;color:var(--yellow);text-shadow:0 0 12px rgba(255,213,74,.6)}
+.g-time.refill{animation:refill .4s ease-out}
+@keyframes refill{0%{transform:scale(1.5);color:#5BE3A6}100%{transform:scale(1)}}
 .g-time.hurry{color:var(--red);text-shadow:0 0 12px rgba(255,90,110,.7)}
 .g-bar{height:12px;border-radius:99px;background:rgba(0,0,0,.35);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
 .g-bar i{display:block;height:100%;width:100%;transform-origin:left center;background:linear-gradient(90deg,var(--pink),var(--yellow));will-change:transform}
@@ -247,7 +249,7 @@ body.playing #bungBack{display:none}
   </div>
   <div class="g-stage" id="gStage">
     <canvas id="cv"></canvas>
-    <div class="hint" id="gHint"><span><span class="hand">👆</span> 화면을 <b>드래그</b>해서 집게를 옮기고</span><span>과녁이 <i style="background:#5BE3A6"></i><b style="color:#5BE3A6">초록색</b>일 때 <b style="color:#FF86C3">잡기!</b></span></div>
+    <div class="hint" id="gHint"><span><span class="hand">👆</span> 화면을 <b>드래그</b>해서 집게를 옮기고</span><span>과녁이 <i style="background:#5BE3A6"></i><b style="color:#5BE3A6">초록색</b>일 때 <b style="color:#FF86C3">잡기!</b></span><span>⏱ 잡을 때마다 <b style="color:#FFD54A">20초</b>가 다시 채워져요</span></div>
     <div class="count" id="gCount"></div>
     <div class="bubble" id="gBubble"><span class="face" id="gBubbleFace"></span><span id="gBubbleText"></span></div>
     <div class="banner" id="gBanner"></div>
@@ -282,7 +284,7 @@ const CFG = {
   startMoney: 100000,         // 가입하면 주는 돈 (리셋 후 재가입 보상 10만원)
   daily: 20000,               // 한국 시간 하루 한 번 첫 접속 때 충전
   packs: [{ n: 1, price: 1000 }, { n: 6, price: 5000 }, { n: 13, price: 10000 }],
-  roundSec: 20,               // 한 판 제한시간
+  roundSec: 20,               // 제한시간. 잡기를 누를 때마다 다시 20초로 채워지고, 다 떨어지면 판이 끝나요
   freeHits: 2,                // 기계는 2번까지 때릴 수 있어요
   banSec: 120,                // 3번째에 쫓겨나는 시간 (2분)
   maxPlayers: 4,
@@ -764,7 +766,7 @@ function renderLobby() {
     ${left ? `<div class="ban">${faceEl(OWNER.id)}<div><b>쫓겨났어요 <span id="banLeft">${fmtLeft(left)}</span></b><p class="small">기계를 세 번 때려서 사장님이 화났어요. 시간이 지나면 다시 할 수 있어요.</p></div></div>` : ''}
     <h3 style="margin-top:2px">오락실 기계 고르기</h3>
     ${machinePicker(selMachine, 'm')}
-    <button class="btn pink big" id="lbSolo" ${left ? 'disabled' : ''}>${MACH[selMachine].emoji} 혼자 ${MACH[selMachine].name}<small>${CFG.roundSec}초 동안 몇 개나 뽑을까?</small></button>
+    <button class="btn pink big" id="lbSolo" ${left ? 'disabled' : ''}>${MACH[selMachine].emoji} 혼자 ${MACH[selMachine].name}<small>잡을 때마다 ${CFG.roundSec}초 다시 충전!</small></button>
     <div class="grid2">
       <button class="btn cyan" id="lbMake" ${left ? 'disabled' : ''}>방 만들기<small>최대 ${CFG.maxPlayers}명 대결</small></button>
       <button class="btn cyan" id="lbJoin" ${left ? 'disabled' : ''}>코드로 입장<small>친구 방 들어가기</small></button>
@@ -1165,10 +1167,10 @@ function renderRoom() {
       return `<div class="seat">${faceEl(p.char)}<div style="min-width:0"><div class="nm" style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.nick)}${id === v.host ? ' 👑' : ''}</div><div class="small muted"><span class="dot ${p.online ? '' : 'off'}"></span> ${id === me.pid ? '나' : p.online ? '접속 중' : '자리 비움'}</div></div></div>`; }).join('')}</div>
     ${last ? `<div class="card"><b>지난 판 결과</b><div class="list" style="margin-top:8px">${last.list.map((p, i) => `<div class="li">${p.win ? '👑' : `<span class="rk">${i + 1}</span>`}${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}${p.kicked ? ' 🚫' : ''}</div><b class="num">${p.score}개</b></div>`).join('')}</div></div>` : ''}
     <div class="card" style="display:grid;gap:10px"><b>${isHost ? '대결할 기계 고르기' : '이번 판 기계'}</b>${machinePicker(v.machine || 'doll', 'rm')}</div>
-    ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || v.status === 'playing' ? 'disabled' : ''}>${v.status === 'playing' ? '게임 중…' : ids.length < 2 ? '친구를 기다리는 중…' : `${CFG.roundSec}초 대결 시작!`}</button>`
+    ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || v.status === 'playing' ? 'disabled' : ''}>${v.status === 'playing' ? '게임 중…' : ids.length < 2 ? '친구를 기다리는 중…' : '대결 시작!'}</button>`
       : `<div class="card" style="text-align:center">${v.status === 'playing' ? '게임 중…' : '방장이 시작하길 기다리는 중…'}</div>`}
     <div class="grid2"><button class="btn" id="rmBuy">🎟 크레딧 충전 (${me.credits || 0}회)</button><button class="btn ghost" id="rmRank">🏆 랭킹</button></div>
-    <p class="mode-note">${CFG.roundSec}초 안에 가장 많이 뽑은 사람이 이겨요. 잡을 때마다 크레딧 1회가 써져요.</p>`;
+    <p class="mode-note">잡기를 누를 때마다 타이머가 ${CFG.roundSec}초로 다시 채워져요. 시간이 다 떨어지면 끝! 가장 많이 뽑은 사람이 이겨요. 잡을 때마다 크레딧 1회가 써져요.</p>`;
   $('#rmBack').onclick = async () => { await leaveRoom(); show('lobby'); };
   $('#rmCopy').onclick = () => { navigator.clipboard?.writeText(link); toast('초대 링크를 복사했어요'); };
   $('#rmShare').onclick = () => { if (navigator.share) navigator.share({ title: '술안먹고 뽑을수있지?', text: `인형뽑기 대결! 방 코드 ${room.code}`, url: link }).catch(() => {}); else { navigator.clipboard?.writeText(link); toast('초대 링크를 복사했어요'); } };
@@ -1191,15 +1193,16 @@ async function startOnline() {
     if (ids.length < 2) return undefined;
     v.status = 'playing'; v.round = (v.round || 0) + 1; v.seed = Math.floor(Math.random() * 2 ** 31);
     v.startAt = db.now() + 4200; v.inRound = {}; v.roundMachine = v.machine || 'doll';
-    ids.forEach(id => { v.inRound[id] = true; Object.assign(v.players[id], { score: 0, done: false, kicked: false }); });
+    ids.forEach(id => { v.inRound[id] = true; Object.assign(v.players[id], { score: 0, done: false, kicked: false, deadline: v.startAt + CFG.roundSec * 1000 }); });
     v.updatedAt = db.now(); return v;
   });
 }
 function checkFinalize(v) {
   const ids = Object.keys(v.inRound || {});
   const now = db.now();
-  const allDone = ids.every(id => { const p = v.players[id]; return !p || p.done || !p.online; });
-  if ((allDone && now > v.startAt + 1500) || now > v.startAt + CFG.roundSec * 1000 + 10000) finalize(v.round);
+  // 각자 잡을 때마다 타이머가 다시 채워지니, 사람마다 마감(deadline)이 달라요. 마감 + 12초가 지나도 소식이 없으면 끝난 걸로 봐요.
+  const finished = id => { const p = v.players[id]; return !p || p.done || !p.online || now > (p.deadline || v.startAt + CFG.roundSec * 1000) + 12000; };
+  if (ids.every(finished) && now > v.startAt + 1500) finalize(v.round);
 }
 let finalizing = 0;
 async function finalize(round) {
@@ -1330,12 +1333,14 @@ function makeHiddenSprite(im) {
   else { g.fillStyle = '#D4AF37'; g.beginPath(); g.arc(S / 2, S / 2, S * .4, 0, Math.PI * 2); g.fill(); }
   return c;
 }
+// 얼굴이 아니라 온몸이 그려진 캐릭터는 인형뽑기에서 그림을 그대로 써요
+const FULL_BODY = new Set(['gana']);
 function loadSprites() {
   makeShadow();
   const hidden = new Promise(res => { const im = new Image(); im.onload = () => { RAW[HIDDEN.id] = im; SPR.doll[HIDDEN.id] = makeHiddenSprite(im); res(); }; im.onerror = () => { SPR.doll[HIDDEN.id] = makeHiddenSprite(null); res(); }; im.src = HIDDEN.img; });
   return Promise.all([hidden, ...CH.map(id => new Promise(res => {
     const im = new Image();
-    const build = img => { if (img) RAW[id] = img; SPR.doll[id] = makeSprite(id, img); SPR.keycap[id] = makeKeycap(id, img); SPR.keyring[id] = makeKeyring(id, img); SPR.clicker[id] = makeClicker(id, img); res(); };
+    const build = img => { if (img) RAW[id] = img; SPR.doll[id] = FULL_BODY.has(id) && img ? makeHiddenSprite(img) : makeSprite(id, img); SPR.keycap[id] = makeKeycap(id, img); SPR.keyring[id] = makeKeyring(id, img); SPR.clicker[id] = makeClicker(id, img); res(); };
     im.onload = () => build(im);
     im.onerror = () => build(null);
     im.src = imgSrc(id);
@@ -1790,6 +1795,10 @@ async function grab() {
   me.credits--; hudMoney();
   txMe(p => { if ((p.credits || 0) <= 0) return undefined; p.credits--; return p; });
   Sound.play('coin');
+  // 잡기를 누를 때마다 남은 시간을 다시 20초로
+  G.endAt = nowMs() + CFG.roundSec * 1000; G.lastSec = -1;
+  $('#gTime').classList.add('refill'); setTimeout(() => $('#gTime').classList.remove('refill'), 400);
+  if (G.mode === 'online' && room.code) db.set(PATH.room(room.code) + '/players/' + me.pid + '/deadline', G.endAt).catch(() => {});
   G.canHit = false; hudHit();
   $('#gHint').style.opacity = 0;
   c.tx = c.x; c.tz = c.z; c.vx = c.vz = 0; c.open = 1;
