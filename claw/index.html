@@ -345,20 +345,16 @@ for (const f of FUSE_LIST) {
 }
 const basePrice = id => (FUSE[id] ? FUSE[id].price : TIERS[TIER_OF[id] || 'common'].price);
 for (const f of FUSE_LIST) f.price = Math.round({ 1: 1.5, 2: 1.6, 3: 1.8 }[f.gen] * (basePrice(f.a) + basePrice(f.b)) / 100) * 100;
-// 같은 인형을 만드는 다른 조합 (53개). 재료는 항상 결과보다 낮은 세대, 같은 재료 쌍은 한 번만 써요.
+// 같은 인형을 만드는 다른 조합: 인형마다 딱 하나씩 (35개, 결과 중복 없음).
+// 재료는 항상 결과보다 낮은 세대, 같은 재료 쌍은 한 번만 써요. 따봉대제·바다의 지배자는 원래 조합만 있어요.
 const ALT_RECIPES = [
-  // 1세대 (기본 + 기본) — 남은 기본 조합 42개를 모두 써요
-  ['f01', 'goran', 'eomji'], ['f01', 'eomji', 'bongchum'], ['f02', 'kkaegul', 'myongradak'], ['f02', 'goran', 'bongchum'],
-  ['f03', 'yeongjun', 'mandu'], ['f03', 'mandu', 'bino'], ['f04', 'eomji', 'myongradak'], ['f04', 'yeongjun', 'bongchum'],
-  ['f05', 'yeongjun', 'yongwang'], ['f06', 'juntak', 'haetsal'], ['f06', 'juntak', 'bongchum'], ['f07', 'yeoni', 'goran'],
-  ['f08', 'yeoni', 'haetsal'], ['f08', 'haetsal', 'goran'], ['f09', 'eomji', 'yeoni'], ['f09', 'yongwang', 'bongchum'],
-  ['f10', 'yongwang', 'goran'], ['f10', 'kkaegul', 'bino'], ['f11', 'eomji', 'yeongjun'], ['f11', 'haetsal', 'bongchum'],
-  ['f12', 'yongwang', 'mandu'], ['f12', 'juntak', 'goran'], ['f13', 'yongwang', 'myongradak'], ['f13', 'mandu', 'myongradak'],
-  ['f14', 'haetsal', 'kkaegul'], ['f15', 'yeongjun', 'bino'], ['f16', 'yeoni', 'myongradak'], ['f16', 'myongradak', 'bino'],
-  ['f17', 'yeoni', 'yongwang'], ['f17', 'juntak', 'kkaegul'], ['f18', 'eomji', 'kkaegul'], ['f18', 'haetsal', 'mandu'],
-  ['f19', 'yeoni', 'yeongjun'], ['f19', 'haetsal', 'myongradak'], ['f20', 'yeongjun', 'goran'], ['f20', 'juntak', 'bino'],
-  ['f21', 'yeoni', 'kkaegul'], ['f21', 'bongchum', 'bino'], ['f22', 'kkaegul', 'mandu'], ['f23', 'yeongjun', 'juntak'],
-  ['f24', 'eomji', 'juntak'], ['f24', 'yongwang', 'bino'],
+  // 1세대 (기본 + 기본)
+  ['f01', 'goran', 'eomji'], ['f02', 'kkaegul', 'myongradak'], ['f03', 'mandu', 'bino'], ['f04', 'eomji', 'myongradak'],
+  ['f05', 'yeongjun', 'yongwang'], ['f06', 'juntak', 'bongchum'], ['f07', 'yeoni', 'goran'], ['f08', 'haetsal', 'goran'],
+  ['f09', 'eomji', 'yeoni'], ['f10', 'yongwang', 'goran'], ['f11', 'haetsal', 'bongchum'], ['f12', 'juntak', 'goran'],
+  ['f13', 'mandu', 'myongradak'], ['f14', 'haetsal', 'kkaegul'], ['f15', 'yeongjun', 'bino'], ['f16', 'yeoni', 'myongradak'],
+  ['f17', 'yeoni', 'yongwang'], ['f18', 'eomji', 'kkaegul'], ['f19', 'haetsal', 'myongradak'], ['f20', 'yeongjun', 'goran'],
+  ['f21', 'yeoni', 'kkaegul'], ['f22', 'kkaegul', 'mandu'], ['f23', 'yeongjun', 'juntak'], ['f24', 'eomji', 'juntak'],
   // 2세대
   ['g01', 'f20', 'f08'], ['g02', 'f13', 'f14'], ['g03', 'f09', 'f22'], ['g04', 'f04', 'f14'], ['g05', 'f05', 'f24'],
   ['g06', 'f06', 'f23'], ['g07', 'f07', 'f13'], ['g08', 'f10', 'yeongjun'], ['g09', 'f11', 'f05'],
