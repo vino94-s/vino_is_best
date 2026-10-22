@@ -979,8 +979,12 @@ async function renderAdmin() {
     <div class="li" style="flex-wrap:wrap">${faceEl(p.char || 'bino', 's')}
       <div class="grow"><div class="nm">${esc(p.nick)} ${(p.banUntil || 0) > now ? '<span class="chip" style="background:#7a1630">쫓겨남</span>' : ''}</div>
       <div class="small muted">${won(p.money)} · 🎟${p.credits || 0} · 🎁 보유 ${dollCount(p)} / 누적 ${p.caught || 0} · 때림 ${p.hits || 0}/${CFG.freeHits} · 가입 ${new Date(p.createdAt || 0).toLocaleDateString('ko-KR')}</div></div>
+      <div class="row" style="width:100%;gap:6px">
+        <span class="small muted" style="white-space:nowrap">💰 바로 충전</span>
+        ${[20000, 50000, 100000].map(v => `<button class="btn mini" style="flex:1" data-a="quick" data-v="${v}" data-p="${p.pid}">+${v / 10000}만원</button>`).join('')}
+      </div>
       <div class="row" style="width:100%;flex-wrap:wrap;gap:6px">
-        <button class="btn mini" data-a="money" data-p="${p.pid}">💰 돈</button>
+        <button class="btn mini" data-a="money" data-p="${p.pid}">💰 직접 입력</button>
         <button class="btn mini" data-a="cred" data-p="${p.pid}">🎟 크레딧</button>
         <button class="btn mini cyan" data-a="code" data-p="${p.pid}">🔑 새 코드</button>
         <button class="btn mini ghost" data-a="unban" data-p="${p.pid}">🚫 해제</button>
@@ -1028,7 +1032,12 @@ async function renderAdmin() {
     const pid = b.dataset.p, p = ps.find(x => x.pid === pid), a = b.dataset.a;
     const log = what => db.push(PATH.log, { at: Date.now(), pid, nick: p.nick, what }).catch(() => {});
     const txp = fn => db.tx(PATH.player(pid), c => (c ? fn(c) : c));
-    if (a === 'money' || a === 'cred') {
+    if (a === 'quick') {
+      const n = +b.dataset.v;
+      b.disabled = true;
+      await txp(c => { c.money = (c.money || 0) + n; return c; });
+      log(`money +${n} (quick)`); toast(`${p.nick}에게 ${won(n)} 충전했어요`);
+    } else if (a === 'money' || a === 'cred') {
       const v = prompt(`${p.nick}에게 ${a === 'money' ? '줄 돈(원)' : '줄 크레딧(회)'}을 넣어요. 빼려면 -를 붙여요.`, a === 'money' ? '20000' : '6');
       const n = Math.round(Number(v)); if (!v || !Number.isFinite(n) || !n) return;
       await txp(c => { const k = a === 'money' ? 'money' : 'credits'; c[k] = Math.max(0, (c[k] || 0) + n); return c; });
