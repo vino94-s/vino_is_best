@@ -47,6 +47,35 @@ p{margin:0}
 .row{display:flex;gap:10px;align-items:center}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.grid4 .btn{font-size:15px;padding:12px 4px 11px}
+.tier-fuse1{color:#FFB3DA}.tier-fuse2{color:#FFD54A}.tier-fuse3{color:#fff;background:linear-gradient(90deg,#FF4FA3,#C89BFF,#4FE3FF)!important}
+.coll{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.coll img{width:100%;aspect-ratio:1;object-fit:contain}
+img.sil{filter:brightness(0) opacity(.42)}
+.gen-h{font:400 17px var(--d);margin:6px 0 0;display:flex;justify-content:space-between;align-items:center}
+.recipe{gap:6px;padding:8px 10px}
+.recipe.can{box-shadow:inset 0 0 0 2px var(--pink)}
+.rc{display:grid;justify-items:center;width:58px;flex:none;gap:2px}
+.rc img{width:46px;height:46px;object-fit:contain}
+.rc small{font-size:10.5px;line-height:1.2;text-align:center;color:var(--muted);word-break:keep-all}
+.rc small b{color:var(--ink)}
+.recipe .op{font:400 18px var(--d);color:var(--muted)}
+.recipe .btn{margin-left:auto;line-height:1.2}
+.fuse-stage{position:relative;height:190px;display:grid;place-items:center;overflow:hidden}
+.fuse-stage img{position:absolute;width:110px;height:110px;object-fit:contain;top:40px}
+.fuse-stage .fa{left:calc(50% - 150px);animation:fa 1.3s ease-in forwards}
+.fuse-stage .fb{left:calc(50% + 40px);animation:fb 1.3s ease-in forwards}
+@keyframes fa{60%{transform:translateX(60px) rotate(-12deg)}100%{transform:translateX(95px) scale(.4) rotate(-360deg);opacity:0}}
+@keyframes fb{60%{transform:translateX(-60px) rotate(12deg)}100%{transform:translateX(-95px) scale(.4) rotate(360deg);opacity:0}}
+.fuse-stage .flash{position:absolute;width:40px;height:40px;border-radius:50%;background:radial-gradient(#fff,rgba(255,255,255,0) 70%);opacity:0;animation:flash .5s 1.15s ease-out}
+@keyframes flash{0%{opacity:1;transform:scale(.5)}100%{opacity:0;transform:scale(9)}}
+.fuse-stage .fr{left:calc(50% - 55px);opacity:0;transform:scale(.3)}
+.fuse-stage .fr.on{animation:frpop .6s cubic-bezier(.3,1.7,.5,1) forwards}
+.fuse-stage .fr.fail{animation:frfail .7s ease-out forwards}
+@keyframes frpop{to{opacity:1;transform:scale(1)}}
+@keyframes frfail{0%{opacity:1;transform:scale(1)}30%{transform:translateX(-10px) rotate(-8deg)}60%{transform:translateX(10px) rotate(8deg)}100%{opacity:.25;transform:scale(.8) rotate(0);filter:grayscale(1)}}
+.newtag{display:inline-block;background:var(--pink);color:#fff;font:400 13px var(--d);padding:3px 8px;border-radius:999px;margin-left:6px;vertical-align:middle}
 .card{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--line);border-radius:20px;padding:16px}
 .btn{appearance:none;border:0;border-radius:16px;padding:14px 14px 13px;font:400 18px/1.15 var(--d);color:#2A0E3F;background:var(--yellow);box-shadow:0 4px 0 #B8880A;cursor:pointer;touch-action:manipulation;transition:transform .08s ease,box-shadow .08s ease;text-align:center}
 .btn:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 #B8880A}
@@ -102,7 +131,7 @@ p{margin:0}
 .dex .face{width:100%;height:auto;aspect-ratio:1}
 .dex span.no .face{filter:grayscale(1);opacity:.28}
 .tier-hidden{color:#FFF;background:linear-gradient(90deg,#FF4FA3,#FFD54A,#4FE3FF)!important}
-.dex .q{display:grid;place-items:center;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5B2BB0,#1E0B45);box-shadow:inset 0 0 0 2px #D4AF37;font:400 22px/1 var(--d);color:#FFD54A;text-shadow:0 0 8px rgba(255,213,74,.7)}
+.q{display:grid;place-items:center;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5B2BB0,#1E0B45);box-shadow:inset 0 0 0 2px #D4AF37;font:400 22px/1 var(--d);color:#FFD54A;text-shadow:0 0 8px rgba(255,213,74,.7)}
 .tier-common{color:#9FE3C1}.tier-rare{color:#7CC7FF}.tier-epic{color:#E0A6FF}.tier-legend{color:#FFD54A}
 .mini{padding:9px 10px;font-size:13px;border-radius:11px;box-shadow:0 3px 0 #B8880A}
 .mini.ghost{box-shadow:inset 0 0 0 1px var(--line)}
@@ -196,6 +225,7 @@ body.playing #bungBack{display:none}
 <section id="s-shop" class="screen hidden"></section>
 <section id="s-rank" class="screen hidden"></section>
 <section id="s-admin" class="screen hidden"></section>
+<section id="s-fuse" class="screen hidden"></section>
 <section id="game" class="hidden">
   <div class="g-hud">
     <div class="g-time" id="gTime">20</div>
@@ -255,6 +285,9 @@ const TIERS = {
   epic:   { name: '에픽', price: 2500, grip: 0.48, slip: 0.50, w: 18 },
   legend: { name: '전설', price: 6000, grip: 0.38, slip: 0.60, w: 7 },
   hidden: { name: '히든', price: 50000, grip: 0.34, slip: 0.62, w: 0 },
+  fuse1:  { name: '합성', price: 0, grip: 0.5, slip: 0.5, w: 0 },
+  fuse2:  { name: '합성+', price: 0, grip: 0.5, slip: 0.5, w: 0 },
+  fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
   eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden' };
@@ -274,7 +307,34 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-const priceOf = (type, id) => Math.max(100, Math.round(TIERS[tierOf(id)].price * MACH[type].priceMul / 100) * 100);
+// 합성: 인형 2개 → 새 인형. 기본 13 + 합성 37 = 컬렉션 50
+const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
+const FUSE_LIST = [
+  // 1세대 (기본 + 기본)
+  ['f01', '무따봉', 'eomji', 'bino'], ['f02', '주르굴', 'kkaegul', 'goran'], ['f03', '냥왈이', 'mandu', 'bongchum'],
+  ['f04', '만세치킨', 'yeongjun', 'myongradak'], ['f05', '일출대왕', 'yongwang', 'haetsal'], ['f06', '소심신사', 'juntak', 'yeoni'],
+  ['f07', '츄르먹보', 'goran', 'mandu'], ['f08', '해무룩', 'haetsal', 'bino'], ['f09', '끄응왈', 'bongchum', 'yeoni'],
+  ['f10', '연못대왕', 'kkaegul', 'yongwang'], ['f11', '따봉선샤인', 'eomji', 'haetsal'], ['f12', '냥신사', 'juntak', 'mandu'],
+  ['f13', '치킨먹보', 'myongradak', 'goran'], ['f14', '날개굴', 'yeongjun', 'kkaegul'], ['f15', '……끄응', 'bino', 'yeoni'],
+  ['f16', '꼬끼왈', 'bongchum', 'myongradak'], ['f17', '용궁신사', 'yongwang', 'juntak'], ['f18', '냥따봉', 'eomji', 'mandu'],
+  ['f19', '아침만세', 'haetsal', 'yeongjun'], ['f20', '침묵주르륵', 'goran', 'bino'], ['f21', '개굴왈왈', 'kkaegul', 'bongchum'],
+  ['f22', '솜뭉치', 'yeoni', 'mandu'], ['f23', '치킨신사', 'juntak', 'myongradak'], ['f24', '어명따봉', 'yongwang', 'eomji'],
+  // 2세대 (합성 인형이 재료)
+  ['g01', '무념무상', 'f01', 'f08'], ['g02', '대식가굴', 'f02', 'f13'], ['g03', '털복숭이', 'f03', 'f22'],
+  ['g04', '새벽합창단', 'f04', 'f16'], ['g05', '용궁 황태자', 'f05', 'f17'], ['g06', '신사협회장', 'f06', 'f12'],
+  ['g07', '간식대마왕', 'f07', 'goran'], ['g08', '하늘연못왕', 'f10', 'f14'], ['g09', '햇살만세단', 'f11', 'f19'],
+  ['g10', '따봉대제', 'f24', 'sp_yongwang'],
+  // 3세대 (최종)
+  ['h01', '침묵의 신', 'g01', 'f15'], ['h02', '동물농장 대표', 'g03', 'f21'], ['h03', '바다의 지배자', 'g05', 'g10'],
+].map(([id, name, a, b]) => ({ id, name, a, b }));
+const FUSE = {};
+for (const f of FUSE_LIST) {
+  f.gen = Math.max(FUSE[f.a] ? FUSE[f.a].gen : 0, FUSE[f.b] ? FUSE[f.b].gen : 0) + 1;
+  FUSE[f.id] = f; TIER_OF[f.id] = 'fuse' + f.gen;
+}
+const basePrice = id => (FUSE[id] ? FUSE[id].price : TIERS[TIER_OF[id] || 'common'].price);
+for (const f of FUSE_LIST) f.price = Math.round({ 1: 1.5, 2: 1.6, 3: 1.8 }[f.gen] * (basePrice(f.a) + basePrice(f.b)) / 100) * 100;
+const priceOf = (type, id) => FUSE[id] ? FUSE[id].price : Math.max(100, Math.round(TIERS[tierOf(id)].price * MACH[type].priceMul / 100) * 100);
 let selMachine = MACH[localStorage.getItem('claw-machine')] ? localStorage.getItem('claw-machine') : 'doll';
 // 가게 사장님은 용왕 (사극 말투 규칙을 따라요)
 const OWNER = {
@@ -305,11 +365,16 @@ function loadScript(src) { return new Promise((res, rej) => { const s = document
 
 /* ══════════ 캐릭터 ══════════ */
 const CH = BUNG_CHARS.list.map(c => c.id);
-const CHAR = id => (id === HIDDEN.id ? HIDDEN.card : BUNG_CHARS.get(id));
-const imgSrc = id => (id === HIDDEN.id ? HIDDEN.img : '../characters/img/' + id + '.png');
-const say = (id, k) => (id === HIDDEN.id ? pick(HIDDEN.card.lines[k] || HIDDEN.card.lines.good) : BUNG_CHARS.line(id, k));
+const fuseCard = {};
+const CHAR = id => (id === HIDDEN.id ? HIDDEN.card : FUSE[id] ? (fuseCard[id] = fuseCard[id] || { id, name: FUSE[id].name, color: '#C89BFF' }) : BUNG_CHARS.get(id));
+const imgSrc = id => (FUSE[id] ? (SPR_URL['doll:' + id] || itemSrc('doll', id)) : id === HIDDEN.id ? HIDDEN.img : '../characters/img/' + id + '.png');
+const say = (id, k) => (FUSE[id] ? say(Math.random() < 0.5 ? FUSE[id].a : FUSE[id].b, k) : id === HIDDEN.id ? pick(HIDDEN.card.lines[k] || HIDDEN.card.lines.good) : BUNG_CHARS.line(id, k));
 const faceEl = (id, cls = '') => `<span class="face ${cls}" style="background-image:url(${imgSrc(id)})" title="${esc(CHAR(id).name)}"></span>`;
 const tierOf = id => TIER_OF[id] || 'common';
+const ALL_DOLLS = [...CH, HIDDEN.id, ...FUSE_LIST.map(f => f.id)];
+// 컬렉션 = 한 번이라도 가져 본 인형 (팔거나 합성에 써도 남아요)
+function collSet(p) { const s = new Set(Object.keys((p && p.dex) || {})); for (const [id, n] of Object.entries((p && p.dolls) || {})) if (n > 0) s.add(id); return s; }
+const collCount = p => { const s = collSet(p); return ALL_DOLLS.filter(id => s.has(id)).length; };
 
 /* ══════════ 소리 ══════════ */
 const Sound = {
@@ -463,6 +528,8 @@ async function enter(code, player, recharged) {
     setMe(v);
   });
   show('lobby');
+  // 예전에 뽑아 둔 인형도 컬렉션에 기록
+  txMe(c => { let ch = false; c.dex = c.dex || {}; for (const [id, n] of Object.entries(c.dolls || {})) if (n > 0 && !c.dex[id]) { c.dex[id] = true; ch = true; } return ch ? c : undefined; });
   if (recharged) setTimeout(() => toast(`오늘의 ${won(CFG.daily)} 충전 완료! 💰`), 300);
   const q = new URLSearchParams(location.search).get('room');
   if (q) joinRoom(q);
@@ -513,7 +580,7 @@ function show(name) {
   el.classList.remove('hidden');
   document.body.classList.toggle('playing', name === 'game');
   if (name !== 'game') stopLoop();
-  ({ login: renderLogin, lobby: renderLobby, room: renderRoom, shop: renderShop, rank: renderRank, admin: renderAdmin }[name] || (() => {}))();
+  ({ login: renderLogin, lobby: renderLobby, room: renderRoom, shop: renderShop, rank: renderRank, admin: renderAdmin, fuse: renderFuse }[name] || (() => {}))();
   if (name !== 'game') window.scrollTo(0, 0);
 }
 let toastT = 0;
@@ -608,7 +675,7 @@ function renderLobby() {
   el.innerHTML = `
     <div class="toprow"><h1 style="font-size:24px">술안먹고 뽑을수있지?</h1><button class="back" id="lbSnd">${Sound.on ? '🔊' : '🔇'}</button></div>
     <div class="card">
-      <div class="prof">${faceEl(me.char, 'l')}<div style="flex:1;min-width:0"><h2>${esc(me.nick)}</h2><p class="small muted">${esc(CHAR(me.char).name)} · ${esc(say(me.char, 'start'))}</p></div></div>
+      <div class="prof">${faceEl(me.char, 'l')}<div style="flex:1;min-width:0"><h2>${esc(me.nick)}</h2><p class="small muted">${esc(CHAR(me.char).name)} · ${esc(say(me.char, 'start'))}</p><p class="small" style="margin-top:4px">📖 인형 컬렉션 <b>${collCount(me)}</b>/${ALL_DOLLS.length}</p></div></div>
       <div class="stats">
         <div class="stat"><b class="money">${won(me.money)}</b><span>보유자산</span></div>
         <div class="stat"><b>🎟 ${me.credits || 0}회</b><span>남은 크레딧</span></div>
@@ -623,9 +690,10 @@ function renderLobby() {
       <button class="btn cyan" id="lbMake" ${left ? 'disabled' : ''}>방 만들기<small>최대 ${CFG.maxPlayers}명 대결</small></button>
       <button class="btn cyan" id="lbJoin" ${left ? 'disabled' : ''}>코드로 입장<small>친구 방 들어가기</small></button>
     </div>
-    <div class="grid3">
+    <div class="grid4">
       <button class="btn" id="lbBuy">🎟 충전</button>
       <button class="btn" id="lbShop">🛍 샵</button>
+      <button class="btn pink" id="lbFuse">🧪 합성</button>
       <button class="btn" id="lbRank">🏆 랭킹</button>
     </div>
     <div class="grid3">
@@ -646,6 +714,7 @@ function renderLobby() {
   $('#lbBuy').onclick = () => openBuy();
   $('#lbShop').onclick = () => show('shop');
   $('#lbRank').onclick = () => show('rank');
+  $('#lbFuse').onclick = () => show('fuse');
   $('#lbCode').onclick = () => modal(`<h2>내 입장 코드</h2><div class="bigcode">${myCode}</div><button class="btn ghost" data-close>닫기</button>`);
   $('#lbAdmin').onclick = adminLogin;
   $('#lbOut').onclick = () => { if (confirm('로그아웃할까요? 코드를 알고 있어야 다시 들어올 수 있어요.')) logout(); };
@@ -681,7 +750,7 @@ let shopTab = 'doll';
 function renderShop() {
   if (!me) return show('login');
   const el = $('#s-shop'), T = shopTab, M = MACH[T], inv = invOf(me, T);
-  const own = [...CH, ...(T === 'doll' ? [HIDDEN.id] : [])].filter(id => (inv[id] || 0) > 0);
+  const own = (T === 'doll' ? ALL_DOLLS : CH).filter(id => (inv[id] || 0) > 0);
   const hasHidden = (inv[HIDDEN.id] || 0) > 0;
   const total = typeValue(me, T);
   el.innerHTML = `
@@ -724,12 +793,83 @@ async function sell(type, items) {
   renderShop();
 }
 
+/* ══════════ 합성소 ══════════ */
+let fuseOnlyCan = false;
+function renderFuse() {
+  if (!me) return show('login');
+  const el = $('#s-fuse'), inv = me.dolls || {}, got = collSet(me);
+  const has = id => inv[id] || 0, known = id => got.has(id);
+  const nm = id => (known(id) ? esc(CHAR(id).name) : '???');
+  const pic = id => (known(id) ? itemImg('doll', id) : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`);
+  const can = f => has(f.a) > 0 && has(f.b) > 0;
+  const genName = { 1: '1세대 합성 (기본 + 기본)', 2: '2세대 합성 ✦ 왕관', 3: '3세대 최종 합성 ★' };
+  const rows = gen => FUSE_LIST.filter(f => f.gen === gen && (!fuseOnlyCan || can(f))).map(f => `
+    <div class="li recipe ${can(f) ? 'can' : ''}">
+      <div class="rc">${pic(f.a)}<small>${nm(f.a)}<br><b>×${has(f.a)}</b></small></div><span class="op">+</span>
+      <div class="rc">${pic(f.b)}<small>${nm(f.b)}<br><b>×${has(f.b)}</b></small></div><span class="op">→</span>
+      <div class="rc">${pic(f.id)}<small>${nm(f.id)}${has(f.id) ? `<br><b>×${has(f.id)}</b>` : ''}</small></div>
+      <button class="btn mini pink" data-f="${f.id}" ${can(f) ? '' : 'disabled'}>합성<br>${Math.round(FUSE_RATE * 100)}%</button>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="toprow"><button class="back" id="fuBack">← 로비</button><h2>🧪 합성소</h2><span class="chip" style="font-size:13px">📖 ${collCount(me)}/${ALL_DOLLS.length}</span></div>
+    <div class="card" style="display:grid;gap:10px">
+      <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 13 · 합성 37</span></div>
+      <div class="coll">${ALL_DOLLS.map(id => `<span title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : id === HIDDEN.id ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
+    </div>
+    <p class="small muted">인형 2개를 넣으면 <b style="color:var(--ink)">${Math.round(FUSE_RATE * 100)}%</b> 확률로 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
+    <div class="tabs" id="fuFilter"><button data-v="0">전체 레시피</button><button data-v="1">지금 만들 수 있는 것만</button></div>
+    ${[1, 2, 3].map(gen => { const r = rows(gen); const all = FUSE_LIST.filter(f => f.gen === gen); return r || !fuseOnlyCan ? `<div class="gen-h"><span>${genName[gen]}</span><span class="small muted">${all.filter(f => known(f.id)).length}/${all.length}</span></div><div class="list">${r || '<p class="muted small">지금 만들 수 있는 게 없어요</p>'}</div>` : ''; }).join('')}
+    ${fuseOnlyCan && !FUSE_LIST.some(can) ? '<p class="muted" style="text-align:center;padding:24px 0">지금 만들 수 있는 합성이 없어요. 인형을 더 뽑아 와요!</p>' : ''}`;
+  $('#fuBack').onclick = () => show('lobby');
+  el.querySelectorAll('#fuFilter button').forEach(b => { b.classList.toggle('on', (b.dataset.v === '1') === fuseOnlyCan); b.onclick = () => { fuseOnlyCan = b.dataset.v === '1'; renderFuse(); }; });
+  el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => doFuse(b.dataset.f));
+}
+async function doFuse(fid) {
+  const f = FUSE[fid];
+  Sound.init();
+  const firstTime = !collSet(me).has(fid);
+  const ok = Math.random() < FUSE_RATE;
+  const lost = ok ? null : Math.random() < 0.5 ? f.a : f.b;
+  const r = await txMe(c => {
+    const d = c.dolls || {};
+    if ((d[f.a] || 0) < 1 || (d[f.b] || 0) < 1) return undefined;
+    c.dex = c.dex || {}; c.dex[f.a] = true; c.dex[f.b] = true;
+    if (ok) { addItem(c, 'doll', f.a, -1); addItem(c, 'doll', f.b, -1); addItem(c, 'doll', fid, 1); c.dex[fid] = true; c.fused = (c.fused || 0) + 1; }
+    else { addItem(c, 'doll', lost, -1); c.fuseFail = (c.fuseFail || 0) + 1; }
+    return c;
+  });
+  if (!r || !r.committed) { toast('재료가 모자라요'); renderFuse(); return; }
+  [0, 250, 500, 750, 1000].forEach((t, i) => setTimeout(() => Sound.tone(500 + i * 160, .08, 'square', .04), t));
+  modal(`<div class="fuse-stage"><img class="fa" src="${itemSrc('doll', f.a)}" alt=""><img class="fb" src="${itemSrc('doll', f.b)}" alt=""><span class="flash"></span>
+      <img class="fr" id="fuRes" src="${itemSrc('doll', ok ? fid : lost)}" alt=""></div>
+    <h2 style="text-align:center" id="fuMsg">합성 중…</h2><p class="muted" style="text-align:center;min-height:1.4em" id="fuSub"></p>
+    <div class="grid2"><button class="btn ghost" data-close>닫기</button><button class="btn pink" id="fuAgain" disabled>한 번 더</button></div>`, (s, close, m) => {
+    m.dataset.lock = '1';
+    s.querySelector('[data-close]').onclick = () => { close(); renderFuse(); };
+    setTimeout(() => {
+      const res = $('#fuRes', s);
+      if (ok) {
+        res.classList.add('on'); Sound.play('win'); vib([40, 40, 80]);
+        $('#fuMsg', s).innerHTML = `${esc(f.name)}${firstTime ? '<span class="newtag">NEW!</span>' : ''}`;
+        $('#fuSub', s).textContent = `합성 성공! ${say(fid, 'good')} · 판매가 ${won(f.price)}`;
+      } else {
+        res.classList.add('fail'); Sound.play('miss'); vib(60);
+        $('#fuMsg', s).textContent = '펑! 합성 실패…';
+        $('#fuSub', s).textContent = `${CHAR(lost).name} 인형이 사라졌어요. ${CHAR(lost === f.a ? f.b : f.a).name}은(는) 돌려받았어요.`;
+      }
+      const again = $('#fuAgain', s), d = me.dolls || {};
+      again.disabled = !((d[f.a] || 0) > 0 && (d[f.b] || 0) > 0);
+      again.onclick = () => { close(); doFuse(fid); };
+    }, 1400);
+  });
+}
+
 /* ══════════ 랭킹 ══════════ */
 let rankTab = 'caught';
 async function renderRank() {
   const el = $('#s-rank');
   el.innerHTML = `<div class="toprow"><button class="back" id="rkBack">← 로비</button><h2>랭킹</h2><span></span></div>
-    <div class="tabs"><button data-t="caught">🎁 뽑은 개수</button><button data-t="money">💰 보유자산</button><button data-t="wins">⚔️ 대결</button></div>
+    <div class="tabs"><button data-t="caught">🎁 뽑기</button><button data-t="money">💰 자산</button><button data-t="coll">📖 컬렉션</button><button data-t="wins">⚔️ 대결</button></div>
     <div class="list" id="rkList"><p class="muted" style="text-align:center">불러오는 중…</p></div>
     <h3 style="margin-top:8px">최근 대결</h3><div class="list" id="rkMatch"></div>`;
   $('#rkBack').onclick = () => show(!me ? 'login' : room.code ? 'room' : 'lobby');
@@ -737,11 +877,11 @@ async function renderRank() {
   const [ps, ms] = await Promise.all([db.get(PATH.players), db.get(PATH.matches)]);
   if (cur !== 'rank') return;
   const list = Object.values(ps || {}).filter(p => p && p.pid);
-  const key = { caught: p => p.caught || 0, money: p => p.money || 0, wins: p => (p.onWins || 0) * 1e6 + (p.onGames || 0) }[rankTab];
+  const key = { coll: p => collCount(p) * 1e6 + (p.caught || 0), caught: p => p.caught || 0, money: p => p.money || 0, wins: p => (p.onWins || 0) * 1e6 + (p.onGames || 0) }[rankTab];
   list.sort((a, b) => key(b) - key(a));
   $('#rkList').innerHTML = list.length ? list.slice(0, 50).map((p, i) => `
     <div class="li ${me && p.pid === me.pid ? 'me' : ''}"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(p.char || 'bino', 's')}
-      <div class="grow"><div class="nm">${esc(p.nick)}</div><div class="small muted">${MTYPES.map(t => MACH[t].unit + ' ' + ((p.caughtBy || {})[t] || (t === 'doll' && !p.caughtBy ? p.caught || 0 : 0))).join(' · ')}</div><div class="small muted">대결 ${p.onWins || 0}승 ${p.onGames || 0}판 · 최고 ${p.best || 0}개/판</div></div>
+      <div class="grow"><div class="nm">${esc(p.nick)}</div><div class="small muted">${MTYPES.map(t => MACH[t].unit + ' ' + ((p.caughtBy || {})[t] || (t === 'doll' && !p.caughtBy ? p.caught || 0 : 0))).join(' · ')}</div><div class="small muted">📖 컬렉션 ${collCount(p)}/${ALL_DOLLS.length} · 대결 ${p.onWins || 0}승 ${p.onGames || 0}판 · 최고 ${p.best || 0}개/판</div></div>
       <div class="num">🎁 ${p.caught || 0}개<small>보유 ${dollCount(p)}개</small></div>
       <div class="num money" style="min-width:86px">${won(p.money)}<small>보유자산</small></div></div>`).join('')
     : '<p class="muted" style="text-align:center">아직 아무도 없어요</p>';
@@ -1008,7 +1148,7 @@ function showOnlineResult(last) {
 
 /* ══════════ 인형 그림 (한 번만 미리 그려 둬요) ══════════ */
 const SPR = { doll: {}, keycap: {}, keyring: {}, clicker: {} }, SPR_URL = {};
-function itemSrc(type, id) { const k = type + ':' + id; if (!SPR_URL[k] && SPR[type][id]) SPR_URL[k] = SPR[type][id].toDataURL(); return SPR_URL[k] || imgSrc(id); }
+function itemSrc(type, id) { const k = type + ':' + id; if (!SPR_URL[k] && SPR[type][id]) SPR_URL[k] = SPR[type][id].toDataURL(); return SPR_URL[k] || (FUSE[id] ? '' : imgSrc(id)); }
 const mkCanvas = S => { const c = document.createElement('canvas'); c.width = c.height = S; return c; };
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255]; }
 function mixHex(h, to, f) { const a = hexRgb(h), b = hexRgb(to); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',')})`; }
@@ -1116,7 +1256,32 @@ function loadSprites() {
     im.onload = () => build(im);
     im.onerror = () => build(null);
     im.src = imgSrc(id);
-  }))]);
+  }))]).then(() => { for (const f of FUSE_LIST) SPR.doll[f.id] = makeFusionSprite(f); });
+}
+// 두 부모 인형을 지그재그로 반씩 붙이고, 세대 표시(1 반짝이 · 2 왕관 · 3 무지개 오라)를 얹어요
+function makeFusionSprite(f) {
+  const S = 160, c = mkCanvas(S), g = c.getContext('2d'), A = SPR.doll[f.a], B = SPR.doll[f.b];
+  if (f.gen === 3) {
+    ['#FF4FA3', '#FFD54A', '#7FEFFF', '#C89BFF'].forEach((col, i) => { g.globalAlpha = .28; g.fillStyle = col; g.beginPath(); g.arc(S / 2 + Math.cos(i * 1.57) * 6, S * .5 + Math.sin(i * 1.57) * 6, S * .47, 0, Math.PI * 2); g.fill(); });
+    g.globalAlpha = 1;
+  }
+  const body = mkCanvas(S), bg = body.getContext('2d');
+  bg.drawImage(B, 0, 0);
+  bg.save(); (() => { const gg = bg; gg.beginPath(); gg.moveTo(0, 0); for (let i = 0; i <= 10; i++) gg.lineTo(S / 2 + (i % 2 ? -7 : 7), i * S / 10); gg.lineTo(0, S); gg.closePath(); })(); bg.clip(); bg.clearRect(0, 0, S, S); bg.drawImage(A, 0, 0); bg.restore();
+  bg.globalCompositeOperation = 'source-atop'; bg.strokeStyle = 'rgba(255,255,255,.9)'; bg.lineWidth = 3;
+  bg.beginPath(); for (let i = 0; i <= 10; i++) bg.lineTo(S / 2 + (i % 2 ? -7 : 7), i * S / 10); bg.stroke();
+  bg.globalCompositeOperation = 'source-over';
+  g.drawImage(body, 0, 0);
+  const sparkle = (x, y, r, col) => { g.fillStyle = col; g.strokeStyle = '#2A1240'; g.lineWidth = 2; g.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 - Math.PI / 2, rr = i % 2 ? r * .38 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.stroke(); g.fill(); };
+  if (f.gen === 1) sparkle(S * .85, S * .14, S * .1, '#FF86C3');
+  else {
+    const cx = S / 2, cy = S * .09, w = S * (f.gen === 3 ? .34 : .28), h = S * .14;
+    g.beginPath(); g.moveTo(cx - w / 2, cy + h / 2); g.lineTo(cx - w / 2, cy - h / 3); g.lineTo(cx - w / 4, cy + h / 8); g.lineTo(cx, cy - h / 2); g.lineTo(cx + w / 4, cy + h / 8); g.lineTo(cx + w / 2, cy - h / 3); g.lineTo(cx + w / 2, cy + h / 2); g.closePath();
+    g.fillStyle = '#FFD54A'; g.strokeStyle = '#2A1240'; g.lineWidth = 2.5; g.stroke(); g.fill();
+    g.fillStyle = '#FF4FA3'; g.beginPath(); g.arc(cx, cy + h / 6, S * .018, 0, Math.PI * 2); g.fill();
+    if (f.gen === 3) { sparkle(S * .14, S * .2, S * .08, '#7FEFFF'); sparkle(S * .86, S * .2, S * .08, '#FFE680'); }
+  }
+  return c;
 }
 
 /* ══════════ 인형뽑기 기계 ══════════ */
@@ -1437,7 +1602,7 @@ function capture(d) {
   bubble(d.id, say(d.id, 'good'));
   if (G.mtype === 'clicker') [0, 90, 180].forEach(t => setTimeout(() => Sound.tone(2200, .03, 'square', .05), t));
   const ty = G.mtype;
-  txMe(c => { addItem(c, ty, d.id, 1); c.caught = (c.caught || 0) + 1; c.caughtBy = c.caughtBy || {}; c.caughtBy[ty] = (c.caughtBy[ty] || 0) + 1; return c; });
+  txMe(c => { addItem(c, ty, d.id, 1); if (ty === 'doll') { c.dex = c.dex || {}; c.dex[d.id] = true; } c.caught = (c.caught || 0) + 1; c.caughtBy = c.caughtBy || {}; c.caughtBy[ty] = (c.caughtBy[ty] || 0) + 1; return c; });
   if (G.mode === 'online' && room.code) db.set(PATH.room(room.code) + '/players/' + me.pid + '/score', G.score).catch(() => {});
 }
 
