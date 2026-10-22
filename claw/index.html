@@ -356,21 +356,21 @@ for (const f of FUSE_LIST) {
 }
 const basePrice = id => (FUSE[id] ? FUSE[id].price : TIERS[TIER_OF[id] || 'common'].price);
 for (const f of FUSE_LIST) f.price = Math.round({ 1: 1.5, 2: 1.6, 3: 1.8 }[f.gen] * (basePrice(f.a) + basePrice(f.b)) / 100) * 100;
-// 같은 인형을 만드는 다른 조합: 인형마다 딱 하나씩 (35개, 결과 중복 없음).
-// 재료는 항상 결과보다 낮은 세대, 같은 재료 쌍은 한 번만 써요. 따봉대제·바다의 지배자는 원래 조합만 있어요.
+// 같은 인형을 만드는 다른 조합: 인형마다 딱 하나씩 (37개, 결과 중복 없음). 가나가 재료로 9곳에 들어가요.
+// 재료는 항상 결과보다 낮은 세대, 같은 재료 쌍은 한 번만 써요. 따봉대제·바다의 지배자 다른 조합도 히든용왕 계열이 있어야 해요.
 const ALT_RECIPES = [
   // 1세대 (기본 + 기본)
-  ['f01', 'goran', 'eomji'], ['f02', 'kkaegul', 'myongradak'], ['f03', 'mandu', 'bino'], ['f04', 'eomji', 'myongradak'],
-  ['f05', 'yeongjun', 'yongwang'], ['f06', 'juntak', 'bongchum'], ['f07', 'yeoni', 'goran'], ['f08', 'haetsal', 'goran'],
-  ['f09', 'eomji', 'yeoni'], ['f10', 'yongwang', 'goran'], ['f11', 'haetsal', 'bongchum'], ['f12', 'juntak', 'goran'],
-  ['f13', 'mandu', 'myongradak'], ['f14', 'haetsal', 'kkaegul'], ['f15', 'yeongjun', 'bino'], ['f16', 'yeoni', 'myongradak'],
-  ['f17', 'yeoni', 'yongwang'], ['f18', 'eomji', 'kkaegul'], ['f19', 'haetsal', 'myongradak'], ['f20', 'yeongjun', 'goran'],
+  ['f01', 'gana', 'eomji'], ['f02', 'kkaegul', 'myongradak'], ['f03', 'mandu', 'bino'], ['f04', 'gana', 'yeongjun'],
+  ['f05', 'yeongjun', 'yongwang'], ['f06', 'juntak', 'bongchum'], ['f07', 'gana', 'goran'], ['f08', 'gana', 'haetsal'],
+  ['f09', 'gana', 'bongchum'], ['f10', 'yongwang', 'goran'], ['f11', 'haetsal', 'bongchum'], ['f12', 'juntak', 'goran'],
+  ['f13', 'gana', 'myongradak'], ['f14', 'gana', 'kkaegul'], ['f15', 'yeongjun', 'bino'], ['f16', 'yeoni', 'myongradak'],
+  ['f17', 'yeoni', 'yongwang'], ['f18', 'gana', 'mandu'], ['f19', 'haetsal', 'myongradak'], ['f20', 'yeongjun', 'goran'],
   ['f21', 'yeoni', 'kkaegul'], ['f22', 'kkaegul', 'mandu'], ['f23', 'yeongjun', 'juntak'], ['f24', 'eomji', 'juntak'],
   // 2세대
   ['g01', 'f20', 'f08'], ['g02', 'f13', 'f14'], ['g03', 'f09', 'f22'], ['g04', 'f04', 'f14'], ['g05', 'f05', 'f24'],
-  ['g06', 'f06', 'f23'], ['g07', 'f07', 'f13'], ['g08', 'f10', 'yeongjun'], ['g09', 'f11', 'f05'],
+  ['g06', 'f06', 'f23'], ['g07', 'f13', 'gana'], ['g08', 'f10', 'yeongjun'], ['g09', 'f11', 'f05'], ['g10', 'sp_yongwang', 'eomji'],
   // 3세대
-  ['h01', 'g01', 'f20'], ['h02', 'g03', 'g02'],
+  ['h01', 'g01', 'f20'], ['h02', 'g03', 'g02'], ['h03', 'g10', 'g08'],
 ];
 for (const f of FUSE_LIST) f.recipes = [{ a: f.a, b: f.b }];
 for (const [id, a, b] of ALT_RECIPES) FUSE[id].recipes.push({ a, b, alt: true });
@@ -2132,7 +2132,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261022-2326';
+const APP_VERSION = '20261022-2339';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
