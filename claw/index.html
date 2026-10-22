@@ -335,7 +335,7 @@ const FUSE_LIST = [
   ['h01', '침묵의 신', 'g01', 'f15'], ['h02', '동물농장 대표', 'g03', 'f21'], ['h03', '바다의 지배자', 'g05', 'g10'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 직접 그린 그림으로 바꾼 합성 인형 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
-const FUSE_ART = Array.from({ length: 20 }, (_, i) => 'f' + String(i + 1).padStart(2, '0')); // f01~f20
+const FUSE_ART = [...Array.from({ length: 24 }, (_, i) => 'f' + String(i + 1).padStart(2, '0')), 'g01', 'g02', 'g03', 'g04', 'g05', 'g06']; // 1~30번
 const FUSE = {};
 for (const f of FUSE_LIST) {
   f.gen = Math.max(FUSE[f.a] ? FUSE[f.a].gen : 0, FUSE[f.b] ? FUSE[f.b].gen : 0) + 1;
