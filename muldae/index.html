@@ -422,6 +422,8 @@ const CH = [
     sp: '추풍통닭', spDesc: '치킨 닭다리를 앞으로 아홉 개 마구 던져요. 높이가 제각각이라 점프로 다 피하긴 어려워요.', st: [3, 4, 4, 3] },
   { id: 'yeoni', name: '여니', h: 164, hp: 102, spd: 4.3, jump: 15, pow: 1.04, reach: 1.0, color: '#c8312c', title: '참다 터지는 강아지',
     sp: '쌍욕사자후', spDesc: '참고 참다 앞으로 쌍욕 사자후를 내질러요. 맞은 상대는 귀에서 피가 나며 3초 동안 기절! 기절 중에 맞으면 기절이 조금씩 줄어요. 방어하면 기절은 막을 수 있어요.', st: [3, 3, 3, 3] },
+  { id: 'gana', name: '가나', h: 168, hp: 100, spd: 4.5, jump: 16, pow: 1.02, reach: 1.0, color: '#7a3e1e', title: '날개 달린 초콜릿',
+    sp: '초코 늪 메롱', spDesc: '녹은 초콜릿을 앞쪽 바닥에 던져 끈적한 초코 늪을 만들어요. 늪에 발이 닿아 있으면 계속 들러붙어 맞아요. 점프로 피하세요.', st: [3, 3, 3, 3] },
   // 10단계 최종 보스 (선택 불가)
   { id: 'soju', name: '소주', boss: true, h: 214, hp: 136, spd: 3.6, jump: 14, pow: 1.1, reach: 1.08, color: '#2e8b3e', title: '최종 보스',
     sp: '병뚜껑 부메랑 날리기', spDesc: '병뚜껑을 부메랑처럼 날려요. 날아갔다가 되돌아오면서 두 번 때려요.', st: [5, 2, 5, 4] },
@@ -722,6 +724,16 @@ function spec(M, i) {
       }
       if (t >= 58) done();
       break;
+    case 'gana':
+      // 메롱 하며 녹은 초콜릿 덩어리를 앞으로 던짐 → 바닥에 떨어지면 끈적한 초코 늪이 됨
+      if (t < 14) f.vx = 0;
+      if (t === 14) {
+        const d = Math.max(110, Math.min(330, Math.abs(o.x - f.x))), tx = Math.max(XMIN, Math.min(XMAX, f.x + f.face * d));
+        M.proj.push({ k: 'choco', o: i, x: f.x + f.face * 40, y: f.y - 120, vx: (tx - f.x - f.face * 40) / 30, vy: -7.5, t: 0, land: 0, r: 16, cd: 0, life: 120 });
+        addFx(M, 'meron', f.x + f.face * 40, f.y - 190);
+      }
+      if (t >= 44) done();
+      break;
     case 'myoungradak':
       // 닭다리 9개를 4프레임 간격으로 마구 던짐 (높이 제각각, 거의 일직선으로 화면 끝까지)
       if (t >= 8 && t < 44 && (t - 8) % 4 === 0) {
@@ -786,6 +798,20 @@ function updProj(M) {
         else if (back && !p.back) { p.back = 1; if (hurt(M, p.o, 12, 22, 6, 4, 0, 'big')) addFx(M, 'clink', p.x, p.y); }
       }
       if ((back && Math.abs(p.x - own.x) < 30) || p.t > 160) alive = false;
+    } else if (p.k === 'choco') {
+      if (!p.land) {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.5;
+        if (p.y >= GROUND) { p.y = GROUND; p.land = 1; p.lt = p.t; addFx(M, 'chocosplat', p.x, GROUND); }
+      } else {
+        p.r = Math.min(80, p.r + 7);
+        if (p.cd > 0) p.cd--;
+        if (o.y >= GROUND - 4 && Math.abs(o.x - p.x) < p.r + 18) {
+          o.vx *= 0.6;
+          if (!p.cd) { if (hurt(M, p.o, 2, 6, 0.4, 0, 1, '') && o.act === 'hit') addFx(M, 'sticky', o.x, o.y - 40); p.cd = 20; }
+        }
+        if (p.t - p.lt > p.life) alive = false;
+      }
+      if (p.x < -60 || p.x > W + 60) alive = false;
     } else if (p.k === 'leg') {
       p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.r += 0.45 * Math.sign(p.vx);
       if (Math.abs(o.x - p.x) < 44 && p.y > o.y - 150 && p.y < o.y + 4) {
@@ -822,7 +848,7 @@ function checkEnd(M) {
 
 function specOk(id, d) {
   return id === 'bino' ? d < 210 : id === 'mandu' ? d > 100 : id === 'juntak' ? d < 210 : id === 'youngjun' ? d < 380
-    : id === 'haetsal' ? true : id === 'umji' ? d < 460 : id === 'yongwang' ? d > 60 && d < 520 : id === 'myoungradak' ? d > 80 : id === 'yeoni' ? d < 380 : id === 'soju' ? d > 90 && d < 420 : d < 150;
+    : id === 'haetsal' ? true : id === 'umji' ? d < 460 : id === 'yongwang' ? d > 60 && d < 520 : id === 'myoungradak' ? d > 80 : id === 'yeoni' ? d < 380 : id === 'gana' ? d > 80 && d < 400 : id === 'soju' ? d > 90 && d < 420 : d < 150;
 }
 function botThink(M, i, dk, mem) {
   const inp = { l: 0, r: 0, d: 0, j: 0, a: 0, b: 0, s: 0 };
@@ -835,6 +861,7 @@ function botThink(M, i, dk, mem) {
   const threat = M.proj.find(p => p.o !== i && (
     ((p.k === 'beam' || p.k === 'leg') && Math.sign(f.x - p.x) === Math.sign(p.vx) && Math.abs(f.x - p.x) < 340) ||
     (p.k === 'water' && Math.abs(p.x - f.x) < 160) ||
+    (p.k === 'choco' && Math.abs(p.x - f.x) < (p.r || 40) + 70) ||
     (p.k === 'cap' && Math.abs(p.x - f.x) < 200) ||
     (p.k === 'roar' && (f.x - p.x) * p.d > -30 && Math.abs(f.x - p.x) < 470) ||
     (p.k === 'laser' && (f.x - p.x) * p.d > 0) ||
@@ -1234,6 +1261,9 @@ function stageScore(M, s) {
         case 'shock': for (let k = 0; k < 7; k++) txt(e.x + (k - 3) * 34, e.y - 80 - Math.abs(k - 3) * -8, '!', '#c8312c', 46); SFX.boom(); break;
         case 'slam': ring(e.x, GROUND, '#fff', 170); dust(e.x, GROUND, 14); txt(e.x, GROUND - 210, '꾹!', '#c8312c', 48); SFX.boom(); break;
         case 'throw': txt(e.x, e.y, '추풍통닭!', '#e8443a', 34); SFX.swing('h'); break;
+        case 'meron': txt(e.x, e.y, '메롱~!', '#7a3e1e', 36); SFX.swing('h'); break;
+        case 'chocosplat': dust(e.x, e.y, 6); txt(e.x, e.y - 60, '철퍽!', '#7a3e1e', 32); SFX.hit(0); break;
+        case 'sticky': if (Math.random() < 0.5) txt(e.x, e.y - 30, '끈적!', '#7a3e1e', 24); break;
         case 'roar': {
           const sw = ['#@%&!', '$#@!!', '%&*#@!', '@#$%!!', '#$%&*!'];
           for (let k = 0; k < 5; k++) parts.push({ k: 'tx', x: e.x + e.d * k * 50, y: e.y + (k % 2 ? -30 : 20) + (Math.random() - 0.5) * 30, vx: e.d * (3 + k), vy: -0.6, life: 50, t: 0, s: sw[k], col: '#c8312c', size: 30 + k * 3 });
@@ -1307,6 +1337,7 @@ function stageScore(M, s) {
         else if (id === 'haetsal') { sy = 1.05; ox = t >= 16 ? -3 : 0; }
         else if (id === 'soju') { rot = t < 14 ? -0.25 : t < 24 ? 0.3 : 0.05; ox = t >= 14 && t < 24 ? 10 : 0; }
         else if (id === 'yeoni') { const p = Math.min(1, t / 18); if (t < 18) { sx = sy = 1 + p * 0.14; rot = -0.12 * p; } else { sx = 1.08 + (Math.random() - 0.5) * 0.06; sy = 0.96; rot = 0.1; ox = (Math.random() - 0.5) * 6; } }
+        else if (id === 'gana') { rot = t < 14 ? -0.14 : t < 26 ? 0.22 : 0.05; sy = t < 14 ? 1.06 : 0.97; ox = t >= 14 && t < 26 ? 10 : 0; }
         else if (id === 'myoungradak') { rot = t >= 8 && t < 46 ? Math.sin(t * 0.9) * 0.12 : 0; sx = 1 + Math.abs(Math.sin(t * 0.9)) * 0.06; }
         else if (id === 'yongwang') { rot = t >= 10 && t < 62 ? Math.sin(t * 0.63) * 0.14 + 0.06 : 0; sy = 1 + Math.abs(Math.sin(t * 0.63)) * 0.05; }
         break;
@@ -1409,6 +1440,27 @@ function stageScore(M, s) {
   }
 
   function drawProj(p) {
+    if (p.k === 'choco') {
+      ctx.save();
+      if (!p.land) {
+        ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx) + Math.PI / 2);
+        ctx.fillStyle = '#7a3e1e'; ctx.strokeStyle = '#2a140a'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(0, -20); ctx.quadraticCurveTo(15, 4, 0, 14); ctx.quadraticCurveTo(-15, 4, 0, -20); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#c98a5a'; ctx.beginPath(); ctx.arc(-4, 0, 3, 0, 7); ctx.fill();
+      } else {
+        const age = p.t - (p.lt || 0), a = Math.min(1, (p.life - age) / 30);
+        ctx.globalAlpha = Math.max(0, a); ctx.translate(p.x, GROUND + 4);
+        ctx.fillStyle = 'rgba(42,20,10,.35)'; ctx.beginPath(); ctx.ellipse(0, 4, p.r + 10, 12, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = '#7a3e1e'; ctx.strokeStyle = '#2a140a'; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (let k = 0; k <= 24; k++) { const an = k / 24 * Math.PI * 2, rr = 1 + Math.sin(an * 5 + age * 0.08) * 0.06; ctx.lineTo(Math.cos(an) * p.r * rr, Math.sin(an) * 11 * rr); }
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#a8653a'; ctx.beginPath(); ctx.ellipse(-p.r * 0.3, -3, p.r * 0.35, 3, 0, 0, 7); ctx.fill();
+        for (let k = 0; k < 3; k++) { const ph = (age * 0.05 + k / 3) % 1, bx = Math.sin(k * 2.3) * p.r * 0.6; ctx.globalAlpha = Math.max(0, a) * (1 - ph); ctx.strokeStyle = '#c98a5a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx, -6 - ph * 18, 3 + ph * 3, 0, 7); ctx.stroke(); }
+      }
+      ctx.restore();
+      return;
+    }
     if (p.k === 'beam') {
       // 샤오롱바오 + 뒤로 뻗는 육즙 줄기
       const d = Math.sign(p.vx), len = Math.min(260, 40 + p.t * 14);

@@ -57,7 +57,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
 .king-hero{width:112px;margin:0 auto -4px;filter:drop-shadow(0 4px 0 rgba(16,50,74,.25));animation:bob 2.4s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-6px) rotate(-2deg)}}
 .lead{margin:0;font-size:14.5px;line-height:1.6;color:var(--ink-soft);word-break:keep-all}
-.foes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.foes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .foe{border:2px solid var(--ink);border-radius:14px;padding:8px 4px 6px;display:grid;gap:2px;justify-items:center;font-size:12px;color:var(--ink-soft)}
 .foe img{height:46px;width:auto}
 .foe b{font-family:var(--f-display);font-weight:400;font-size:16px;color:var(--ink)}
@@ -119,11 +119,12 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   <div class="card">
     <img class="king-hero" src="./king.png" alt="용왕">
     <h1 class="title">온세상 모든 바다는<br><em>용왕꺼야잇</em></h1>
-    <p class="lead">바다를 헤엄쳐 선을 긋고, 내 바다로 돌아오면 그 안쪽이 전부 용왕 꺼!<br>바다를 노리는 방해꾼 셋을 조심하세요.</p>
+    <p class="lead">바다를 헤엄쳐 선을 긋고, 내 바다로 돌아오면 그 안쪽이 전부 용왕 꺼!<br>바다를 노리는 방해꾼 넷을 조심하세요.</p>
     <div class="foes">
       <div class="foe"><img src="./rabbit.png" alt=""><b>토끼</b>날쌘 꼬리 사냥꾼</div>
       <div class="foe"><img src="./gorani.png" alt=""><b>고라니</b>욕심쟁이 땅부자</div>
       <div class="foe"><img src="./mandu.png" alt=""><b>만두</b>느긋한 새치기꾼</div>
+      <div class="foe"><img src="./gana.png" alt=""><b>가나</b>메롱 날개 초콜릿</div>
     </div>
     <ul class="rules">
       <li><span>👆</span><span>화면 아무 곳이나 밀면 그 방향으로 헤엄쳐요.</span></li>
@@ -195,7 +196,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   const MAX_ITEMS = 7, ITEM_EVERY = 3.2, ITEM_LIFE = 20;
 
   const IMG = {};
-  for (const [k, src] of Object.entries({ king: "./king.png", rabbit: "./rabbit.png", gorani: "./gorani.png", mandu: "./mandu.png" })) {
+  for (const [k, src] of Object.entries({ king: "./king.png", rabbit: "./rabbit.png", gorani: "./gorani.png", mandu: "./mandu.png", gana: "./gana.png" })) {
     const im = new Image(); im.src = src; IMG[k] = im;
   }
   const CAST = [
@@ -204,6 +205,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
     { id: 2, name: "토끼", img: "rabbit", fill: "#ffb7d2", edge: "#d7779c", line: "rgba(255,200,222,.9)",  speed: 6.3, out: [3, 8],  side: [3, 7],  aggro: 10, wary: 4, maxTrail: 34 },
     { id: 3, name: "고라니", img: "gorani", fill: "#ffb072", edge: "#c9743a", line: "rgba(255,196,146,.9)", speed: 5.6, out: [5, 13], side: [5, 13], aggro: 5,  wary: 5, maxTrail: 52 },
     { id: 4, name: "만두", img: "mandu",  fill: "#f6f0dd", edge: "#b9a874", line: "rgba(255,250,232,.9)",  speed: 5.2, out: [3, 7],  side: [2, 6],  aggro: 8,  wary: 3, maxTrail: 30 },
+    { id: 5, name: "가나", img: "gana",   fill: "#c98a5a", edge: "#7a3e1e", line: "rgba(214,160,118,.9)", speed: 5.0, out: [3, 8],  side: [3, 7],  aggro: 4,  wary: 5, maxTrail: 36 },
   ];
   const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0]; // 위 오른 아래 왼
 
@@ -220,7 +222,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   // ---------- 상태 ----------
   const owner = new Uint8Array(W * H);
   const trail = new Uint8Array(W * H);
-  const counts = [0, 0, 0, 0, 0];
+  const counts = [0, 0, 0, 0, 0, 0];
   let ents = [], items = [], fx = [];
   let state = "ready";                  // ready | play | pause | dying | over
   let timeLeft = GAME_TIME, played = 0, peak = 0, itemTimer = 0, deathWhy = "";
@@ -505,7 +507,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   }
   function newGame() {
     owner.fill(0); trail.fill(0); items = []; fx = [];
-    ents = [makeEnt(CAST[1]), makeEnt(CAST[2]), makeEnt(CAST[3]), makeEnt(CAST[4])];
+    ents = [makeEnt(CAST[1]), makeEnt(CAST[2]), makeEnt(CAST[3]), makeEnt(CAST[4]), makeEnt(CAST[5])];
     ents.forEach(spawn); cam.set = false;
     timeLeft = GAME_TIME; played = 0; itemTimer = 0; deathWhy = "";
     for (let k = 0; k < 4; k++) dropItem();
@@ -722,7 +724,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
 
     // 영토 (아래쪽에 두께감)
     const depth = Math.max(3, cs * .26);
-    for (let id = 1; id <= 4; id++) {
+    for (let id = 1; id < CAST.length; id++) {
       const C = CAST[id];
       c.fillStyle = C.edge;
       for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
@@ -731,7 +733,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
         c.fillRect(Math.floor(ox + x * cs), Math.floor(oy + y * cs + depth), Math.ceil(cs) + 1, Math.ceil(cs));
       }
     }
-    for (let id = 1; id <= 4; id++) {
+    for (let id = 1; id < CAST.length; id++) {
       const C = CAST[id];
       c.fillStyle = C.fill;
       for (let y = y0; y <= y1; y++) {
@@ -832,7 +834,7 @@ body{position:fixed;inset:0;font-family:var(--f-body);color:var(--ink);-webkit-u
   function roundRect(c, x, y, w, h, r) {
     c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
   }
-  const RGB = [[0, 0, 0], [255, 210, 90], [255, 183, 210], [255, 176, 114], [246, 240, 221]];
+  const RGB = [[0, 0, 0], [255, 210, 90], [255, 183, 210], [255, 176, 114], [246, 240, 221], [201, 138, 90]];
   let miniT = 0;
   function drawMini(c, now) {
     if (now - miniT > 200) {

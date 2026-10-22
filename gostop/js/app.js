@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261020b';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261020b';
-import { botMove, botGoStop } from './bot.js?v=20261020b';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261020b';
-import { botBet, botChoose } from './seotda-bot.js?v=20261020b';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261020b';
-import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261020b';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261020b';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261022g';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261022g';
+import { botMove, botGoStop } from './bot.js?v=20261022g';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261022g';
+import { botBet, botChoose } from './seotda-bot.js?v=20261022g';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261022g';
+import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261022g';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261022g';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);

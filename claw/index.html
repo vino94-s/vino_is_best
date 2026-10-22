@@ -299,14 +299,14 @@ const TIERS = {
   fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
-  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden' };
+  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden' };
 // 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.5% 확률로 이 인형이 돼요 (한 판 21개 기준 약 10%)
 const HIDDEN = {
   id: 'sp_yongwang', chance: 0.005, img: 'special-yongwang.png',
   card: { id: 'sp_yongwang', name: '히든용왕', color: '#D4AF37', hi: '에헴!',
     lines: { good: ['과인의 진짜 모습을 보았느냐!', '에헴… 이 몸이 히든용왕이로다'], bad: ['어허! 쉽게 잡힐 과인이 아니로다', '여봐라, 다시 해 보거라'], start: ['용궁의 보물이 납시었노라'], win: ['온 바다가 히든용왕 것이로다!'], lose: ['어허… 물때가 아니로다'], taunt: ['감히 과인을 넘보느냐?'] } },
 };
-// 오락실 기계 4대 (모두 같은 캐릭터 12명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
+// 오락실 기계 4대 (모두 같은 캐릭터 13명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
 const MACH = {
   doll:    { name: '인형뽑기', unit: '인형', emoji: '🧸', R: 8,   floor: 15, total: 21, grip: 1,    slip: 1,    priceMul: 1,    neon: '#FF86C3', neon2: '#FF4FA3', note: '폭신한 캐릭터 인형' },
   keycap:  { name: '키캡뽑기', unit: '키캡', emoji: '⌨️', R: 6,   floor: 22, total: 30, grip: 1.05, slip: 1.1,  priceMul: 0.6,  neon: '#8FF3FF', neon2: '#2EC8F0', note: '작고 많지만 잘 미끄러져요' },
@@ -316,7 +316,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 13 + 합성 37 = 컬렉션 50
+// 합성: 인형 2개 → 새 인형. 기본 14(캐릭터 13 + 히든) + 합성 37 = 컬렉션 51
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_LIST = [
   // 1세대 (기본 + 기본)
@@ -836,7 +836,7 @@ function renderShop() {
     <div class="toprow"><button class="back" id="shBack">← 로비</button><h2>샵</h2><span class="money">${won(me.money)}</span></div>
     <div class="tabs">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit} ${typeCount(me, t)}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => id !== HIDDEN.id).length}/12${T === 'doll' ? ` · 히든 ${hasHidden ? '1' : '?'}/1` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
+      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => id !== HIDDEN.id).length}/${CH.length}${T === 'doll' ? ` · 히든 ${hasHidden ? '1' : '?'}/1` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
       <div class="dex">${CH.map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? (hasHidden ? `<span title="히든용왕">${itemImg(T, HIDDEN.id)}</span>` : '<span class="q" title="히든 인형">?</span>') : ''}</div>
     </div>
     <div class="list">${own.length ? own.map(id => {
@@ -892,7 +892,7 @@ function renderFuse() {
   el.innerHTML = `
     <div class="toprow"><button class="back" id="fuBack">← 로비</button><h2>🧪 합성소</h2><span class="chip" style="font-size:13px">📖 ${collCount(me)}/${ALL_DOLLS.length}</span></div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 13 · 합성 37</span></div>
+      <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 ${CH.length + 1} · 합성 ${FUSE_LIST.length}</span></div>
       <div class="coll">${ALL_DOLLS.map(id => `<span title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : id === HIDDEN.id ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
     </div>
     <p class="small muted">레시피 ${RECIPES.length}개 · 같은 인형을 만드는 <b style="color:var(--ink)">다른 조합</b>도 있어요. 인형 2개를 넣으면 <b style="color:var(--ink)">${Math.round(FUSE_RATE * 100)}%</b> 확률로 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
@@ -1366,6 +1366,7 @@ const BASE_META = {
   myongradak: { cx: 180, top: 118, hw: 110, mx: 200, my: 215, chin: 300 },
   bongchum: { cx: 190, top: 75, hw: 115, mx: 200, my: 250, chin: 320 },
   bino: { cx: 182, top: 72, hw: 145, mx: 200, my: 265, chin: 330 },
+  gana: { cx: 178, top: 88, hw: 85, mx: 165, my: 160, chin: 205 },
   sp_yongwang: { cx: 180, top: 25, hw: 150, mx: 225, my: 235, chin: 325 },
 };
 // 특징 부품: src 그림의 crop [x,y,w,h], mask(남길 색), 앞/뒤 층, 크기 w(바탕 360 기준), 위치 at
