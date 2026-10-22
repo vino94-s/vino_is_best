@@ -1303,38 +1303,121 @@ function makeHiddenSprite(im) {
 }
 function loadSprites() {
   makeShadow();
-  const hidden = new Promise(res => { const im = new Image(); im.onload = () => { SPR.doll[HIDDEN.id] = makeHiddenSprite(im); res(); }; im.onerror = () => { SPR.doll[HIDDEN.id] = makeHiddenSprite(null); res(); }; im.src = HIDDEN.img; });
+  const hidden = new Promise(res => { const im = new Image(); im.onload = () => { RAW[HIDDEN.id] = im; SPR.doll[HIDDEN.id] = makeHiddenSprite(im); res(); }; im.onerror = () => { SPR.doll[HIDDEN.id] = makeHiddenSprite(null); res(); }; im.src = HIDDEN.img; });
   return Promise.all([hidden, ...CH.map(id => new Promise(res => {
     const im = new Image();
-    const build = img => { SPR.doll[id] = makeSprite(id, img); SPR.keycap[id] = makeKeycap(id, img); SPR.keyring[id] = makeKeyring(id, img); SPR.clicker[id] = makeClicker(id, img); res(); };
+    const build = img => { if (img) RAW[id] = img; SPR.doll[id] = makeSprite(id, img); SPR.keycap[id] = makeKeycap(id, img); SPR.keyring[id] = makeKeyring(id, img); SPR.clicker[id] = makeClicker(id, img); res(); };
     im.onload = () => build(im);
     im.onerror = () => build(null);
     im.src = imgSrc(id);
   }))]).then(() => { for (const f of FUSE_LIST) SPR.doll[f.id] = makeFusionSprite(f); });
 }
-// 두 부모 인형을 지그재그로 반씩 붙이고, 세대 표시(1 반짝이 · 2 왕관 · 3 무지개 오라)를 얹어요
+/* ── 합성 인형: 바탕 캐릭터 얼굴 + 다른 캐릭터들의 특징 부품(원본 그림에서 오려 냄) ── */
+const RAW = {};
+// 바탕 얼굴 기준점 (원본 360px 좌표): 가운데 cx, 머리 위 top, 반폭 hw, 입 mx/my, 턱 chin
+const BASE_META = {
+  eomji: { cx: 175, top: 25, hw: 85, mx: 190, my: 200, chin: 330 },
+  yeoni: { cx: 205, top: 45, hw: 140, mx: 235, my: 265, chin: 300 },
+  yeongjun: { cx: 200, top: 68, hw: 150, mx: 210, my: 200, chin: 280 },
+  yongwang: { cx: 190, top: 55, hw: 105, mx: 215, my: 215, chin: 330 },
+  juntak: { cx: 185, top: 75, hw: 150, mx: 200, my: 265, chin: 300 },
+  haetsal: { cx: 185, top: 85, hw: 100, mx: 200, my: 230, chin: 300 },
+  goran: { cx: 190, top: 100, hw: 115, mx: 215, my: 270, chin: 330 },
+  kkaegul: { cx: 195, top: 65, hw: 150, mx: 210, my: 215, chin: 290 },
+  mandu: { cx: 175, top: 80, hw: 155, mx: 200, my: 265, chin: 330 },
+  myongradak: { cx: 180, top: 118, hw: 110, mx: 200, my: 215, chin: 300 },
+  bongchum: { cx: 190, top: 75, hw: 115, mx: 200, my: 250, chin: 320 },
+  bino: { cx: 182, top: 72, hw: 145, mx: 200, my: 265, chin: 330 },
+  sp_yongwang: { cx: 180, top: 25, hw: 150, mx: 225, my: 235, chin: 325 },
+};
+// 특징 부품: src 그림의 crop [x,y,w,h], mask(남길 색), 앞/뒤 층, 크기 w(바탕 360 기준), 위치 at
+const keep = {
+  dark: (r, g, b) => r * .3 + g * .59 + b * .11 < 95,
+  grey: (r, g, b) => Math.max(r, g, b) - Math.min(r, g, b) < 34,
+  vivid: (r, g, b) => { const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return (mx - mn) / (mx || 1) > .42 || r * .3 + g * .59 + b * .11 < 70; },
+  red: (r, g, b) => (r > 150 && g < 110 && b < 110) || r * .3 + g * .59 + b * .11 < 70,
+  petal: (r, g, b) => (r > 200 && g > 95 && g < 196 && b < 110),
+};
+const PARTS = {
+  crown:     { src: 'yongwang', crop: [85, 8, 180, 50], layer: 'front', w: () => 150, at: (M, w, h) => [M.cx - w / 2, M.top - h + 10] },
+  beard:     { src: 'yongwang', crop: [112, 178, 116, 165], mask: 'grey', layer: 'front', w: () => 98, at: (M, w, h) => [M.mx - w / 2 - 8, M.my - 30] },
+  hat:       { src: 'juntak', crop: [15, 38, 158, 110], mask: 'dark', layer: 'front', w: () => 175, at: (M, w, h) => [M.cx - w * .78, M.top - h * .72] },
+  rose:      { src: 'juntak', crop: [192, 222, 90, 92], mask: 'vivid', layer: 'front', w: () => 92, at: (M, w, h) => [M.mx - 5, M.my - h * .5] },
+  halo:      { src: 'haetsal', crop: [0, 50, 360, 280], mask: 'petal', layer: 'back', w: M => Math.max(380, M.hw * 3.1), at: (M, w, h) => [M.cx - w / 2, (M.top + M.chin) / 2 - h / 2 - 10] },
+  comb:      { src: 'myongradak', crop: [115, 52, 120, 76], mask: 'red', layer: 'front', w: () => 140, at: (M, w, h) => [M.cx - w / 2, M.top - h + 14] },
+  bird:      { src: 'yeongjun', crop: [10, 60, 345, 225], layer: 'front', w: () => 170, at: (M, w, h) => [M.cx - w / 2, M.top - h + 30] },
+  bunnyEars: { src: 'goran', crop: [100, 22, 162, 98], layer: 'back', w: () => 200, at: (M, w, h) => [M.cx - w / 2, M.top - h + 34] },
+  catEars:   { src: 'mandu', crop: [70, 5, 235, 82], layer: 'back', w: M => M.hw * 1.75, at: (M, w, h) => [M.cx - w / 2, M.top - h + 24] },
+  chiEarL:   { src: 'bongchum', crop: [12, 38, 100, 110], layer: 'back', w: () => 112, at: (M, w, h) => [M.cx - M.hw - w * .42, M.top - h * .45] },
+  chiEarR:   { src: 'bongchum', crop: [245, 32, 105, 105], layer: 'back', w: () => 112, at: (M, w, h) => [M.cx + M.hw - w * .58, M.top - h * .5] },
+  dogEarL:   { src: 'yeoni', crop: [5, 62, 78, 110], layer: 'front', w: () => 105, at: (M, w, h) => [M.cx - M.hw - w * .55, M.top + 18] },
+  dogEarR:   { src: 'yeoni', crop: [285, 45, 72, 95], layer: 'front', w: () => 100, at: (M, w, h) => [M.cx + M.hw - w * .45, M.top + 12] },
+  thumb:     { src: 'eomji', crop: [60, 0, 240, 345], layer: 'front', w: () => 140, at: (M, w, h) => [M.cx + M.hw * .42, M.chin - h + 26] },
+};
+const EARS = { chiEars: ['chiEarL', 'chiEarR'], dogEars: ['dogEarL', 'dogEarR'] };
+// 합성 인형 생김새: base(바탕 얼굴) + parts(다른 캐릭터 특징)
+const FUSE_LOOK = {
+  f01: ['bino', 'thumb'], f02: ['kkaegul', 'bunnyEars'], f03: ['mandu', 'chiEars'], f04: ['yeongjun', 'comb'],
+  f05: ['yongwang', 'halo'], f06: ['yeoni', 'hat', 'rose'], f07: ['mandu', 'bunnyEars'], f08: ['bino', 'halo'],
+  f09: ['yeoni', 'chiEars'], f10: ['kkaegul', 'crown', 'beard'], f11: ['haetsal', 'thumb'], f12: ['mandu', 'hat', 'rose'],
+  f13: ['myongradak', 'bunnyEars'], f14: ['kkaegul', 'bird'], f15: ['bino', 'dogEars'], f16: ['bongchum', 'comb'],
+  f17: ['yongwang', 'rose'], f18: ['mandu', 'thumb'], f19: ['yeongjun', 'halo'], f20: ['bino', 'bunnyEars'],
+  f21: ['kkaegul', 'chiEars'], f22: ['yeoni', 'catEars'], f23: ['myongradak', 'hat'], f24: ['yongwang', 'thumb'],
+  g01: ['bino', 'halo', 'thumb'], g02: ['kkaegul', 'bunnyEars', 'comb'], g03: ['yeoni', 'catEars', 'chiEars'], g04: ['yeongjun', 'comb', 'chiEars'],
+  g05: ['haetsal', 'crown', 'rose'], g06: ['yeoni', 'catEars', 'hat', 'rose'], g07: ['goran', 'catEars'], g08: ['kkaegul', 'bird', 'beard'],
+  g09: ['yeongjun', 'halo', 'thumb'], g10: ['sp_yongwang', 'crown', 'thumb'],
+  h01: ['bino', 'halo', 'dogEars', 'thumb'], h02: ['kkaegul', 'catEars', 'chiEars', 'comb'], h03: ['sp_yongwang', 'halo', 'crown', 'rose', 'thumb'],
+};
+const partCache = {};
+function partCanvas(key) {
+  if (partCache[key]) return partCache[key];
+  const P = PARTS[key], im = RAW[P.src], [x, y, w, h] = P.crop;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  if (im) g.drawImage(im, x, y, w, h, 0, 0, w, h);
+  if (im && P.mask) {
+    const d = g.getImageData(0, 0, w, h), a = d.data, fn = keep[P.mask];
+    for (let i = 0; i < a.length; i += 4) if (a[i + 3] > 0 && !fn(a[i], a[i + 1], a[i + 2])) a[i + 3] = 0;
+    g.putImageData(d, 0, 0);
+  }
+  return (partCache[key] = c);
+}
 function makeFusionSprite(f) {
-  const S = 160, c = mkCanvas(S), g = c.getContext('2d'), A = SPR.doll[f.a], B = SPR.doll[f.b];
+  const look = FUSE_LOOK[f.id], base = look[0];
+  const parts = look.slice(1).flatMap(p => EARS[p] || [p]);
+  const S = 160, t = mkCanvas(S), g = t.getContext('2d');
+  const k = S * 0.74 / 360, bx = S * 0.13, by = S * 0.15;
+  const M = BASE_META[base];
+  const donor = PARTS[parts[0]].src;
+  // 몸통: 바탕 색과 첫 부품 주인 색을 섞어요
+  g.fillStyle = mixHex(baseCol(base === HIDDEN.id ? 'yongwang' : base), baseCol(donor), .5);
+  g.beginPath(); g.ellipse(S / 2, S * .82, S * .36, S * .14, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.ellipse(S * .33, S * .91, S * .1, S * .05, 0, 0, Math.PI * 2); g.ellipse(S * .67, S * .91, S * .1, S * .05, 0, 0, Math.PI * 2); g.fill();
+  const place = key => {
+    const P = PARTS[key], pc = partCanvas(key), w = P.w(M), h = w * pc.height / pc.width, [x, y] = P.at(M, w, h);
+    g.drawImage(pc, bx + x * k, by + y * k, w * k, h * k);
+  };
+  parts.filter(p => PARTS[p].layer === 'back').forEach(place);
+  if (base === HIDDEN.id) {
+    const cx = bx + 180 * k, cy = by + 175 * k, r = 150 * k;
+    g.fillStyle = '#F7E3A1'; g.beginPath(); g.arc(cx, cy, r + 4, 0, Math.PI * 2); g.fill();
+    g.save(); g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.clip();
+    if (RAW[HIDDEN.id]) g.drawImage(RAW[HIDDEN.id], cx - r, cy - r, r * 2, r * 2);
+    g.restore(); g.strokeStyle = '#B8860B'; g.lineWidth = 2.5; g.beginPath(); g.arc(cx, cy, r + 2, 0, Math.PI * 2); g.stroke();
+  } else if (RAW[base]) g.drawImage(RAW[base], bx, by, 360 * k, 360 * k);
+  parts.filter(p => PARTS[p].layer === 'front').forEach(place);
+  const body = outlined(t, '#2A1240', 3); gloss(body, S * .36, S * .22, S * .3, .3);
+  // 세대 표시: 2세대 금별, 3세대 무지개 오라 + 별 두 개
+  const c = mkCanvas(S), cg = c.getContext('2d');
   if (f.gen === 3) {
-    ['#FF4FA3', '#FFD54A', '#7FEFFF', '#C89BFF'].forEach((col, i) => { g.globalAlpha = .28; g.fillStyle = col; g.beginPath(); g.arc(S / 2 + Math.cos(i * 1.57) * 6, S * .5 + Math.sin(i * 1.57) * 6, S * .47, 0, Math.PI * 2); g.fill(); });
-    g.globalAlpha = 1;
+    const rg = cg.createRadialGradient(S / 2, S * .5, S * .18, S / 2, S * .5, S * .5);
+    rg.addColorStop(0, 'rgba(255,255,255,0)'); rg.addColorStop(.6, 'rgba(200,155,255,.45)'); rg.addColorStop(.8, 'rgba(127,239,255,.35)'); rg.addColorStop(1, 'rgba(255,134,195,0)');
+    cg.fillStyle = rg; cg.fillRect(0, 0, S, S);
   }
-  const body = mkCanvas(S), bg = body.getContext('2d');
-  bg.drawImage(B, 0, 0);
-  bg.save(); (() => { const gg = bg; gg.beginPath(); gg.moveTo(0, 0); for (let i = 0; i <= 10; i++) gg.lineTo(S / 2 + (i % 2 ? -7 : 7), i * S / 10); gg.lineTo(0, S); gg.closePath(); })(); bg.clip(); bg.clearRect(0, 0, S, S); bg.drawImage(A, 0, 0); bg.restore();
-  bg.globalCompositeOperation = 'source-atop'; bg.strokeStyle = 'rgba(255,255,255,.9)'; bg.lineWidth = 3;
-  bg.beginPath(); for (let i = 0; i <= 10; i++) bg.lineTo(S / 2 + (i % 2 ? -7 : 7), i * S / 10); bg.stroke();
-  bg.globalCompositeOperation = 'source-over';
-  g.drawImage(body, 0, 0);
-  const sparkle = (x, y, r, col) => { g.fillStyle = col; g.strokeStyle = '#2A1240'; g.lineWidth = 2; g.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 - Math.PI / 2, rr = i % 2 ? r * .38 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.stroke(); g.fill(); };
-  if (f.gen === 1) sparkle(S * .85, S * .14, S * .1, '#FF86C3');
-  else {
-    const cx = S / 2, cy = S * .09, w = S * (f.gen === 3 ? .34 : .28), h = S * .14;
-    g.beginPath(); g.moveTo(cx - w / 2, cy + h / 2); g.lineTo(cx - w / 2, cy - h / 3); g.lineTo(cx - w / 4, cy + h / 8); g.lineTo(cx, cy - h / 2); g.lineTo(cx + w / 4, cy + h / 8); g.lineTo(cx + w / 2, cy - h / 3); g.lineTo(cx + w / 2, cy + h / 2); g.closePath();
-    g.fillStyle = '#FFD54A'; g.strokeStyle = '#2A1240'; g.lineWidth = 2.5; g.stroke(); g.fill();
-    g.fillStyle = '#FF4FA3'; g.beginPath(); g.arc(cx, cy + h / 6, S * .018, 0, Math.PI * 2); g.fill();
-    if (f.gen === 3) { sparkle(S * .14, S * .2, S * .08, '#7FEFFF'); sparkle(S * .86, S * .2, S * .08, '#FFE680'); }
-  }
+  cg.drawImage(body, 0, 0);
+  const star = (x, y, r, col) => { cg.fillStyle = col; cg.strokeStyle = '#2A1240'; cg.lineWidth = 2; cg.beginPath(); for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, rr = i % 2 ? r * .45 : r; cg.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } cg.closePath(); cg.stroke(); cg.fill(); };
+  if (f.gen === 2) star(S * .86, S * .16, S * .075, '#FFD54A');
+  if (f.gen === 3) { star(S * .86, S * .16, S * .08, '#FFD54A'); star(S * .14, S * .2, S * .065, '#7FEFFF'); }
   return c;
 }
 
