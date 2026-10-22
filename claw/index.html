@@ -742,29 +742,79 @@ async function renderRank() {
 }
 
 /* ══════════ 어드민 ══════════ */
+let adminQ = '', adminTarget = 'all';
 async function renderAdmin() {
   if (sessionStorage.getItem('claw-admin') !== '1') return show(me ? 'lobby' : 'login');
   const el = $('#s-admin');
   el.innerHTML = `<div class="toprow"><button class="back" id="adBack">← 나가기</button><h2>어드민</h2><button class="back" id="adRe">새로고침</button></div>
-    <p class="small muted">플레이어 ${'…'}명 · 코드는 목록으로 볼 수 없어서, 잃어버린 사람은 새 코드를 발급해 주세요.</p>
-    <div class="list" id="adList"><p class="muted">불러오는 중…</p></div>`;
+    <input class="inp" id="adQ" type="search" placeholder="🔍 닉네임 검색" autocomplete="off" value="${esc(adminQ)}">
+    <div class="card" style="display:grid;gap:10px">
+      <b>일괄 충전 · 빼기</b>
+      <div class="grid2">
+        <label class="small muted" style="display:grid;gap:4px">💰 돈 (원)<input class="inp" id="bkMoney" inputmode="numeric" placeholder="예: 20000"></label>
+        <label class="small muted" style="display:grid;gap:4px">🎟 크레딧 (회)<input class="inp" id="bkCred" inputmode="numeric" placeholder="예: 6"></label>
+      </div>
+      <div class="tabs" id="bkTarget"><button data-t="all">모든 유저 <span id="bkAll">…</span>명</button><button data-t="found">검색된 유저만 <span id="bkFound">…</span>명</button></div>
+      <div class="grid2"><button class="btn" id="bkAdd">➕ 충전</button><button class="btn orange" id="bkSub">➖ 빼기</button></div>
+      <p class="small muted">돈과 크레딧 중 하나만 넣어도 돼요. 빼기는 0 아래로 내려가지 않아요.</p>
+    </div>
+    <p class="small muted" id="adInfo">불러오는 중…</p>
+    <div class="list" id="adList"></div>`;
   $('#adBack').onclick = () => { sessionStorage.removeItem('claw-admin'); show(me ? 'lobby' : 'login'); };
   $('#adRe').onclick = renderAdmin;
   const ps = Object.values((await db.get(PATH.players)) || {}).filter(p => p && p.pid).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   if (cur !== 'admin') return;
-  el.querySelector('p.small').textContent = `플레이어 ${ps.length}명 · 코드는 목록으로 볼 수 없어서, 잃어버린 사람은 새 코드를 발급해 주세요.`;
   const now = db.now();
-  $('#adList').innerHTML = ps.map(p => `
+  const found = () => { const q = adminQ.trim().toLowerCase(); return q ? ps.filter(p => String(p.nick || '').toLowerCase().includes(q)) : ps; };
+  const targets = () => (adminTarget === 'found' ? found() : ps);
+  const row = p => `
     <div class="li" style="flex-wrap:wrap">${faceEl(p.char || 'bino', 's')}
       <div class="grow"><div class="nm">${esc(p.nick)} ${(p.banUntil || 0) > now ? '<span class="chip" style="background:#7a1630">쫓겨남</span>' : ''}</div>
-      <div class="small muted">${won(p.money)} · 🎟${p.credits || 0} · 🧸 보유 ${dollCount(p)} / 누적 ${p.caught || 0} · 때림 ${p.hits || 0}/${CFG.freeHits} · 가입 ${new Date(p.createdAt || 0).toLocaleDateString('ko-KR')}</div></div>
+      <div class="small muted">${won(p.money)} · 🎟${p.credits || 0} · 🎁 보유 ${dollCount(p)} / 누적 ${p.caught || 0} · 때림 ${p.hits || 0}/${CFG.freeHits} · 가입 ${new Date(p.createdAt || 0).toLocaleDateString('ko-KR')}</div></div>
       <div class="row" style="width:100%;flex-wrap:wrap;gap:6px">
         <button class="btn mini" data-a="money" data-p="${p.pid}">💰 돈</button>
         <button class="btn mini" data-a="cred" data-p="${p.pid}">🎟 크레딧</button>
         <button class="btn mini cyan" data-a="code" data-p="${p.pid}">🔑 새 코드</button>
         <button class="btn mini ghost" data-a="unban" data-p="${p.pid}">🚫 해제</button>
         <button class="btn mini ghost" data-a="del" data-p="${p.pid}" style="color:#FF9AA8">삭제</button>
-      </div></div>`).join('') || '<p class="muted">아직 플레이어가 없어요</p>';
+      </div></div>`;
+  const draw = () => {
+    const f = found();
+    $('#adInfo').textContent = adminQ.trim() ? `검색 결과 ${f.length}명 / 전체 ${ps.length}명` : `플레이어 ${ps.length}명 · 코드는 목록으로 볼 수 없어서, 잃어버린 사람은 새 코드를 발급해 주세요.`;
+    $('#adList').innerHTML = f.map(row).join('') || `<p class="muted" style="text-align:center">${ps.length ? '검색된 유저가 없어요' : '아직 플레이어가 없어요'}</p>`;
+    $('#bkAll').textContent = ps.length; $('#bkFound').textContent = f.length;
+    $('#bkTarget').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === adminTarget));
+  };
+  draw();
+  $('#adQ').oninput = e => { adminQ = e.target.value; draw(); };
+  $('#bkTarget').onclick = e => { const b = e.target.closest('[data-t]'); if (b) { adminTarget = b.dataset.t; draw(); } };
+  const bulk = async sign => {
+    const num = id => { const v = $(id).value.replace(/[,\s원회]/g, ''); if (!v) return 0; const n = Math.abs(Math.round(Number(v))); return Number.isFinite(n) ? n : NaN; };
+    const dm = num('#bkMoney'), dc = num('#bkCred');
+    if (Number.isNaN(dm) || Number.isNaN(dc)) return toast('숫자만 넣어 주세요');
+    if (!dm && !dc) return toast('돈이나 크레딧 중 하나는 넣어 주세요');
+    const list = targets();
+    if (!list.length) return toast('적용할 유저가 없어요');
+    const what = [dm ? `돈 ${sign > 0 ? '+' : '−'}${won(dm)}` : '', dc ? `크레딧 ${sign > 0 ? '+' : '−'}${dc}회` : ''].filter(Boolean).join(', ');
+    const who = adminTarget === 'found' && adminQ.trim() ? `'${adminQ.trim()}' 검색된 유저 ${list.length}명` : `모든 유저 ${list.length}명`;
+    if (!confirm(`${who}에게 ${what} 적용할까요?`)) return;
+    const btns = [$('#bkAdd'), $('#bkSub')]; btns.forEach(x => x.disabled = true);
+    let done = 0;
+    for (let i = 0; i < list.length; i += 6) {
+      await Promise.all(list.slice(i, i + 6).map(p => db.tx(PATH.player(p.pid), c => {
+        if (!c) return c;
+        if (dm) c.money = Math.max(0, (c.money || 0) + sign * dm);
+        if (dc) c.credits = Math.max(0, (c.credits || 0) + sign * dc);
+        return c;
+      }).then(() => { done++; }).catch(() => {})));
+      toast(`적용 중… ${done}/${list.length}`, 1200);
+    }
+    db.push(PATH.log, { at: Date.now(), pid: '*', nick: who, what: `bulk ${sign > 0 ? '+' : '-'} money ${dm} credits ${dc}` }).catch(() => {});
+    toast(`${done}명에게 ${what} 적용했어요`);
+    renderAdmin();
+  };
+  $('#bkAdd').onclick = () => bulk(1);
+  $('#bkSub').onclick = () => bulk(-1);
   $('#adList').onclick = async e => {
     const b = e.target.closest('[data-a]'); if (!b) return;
     const pid = b.dataset.p, p = ps.find(x => x.pid === pid), a = b.dataset.a;
