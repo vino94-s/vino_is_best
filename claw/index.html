@@ -1355,7 +1355,7 @@ function makeHiddenSprite(im) {
   else { g.fillStyle = '#D4AF37'; g.beginPath(); g.arc(S / 2, S / 2, S * .4, 0, Math.PI * 2); g.fill(); }
   return c;
 }
-// 얼굴이 아니라 온몸이 그려진 캐릭터는 인형뽑기에서 그림을 그대로 써요
+// 얼굴이 아니라 온몸이 그려진 캐릭터는 인형뽑기에서 그림을 그대로 써요 (인형 사진이 있으면 그걸로 덮어써요)
 const FULL_BODY = new Set(['gana']);
 function loadSprites() {
   makeShadow();
@@ -1368,13 +1368,14 @@ function loadSprites() {
     im.src = imgSrc(id);
   }))]).then(() => {
     for (const f of FUSE_LIST) SPR.doll[f.id] = makeFusionSprite(f);
-    // 직접 그린 합성 인형 그림이 있으면 그대로 써요 (fusion/<id>.png)
-    return Promise.all(FUSE_ART.map(id => new Promise(res => {
+    // 직접 그린 합성 인형 그림(fusion/<id>.png)과 기본 캐릭터 인형 사진(plush/<id>.png)은 그대로 써요
+    const art = (dir, id) => new Promise(res => {
       const im = new Image();
       im.onload = () => { SPR.doll[id] = makeHiddenSprite(im); res(); };
       im.onerror = () => res();
-      im.src = 'fusion/' + id + '.png';
-    })));
+      im.src = dir + '/' + id + '.png';
+    });
+    return Promise.all([...FUSE_ART.map(id => art('fusion', id)), ...CH.map(id => art('plush', id))]);
   });
 }
 /* ── 합성 인형: 바탕 캐릭터 얼굴 + 다른 캐릭터들의 특징 부품(원본 그림에서 오려 냄) ── */
@@ -2132,7 +2133,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261022-2339';
+const APP_VERSION = '20261022-2359';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
