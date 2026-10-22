@@ -245,7 +245,7 @@ var GAMES = {
   'golf': ['../golf/', '골프'], 'gonake': ['../gonake/', '고네이크'], 'yongwang': ['../yongwang/', '용왕'],
   'ddomeok': ['../ddomeok/', '또먹'], 'muldae': ['../muldae/', '천하제일 무술대회'], 'badukbung': ['../badukbung/', '대환장 바둑벙'],
   'siren': ['../siren/', '수염은 스타벅스만 잡아'], 'circus': ['../circus/', '서커스'], 'yutjabi': ['../yutjabi/', '내가바로 윷잡이'],
-  'hallin': ['../hallin/', '할린데예 갈린데예'], 'gostop': ['../gostop/', '손모가지 조심!'],
+  'hallin': ['../hallin/', '할린데예 갈린데예'], 'gostop': ['../gostop/', '손모가지 조심!'], 'claw': ['../claw/', '술안먹고 뽑을수있지?'],
   'chat': ['../chat/', '수다방']
 };
 // 게임마다 그럴듯한 파일 이름
@@ -478,7 +478,7 @@ function tidyFrame(){
 
 /* ── 시트 스킨 ── */
 // 배경이 어두운 게임은 색을 뒤집어서 흰 시트처럼, 밝은 게임은 채도만 낮춰요. 글꼴은 맑은 고딕, 모서리는 각지게.
-var DARK = { golf: 1, yongwang: 1, ddomeok: 1, muldae: 1, badukbung: 1, siren: 1, circus: 1, yutjabi: 1, gostop: 1 };
+var DARK = { golf: 1, yongwang: 1, ddomeok: 1, muldae: 1, badukbung: 1, siren: 1, circus: 1, yutjabi: 1, gostop: 1, claw: 1 };
 var FORMULAS = ['=VLOOKUP(B#,매출_원본!A:I,7,FALSE)', '=SUMIFS(매출_원본!G:G,매출_원본!H:H,C#)', '=IFERROR(D#/C#,0)', '=ROUND(AVERAGE(E3:E#),0)', '=COUNTIF(매출_원본!I:I,"서울")', '=XLOOKUP(A#,피벗_지역별!A:A,피벗_지역별!F:F)'];
 var SKINS = ['auto', 'flip', 'off'], skin = 'auto';
 try { skin = localStorage.getItem('bung_excel_skin') || 'auto'; if (SKINS.indexOf(skin) < 0) skin = 'auto'; } catch (e) {}
