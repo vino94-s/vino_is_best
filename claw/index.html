@@ -334,6 +334,8 @@ const FUSE_LIST = [
   // 3세대 (최종)
   ['h01', '침묵의 신', 'g01', 'f15'], ['h02', '동물농장 대표', 'g03', 'f21'], ['h03', '바다의 지배자', 'g05', 'g10'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
+// 직접 그린 그림으로 바꾼 합성 인형 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
+const FUSE_ART = ['f01', 'f02', 'f03', 'f04', 'f05', 'f06', 'f07', 'f08', 'f09', 'f10'];
 const FUSE = {};
 for (const f of FUSE_LIST) {
   f.gen = Math.max(FUSE[f.a] ? FUSE[f.a].gen : 0, FUSE[f.b] ? FUSE[f.b].gen : 0) + 1;
@@ -1289,7 +1291,7 @@ function makeShadow() {
   g.fillStyle = r; g.save(); g.scale(1, .5); g.beginPath(); g.arc(64, 64, 62, 0, Math.PI * 2); g.fill(); g.restore();
   SHADOW = c;
 }
-// 히든 인형: 보내준 인형 그림을 그대로 써요 (배경만 지운 PNG)
+// 보내준 인형 그림을 그대로 써요 (히든 인형, 직접 그린 합성 인형)
 function makeHiddenSprite(im) {
   const S = 160, c = mkCanvas(S), g = c.getContext('2d');
   if (im) { g.imageSmoothingQuality = 'high'; g.drawImage(im, S * 0.02, 0, S * 0.96, S * 0.96); }
@@ -1305,7 +1307,16 @@ function loadSprites() {
     im.onload = () => build(im);
     im.onerror = () => build(null);
     im.src = imgSrc(id);
-  }))]).then(() => { for (const f of FUSE_LIST) SPR.doll[f.id] = makeFusionSprite(f); });
+  }))]).then(() => {
+    for (const f of FUSE_LIST) SPR.doll[f.id] = makeFusionSprite(f);
+    // 직접 그린 합성 인형 그림이 있으면 그대로 써요 (fusion/<id>.png)
+    return Promise.all(FUSE_ART.map(id => new Promise(res => {
+      const im = new Image();
+      im.onload = () => { SPR.doll[id] = makeHiddenSprite(im); res(); };
+      im.onerror = () => res();
+      im.src = 'fusion/' + id + '.png';
+    })));
+  });
 }
 /* ── 합성 인형: 바탕 캐릭터 얼굴 + 다른 캐릭터들의 특징 부품(원본 그림에서 오려 냄) ── */
 const RAW = {};
