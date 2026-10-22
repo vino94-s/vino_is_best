@@ -101,6 +101,8 @@ p{margin:0}
 .dex{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .dex .face{width:100%;height:auto;aspect-ratio:1}
 .dex span.no .face{filter:grayscale(1);opacity:.28}
+.tier-hidden{color:#FFF;background:linear-gradient(90deg,#FF4FA3,#FFD54A,#4FE3FF)!important}
+.dex .q{display:grid;place-items:center;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5B2BB0,#1E0B45);box-shadow:inset 0 0 0 2px #D4AF37;font:400 22px/1 var(--d);color:#FFD54A;text-shadow:0 0 8px rgba(255,213,74,.7)}
 .tier-common{color:#9FE3C1}.tier-rare{color:#7CC7FF}.tier-epic{color:#E0A6FF}.tier-legend{color:#FFD54A}
 .mini{padding:9px 10px;font-size:13px;border-radius:11px;box-shadow:0 3px 0 #B8880A}
 .mini.ghost{box-shadow:inset 0 0 0 1px var(--line)}
@@ -243,7 +245,7 @@ const CFG = {
   packs: [{ n: 1, price: 1000 }, { n: 6, price: 5000 }, { n: 13, price: 10000 }],
   roundSec: 20,               // 한 판 제한시간
   freeHits: 2,                // 기계는 2번까지 때릴 수 있어요
-  banSec: 180,                // 3번째에 쫓겨나는 시간
+  banSec: 120,                // 3번째에 쫓겨나는 시간 (2분)
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
@@ -252,9 +254,16 @@ const TIERS = {
   rare:   { name: '레어', price: 1200, grip: 0.58, slip: 0.40, w: 30 },
   epic:   { name: '에픽', price: 2500, grip: 0.48, slip: 0.50, w: 18 },
   legend: { name: '전설', price: 6000, grip: 0.38, slip: 0.60, w: 7 },
+  hidden: { name: '히든', price: 50000, grip: 0.34, slip: 0.62, w: 0 },
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
-  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend' };
+  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden' };
+// 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.05% 확률로 이 인형이 돼요 (한 판 21개 기준 약 1%)
+const HIDDEN = {
+  id: 'sp_yongwang', chance: 0.0005, img: 'special-yongwang.jpg',
+  card: { id: 'sp_yongwang', name: '특별한 용왕', color: '#D4AF37', hi: '에헴!',
+    lines: { good: ['과인의 진짜 모습을 보았느냐!', '에헴… 이 몸이 특별한 용왕이로다'], bad: ['어허! 쉽게 잡힐 과인이 아니로다', '여봐라, 다시 해 보거라'], start: ['용궁의 보물이 납시었노라'], win: ['온 바다가 특별한 용왕 것이로다!'], lose: ['어허… 물때가 아니로다'], taunt: ['감히 과인을 넘보느냐?'] } },
+};
 // 오락실 기계 4대 (모두 같은 캐릭터 12명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
 const MACH = {
   doll:    { name: '인형뽑기', unit: '인형', emoji: '🧸', R: 8,   floor: 15, total: 21, grip: 1,    slip: 1,    priceMul: 1,    neon: '#FF86C3', neon2: '#FF4FA3', note: '폭신한 캐릭터 인형' },
@@ -272,8 +281,8 @@ const OWNER = {
   id: 'yongwang',
   warn1: ['어허! 과인의 기계를 때리다니 무엄하도다!', '여봐라~ 기계는 살살 다루거라, 에헴!'],
   warn2: ['한 번만 더 때리면 용궁 밖으로 내쫓겠노라!', '어허! 이것이 마지막 경고로다!'],
-  kick:  ['썩 물러가거라! 3분 동안 출입 금지로다!', '여봐라~ 이 자를 당장 끌어내라!'],
-  banned:['아직 과인의 노여움이 풀리지 않았노라', '3분이 지나기 전엔 못 들어오노라, 에헴!'],
+  kick:  ['썩 물러가거라! 2분 동안 출입 금지로다!', '여봐라~ 이 자를 당장 끌어내라!'],
+  banned:['아직 과인의 노여움이 풀리지 않았노라', '2분이 지나기 전엔 못 들어오노라, 에헴!'],
   lucky: ['…어허, 이번만 봐주겠노라', '에헴… 운이 좋았구나'],
 };
 
@@ -296,9 +305,9 @@ function loadScript(src) { return new Promise((res, rej) => { const s = document
 
 /* ══════════ 캐릭터 ══════════ */
 const CH = BUNG_CHARS.list.map(c => c.id);
-const CHAR = id => BUNG_CHARS.get(id);
-const imgSrc = id => '../characters/img/' + id + '.png';
-const say = (id, k) => BUNG_CHARS.line(id, k);
+const CHAR = id => (id === HIDDEN.id ? HIDDEN.card : BUNG_CHARS.get(id));
+const imgSrc = id => (id === HIDDEN.id ? HIDDEN.img : '../characters/img/' + id + '.png');
+const say = (id, k) => (id === HIDDEN.id ? pick(HIDDEN.card.lines[k] || HIDDEN.card.lines.good) : BUNG_CHARS.line(id, k));
 const faceEl = (id, cls = '') => `<span class="face ${cls}" style="background-image:url(${imgSrc(id)})" title="${esc(CHAR(id).name)}"></span>`;
 const tierOf = id => TIER_OF[id] || 'common';
 
@@ -672,14 +681,15 @@ let shopTab = 'doll';
 function renderShop() {
   if (!me) return show('login');
   const el = $('#s-shop'), T = shopTab, M = MACH[T], inv = invOf(me, T);
-  const own = CH.filter(id => (inv[id] || 0) > 0);
+  const own = [...CH, ...(T === 'doll' ? [HIDDEN.id] : [])].filter(id => (inv[id] || 0) > 0);
+  const hasHidden = (inv[HIDDEN.id] || 0) > 0;
   const total = typeValue(me, T);
   el.innerHTML = `
     <div class="toprow"><button class="back" id="shBack">← 로비</button><h2>샵</h2><span class="money">${won(me.money)}</span></div>
     <div class="tabs">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit} ${typeCount(me, t)}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>${M.unit} 도감 ${own.length}/12</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
-      <div class="dex">${CH.map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}</div>
+      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => id !== HIDDEN.id).length}/12${T === 'doll' ? ` · 히든 ${hasHidden ? '1' : '?'}/1` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
+      <div class="dex">${CH.map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? (hasHidden ? `<span title="특별한 용왕">${itemImg(T, HIDDEN.id)}</span>` : '<span class="q" title="히든 인형">?</span>') : ''}</div>
     </div>
     <div class="list">${own.length ? own.map(id => {
       const t = tierOf(id), pr = priceOf(T, id), n = inv[id];
@@ -762,7 +772,9 @@ async function renderAdmin() {
     <div class="list" id="adList"></div>`;
   $('#adBack').onclick = () => { sessionStorage.removeItem('claw-admin'); show(me ? 'lobby' : 'login'); };
   $('#adRe').onclick = renderAdmin;
-  const ps = Object.values((await db.get(PATH.players)) || {}).filter(p => p && p.pid).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  // 돈이 0원인 사람을 맨 위로, 나머지는 최근 가입 순
+  const ps = Object.values((await db.get(PATH.players)) || {}).filter(p => p && p.pid)
+    .sort((a, b) => ((a.money || 0) > 0) - ((b.money || 0) > 0) || (b.createdAt || 0) - (a.createdAt || 0));
   if (cur !== 'admin') return;
   const now = db.now();
   const found = () => { const q = adminQ.trim().toLowerCase(); return q ? ps.filter(p => String(p.nick || '').toLowerCase().includes(q)) : ps; };
@@ -1083,15 +1095,28 @@ function makeShadow() {
   g.fillStyle = r; g.save(); g.scale(1, .5); g.beginPath(); g.arc(64, 64, 62, 0, Math.PI * 2); g.fill(); g.restore();
   SHADOW = c;
 }
+function makeHiddenSprite(im) {
+  const S = 160, t = mkCanvas(S), g = t.getContext('2d');
+  g.fillStyle = '#D4AF37';
+  g.beginPath(); g.ellipse(S / 2, S * 0.8, S * 0.37, S * 0.15, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.ellipse(S * 0.33, S * 0.9, S * 0.1, S * 0.055, 0, 0, Math.PI * 2); g.ellipse(S * 0.67, S * 0.9, S * 0.1, S * 0.055, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#F7E3A1'; g.beginPath(); g.arc(S / 2, S * 0.43, S * 0.4, 0, Math.PI * 2); g.fill();
+  g.save(); g.beginPath(); g.arc(S / 2, S * 0.43, S * 0.355, 0, Math.PI * 2); g.clip();
+  if (im) g.drawImage(im, S / 2 - S * 0.36, S * 0.43 - S * 0.36, S * 0.72, S * 0.72); else { g.fillStyle = '#2E5E9E'; g.fill(); }
+  g.restore();
+  g.strokeStyle = '#B8860B'; g.lineWidth = 3; g.beginPath(); g.arc(S / 2, S * 0.43, S * 0.37, 0, Math.PI * 2); g.stroke();
+  const c = outlined(t, '#2A1240', 3); gloss(c, S * 0.36, S * 0.2, S * 0.3, .3); return c;
+}
 function loadSprites() {
   makeShadow();
-  return Promise.all(CH.map(id => new Promise(res => {
+  const hidden = new Promise(res => { const im = new Image(); im.onload = () => { SPR.doll[HIDDEN.id] = makeHiddenSprite(im); res(); }; im.onerror = () => { SPR.doll[HIDDEN.id] = makeHiddenSprite(null); res(); }; im.src = HIDDEN.img; });
+  return Promise.all([hidden, ...CH.map(id => new Promise(res => {
     const im = new Image();
     const build = img => { SPR.doll[id] = makeSprite(id, img); SPR.keycap[id] = makeKeycap(id, img); SPR.keyring[id] = makeKeyring(id, img); SPR.clicker[id] = makeClicker(id, img); res(); };
     im.onload = () => build(im);
     im.onerror = () => build(null);
     im.src = imgSrc(id);
-  })));
+  }))]);
 }
 
 /* ══════════ 인형뽑기 기계 ══════════ */
@@ -1215,6 +1240,7 @@ function surface(x, z, ex) {
 }
 function setupDolls(rng) {
   const pickId = () => {
+    if (G.mtype === 'doll' && rng() < HIDDEN.chance) return HIDDEN.id;
     let r = rng() * 100, tier = 'common';
     for (const [k, t] of Object.entries(TIERS)) { if ((r -= t.w) < 0) { tier = k; break; } }
     const ids = CH.filter(id => tierOf(id) === tier); return ids[Math.floor(rng() * ids.length)];
@@ -1256,6 +1282,7 @@ function startRound({ mode, seed, startAt, machine = 'doll' }) {
     claw: { x: W * 0.62, z: D * 0.5, y: REST_Y, tx: W * 0.62, tz: D * 0.5, vx: 0, vz: 0, pvx: 0, pvz: 0, sway: 0, swayV: 0, swayZ: 0, open: 1, st: 'idle', t: 0, held: null, slipAt: -1, trav: 0 },
   });
   setupDolls(G.rng);
+  if (G.dolls.some(d => d.id === HIDDEN.id)) setTimeout(() => { if (cur === 'game') { bubble(HIDDEN.id, '…기계 안에서 뭔가 반짝인다?! ✨'); Sound.play('win'); } }, 700);
   show('game');
   $('#gHint').style.opacity = 1;
   $('#gScore').textContent = '0';
@@ -1404,7 +1431,9 @@ function capture(d) {
   const cols = ['#FF4FA3', '#4FE3FF', '#FFD54A', '#6EE7A8', '#C89BFF', '#fff'];
   for (let i = 0; i < 30; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, v = 180 + Math.random() * 260; G.parts.push({ x: dx, y: dy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6, vr: (Math.random() - .5) * 14, c: cols[i % cols.length], life: 0.9 + Math.random() * 0.6, s: 3 + Math.random() * 4 }); }
   $('#gScore').textContent = G.score;
-  banner('+1 획득!'); Sound.play('win'); vib([30, 40, 30]);
+  if (d.id === HIDDEN.id) { banner('✨ 히든 획득!! ✨'); vib([60, 40, 60, 40, 120]); [0, 300].forEach(t => setTimeout(() => Sound.play('win'), t)); }
+  else banner('+1 획득!');
+  Sound.play('win'); vib([30, 40, 30]);
   bubble(d.id, say(d.id, 'good'));
   if (G.mtype === 'clicker') [0, 90, 180].forEach(t => setTimeout(() => Sound.tone(2200, .03, 'square', .05), t));
   const ty = G.mtype;
@@ -1523,10 +1552,10 @@ function drawDoll(d, alpha) {
   if (clip) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, G.w, P(0, 0, CHUTE.z0)[1]); ctx.clip(); }
   if (alpha != null) ctx.globalAlpha = alpha;
   ctx.drawImage(SPR[G.mtype][d.id], sx - size / 2 * (1 + w), sy - size * 0.95 * (1 - w), size * (1 + w), size * (1 - w));
-  if (tierOf(d.id) === 'legend' && d.st !== 'gone') {
-    const t = performance.now() / 300, r = size * 0.42;
-    ctx.fillStyle = '#FFE680';
-    for (let i = 0; i < 3; i++) { const a = t + i * 2.1; star(sx + Math.cos(a) * r, sy - size * 0.5 + Math.sin(a) * r * 0.6, 2.5 + Math.sin(t * 2 + i) * 1.2); }
+  const tr = tierOf(d.id);
+  if ((tr === 'legend' || tr === 'hidden') && d.st !== 'gone') {
+    const t = performance.now() / (tr === 'hidden' ? 220 : 300), r = size * (tr === 'hidden' ? 0.5 : 0.42), n = tr === 'hidden' ? 5 : 3;
+    for (let i = 0; i < n; i++) { ctx.fillStyle = tr === 'hidden' ? ['#FF86C3', '#FFE680', '#7FEFFF', '#C89BFF', '#93F7BE'][i] : '#FFE680'; const a = t + i * (6.283 / n); star(sx + Math.cos(a) * r, sy - size * 0.5 + Math.sin(a) * r * 0.6, 2.5 + Math.sin(t * 2 + i) * 1.2); }
   }
   ctx.globalAlpha = 1;
   if (clip) ctx.restore();
