@@ -85,7 +85,7 @@ p{margin:0}
 .prof h2{font-size:24px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .stat{background:rgba(0,0,0,.25);border-radius:14px;padding:10px 8px;text-align:center}
-.stat b{display:block;font:400 19px/1.2 var(--d)}
+.stat b{display:block;font:400 17px/1.2 var(--d);white-space:nowrap}
 .stat span{font-size:12px;color:var(--muted)}
 .ban{background:linear-gradient(90deg,#5B0F2C,#3A0B3A);border:1px solid #FF5A6E;border-radius:16px;padding:12px;display:flex;gap:10px;align-items:center}
 .ban b{font-family:var(--d);font-size:20px;color:#FF9AA8}
@@ -100,7 +100,7 @@ p{margin:0}
 .li .num small{display:block;font:600 11px var(--f);color:var(--muted)}
 .dex{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
 .dex .face{width:100%;height:auto;aspect-ratio:1}
-.dex .no{filter:grayscale(1);opacity:.28}
+.dex span.no .face{filter:grayscale(1);opacity:.28}
 .tier-common{color:#9FE3C1}.tier-rare{color:#7CC7FF}.tier-epic{color:#E0A6FF}.tier-legend{color:#FFD54A}
 .mini{padding:9px 10px;font-size:13px;border-radius:11px;box-shadow:0 3px 0 #B8880A}
 .mini.ghost{box-shadow:inset 0 0 0 1px var(--line)}
@@ -170,7 +170,17 @@ p{margin:0}
 #toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:80;background:#fff;color:#2A0E3F;font-weight:800;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s;max-width:90vw;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 .res-dolls{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
-.res-dolls .face{width:42px;height:42px;animation:up .4s both}
+.res-dolls .face,.res-dolls .item{width:46px;height:46px;animation:up .4s both}
+.machines{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mach{border:0;cursor:pointer;border-radius:16px;padding:7px 4px 8px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(0,0,0,.25));box-shadow:inset 0 0 0 2px rgba(255,255,255,.12);display:grid;justify-items:center;gap:3px;transition:transform .12s,box-shadow .12s}
+.mach img{width:100%;max-width:70px;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}
+.mach-top{font:400 14px/1.1 var(--d);color:var(--neon);text-shadow:0 0 8px var(--neon2);white-space:nowrap}
+.mach-note{font-size:10px;line-height:1.25;color:var(--muted);text-align:center;min-height:2.5em}
+.mach.on{box-shadow:inset 0 0 0 3px var(--neon),0 0 16px var(--neon2);transform:translateY(-2px)}
+.mach[disabled]{cursor:default}
+.li img.item,.dex img.item{width:44px;height:44px;object-fit:contain;flex:none}
+.dex img.item{width:100%;height:auto;aspect-ratio:1}
+.dex .no img{filter:grayscale(1);opacity:.28}
 .mode-note{font-size:12px;color:var(--muted);text-align:center}
 #bungBack{position:fixed;z-index:2147483000;left:env(safe-area-inset-left);top:40%;width:30px;height:46px;border-radius:0 14px 14px 0;display:flex;align-items:center;justify-content:center;background:rgba(15,20,25,.5);color:#fff;border:1px solid rgba(255,255,255,.3);border-left:0;text-decoration:none;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);touch-action:manipulation}
 body.playing #bungBack{display:none}
@@ -194,7 +204,7 @@ body.playing #bungBack{display:none}
     </div>
   </div>
   <div class="g-sub">
-    <div class="g-score">뽑은 인형 <b id="gScore">0</b></div>
+    <div class="g-score"><span id="gUnit">뽑은 인형</span> <b id="gScore">0</b></div>
     <div class="opps" id="gOpps"></div>
   </div>
   <div class="g-stage" id="gStage">
@@ -245,6 +255,18 @@ const TIERS = {
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
   eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend' };
+// 오락실 기계 4대 (모두 같은 캐릭터 12명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
+const MACH = {
+  doll:    { name: '인형뽑기', unit: '인형', emoji: '🧸', R: 8,   floor: 15, total: 21, grip: 1,    slip: 1,    priceMul: 1,    neon: '#FF86C3', neon2: '#FF4FA3', note: '폭신한 캐릭터 인형' },
+  keycap:  { name: '키캡뽑기', unit: '키캡', emoji: '⌨️', R: 6,   floor: 22, total: 30, grip: 1.05, slip: 1.1,  priceMul: 0.6,  neon: '#8FF3FF', neon2: '#2EC8F0', note: '작고 많지만 잘 미끄러져요' },
+  keyring: { name: '키링뽑기', unit: '키링', emoji: '🔑', R: 6.5, floor: 20, total: 27, grip: 1.1,  slip: 1,    priceMul: 0.7,  neon: '#FFE27A', neon2: '#F5B800', note: '고리가 걸려서 잘 잡혀요' },
+  clicker: { name: '클리커뽑기', unit: '클리커', emoji: '🖲️', R: 6.5, floor: 20, total: 27, grip: 1,  slip: 0.95, priceMul: 0.75, neon: '#93F7BE', neon2: '#2FD27F', note: '뽑으면 딸깍딸깍' },
+};
+const MTYPES = Object.keys(MACH);
+// 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
+const EASY = { grip: 1.1, slip: 0.9 };
+const priceOf = (type, id) => Math.max(100, Math.round(TIERS[tierOf(id)].price * MACH[type].priceMul / 100) * 100);
+let selMachine = MACH[localStorage.getItem('claw-machine')] ? localStorage.getItem('claw-machine') : 'doll';
 // 가게 사장님은 용왕 (사극 말투 규칙을 따라요)
 const OWNER = {
   id: 'yongwang',
@@ -455,8 +477,23 @@ async function dailyCheck() {
 }
 const banLeft = () => (me ? Math.max(0, (me.banUntil || 0) - db.now()) : 0);
 const fmtLeft = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-const dollCount = p => Object.values((p && p.dolls) || {}).reduce((a, b) => a + (b || 0), 0);
-const dollValue = p => Object.entries((p && p.dolls) || {}).reduce((a, [id, n]) => a + (n || 0) * TIERS[tierOf(id)].price, 0);
+// 인형은 dolls/{id}, 키캡·키링·클리커는 goods/{종류}/{id}에 개수로 저장해요
+const invOf = (p, type) => (type === 'doll' ? (p && p.dolls) || {} : ((p && p.goods) || {})[type] || {});
+const typeCount = (p, type) => Object.values(invOf(p, type)).reduce((a, b) => a + (b || 0), 0);
+const typeValue = (p, type) => Object.entries(invOf(p, type)).reduce((a, [id, n]) => a + (n || 0) * priceOf(type, id), 0);
+const dollCount = p => MTYPES.reduce((a, t) => a + typeCount(p, t), 0);
+const dollValue = p => MTYPES.reduce((a, t) => a + typeValue(p, t), 0);
+function addItem(c, type, id, n) {
+  if (type === 'doll') { c.dolls = c.dolls || {}; c.dolls[id] = (c.dolls[id] || 0) + n; if (c.dolls[id] <= 0) delete c.dolls[id]; }
+  else { c.goods = c.goods || {}; c.goods[type] = c.goods[type] || {}; c.goods[type][id] = (c.goods[type][id] || 0) + n; if (c.goods[type][id] <= 0) delete c.goods[type][id]; }
+}
+const itemImg = (type, id, cls = 'item') => `<img class="${cls}" src="${itemSrc(type, id)}" alt="${esc(CHAR(id).name)} ${MACH[type].unit}">`;
+function machinePicker(sel, attr) {
+  return `<div class="machines">${MTYPES.map(t => { const m = MACH[t];
+    return `<button type="button" class="mach ${t === sel ? 'on' : ''}" data-${attr}="${t}" style="--neon:${m.neon};--neon2:${m.neon2}">
+      <span class="mach-top">${m.name}</span><img src="${itemSrc(t, PREVIEW[t])}" alt=""><span class="mach-note">${m.note}</span></button>`; }).join('')}</div>`;
+}
+const PREVIEW = { doll: 'kkaegul', keycap: 'eomji', keyring: 'haetsal', clicker: 'mandu' };
 
 /* ══════════ 화면 전환 ══════════ */
 let cur = 'boot';
@@ -566,18 +603,20 @@ function renderLobby() {
       <div class="stats">
         <div class="stat"><b class="money">${won(me.money)}</b><span>보유자산</span></div>
         <div class="stat"><b>🎟 ${me.credits || 0}회</b><span>남은 크레딧</span></div>
-        <div class="stat"><b>🧸 ${dollCount(me)}개</b><span>보유 인형</span></div>
+        <div class="stat"><b>🎁 ${dollCount(me)}개</b><span>보유 상품</span></div>
       </div>
     </div>
     ${left ? `<div class="ban">${faceEl(OWNER.id)}<div><b>쫓겨났어요 <span id="banLeft">${fmtLeft(left)}</span></b><p class="small">기계를 세 번 때려서 사장님이 화났어요. 시간이 지나면 다시 할 수 있어요.</p></div></div>` : ''}
-    <button class="btn pink big" id="lbSolo" ${left ? 'disabled' : ''}>혼자 뽑기<small>${CFG.roundSec}초 동안 몇 개나 뽑을까?</small></button>
+    <h3 style="margin-top:2px">오락실 기계 고르기</h3>
+    ${machinePicker(selMachine, 'm')}
+    <button class="btn pink big" id="lbSolo" ${left ? 'disabled' : ''}>${MACH[selMachine].emoji} 혼자 ${MACH[selMachine].name}<small>${CFG.roundSec}초 동안 몇 개나 뽑을까?</small></button>
     <div class="grid2">
       <button class="btn cyan" id="lbMake" ${left ? 'disabled' : ''}>방 만들기<small>최대 ${CFG.maxPlayers}명 대결</small></button>
       <button class="btn cyan" id="lbJoin" ${left ? 'disabled' : ''}>코드로 입장<small>친구 방 들어가기</small></button>
     </div>
     <div class="grid3">
       <button class="btn" id="lbBuy">🎟 충전</button>
-      <button class="btn" id="lbShop">🧸 인형 샵</button>
+      <button class="btn" id="lbShop">🛍 샵</button>
       <button class="btn" id="lbRank">🏆 랭킹</button>
     </div>
     <div class="grid3">
@@ -588,6 +627,7 @@ function renderLobby() {
     <p class="mode-note">1회 1,000원 · 6회 5,000원 · 13회 10,000원 · 매일 ${won(CFG.daily)} 자동 충전${db.mode === 'local' ? ' · 오프라인 모드' : ''}</p>`;
   $('#lbSnd').onclick = () => { Sound.on = !Sound.on; localStorage.setItem('claw-mute', Sound.on ? '0' : '1'); renderLobby(); };
   $('#lbSolo').onclick = () => startSolo();
+  el.querySelector('.machines').onclick = e => { const b = e.target.closest('[data-m]'); if (!b) return; selMachine = b.dataset.m; localStorage.setItem('claw-machine', selMachine); Sound.init(); Sound.play('tick'); renderLobby(); };
   $('#lbMake').onclick = createRoom;
   $('#lbJoin').onclick = () => modal(`<h2>방 코드 입력</h2><input class="inp code-inp" id="jc" maxlength="5" inputmode="numeric" placeholder="12345">
     <div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn cyan" id="jg">입장</button></div>`, (s, close) => {
@@ -627,41 +667,45 @@ function openBuy(onDone) {
   });
 }
 
-/* ══════════ 인형 샵 ══════════ */
+/* ══════════ 샵 (인형·키캡·키링·클리커) ══════════ */
+let shopTab = 'doll';
 function renderShop() {
   if (!me) return show('login');
-  const el = $('#s-shop');
-  const own = CH.filter(id => (me.dolls[id] || 0) > 0);
-  const total = dollValue(me);
+  const el = $('#s-shop'), T = shopTab, M = MACH[T], inv = invOf(me, T);
+  const own = CH.filter(id => (inv[id] || 0) > 0);
+  const total = typeValue(me, T);
   el.innerHTML = `
-    <div class="toprow"><button class="back" id="shBack">← 로비</button><h2>인형 샵</h2><span class="money">${won(me.money)}</span></div>
+    <div class="toprow"><button class="back" id="shBack">← 로비</button><h2>샵</h2><span class="money">${won(me.money)}</span></div>
+    <div class="tabs">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit} ${typeCount(me, t)}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>인형 도감 ${CH.filter(id => (me.dolls[id] || 0) > 0).length}/12</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
-      <div class="dex">${CH.map(id => `<span class="${(me.dolls[id] || 0) ? '' : 'no'}">${faceEl(id)}</span>`).join('')}</div>
+      <div class="toprow"><b>${M.unit} 도감 ${own.length}/12</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
+      <div class="dex">${CH.map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}</div>
     </div>
     <div class="list">${own.length ? own.map(id => {
-      const t = tierOf(id), pr = TIERS[t].price, n = me.dolls[id];
-      return `<div class="li">${faceEl(id)}<div class="grow"><div class="nm">${esc(CHAR(id).name)} <span class="chip tier-${t}">${TIERS[t].name}</span></div><div class="small muted">${n}개 · 개당 ${won(pr)}</div></div>
+      const t = tierOf(id), pr = priceOf(T, id), n = inv[id];
+      return `<div class="li">${itemImg(T, id)}<div class="grow"><div class="nm">${esc(CHAR(id).name)} ${M.unit} <span class="chip tier-${t}">${TIERS[t].name}</span></div><div class="small muted">${n}개 · 개당 ${won(pr)}</div></div>
         <button class="btn mini" data-sell="${id}" data-n="1">1개 팔기</button>${n > 1 ? `<button class="btn mini ghost" data-sell="${id}" data-n="${n}">모두</button>` : ''}</div>`;
-    }).join('') : '<p class="muted" style="text-align:center;padding:30px 0">아직 뽑은 인형이 없어요. 한 판 하러 가요!</p>'}</div>
-    ${own.length ? `<button class="btn orange" id="shAll">전부 팔기 (${won(total)})</button>` : ''}
-    <div class="card small muted">판매가 · 일반 ${won(TIERS.common.price)} · 레어 ${won(TIERS.rare.price)} · 에픽 ${won(TIERS.epic.price)} · 전설 ${won(TIERS.legend.price)}<br>비싼 인형일수록 잘 미끄러져요.</div>`;
+    }).join('') : `<p class="muted" style="text-align:center;padding:30px 0">아직 뽑은 ${M.unit}이(가) 없어요. ${M.name} 한 판 하러 가요!</p>`}</div>
+    ${own.length ? `<button class="btn orange" id="shAll">${M.unit} 전부 팔기 (${won(total)})</button>` : ''}
+    <div class="card small muted">${M.unit} 판매가 · 일반 ${won(priceOf(T, 'yeoni'))} · 레어 ${won(priceOf(T, 'eomji'))} · 에픽 ${won(priceOf(T, 'juntak'))} · 전설 ${won(priceOf(T, 'bino'))}<br>비싼 캐릭터일수록 잘 미끄러져요. 가진 상품 전체 가치 ${won(dollValue(me))}</div>`;
   $('#shBack').onclick = () => show('lobby');
+  el.querySelector('.tabs').onclick = e => { const b = e.target.closest('[data-t]'); if (b) { shopTab = b.dataset.t; renderShop(); } };
   el.querySelector('.list').onclick = async e => {
     const b = e.target.closest('[data-sell]'); if (!b) return;
-    await sell({ [b.dataset.sell]: +b.dataset.n });
+    await sell(T, { [b.dataset.sell]: +b.dataset.n });
   };
   const all = $('#shAll');
-  if (all) all.onclick = async () => { if (confirm(`인형을 전부 ${won(total)}에 팔까요?`)) await sell({ ...me.dolls }); };
+  if (all) all.onclick = async () => { if (confirm(`${M.unit}을(를) 전부 ${won(total)}에 팔까요?`)) await sell(T, { ...inv }); };
 }
-async function sell(items) {
+async function sell(type, items) {
   let got = 0;
   const r = await txMe(c => {
-    c.dolls = c.dolls || {}; got = 0;
+    got = 0;
+    const inv = invOf(c, type);
     for (const [id, n0] of Object.entries(items)) {
-      const n = Math.min(n0, c.dolls[id] || 0); if (n <= 0) continue;
-      c.dolls[id] -= n; if (!c.dolls[id]) delete c.dolls[id];
-      got += n * TIERS[tierOf(id)].price;
+      const n = Math.min(n0, inv[id] || 0); if (n <= 0) continue;
+      addItem(c, type, id, -n);
+      got += n * priceOf(type, id);
     }
     if (!got) return undefined;
     c.money = (c.money || 0) + got; return c;
@@ -675,7 +719,7 @@ let rankTab = 'caught';
 async function renderRank() {
   const el = $('#s-rank');
   el.innerHTML = `<div class="toprow"><button class="back" id="rkBack">← 로비</button><h2>랭킹</h2><span></span></div>
-    <div class="tabs"><button data-t="caught">🧸 뽑은 인형</button><button data-t="money">💰 보유자산</button><button data-t="wins">⚔️ 대결</button></div>
+    <div class="tabs"><button data-t="caught">🎁 뽑은 개수</button><button data-t="money">💰 보유자산</button><button data-t="wins">⚔️ 대결</button></div>
     <div class="list" id="rkList"><p class="muted" style="text-align:center">불러오는 중…</p></div>
     <h3 style="margin-top:8px">최근 대결</h3><div class="list" id="rkMatch"></div>`;
   $('#rkBack').onclick = () => show(!me ? 'login' : room.code ? 'room' : 'lobby');
@@ -687,12 +731,12 @@ async function renderRank() {
   list.sort((a, b) => key(b) - key(a));
   $('#rkList').innerHTML = list.length ? list.slice(0, 50).map((p, i) => `
     <div class="li ${me && p.pid === me.pid ? 'me' : ''}"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(p.char || 'bino', 's')}
-      <div class="grow"><div class="nm">${esc(p.nick)}</div><div class="small muted">대결 ${p.onWins || 0}승 ${p.onGames || 0}판 · 최고 ${p.best || 0}개/판</div></div>
-      <div class="num">🧸 ${p.caught || 0}개<small>보유 ${dollCount(p)}개</small></div>
+      <div class="grow"><div class="nm">${esc(p.nick)}</div><div class="small muted">${MTYPES.map(t => MACH[t].unit + ' ' + ((p.caughtBy || {})[t] || (t === 'doll' && !p.caughtBy ? p.caught || 0 : 0))).join(' · ')}</div><div class="small muted">대결 ${p.onWins || 0}승 ${p.onGames || 0}판 · 최고 ${p.best || 0}개/판</div></div>
+      <div class="num">🎁 ${p.caught || 0}개<small>보유 ${dollCount(p)}개</small></div>
       <div class="num money" style="min-width:86px">${won(p.money)}<small>보유자산</small></div></div>`).join('')
     : '<p class="muted" style="text-align:center">아직 아무도 없어요</p>';
   const mm = (Array.isArray(ms) ? ms : Object.values(ms || {})).filter(Boolean).slice(0, 15);
-  $('#rkMatch').innerHTML = mm.length ? mm.map(m => `<div class="li" style="flex-wrap:wrap;gap:6px"><span class="small muted" style="width:100%">${new Date(m.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+  $('#rkMatch').innerHTML = mm.length ? mm.map(m => `<div class="li" style="flex-wrap:wrap;gap:6px"><span class="small muted" style="width:100%">${MACH[m.machine || 'doll'].emoji} ${MACH[m.machine || 'doll'].name} · ${new Date(m.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
     ${(m.list || []).map(p => `<span class="chip" style="font-size:13px;padding:6px 9px">${p.win ? '👑 ' : ''}${esc(p.nick)} ${p.score}개</span>`).join('')}</div>`).join('')
     : '<p class="muted small">아직 대결 기록이 없어요</p>';
 }
@@ -753,7 +797,7 @@ async function createRoom() {
   for (let i = 0; i < 20 && !code; i++) {
     const c = genCode(5, '0123456789');
     const r = await db.tx(PATH.room(c), v => (v && db.now() - (v.updatedAt || 0) < 6 * 3600e3 ? undefined : {
-      host: me.pid, status: 'waiting', round: 0, createdAt: db.now(), updatedAt: db.now(), players: { [me.pid]: seatOf() } }));
+      host: me.pid, status: 'waiting', round: 0, machine: selMachine, createdAt: db.now(), updatedAt: db.now(), players: { [me.pid]: seatOf() } }));
     if (r.committed && r.value && r.value.host === me.pid) code = c;
   }
   if (!code) return toast('방을 만들지 못했어요');
@@ -808,7 +852,7 @@ function onRoom(v) {
   }
   if (v.status === 'playing' && v.round && v.round !== G.onlineRound && v.inRound && v.inRound[me.pid]) {
     G.onlineRound = v.round; G.resultShown = false;
-    startRound({ mode: 'online', seed: v.seed, startAt: v.startAt });
+    startRound({ mode: 'online', seed: v.seed, startAt: v.startAt, machine: v.machine || 'doll' });
   }
   if (cur === 'room') renderRoom();
   if (cur === 'game' && G.mode === 'online') renderOpps();
@@ -830,6 +874,7 @@ function renderRoom() {
     <div class="seats">${[0, 1, 2, 3].map(i => { const id = ids[i]; if (!id) return '<div class="seat empty">빈 자리</div>'; const p = v.players[id];
       return `<div class="seat">${faceEl(p.char)}<div style="min-width:0"><div class="nm" style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.nick)}${id === v.host ? ' 👑' : ''}</div><div class="small muted"><span class="dot ${p.online ? '' : 'off'}"></span> ${id === me.pid ? '나' : p.online ? '접속 중' : '자리 비움'}</div></div></div>`; }).join('')}</div>
     ${last ? `<div class="card"><b>지난 판 결과</b><div class="list" style="margin-top:8px">${last.list.map((p, i) => `<div class="li">${p.win ? '👑' : `<span class="rk">${i + 1}</span>`}${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}${p.kicked ? ' 🚫' : ''}</div><b class="num">${p.score}개</b></div>`).join('')}</div></div>` : ''}
+    <div class="card" style="display:grid;gap:10px"><b>${isHost ? '대결할 기계 고르기' : '이번 판 기계'}</b>${machinePicker(v.machine || 'doll', 'rm')}</div>
     ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || v.status === 'playing' ? 'disabled' : ''}>${v.status === 'playing' ? '게임 중…' : ids.length < 2 ? '친구를 기다리는 중…' : `${CFG.roundSec}초 대결 시작!`}</button>`
       : `<div class="card" style="text-align:center">${v.status === 'playing' ? '게임 중…' : '방장이 시작하길 기다리는 중…'}</div>`}
     <div class="grid2"><button class="btn" id="rmBuy">🎟 크레딧 충전 (${me.credits || 0}회)</button><button class="btn ghost" id="rmRank">🏆 랭킹</button></div>
@@ -841,6 +886,12 @@ function renderRoom() {
   $('#rmRank').onclick = () => show('rank');
   const st = $('#rmStart');
   if (st) st.onclick = startOnline;
+  el.querySelectorAll('[data-rm]').forEach(b => { if (!isHost) b.disabled = true; });
+  if (isHost) el.querySelector('.machines').onclick = e => {
+    const b = e.target.closest('[data-rm]'); if (!b) return;
+    const m = b.dataset.rm; selMachine = m; localStorage.setItem('claw-machine', m);
+    db.tx(PATH.room(room.code), v2 => { if (!v2 || v2.status === 'playing' || v2.host !== me.pid) return undefined; v2.machine = m; v2.updatedAt = db.now(); return v2; });
+  };
 }
 async function startOnline() {
   const code = room.code;
@@ -849,7 +900,7 @@ async function startOnline() {
     const ids = Object.keys(v.players || {});
     if (ids.length < 2) return undefined;
     v.status = 'playing'; v.round = (v.round || 0) + 1; v.seed = Math.floor(Math.random() * 2 ** 31);
-    v.startAt = db.now() + 4200; v.inRound = {};
+    v.startAt = db.now() + 4200; v.inRound = {}; v.roundMachine = v.machine || 'doll';
     ids.forEach(id => { v.inRound[id] = true; Object.assign(v.players[id], { score: 0, done: false, kicked: false }); });
     v.updatedAt = db.now(); return v;
   });
@@ -870,11 +921,11 @@ async function finalize(round) {
     const list = ids.map(id => { const p = v.players[id] || {}; return { pid: id, nick: p.nick || '?', char: p.char || 'bino', score: p.score || 0, kicked: !!p.kicked }; }).sort((a, b) => b.score - a.score);
     const top = list.length ? list[0].score : 0;
     list.forEach(p => { p.win = top > 0 && p.score === top; });
-    v.last = { round, at: Date.now(), list }; v.status = 'waiting'; v.updatedAt = db.now();
+    v.last = { round, at: Date.now(), list, machine: v.roundMachine || v.machine || 'doll' }; v.status = 'waiting'; v.updatedAt = db.now();
     return v;
   }).catch(() => ({ committed: false }));
   if (r.committed && r.value && r.value.last) {
-    const rec = { at: r.value.last.at, list: r.value.last.list.map(({ nick, char, score, win }) => ({ nick, char, score, win })) };
+    const rec = { at: r.value.last.at, machine: r.value.last.machine || 'doll', list: r.value.last.list.map(({ nick, char, score, win }) => ({ nick, char, score, win })) };
     db.tx(PATH.matches, a => [rec, ...(Array.isArray(a) ? a : Object.values(a || {}))].slice(0, 30)).catch(() => {});
   }
 }
@@ -894,7 +945,66 @@ function showOnlineResult(last) {
 }
 
 /* ══════════ 인형 그림 (한 번만 미리 그려 둬요) ══════════ */
-const SPR = {};
+const SPR = { doll: {}, keycap: {}, keyring: {}, clicker: {} }, SPR_URL = {};
+function itemSrc(type, id) { const k = type + ':' + id; if (!SPR_URL[k] && SPR[type][id]) SPR_URL[k] = SPR[type][id].toDataURL(); return SPR_URL[k] || imgSrc(id); }
+const mkCanvas = S => { const c = document.createElement('canvas'); c.width = c.height = S; return c; };
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255]; }
+function mixHex(h, to, f) { const a = hexRgb(h), b = hexRgb(to); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',')})`; }
+function outlined(t, col, px) {
+  const S = t.width, o = mkCanvas(S), og = o.getContext('2d');
+  og.drawImage(t, 0, 0); og.globalCompositeOperation = 'source-in'; og.fillStyle = col; og.fillRect(0, 0, S, S);
+  const c = mkCanvas(S), cg = c.getContext('2d');
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; cg.drawImage(o, Math.cos(a) * px, Math.sin(a) * px); }
+  cg.drawImage(t, 0, 0); return c;
+}
+function rrPath(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function gloss(c, x, y, r, a = .4) {
+  const g = c.getContext('2d'), hg = g.createRadialGradient(x, y, 2, x, y, r);
+  hg.addColorStop(0, `rgba(255,255,255,${a})`); hg.addColorStop(1, 'rgba(255,255,255,0)');
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = hg; g.fillRect(0, 0, c.width, c.height); g.globalCompositeOperation = 'source-over';
+}
+const baseCol = id => { const c = CHAR(id).color; return /^#fff/i.test(c) ? '#E9E4F2' : c; };
+// 키캡: 아래 스커트 + 위 면에 얼굴 인쇄
+function makeKeycap(id, im) {
+  const S = 160, t = mkCanvas(S), g = t.getContext('2d'), col = baseCol(id);
+  rrPath(g, S * .08, S * .4, S * .84, S * .55, 20); g.fillStyle = mixHex(col, '#1A0830', .38); g.fill();
+  rrPath(g, S * .08, S * .4, S * .84, S * .2, 20); g.fillStyle = mixHex(col, '#1A0830', .2); g.fill();
+  rrPath(g, S * .16, S * .1, S * .68, S * .7, 18); g.fillStyle = mixHex(col, '#FFFFFF', .55); g.fill();
+  g.save(); rrPath(g, S * .19, S * .13, S * .62, S * .64, 15); g.clip();
+  g.fillStyle = mixHex(col, '#FFFFFF', .75); g.fill();
+  if (im) g.drawImage(im, S * .2, S * .14, S * .6, S * .6);
+  g.restore();
+  const c = outlined(t, '#2A1240', 3); gloss(c, S * .32, S * .2, S * .28, .35); return c;
+}
+// 키링: 아크릴 참(흰 테두리) + 금속 고리
+function makeKeyring(id, im) {
+  const S = 160, ch = mkCanvas(S), cg = ch.getContext('2d');
+  cg.fillStyle = mixHex(baseCol(id), '#FFFFFF', .2);
+  cg.beginPath(); cg.ellipse(S * .5, S * .62, S * .3, S * .28, 0, 0, Math.PI * 2); cg.fill();
+  if (im) cg.drawImage(im, S * .15, S * .26, S * .7, S * .7);
+  let charm = outlined(ch, '#FFFFFF', 7); charm = outlined(charm, '#2A1240', 2.5);
+  gloss(charm, S * .36, S * .4, S * .3, .45);
+  const c = mkCanvas(S), g = c.getContext('2d');
+  g.lineCap = 'round';
+  g.strokeStyle = '#2A1240'; g.lineWidth = 9; g.beginPath(); g.arc(S * .5, S * .12, S * .08, 0, Math.PI * 2); g.stroke();
+  g.beginPath(); g.moveTo(S * .5, S * .2); g.lineTo(S * .5, S * .3); g.stroke();
+  g.strokeStyle = '#D9DEEA'; g.lineWidth = 5; g.beginPath(); g.arc(S * .5, S * .12, S * .08, 0, Math.PI * 2); g.stroke();
+  g.beginPath(); g.moveTo(S * .5, S * .2); g.lineTo(S * .5, S * .3); g.stroke();
+  g.drawImage(charm, 0, 0); return c;
+}
+// 클리커: 동글한 본체 + 얼굴 버튼 + 작은 고리
+function makeClicker(id, im) {
+  const S = 160, t = mkCanvas(S), g = t.getContext('2d'), col = baseCol(id);
+  g.lineCap = 'round'; g.strokeStyle = '#D9DEEA'; g.lineWidth = 5; g.beginPath(); g.arc(S * .2, S * .2, S * .07, 0, Math.PI * 2); g.stroke();
+  rrPath(g, S * .1, S * .3, S * .8, S * .65, 34); g.fillStyle = mixHex(col, '#1A0830', .3); g.fill();
+  rrPath(g, S * .1, S * .3, S * .8, S * .4, 34); g.fillStyle = mixHex(col, '#1A0830', .12); g.fill();
+  g.fillStyle = '#FFFFFF'; g.beginPath(); g.arc(S * .5, S * .5, S * .33, 0, Math.PI * 2); g.fill();
+  g.save(); g.beginPath(); g.arc(S * .5, S * .5, S * .29, 0, Math.PI * 2); g.clip();
+  g.fillStyle = mixHex(col, '#FFFFFF', .6); g.fill();
+  if (im) g.drawImage(im, S * .21, S * .2, S * .58, S * .58);
+  g.restore();
+  const c = outlined(t, '#2A1240', 3); gloss(c, S * .38, S * .32, S * .22, .5); return c;
+}
 let SHADOW = null;
 function makeSprite(id, im) {
   const S = 160, t = document.createElement('canvas'); t.width = t.height = S;
@@ -927,14 +1037,16 @@ function loadSprites() {
   makeShadow();
   return Promise.all(CH.map(id => new Promise(res => {
     const im = new Image();
-    im.onload = () => { SPR[id] = makeSprite(id, im); res(); };
-    im.onerror = () => { SPR[id] = makeSprite(id, null); res(); };
+    const build = img => { SPR.doll[id] = makeSprite(id, img); SPR.keycap[id] = makeKeycap(id, img); SPR.keyring[id] = makeKeyring(id, img); SPR.clicker[id] = makeClicker(id, img); res(); };
+    im.onload = () => build(im);
+    im.onerror = () => build(null);
     im.src = imgSrc(id);
   })));
 }
 
 /* ══════════ 인형뽑기 기계 ══════════ */
-const W = 100, D = 56, R = 8, TOP = 74, REST_Y = 60;
+const W = 100, D = 56, TOP = 74, REST_Y = 60;
+let R = 8; // 상품 크기 (기계마다 달라요)
 const CHUTE = { x0: 2, x1: 25, z0: 2, z1: 21 };
 CHUTE.cx = (CHUTE.x0 + CHUTE.x1) / 2; CHUTE.cz = (CHUTE.z0 + CHUTE.z1) / 2;
 const inChute = (x, z, m = 0) => x > CHUTE.x0 + m && x < CHUTE.x1 - m && z > CHUTE.z0 + m && z < CHUTE.z1 - m;
@@ -1003,9 +1115,9 @@ function drawStatic() {
   g.strokeStyle = 'rgba(200,245,255,.8)'; g.lineWidth = 1.5; line(g, P(CHUTE.x0, 14, CHUTE.z0), P(CHUTE.x1, 14, CHUTE.z0));
   // 아래 패널
   const fl = P(0, 0, 0), fr = P(W, 0, 0);
-  gr = g.createLinearGradient(0, G.frontY, 0, h); gr.addColorStop(0, '#FF4FA3'); gr.addColorStop(.08, '#7A2BC8'); gr.addColorStop(1, '#3A127A');
+  gr = g.createLinearGradient(0, G.frontY, 0, h); gr.addColorStop(0, G.M.neon2); gr.addColorStop(.08, '#7A2BC8'); gr.addColorStop(1, '#3A127A');
   g.fillStyle = gr; g.fillRect(0, G.frontY, w, h - G.frontY);
-  g.fillStyle = '#FF86C3'; g.fillRect(0, G.frontY, w, 3);
+  g.fillStyle = G.M.neon; g.fillRect(0, G.frontY, w, 3);
   // 상품 나오는 문
   const dx0 = P(CHUTE.x0 + 1, 0, 0)[0], dx1 = P(CHUTE.x1 - 1, 0, 0)[0], dy0 = G.frontY + 10, dy1 = h - 8;
   G.door = { x: (dx0 + dx1) / 2, y: dy1 - 4, w: dx1 - dx0, h: dy1 - dy0 };
@@ -1028,7 +1140,13 @@ function drawStatic() {
   g.beginPath(); g.moveTo(w * .78, 0); g.lineTo(w * .8, 0); g.lineTo(w * .53, G.frontY); g.lineTo(w * .51, G.frontY); g.fill();
   g.restore();
   // 네온 테두리
-  g.strokeStyle = '#FF86C3'; g.lineWidth = 3; g.shadowColor = '#FF4FA3'; g.shadowBlur = 12;
+  g.strokeStyle = G.M.neon; g.lineWidth = 3; g.shadowColor = G.M.neon2; g.shadowBlur = 12;
+  // 기계 이름판
+  g.shadowBlur = 0; g.font = `400 ${Math.max(12, Math.min(18, G.u * 4.6))}px "Black Han Sans",sans-serif`; g.textAlign = 'center';
+  const tag = G.M.emoji + ' ' + G.M.name, tw = g.measureText(tag).width + 22;
+  roundRect(g, w / 2 - tw / 2, 10, tw, Math.max(22, G.u * 6.4), 11, 'rgba(10,2,24,.55)');
+  g.fillStyle = G.M.neon; g.fillText(tag, w / 2, 10 + Math.max(22, G.u * 6.4) * .72);
+  g.shadowColor = G.M.neon2; g.shadowBlur = 12;
   g.strokeRect(fl[0] - 3, 6, fr[0] - fl[0] + 6, G.frontY - 6);
   g.shadowBlur = 0;
 }
@@ -1055,13 +1173,13 @@ function setupDolls(rng) {
   const mk = (x, z, y) => ({ id: pickId(), x, z, y, vx: 0, vy: 0, vz: 0, st: 'rest', wob: 0 });
   const ok = (x, z) => !(x < CHUTE.x1 + R + 2 && z < CHUTE.z1 + R + 2);
   let tries = 0;
-  while (G.dolls.length < 15 && tries++ < 4000) {
+  while (G.dolls.length < G.M.floor && tries++ < 4000) {
     const x = R + 1 + rng() * (W - 2 * R - 2), z = R + rng() * (D - 2 * R);
     if (!ok(x, z) || G.dolls.some(d => Math.hypot(d.x - x, d.z - z) < R * 1.7)) continue;
     G.dolls.push(mk(x, z, 0));
   }
   tries = 0;
-  while (G.dolls.length < 21 && tries++ < 4000) {
+  while (G.dolls.length < G.M.total && tries++ < 4000) {
     const x = R + 1 + rng() * (W - 2 * R - 2), z = R + rng() * (D - 2 * R);
     if (!ok(x, z)) continue;
     const y = surface(x, z);
@@ -1075,9 +1193,11 @@ const nowMs = () => (G.mode === 'online' ? db.now() : Date.now());
 function startSolo() {
   if (banLeft()) { owner('banned'); return; }
   if ((me.credits || 0) <= 0) { toast('크레딧이 없어요. 먼저 충전해요'); openBuy(() => startSolo()); return; }
-  startRound({ mode: 'solo', seed: Math.floor(Math.random() * 2 ** 31), startAt: Date.now() + 3200 });
+  startRound({ mode: 'solo', seed: Math.floor(Math.random() * 2 ** 31), startAt: Date.now() + 3200, machine: selMachine });
 }
-function startRound({ mode, seed, startAt }) {
+function startRound({ mode, seed, startAt, machine = 'doll' }) {
+  G.mtype = MACH[machine] ? machine : 'doll'; G.M = MACH[G.mtype]; R = G.M.R;
+  $('#gUnit').textContent = '뽑은 ' + G.M.unit;
   Sound.init();
   $('#modalRoot').innerHTML = '';
   Object.assign(G, {
@@ -1211,11 +1331,11 @@ function evalGrab() {
   const covered = G.dolls.some(o => o !== d && o.st === 'rest' && o.y > d.y + R * 0.5 && Math.hypot(o.x - d.x, o.z - d.z) < R * 1.5);
   const cf = clamp(1.2 - (dist / (R * 1.3)) ** 2, 0, 1);
   const T = TIERS[tierOf(d.id)];
-  const p = T.grip * cf * (covered ? 0.3 : 1) * (0.88 + Math.random() * 0.24);
+  const p = Math.min(0.95, T.grip * G.M.grip * EASY.grip * cf * (covered ? 0.3 : 1) * (0.88 + Math.random() * 0.24));
   if (Math.random() < p) {
     c.held = d; d.st = 'held';
     const journey = (REST_Y - c.y) + Math.hypot(CHUTE.cx - c.x, CHUTE.cz - c.z);
-    c.slipAt = Math.random() < T.slip ? journey * (0.12 + Math.random() * 0.86) : -1;
+    c.slipAt = Math.random() < T.slip * G.M.slip * EASY.slip ? journey * (0.12 + Math.random() * 0.86) : -1;
     // 위에 얹혀 있던 인형은 떨어져요
     for (const o of G.dolls) if (o !== d && o.st === 'rest' && o.y > d.y + 1 && Math.hypot(o.x - d.x, o.z - d.z) < R * 1.6) { o.st = 'fall'; o.vy = 0; }
   } else { d.wob = 1; missed('grab'); }
@@ -1236,7 +1356,9 @@ function capture(d) {
   $('#gScore').textContent = G.score;
   banner('+1 획득!'); Sound.play('win'); vib([30, 40, 30]);
   bubble(d.id, say(d.id, 'good'));
-  txMe(c => { c.dolls = c.dolls || {}; c.dolls[d.id] = (c.dolls[d.id] || 0) + 1; c.caught = (c.caught || 0) + 1; return c; });
+  if (G.mtype === 'clicker') [0, 90, 180].forEach(t => setTimeout(() => Sound.tone(2200, .03, 'square', .05), t));
+  const ty = G.mtype;
+  txMe(c => { addItem(c, ty, d.id, 1); c.caught = (c.caught || 0) + 1; c.caughtBy = c.caughtBy || {}; c.caughtBy[ty] = (c.caughtBy[ty] || 0) + 1; return c; });
   if (G.mode === 'online' && room.code) db.set(PATH.room(room.code) + '/players/' + me.pid + '/score', G.score).catch(() => {});
 }
 
@@ -1331,9 +1453,9 @@ function finishRound() {
   setTimeout(() => {
     if (cur !== 'game') return;
     const kicked = G.kicked;
-    modal(`<h2 style="text-align:center">${kicked ? '🚫 쫓겨났어요' : G.score ? `🧸 ${G.score}개 뽑았어요!` : '하나도 못 뽑았어요…'}</h2>
+    modal(`<h2 style="text-align:center">${kicked ? '🚫 쫓겨났어요' : G.score ? `${G.M.emoji} ${G.M.unit} ${G.score}개 뽑았어요!` : '하나도 못 뽑았어요…'}</h2>
       <p class="muted" style="text-align:center">${kicked ? `사장님이 ${CFG.banSec / 60}분 동안 못 들어오게 했어요.` : esc(say(me.char, G.score ? 'win' : 'lose'))}</p>
-      ${G.caught.length ? `<div class="res-dolls">${G.caught.map((id, i) => faceEl(id).replace('class="face ', `style="animation-delay:${i * 70}ms" class="face `)).join('')}</div>` : ''}
+      ${G.caught.length ? `<div class="res-dolls">${G.caught.map((id, i) => itemImg(G.mtype, id).replace('<img ', `<img style="animation-delay:${i * 70}ms" `)).join('')}</div>` : ''}
       <p class="small muted" style="text-align:center">최고 기록 ${Math.max(me.best || 0, G.score)}개 · 남은 크레딧 ${me.credits || 0}회 · ${won(me.money)}</p>
       <div class="grid2"><button class="btn ghost" id="rsLobby">로비로</button><button class="btn pink" id="rsAgain" ${kicked ? 'disabled' : ''}>한 판 더!</button></div>`, (s, close, m) => {
       m.dataset.lock = '1';
@@ -1350,7 +1472,7 @@ function drawDoll(d, alpha) {
   const clip = d.st === 'fall' && inChute(d.x, d.z, 0.5) && d.y < R * 2;
   if (clip) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, G.w, P(0, 0, CHUTE.z0)[1]); ctx.clip(); }
   if (alpha != null) ctx.globalAlpha = alpha;
-  ctx.drawImage(SPR[d.id], sx - size / 2 * (1 + w), sy - size * 0.95 * (1 - w), size * (1 + w), size * (1 - w));
+  ctx.drawImage(SPR[G.mtype][d.id], sx - size / 2 * (1 + w), sy - size * 0.95 * (1 - w), size * (1 + w), size * (1 - w));
   if (tierOf(d.id) === 'legend' && d.st !== 'gone') {
     const t = performance.now() / 300, r = size * 0.42;
     ctx.fillStyle = '#FFE680';
@@ -1427,7 +1549,7 @@ function draw() {
   if (G.door) for (const p of G.prizes) {
     const t = p.t, pop = t < 0.35 ? easeBack(t / 0.35) : t > 1.2 ? Math.max(0, 1 - (t - 1.2) / 0.4) : 1;
     const size = Math.min(G.door.w * 0.9, 70) * pop;
-    ctx.drawImage(SPR[p.id], G.door.x - size / 2, G.door.y - size * 0.95 - (t < 0.35 ? 0 : 6 * Math.sin(t * 8) * (1.2 - Math.min(t, 1.2))), size, size);
+    ctx.drawImage(SPR[G.mtype][p.id], G.door.x - size / 2, G.door.y - size * 0.95 - (t < 0.35 ? 0 : 6 * Math.sin(t * 8) * (1.2 - Math.min(t, 1.2))), size, size);
   }
   for (const p of G.parts) { ctx.save(); ctx.globalAlpha = clamp(p.life * 1.5, 0, 1); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); }
 }
