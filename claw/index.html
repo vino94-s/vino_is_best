@@ -300,7 +300,7 @@ const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'c
   eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden' };
 // 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.05% 확률로 이 인형이 돼요 (한 판 21개 기준 약 1%)
 const HIDDEN = {
-  id: 'sp_yongwang', chance: 0.0005, img: 'special-yongwang.jpg',
+  id: 'sp_yongwang', chance: 0.0005, img: 'special-yongwang.png',
   card: { id: 'sp_yongwang', name: '특별한 용왕', color: '#D4AF37', hi: '에헴!',
     lines: { good: ['과인의 진짜 모습을 보았느냐!', '에헴… 이 몸이 특별한 용왕이로다'], bad: ['어허! 쉽게 잡힐 과인이 아니로다', '여봐라, 다시 해 보거라'], start: ['용궁의 보물이 납시었노라'], win: ['온 바다가 특별한 용왕 것이로다!'], lose: ['어허… 물때가 아니로다'], taunt: ['감히 과인을 넘보느냐?'] } },
 };
@@ -1289,17 +1289,12 @@ function makeShadow() {
   g.fillStyle = r; g.save(); g.scale(1, .5); g.beginPath(); g.arc(64, 64, 62, 0, Math.PI * 2); g.fill(); g.restore();
   SHADOW = c;
 }
+// 히든 인형: 보내준 인형 그림을 그대로 써요 (배경만 지운 PNG)
 function makeHiddenSprite(im) {
-  const S = 160, t = mkCanvas(S), g = t.getContext('2d');
-  g.fillStyle = '#D4AF37';
-  g.beginPath(); g.ellipse(S / 2, S * 0.8, S * 0.37, S * 0.15, 0, 0, Math.PI * 2); g.fill();
-  g.beginPath(); g.ellipse(S * 0.33, S * 0.9, S * 0.1, S * 0.055, 0, 0, Math.PI * 2); g.ellipse(S * 0.67, S * 0.9, S * 0.1, S * 0.055, 0, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#F7E3A1'; g.beginPath(); g.arc(S / 2, S * 0.43, S * 0.4, 0, Math.PI * 2); g.fill();
-  g.save(); g.beginPath(); g.arc(S / 2, S * 0.43, S * 0.355, 0, Math.PI * 2); g.clip();
-  if (im) g.drawImage(im, S / 2 - S * 0.36, S * 0.43 - S * 0.36, S * 0.72, S * 0.72); else { g.fillStyle = '#2E5E9E'; g.fill(); }
-  g.restore();
-  g.strokeStyle = '#B8860B'; g.lineWidth = 3; g.beginPath(); g.arc(S / 2, S * 0.43, S * 0.37, 0, Math.PI * 2); g.stroke();
-  const c = outlined(t, '#2A1240', 3); gloss(c, S * 0.36, S * 0.2, S * 0.3, .3); return c;
+  const S = 160, c = mkCanvas(S), g = c.getContext('2d');
+  if (im) { g.imageSmoothingQuality = 'high'; g.drawImage(im, S * 0.02, 0, S * 0.96, S * 0.96); }
+  else { g.fillStyle = '#D4AF37'; g.beginPath(); g.arc(S / 2, S / 2, S * .4, 0, Math.PI * 2); g.fill(); }
+  return c;
 }
 function loadSprites() {
   makeShadow();
