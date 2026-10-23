@@ -336,7 +336,7 @@ const HIDDEN4 = {
     lines: { good: ['네 아가씨, 브이 하겠습니다 ✌️', '실례지만… 오늘은 말랑하게 왔습니다'], bad: ['이런… 실례를 범했군요', '모자가 없으니 허전하군요'], start: ['네 아가씨, 모시겠습니다'], win: ['실례지만… 이겼습니다 ✌️'], lose: ['패배도 말랑하게…'], taunt: ['아가씨, 브이는 제가 먼저입니다'] } },
 };
 const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4];
-// 공용 캐릭터 카드에 없는 이 게임 전용 인형 (인형뽑기 기계에만 나와요)
+// 공용 캐릭터 카드에 없는 이 게임 전용 인형 (모든 기계에 나와요)
 const EXTRA = [
   { id: 'honey', name: '현꿀오소리', tier: 'common', img: 'plush/honey.png', color: '#4A3F3A', hi: '덤벼!',
     lines: { good: ['꿀 냄새 난다! 덤벼!', '오소리는 겁이 없지'], bad: ['…놓쳤지만 안 쫄았어', '다시 덤벼!'], start: ['꿀 찾으러 왔다!'], win: ['꿀오소리 승리!'], lose: ['…다음엔 물어버린다'], taunt: ['송곳니 보여줄까?'] } },
@@ -354,7 +354,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 17(캐릭터 13 + 히든 4) + 합성 37 + 새 조합 37 + 히든비노 조합 11 + 히든 고란·준탁 조합 20 = 컬렉션 122
+// 합성: 인형 2개 → 새 인형. 기본 18(캐릭터 13 + 현꿀오소리 + 히든 4) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 = 컬렉션 133
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -410,6 +410,11 @@ const FUSE_LIST = [
   ['k04', '왈왈 준탁', 'sp_juntak', 'bongchum'], ['k05', '만세 준탁', 'sp_juntak', 'yeongjun'], ['k06', '무표정 준탁', 'sp_juntak', 'bino'],
   ['k07', '힙합 준탁', 'sp_juntak', 'sp_bino'], ['k08', '용궁 준탁', 'sp_juntak', 'sp_yongwang'], ['k09', '준탁과 고라니', 'sp_juntak', 'sp_goran'],
   ['k10', '준탁 패밀리', 'k01', 'k02'],
+  // ── 현꿀오소리 조합 10종 (o01~o10) ──
+  ['o01', '꿀따봉 오소리', 'honey', 'eomji'], ['o02', '개굴 오소리', 'honey', 'kkaegul'], ['o03', '꼬꼬 오소리', 'honey', 'myongradak'],
+  ['o04', '초코꿀 오소리', 'honey', 'gana'], ['o05', '주르륵 오소리', 'honey', 'goran'], ['o06', '햇살꿀 오소리', 'honey', 'haetsal'],
+  ['o07', '신사 오소리', 'honey', 'juntak'], ['o08', '오소리 대감', 'honey', 'yongwang'], ['o09', '무표정 오소리', 'honey', 'bino'],
+  ['o10', '오소리 대장', 'o01', 'o08'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
 const FUSE = {};
@@ -891,15 +896,15 @@ let shopTab = 'doll';
 function renderShop() {
   if (!me) return show('login');
   const el = $('#s-shop'), T = shopTab, M = MACH[T], inv = invOf(me, T);
-  const own = (T === 'doll' ? ALL_DOLLS : CH).filter(id => (inv[id] || 0) > 0);
+  const own = (T === 'doll' ? ALL_DOLLS : [...CH, ...EXTRA.map(e => e.id)]).filter(id => (inv[id] || 0) > 0);
   const hidOwned = HIDS.filter(h => (inv[h.id] || 0) > 0).length;
   const total = typeValue(me, T);
   el.innerHTML = `
     <div class="toprow"><button class="back" id="shBack">← 로비</button><h2>샵</h2><span class="money">${won(me.money)}</span></div>
     <div class="tabs">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit} ${typeCount(me, t)}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => CH.includes(id) || EXT[id]).length}/${CH.length + (T === 'doll' ? EXTRA.length : 0)}${T === 'doll' ? ` · 히든 ${hidOwned || '?'}/${HIDS.length}` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
-      <div class="dex">${[...CH, ...(T === 'doll' ? EXTRA.map(e => e.id) : [])].map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? HIDS.map(h => (inv[h.id] || 0) ? `<span title="${h.card.name}">${itemImg(T, h.id)}</span>` : '<span class="q" title="히든 인형">?</span>').join('') : ''}</div>
+      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => CH.includes(id) || EXT[id]).length}/${CH.length + EXTRA.length}${T === 'doll' ? ` · 히든 ${hidOwned || '?'}/${HIDS.length}` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
+      <div class="dex">${[...CH, ...EXTRA.map(e => e.id)].map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? HIDS.map(h => (inv[h.id] || 0) ? `<span title="${h.card.name}">${itemImg(T, h.id)}</span>` : '<span class="q" title="히든 인형">?</span>').join('') : ''}</div>
     </div>
     <div class="list">${own.length ? own.map(id => {
       const t = tierOf(id), pr = priceOf(T, id), n = inv[id];
@@ -948,7 +953,7 @@ function renderFuse() {
     <div class="li recipe ${can(r) ? 'can' : ''}${r.alt ? ' alt' : ''}">
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
       <div class="rc">${pic(r.b)}<small>${nm(r.b)}<br><b>×${has(r.b)}</b></small></div><span class="op">→</span>
-      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : r.id[0] === 'q' ? '<br><i class="alt-tag">히든 고란</i>' : r.id[0] === 'k' ? '<br><i class="alt-tag">히든 준탁</i>' : ''}</small></div>
+      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : r.id[0] === 'q' ? '<br><i class="alt-tag">히든 고란</i>' : r.id[0] === 'k' ? '<br><i class="alt-tag">히든 준탁</i>' : r.id[0] === 'o' ? '<br><i class="alt-tag">현꿀오소리</i>' : ''}</small></div>
       <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성</button>
     </div>`).join('');
   el.innerHTML = `
@@ -1426,7 +1431,11 @@ function loadSprites() {
       im.onerror = () => res();
       im.src = dir + '/' + id + '.png?v=' + APP_VERSION; // 같은 이름으로 그림을 바꿔도 새 그림을 받아요
     });
-    return Promise.all([...FUSE_ART.map(id => art('fusion', id)), ...CH.map(id => art('plush', id)), ...EXTRA.map(e => art('plush', e.id))]);
+    return Promise.all([...FUSE_ART.map(id => art('fusion', id)), ...CH.map(id => art('plush', id)), ...EXTRA.map(e => art('plush', e.id).then(() => {
+      // 키캡·키링·클리커는 인형 사진으로 만들어요
+      const im = new Image();
+      return new Promise(res => { im.onload = () => { SPR.keycap[e.id] = makeKeycap(e.id, im); SPR.keyring[e.id] = makeKeyring(e.id, im); SPR.clicker[e.id] = makeClicker(e.id, im); res(); }; im.onerror = () => res(); im.src = e.img + '?v=' + APP_VERSION; });
+    }))]);
   });
 }
 /* ── 합성 인형: 바탕 캐릭터 얼굴 + 다른 캐릭터들의 특징 부품(원본 그림에서 오려 냄) ── */
@@ -1663,7 +1672,7 @@ function setupDolls(rng) {
     if (G.mtype === 'doll') for (const h of HIDS) if (rng() < h.chance) return h.id;
     let r = rng() * 100, tier = 'common';
     for (const [k, t] of Object.entries(TIERS)) { if ((r -= t.w) < 0) { tier = k; break; } }
-    const ids = [...CH, ...(G.mtype === 'doll' ? EXTRA.map(e => e.id) : [])].filter(id => tierOf(id) === tier); return ids[Math.floor(rng() * ids.length)];
+    const ids = [...CH, ...EXTRA.map(e => e.id)].filter(id => tierOf(id) === tier); return ids[Math.floor(rng() * ids.length)];
   };
   G.dolls = [];
   const mk = (x, z, y) => ({ id: pickId(), x, z, y, vx: 0, vy: 0, vz: 0, st: 'rest', wob: 0 });
@@ -2205,7 +2214,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1449';
+const APP_VERSION = '20261023-1506';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
