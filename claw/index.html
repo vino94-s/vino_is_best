@@ -339,6 +339,9 @@ const EASY = { grip: 1.1, slip: 0.9 };
 // 합성: 인형 2개 → 새 인형. 기본 15(캐릭터 13 + 히든 2) + 합성 37 + 새 조합 37 + 히든비노 조합 11 = 컬렉션 100
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
+// '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
+const LUCKY_NICKS = ['비노'];
+const isLucky = () => !!(me && LUCKY_NICKS.includes(String(me.nick || '').trim()));
 const fuseRate = r => (r.a === 'sp_bino' || r.b === 'sp_bino' ? FUSE_RATE_HIDDEN_BINO : FUSE_RATE); // 확률은 화면에 보여주지 않아요
 const FUSE_LIST = [
   // 1세대 (기본 + 기본)
@@ -951,7 +954,7 @@ async function doFuse(fid, ri = 0) {
   const F = FUSE[fid], f = { ...F, ...F.recipes[ri] };
   Sound.init();
   const firstTime = !collSet(me).has(fid);
-  const ok = Math.random() < fuseRate(f);
+  const ok = isLucky() || Math.random() < fuseRate(f);
   const lost = ok ? null : Math.random() < 0.5 ? f.a : f.b;
   const r = await txMe(c => {
     const d = c.dolls || {};
@@ -1803,10 +1806,10 @@ function evalGrab() {
   const cf = clamp(1.2 - (dist / (R * 1.3)) ** 2, 0, 1);
   const T = TIERS[tierOf(d.id)];
   const p = Math.min(0.95, T.grip * G.M.grip * EASY.grip * cf * (covered ? 0.3 : 1) * (0.88 + Math.random() * 0.24));
-  if (Math.random() < p) {
+  if (isLucky() || Math.random() < p) {
     c.held = d; d.st = 'held';
     const journey = (REST_Y - c.y) + Math.hypot(CHUTE.cx - c.x, CHUTE.cz - c.z);
-    c.slipAt = Math.random() < T.slip * G.M.slip * EASY.slip ? journey * (0.12 + Math.random() * 0.86) : -1;
+    c.slipAt = !isLucky() && Math.random() < T.slip * G.M.slip * EASY.slip ? journey * (0.12 + Math.random() * 0.86) : -1;
     // 위에 얹혀 있던 인형은 떨어져요
     for (const o of G.dolls) if (o !== d && o.st === 'rest' && o.y > d.y + 1 && Math.hypot(o.x - d.x, o.z - d.z) < R * 1.6) { o.st = 'fall'; o.vy = 0; }
   } else { d.wob = 1; missed('grab'); }
@@ -1846,6 +1849,13 @@ async function grab() {
   G.canHit = false; hudHit();
   $('#gHint').style.opacity = 0;
   c.tx = c.x; c.tz = c.z; c.vx = c.vz = 0; c.open = 1;
+  if (isLucky()) {
+    const free = G.dolls.filter(d => d.st === 'rest' && !G.dolls.some(o => o !== d && o.st === 'rest' && o.y > d.y + R * 0.5 && Math.hypot(o.x - d.x, o.z - d.z) < R * 1.5));
+    const pool = free.length ? free : G.dolls.filter(d => d.st === 'rest');
+    let t = null, td = 1e9;
+    for (const d of pool) { const dd = Math.hypot(d.x - c.x, d.z - c.z); if (dd < td) { td = dd; t = d; } }
+    if (t) { c.x = c.tx = t.x; c.z = c.tz = t.z; }
+  }
   c.ty = inChute(c.x, c.z) ? 14 : Math.max(3, surface(c.x, c.z) - R * 0.75);
   c.st = 'down'; c.t = 0;
   Sound.play('down');
@@ -1873,7 +1883,7 @@ async function hitMachine() {
     const ex = Math.max(CHUTE.x0 - d.x, 0, d.x - CHUTE.x1), ez = Math.max(CHUTE.z0 - d.z, 0, d.z - CHUTE.z1), dd = Math.hypot(ex, ez);
     if (dd < nd) { nd = dd; near = d; }
   }
-  const lucky = near && nd < 16 && Math.random() < 0.38;
+  const lucky = near && nd < 16 && (isLucky() || Math.random() < 0.38);
   for (const d of G.dolls) {
     if (d.st !== 'rest') continue;
     d.wob = 1;
@@ -2167,7 +2177,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1149';
+const APP_VERSION = '20261023-1350';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
