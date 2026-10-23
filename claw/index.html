@@ -328,7 +328,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 14(캐릭터 13 + 히든) + 합성 37 = 컬렉션 51
+// 합성: 인형 2개 → 새 인형. 기본 14(캐릭터 13 + 히든) + 합성 37 + 새 조합 37 = 컬렉션 88
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_LIST = [
   // 1세대 (기본 + 기본)
@@ -347,32 +347,35 @@ const FUSE_LIST = [
   ['g10', '따봉대제', 'f24', 'sp_yongwang'],
   // 3세대 (최종)
   ['h01', '침묵의 신', 'g01', 'f15'], ['h02', '동물농장 대표', 'g03', 'f21'], ['h03', '바다의 지배자', 'g05', 'g10'],
+  // ── 새 조합 인형 37종 (v01~v37): 그림 속 캐릭터로 재료를 정했어요 ──
+  // 1세대 (기본 + 기본, 일부는 히든용왕)
+  ['v01', '끄응따봉', 'yeoni', 'eomji'], ['v02', '만세개굴', 'yeongjun', 'kkaegul'], ['v03', '왈따봉', 'bongchum', 'eomji'],
+  ['v04', '소심꼬꼬', 'myongradak', 'yeoni'], ['v05', '일출꼬꼬', 'myongradak', 'haetsal'], ['v06', '무표정신사', 'bino', 'juntak'],
+  ['v07', '닭다리주르륵', 'goran', 'yeoni'], ['v08', '햇살끄응', 'haetsal', 'yeoni'], ['v09', '멍때리기', 'bino', 'yeoni'],
+  ['v10', '용궁주르륵', 'goran', 'sp_yongwang'], ['v11', '무표정선샤인', 'haetsal', 'bino'], ['v12', '토끼신사', 'goran', 'juntak'],
+  ['v13', '짹멍이', 'yeongjun', 'yeoni'], ['v14', '천사개굴', 'kkaegul', 'yeoni'], ['v15', '수염멍멍', 'bongchum', 'yongwang'],
+  ['v16', '빨강꼬꼬', 'myongradak', 'yeongjun'], ['v17', '용궁꼬꼬', 'myongradak', 'sp_yongwang'], ['v18', '따봉냥', 'mandu', 'eomji'],
+  ['v19', '해바라기짹', 'yeongjun', 'haetsal'], ['v20', '수염토끼', 'goran', 'yongwang'], ['v21', '개굴꼬꼬', 'kkaegul', 'myongradak'],
+  ['v22', '개굴냥', 'kkaegul', 'mandu'], ['v23', '수염신사', 'juntak', 'yongwang'], ['v24', '따봉신사', 'juntak', 'eomji'],
+  // 2세대
+  ['v25', '눈물햇살', 'v08', 'goran'], ['v26', '닭다리개굴', 'v21', 'f13'], ['v27', '털뭉치비노', 'v22', 'bino'],
+  ['v28', '개굴합창단', 'v21', 'f04'], ['v29', '용궁멍멍', 'v03', 'sp_yongwang'], ['v30', '무표정대감', 'v06', 'yongwang'],
+  ['v31', '야식대마왕', 'v07', 'f13'], ['v32', '용궁토끼왕', 'v10', 'yongwang'], ['v33', '용궁선샤인', 'v11', 'sp_yongwang'],
+  ['v34', '용궁따봉공주', 'v01', 'sp_yongwang'],
+  // 3세대
+  ['v35', '구름 위의 도사', 'v32', 'v25'], ['v36', '개굴농장 대표', 'v26', 'v27'], ['v37', '용궁 대제', 'v29', 'v32'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
-// 직접 그린 그림으로 바꾼 합성 인형 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
+// 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
 const FUSE = {};
-const FUSE_ART = FUSE_LIST.map(f => f.id); // 37종 모두 직접 그린 그림 (fusion/<id>.png)
+const FUSE_ART = FUSE_LIST.map(f => f.id); // 74종 모두 직접 그린 그림 (fusion/<id>.png)
 for (const f of FUSE_LIST) {
   f.gen = Math.max(FUSE[f.a] ? FUSE[f.a].gen : 0, FUSE[f.b] ? FUSE[f.b].gen : 0) + 1;
   FUSE[f.id] = f; TIER_OF[f.id] = 'fuse' + f.gen;
 }
 const basePrice = id => (FUSE[id] ? FUSE[id].price : TIERS[TIER_OF[id] || 'common'].price);
 for (const f of FUSE_LIST) f.price = Math.round({ 1: 1.5, 2: 1.6, 3: 1.8 }[f.gen] * (basePrice(f.a) + basePrice(f.b)) / 100) * 100;
-// 같은 인형을 만드는 다른 조합: 인형마다 딱 하나씩 (37개, 결과 중복 없음). 가나가 재료로 9곳에 들어가요.
-// 재료는 항상 결과보다 낮은 세대, 같은 재료 쌍은 한 번만 써요. 따봉대제·바다의 지배자 다른 조합도 히든용왕 계열이 있어야 해요.
-const ALT_RECIPES = [
-  // 1세대 (기본 + 기본)
-  ['f01', 'gana', 'eomji'], ['f02', 'kkaegul', 'myongradak'], ['f03', 'mandu', 'bino'], ['f04', 'gana', 'yeongjun'],
-  ['f05', 'yeongjun', 'yongwang'], ['f06', 'juntak', 'bongchum'], ['f07', 'gana', 'goran'], ['f08', 'gana', 'haetsal'],
-  ['f09', 'gana', 'bongchum'], ['f10', 'yongwang', 'goran'], ['f11', 'haetsal', 'bongchum'], ['f12', 'juntak', 'goran'],
-  ['f13', 'gana', 'myongradak'], ['f14', 'gana', 'kkaegul'], ['f15', 'yeongjun', 'bino'], ['f16', 'yeoni', 'myongradak'],
-  ['f17', 'yeoni', 'yongwang'], ['f18', 'gana', 'mandu'], ['f19', 'haetsal', 'myongradak'], ['f20', 'yeongjun', 'goran'],
-  ['f21', 'yeoni', 'kkaegul'], ['f22', 'kkaegul', 'mandu'], ['f23', 'yeongjun', 'juntak'], ['f24', 'eomji', 'juntak'],
-  // 2세대
-  ['g01', 'f20', 'f08'], ['g02', 'f13', 'f14'], ['g03', 'f09', 'f22'], ['g04', 'f04', 'f14'], ['g05', 'f05', 'f24'],
-  ['g06', 'f06', 'f23'], ['g07', 'f13', 'gana'], ['g08', 'f10', 'yeongjun'], ['g09', 'f11', 'f05'], ['g10', 'sp_yongwang', 'eomji'],
-  // 3세대
-  ['h01', 'g01', 'f20'], ['h02', 'g03', 'g02'], ['h03', 'g10', 'g08'],
-];
+// 예전 '다른 조합'(같은 인형을 다른 재료로)은 새 조합 인형 37종(v01~v37)으로 바뀌었어요
+const ALT_RECIPES = [];
 for (const f of FUSE_LIST) f.recipes = [{ a: f.a, b: f.b }];
 for (const [id, a, b] of ALT_RECIPES) FUSE[id].recipes.push({ a, b, alt: true });
 const RECIPES = FUSE_LIST.flatMap(f => f.recipes.map((r, i) => ({ ...r, id: f.id, ri: i, gen: f.gen })));
@@ -899,7 +902,7 @@ function renderFuse() {
     <div class="li recipe ${can(r) ? 'can' : ''}${r.alt ? ' alt' : ''}">
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
       <div class="rc">${pic(r.b)}<small>${nm(r.b)}<br><b>×${has(r.b)}</b></small></div><span class="op">→</span>
-      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.alt ? '<br><i class="alt-tag">다른 조합</i>' : ''}</small></div>
+      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : ''}</small></div>
       <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성<br>${Math.round(FUSE_RATE * 100)}%</button>
     </div>`).join('');
   el.innerHTML = `
@@ -908,7 +911,7 @@ function renderFuse() {
       <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 ${CH.length + 1} · 합성 ${FUSE_LIST.length}</span></div>
       <div class="coll">${ALL_DOLLS.map(id => `<span ${known(id) ? `data-zoom="${id}" role="button" tabindex="0"` : ''} title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : id === HIDDEN.id ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
     </div>
-    <p class="small muted">레시피 ${RECIPES.length}개 · 같은 인형을 만드는 <b style="color:var(--ink)">다른 조합</b>도 있어요. 인형 2개를 넣으면 <b style="color:var(--ink)">${Math.round(FUSE_RATE * 100)}%</b> 확률로 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
+    <p class="small muted">레시피 ${RECIPES.length}개 · <b style="color:var(--ink)">새 조합</b> 인형 37종도 있어요. 인형 2개를 넣으면 <b style="color:var(--ink)">${Math.round(FUSE_RATE * 100)}%</b> 확률로 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
     <div class="tabs" id="fuFilter"><button data-v="0">전체 레시피</button><button data-v="1">지금 만들 수 있는 것만</button></div>
     ${[1, 2, 3].map(gen => { const r = rows(gen); const all = FUSE_LIST.filter(f => f.gen === gen); return r || !fuseOnlyCan ? `<div class="gen-h"><span>${genName[gen]}</span><span class="small muted">${all.filter(f => known(f.id)).length}/${all.length}</span></div><div class="list">${r || '<p class="muted small">지금 만들 수 있는 게 없어요</p>'}</div>` : ''; }).join('')}
     ${fuseOnlyCan && !RECIPES.some(can) ? '<p class="muted" style="text-align:center;padding:24px 0">지금 만들 수 있는 합성이 없어요. 인형을 더 뽑아 와요!</p>' : ''}`;
@@ -1369,7 +1372,7 @@ function loadSprites() {
     im.onerror = () => build(null);
     im.src = imgSrc(id);
   }))]).then(() => {
-    for (const f of FUSE_LIST) SPR.doll[f.id] = makeFusionSprite(f);
+    for (const f of FUSE_LIST) SPR.doll[f.id] = FUSE_LOOK[f.id] ? makeFusionSprite(f) : mkCanvas(160); // 그림은 아래에서 불러와요
     // 직접 그린 합성 인형 그림(fusion/<id>.png)과 기본 캐릭터 인형 사진(plush/<id>.png)은 그대로 써요
     const art = (dir, id) => new Promise(res => {
       const im = new Image();
@@ -2136,7 +2139,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-0917';
+const APP_VERSION = '20261023-1105';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
