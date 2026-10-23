@@ -324,14 +324,14 @@ const HIDDEN2 = {
   card: { id: 'sp_bino', name: '히든비노', color: '#8A8F98', hi: '…',
     lines: { good: ['……뽑혔네.', '(후드 끈을 조용히 당김)'], bad: ['……', '(귀걸이만 반짝임)'], start: ['…왔다.'], win: ['……', '(무표정으로 상투를 고쳐 묶음)'], lose: ['…다음.'], taunt: ['(빤히 쳐다봄)'] } },
 };
-// 세 번째·네 번째 히든 인형: 히든 고란, 히든 준탁 (각각 인형 하나하나가 0.2% 확률)
+// 세 번째·네 번째 히든 인형: 히든 고란, 히든 준탁 (히든용왕과 같은 0.5% 확률)
 const HIDDEN3 = {
-  id: 'sp_goran', chance: 0.002, img: 'special-goran.png',
+  id: 'sp_goran', chance: 0.005, img: 'special-goran.png',
   card: { id: 'sp_goran', name: '히든 고란', color: '#D2A06B', hi: '주르륵…',
     lines: { good: ['츄릅… 송곳니로 꽉 물었다…', '주르륵… 히든이라 더 맛있어…'], bad: ['배고파서… 엎드려 있을래…', '주르륵… 놓쳤다…'], start: ['츄릅… 깡총…'], win: ['츄릅… 다 먹었다…'], lose: ['배고파… 주르륵…'], taunt: ['송곳니 보여줄까… 츄릅'] } },
 };
 const HIDDEN4 = {
-  id: 'sp_juntak', chance: 0.002, img: 'special-juntak.png',
+  id: 'sp_juntak', chance: 0.005, img: 'special-juntak.png',
   card: { id: 'sp_juntak', name: '히든 준탁', color: '#F3E3B8', hi: '네 아가씨',
     lines: { good: ['네 아가씨, 브이 하겠습니다 ✌️', '실례지만… 오늘은 말랑하게 왔습니다'], bad: ['이런… 실례를 범했군요', '모자가 없으니 허전하군요'], start: ['네 아가씨, 모시겠습니다'], win: ['실례지만… 이겼습니다 ✌️'], lose: ['패배도 말랑하게…'], taunt: ['아가씨, 브이는 제가 먼저입니다'] } },
 };
@@ -347,7 +347,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 17(캐릭터 13 + 히든 4) + 합성 37 + 새 조합 37 + 히든비노 조합 11 = 컬렉션 100
+// 합성: 인형 2개 → 새 인형. 기본 17(캐릭터 13 + 히든 4) + 합성 37 + 새 조합 37 + 히든비노 조합 11 + 히든 고란·준탁 조합 20 = 컬렉션 122
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -393,6 +393,16 @@ const FUSE_LIST = [
   ['b04', '주르륵 상투', 'sp_bino', 'goran'], ['b05', '상투 대감', 'sp_bino', 'yongwang'], ['b06', '꼬꼬 상투', 'sp_bino', 'myongradak'],
   ['b07', '초코 힙스터', 'sp_bino', 'gana'], ['b08', '비노 형제', 'sp_bino', 'bino'], ['b09', '용궁 도령', 'sp_bino', 'sp_yongwang'],
   ['b10', '상투 크루', 'b01', 'b02'], ['b11', '상투 황제', 'b10', 'b09'],
+  // ── 히든 고란 조합 10종 (q01~q10) ──
+  ['q01', '따봉 고라니', 'sp_goran', 'eomji'], ['q02', '연못 고라니', 'sp_goran', 'kkaegul'], ['q03', '꼬꼬 고라니', 'sp_goran', 'myongradak'],
+  ['q04', '햇살 고라니', 'sp_goran', 'haetsal'], ['q05', '초코 고라니', 'sp_goran', 'gana'], ['q06', '고란 남매', 'sp_goran', 'goran'],
+  ['q07', '고라니 대감', 'sp_goran', 'yongwang'], ['q08', '상투 고라니', 'sp_goran', 'sp_bino'], ['q09', '용궁 고라니', 'sp_goran', 'sp_yongwang'],
+  ['q10', '고라니 황제', 'q07', 'q09'],
+  // ── 히든 준탁 조합 10종 (k01~k10) ──
+  ['k01', '준탁 형제', 'sp_juntak', 'juntak'], ['k02', '솜사탕 준탁', 'sp_juntak', 'yeoni'], ['k03', '냥냥 준탁', 'sp_juntak', 'mandu'],
+  ['k04', '왈왈 준탁', 'sp_juntak', 'bongchum'], ['k05', '만세 준탁', 'sp_juntak', 'yeongjun'], ['k06', '무표정 준탁', 'sp_juntak', 'bino'],
+  ['k07', '힙합 준탁', 'sp_juntak', 'sp_bino'], ['k08', '용궁 준탁', 'sp_juntak', 'sp_yongwang'], ['k09', '준탁과 고라니', 'sp_juntak', 'sp_goran'],
+  ['k10', '준탁 패밀리', 'k01', 'k02'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
 const FUSE = {};
@@ -931,7 +941,7 @@ function renderFuse() {
     <div class="li recipe ${can(r) ? 'can' : ''}${r.alt ? ' alt' : ''}">
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
       <div class="rc">${pic(r.b)}<small>${nm(r.b)}<br><b>×${has(r.b)}</b></small></div><span class="op">→</span>
-      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : ''}</small></div>
+      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : r.id[0] === 'q' ? '<br><i class="alt-tag">히든 고란</i>' : r.id[0] === 'k' ? '<br><i class="alt-tag">히든 준탁</i>' : ''}</small></div>
       <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성</button>
     </div>`).join('');
   el.innerHTML = `
@@ -2188,7 +2198,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1425';
+const APP_VERSION = '20261023-1431';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
