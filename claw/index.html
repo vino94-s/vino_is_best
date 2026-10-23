@@ -338,6 +338,8 @@ const MTYPES = Object.keys(MACH);
 const EASY = { grip: 1.1, slip: 0.9 };
 // 합성: 인형 2개 → 새 인형. 기본 15(캐릭터 13 + 히든 2) + 합성 37 + 새 조합 37 + 히든비노 조합 11 = 컬렉션 100
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
+const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
+const fuseRate = r => (r.a === 'sp_bino' || r.b === 'sp_bino' ? FUSE_RATE_HIDDEN_BINO : FUSE_RATE); // 확률은 화면에 보여주지 않아요
 const FUSE_LIST = [
   // 1세대 (기본 + 기본)
   ['f01', '무따봉', 'eomji', 'bino'], ['f02', '주르굴', 'kkaegul', 'goran'], ['f03', '냥왈이', 'mandu', 'bongchum'],
@@ -916,7 +918,7 @@ function renderFuse() {
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
       <div class="rc">${pic(r.b)}<small>${nm(r.b)}<br><b>×${has(r.b)}</b></small></div><span class="op">→</span>
       <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : ''}</small></div>
-      <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성<br>${Math.round(FUSE_RATE * 100)}%</button>
+      <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성</button>
     </div>`).join('');
   el.innerHTML = `
     <div class="toprow"><button class="back" id="fuBack">← 로비</button><h2>🧪 합성소</h2><span class="chip" style="font-size:13px">📖 ${collCount(me)}/${ALL_DOLLS.length}</span></div>
@@ -924,7 +926,7 @@ function renderFuse() {
       <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 ${CH.length + HIDS.length} · 합성 ${FUSE_LIST.length}</span></div>
       <div class="coll">${ALL_DOLLS.map(id => `<span ${known(id) ? `data-zoom="${id}" role="button" tabindex="0"` : ''} title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : HID[id] ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
     </div>
-    <p class="small muted">레시피 ${RECIPES.length}개 · <b style="color:var(--ink)">새 조합</b> 인형 37종도 있어요. 인형 2개를 넣으면 <b style="color:var(--ink)">${Math.round(FUSE_RATE * 100)}%</b> 확률로 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
+    <p class="small muted">레시피 ${RECIPES.length}개 · <b style="color:var(--ink)">새 조합</b> 인형 37종도 있어요. 인형 2개를 넣으면 확률에 따라 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
     <div class="tabs" id="fuFilter"><button data-v="0">전체 레시피</button><button data-v="1">지금 만들 수 있는 것만</button></div>
     ${[1, 2, 3].map(gen => { const r = rows(gen); const all = FUSE_LIST.filter(f => f.gen === gen); return r || !fuseOnlyCan ? `<div class="gen-h"><span>${genName[gen]}</span><span class="small muted">${all.filter(f => known(f.id)).length}/${all.length}</span></div><div class="list">${r || '<p class="muted small">지금 만들 수 있는 게 없어요</p>'}</div>` : ''; }).join('')}
     ${fuseOnlyCan && !RECIPES.some(can) ? '<p class="muted" style="text-align:center;padding:24px 0">지금 만들 수 있는 합성이 없어요. 인형을 더 뽑아 와요!</p>' : ''}`;
@@ -949,7 +951,7 @@ async function doFuse(fid, ri = 0) {
   const F = FUSE[fid], f = { ...F, ...F.recipes[ri] };
   Sound.init();
   const firstTime = !collSet(me).has(fid);
-  const ok = Math.random() < FUSE_RATE;
+  const ok = Math.random() < fuseRate(f);
   const lost = ok ? null : Math.random() < 0.5 ? f.a : f.b;
   const r = await txMe(c => {
     const d = c.dolls || {};
@@ -2153,7 +2155,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1122';
+const APP_VERSION = '20261023-1138';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
