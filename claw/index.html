@@ -60,6 +60,10 @@ p{margin:0}
 img.sil{filter:brightness(0) opacity(.42)}
 .gen-h{font:400 17px var(--d);margin:6px 0 0;display:flex;justify-content:space-between;align-items:center}
 .recipe{gap:6px;padding:8px 10px}
+.auopt{border:0;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.auopt .sw{width:44px;height:26px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;flex:none;transition:background .15s}
+.auopt .sw::after{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.auopt.on .sw{background:var(--pink)}.auopt.on .sw::after{transform:translateX(18px)}
 .recipe.can{box-shadow:inset 0 0 0 2px var(--pink)}
 .rc{display:grid;justify-items:center;width:58px;flex:none;gap:2px}
 .rc img{width:46px;height:46px;object-fit:contain}
@@ -984,12 +988,14 @@ function renderFuse() {
       <div class="coll">${ALL_DOLLS.map(id => `<span ${known(id) ? `data-zoom="${id}" role="button" tabindex="0"` : ''} title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : HID[id] ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
     </div>
     <p class="small muted">레시피 ${RECIPES.length}개 · <b style="color:var(--ink)">새 조합</b> 인형 37종도 있어요. 인형 2개를 넣으면 확률에 따라 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
+    <button class="btn pink big" id="fuAuto">⚡ 자동 합성<small>가진 인형으로 만들 수 있는 조합을 알아서 합성해요</small></button>
     <div class="tabs" id="fuFilter"><button data-v="0">전체 레시피</button><button data-v="1">지금 만들 수 있는 것만</button></div>
     ${[1, 2, 3].map(gen => { const r = rows(gen); const all = FUSE_LIST.filter(f => f.gen === gen); return r || !fuseOnlyCan ? `<div class="gen-h"><span>${genName[gen]}</span><span class="small muted">${all.filter(f => known(f.id)).length}/${all.length}</span></div><div class="list">${r || '<p class="muted small">지금 만들 수 있는 게 없어요</p>'}</div>` : ''; }).join('')}
     ${fuseOnlyCan && !RECIPES.some(can) ? '<p class="muted" style="text-align:center;padding:24px 0">지금 만들 수 있는 합성이 없어요. 인형을 더 뽑아 와요!</p>' : ''}`;
   $('#fuBack').onclick = () => show('lobby');
   el.querySelectorAll('#fuFilter button').forEach(b => { b.classList.toggle('on', (b.dataset.v === '1') === fuseOnlyCan); b.onclick = () => { fuseOnlyCan = b.dataset.v === '1'; renderFuse(); }; });
   el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => doFuse(b.dataset.f, +b.dataset.r || 0));
+  $('#fuAuto').onclick = openAutoFuse;
   el.querySelector('.coll').onclick = e => { const z = e.target.closest('[data-zoom]'); if (z) zoomDoll(z.dataset.zoom); else if (e.target.closest('span')) toast('아직 못 모은 인형이에요'); };
 }
 function zoomDoll(id) {
@@ -1003,6 +1009,76 @@ function zoomDoll(id) {
       ${F ? `<span class="muted">만드는 법: ${how}</span>` : HID[id] ? `<span class="muted">인형뽑기 기계에서 ${HID[id].chance * 100}% 확률로 나타나는 히든 인형</span>` : '<span class="muted">인형뽑기 기계에서 뽑을 수 있어요</span>'}
     </div>
     <button class="btn ghost" data-close>닫기</button>`);
+}
+/* ── 자동 합성기 ── */
+const AUTO = { newOnly: true, useHidden: false, keepOne: true };
+try { Object.assign(AUTO, JSON.parse(localStorage.getItem('claw-auto') || '{}')); } catch (e) {}
+// 지금 인벤토리로 자동 합성이 고를 레시피 목록 (낮은 세대부터)
+function autoPick(inv, got, o) {
+  const spare = id => (inv[id] || 0) - (o.keepOne && !FUSE[id] ? 1 : 0); // 기본 인형은 1개씩 남겨 두기
+  return RECIPES.filter(r => {
+    if (!o.useHidden && (HID[r.a] || HID[r.b])) return false;
+    if (o.newOnly && got.has(r.id)) return false;
+    if (r.a === r.b) return spare(r.a) >= 2;
+    return spare(r.a) >= 1 && spare(r.b) >= 1;
+  }).sort((x, y) => x.gen - y.gen);
+}
+function openAutoFuse() {
+  if (!me) return;
+  const render = sh => {
+    const n = autoPick(me.dolls || {}, collSet(me), AUTO).length;
+    sh.querySelector('#auCnt').textContent = n ? `지금 바로 합성할 수 있는 조합 ${n}개` : '지금 조건으로 합성할 수 있는 게 없어요';
+    sh.querySelector('#auGo').disabled = !n;
+    sh.querySelectorAll('[data-o]').forEach(b => b.classList.toggle('on', !!AUTO[b.dataset.o]));
+  };
+  modal(`<h2>⚡ 자동 합성</h2>
+    <div class="list">
+      <button class="li auopt" data-o="newOnly"><span class="grow"><b>새 인형만 만들기</b><br><span class="small muted">컬렉션에 없는 인형만 노려요. 끄면 만들 수 있는 건 다 합성해요.</span></span><span class="sw"></span></button>
+      <button class="li auopt" data-o="keepOne"><span class="grow"><b>기본 인형 1개씩 남기기</b><br><span class="small muted">재료로 쓰는 기본 인형을 마지막 1개는 남겨 둬요.</span></span><span class="sw"></span></button>
+      <button class="li auopt" data-o="useHidden"><span class="grow"><b>히든 인형도 재료로 쓰기</b><br><span class="small muted">비싼 히든 인형까지 써요. 기본은 꺼져 있어요.</span></span><span class="sw"></span></button>
+    </div>
+    <p class="muted small" id="auCnt" style="text-align:center"></p>
+    <div class="grid2"><button class="btn ghost" data-close>닫기</button><button class="btn pink" id="auGo">합성 시작</button></div>`, (sh, close) => {
+    sh.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { AUTO[b.dataset.o] = !AUTO[b.dataset.o]; try { localStorage.setItem('claw-auto', JSON.stringify(AUTO)); } catch (e) {} render(sh); });
+    sh.querySelector('#auGo').onclick = () => { close(); runAutoFuse(); };
+    render(sh);
+  });
+}
+async function runAutoFuse() {
+  Sound.init();
+  let log = [];
+  const r = await txMe(c => {
+    log = [];
+    const inv = { ...(c.dolls || {}) }, got = collSet(c), opts = { ...AUTO };
+    for (let guard = 0; guard < 400; guard++) {
+      const pickList = autoPick(inv, got, opts);
+      if (!pickList.length) break;
+      const rc = pickList[0];
+      const ok = isLucky() || Math.random() < fuseRate(rc);
+      c.dex = c.dex || {}; c.dex[rc.a] = true; c.dex[rc.b] = true;
+      if (ok) {
+        addItem(c, 'doll', rc.a, -1); addItem(c, 'doll', rc.b, -1); addItem(c, 'doll', rc.id, 1);
+        inv[rc.a]--; inv[rc.b]--; inv[rc.id] = (inv[rc.id] || 0) + 1;
+        const isNew = !got.has(rc.id); got.add(rc.id); c.dex[rc.id] = true; c.fused = (c.fused || 0) + 1;
+        log.push({ ok: true, id: rc.id, isNew });
+      } else {
+        const lost = Math.random() < 0.5 ? rc.a : rc.b;
+        addItem(c, 'doll', lost, -1); inv[lost]--; c.fuseFail = (c.fuseFail || 0) + 1;
+        log.push({ ok: false, id: rc.id, lost });
+      }
+    }
+    return log.length ? c : undefined;
+  });
+  if (!r || !r.committed || !log.length) { toast('합성할 수 있는 조합이 없어요'); renderFuse(); return; }
+  const okN = log.filter(x => x.ok).length, newIds = [...new Set(log.filter(x => x.ok && x.isNew).map(x => x.id))];
+  const made = {}; log.filter(x => x.ok).forEach(x => { made[x.id] = (made[x.id] || 0) + 1; });
+  const lost = {}; log.filter(x => !x.ok).forEach(x => { lost[x.lost] = (lost[x.lost] || 0) + 1; });
+  Sound.play(okN ? 'win' : 'miss'); vib(okN ? [40, 40, 80] : 60);
+  modal(`<h2 style="text-align:center">⚡ 자동 합성 끝!</h2>
+    <p style="text-align:center" class="muted">${log.length}번 합성 · 성공 <b style="color:var(--green)">${okN}</b> · 실패 <b style="color:var(--red)">${log.length - okN}</b>${newIds.length ? ` · <b style="color:var(--yellow)">NEW ${newIds.length}종</b>` : ''}</p>
+    ${okN ? `<b>만든 인형</b><div class="res-dolls">${Object.entries(made).map(([id, n], i) => `<span style="position:relative;display:inline-block">${itemImg('doll', id).replace('<img ', `<img style="animation-delay:${i * 60}ms" title="${esc(CHAR(id).name)}" `)}${newIds.includes(id) ? '<span class="newtag" style="position:absolute;left:-6px;top:-6px;font-size:10px;padding:1px 5px">N</span>' : ''}${n > 1 ? `<small style="position:absolute;right:-2px;bottom:-2px;font-weight:900">×${n}</small>` : ''}</span>`).join('')}</div>` : ''}
+    ${Object.keys(lost).length ? `<p class="small muted">실패로 잃은 재료: ${Object.entries(lost).map(([id, n]) => `${esc(CHAR(id).name)} ${n}개`).join(', ')}</p>` : ''}
+    <button class="btn pink" data-close>확인</button>`, (sh, close, m) => { m.dataset.lock = '1'; sh.querySelector('[data-close]').onclick = () => { close(); renderFuse(); }; });
 }
 async function doFuse(fid, ri = 0) {
   const F = FUSE[fid], f = { ...F, ...F.recipes[ri] };
@@ -2246,7 +2322,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1823';
+const APP_VERSION = '20261023-1842';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
