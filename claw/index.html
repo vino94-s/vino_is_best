@@ -157,6 +157,8 @@ img.sil{filter:brightness(0) opacity(.42)}
 #game{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;touch-action:none;overscroll-behavior:none;user-select:none;-webkit-user-select:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);background:radial-gradient(120% 60% at 50% 0%,#3E1784,#170A33 70%)}
 .g-hud{width:100%;max-width:560px;padding:8px 12px 4px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
 .g-time{font:400 30px/1 var(--d);min-width:62px;text-align:center;color:var(--yellow);text-shadow:0 0 12px rgba(255,213,74,.6)}
+.g-time.paused{color:#8FF3FF;text-shadow:0 0 12px rgba(79,227,255,.6)}
+.g-time.paused::after{content:'⏸';font-size:12px;vertical-align:top;margin-left:2px}
 .g-time.refill{animation:refill .4s ease-out}
 @keyframes refill{0%{transform:scale(1.5);color:#5BE3A6}100%{transform:scale(1)}}
 .g-time.hurry{color:var(--red);text-shadow:0 0 12px rgba(255,90,110,.7)}
@@ -262,7 +264,7 @@ body.playing #bungBack{display:none}
   <div class="g-stage" id="gStage">
     <canvas id="cv"></canvas>
     <div class="opps" id="gOpps"></div>
-    <div class="hint" id="gHint"><span><span class="hand">👆</span> 화면을 <b>드래그</b>해서 집게를 옮기고</span><span>과녁이 <i style="background:#5BE3A6"></i><b style="color:#5BE3A6">초록색</b>일 때 <b style="color:#FF86C3">잡기!</b></span><span>⏱ <b style="color:#FFD54A">20초</b> 안에 최대한 많이!</span></div>
+    <div class="hint" id="gHint"><span><span class="hand">👆</span> 화면을 <b>드래그</b>해서 집게를 옮기고</span><span>과녁이 <i style="background:#5BE3A6"></i><b style="color:#5BE3A6">초록색</b>일 때 <b style="color:#FF86C3">잡기!</b></span><span>⏱ <b style="color:#FFD54A">20초</b> 안에 최대한 많이! (집게가 움직이는 동안은 시간이 멈춰요)</span></div>
     <div class="count" id="gCount"></div>
     <div class="bubble" id="gBubble"><span class="face" id="gBubbleFace"></span><span id="gBubbleText"></span></div>
     <div class="banner" id="gBanner"></div>
@@ -1819,6 +1821,7 @@ function startRound({ mode, seed, startAt, machine = 'doll' }) {
     claw: { x: W * 0.62, z: D * 0.5, y: REST_Y, tx: W * 0.62, tz: D * 0.5, vx: 0, vz: 0, pvx: 0, pvz: 0, sway: 0, swayV: 0, swayZ: 0, open: 1, st: 'idle', t: 0, held: null, slipAt: -1, trav: 0 },
   });
   setupDolls(G.rng);
+  G.prevNow = 0; G.wasBusy = false; $('#gTime').classList.remove('paused');
   const hd = G.dolls.find(d => HID[d.id]);
   if (hd) setTimeout(() => { if (cur === 'game') { bubble(hd.id, '…기계 안에서 뭔가 반짝인다?! ✨'); Sound.play('win'); } }, 700);
   show('game');
@@ -1849,6 +1852,16 @@ new ResizeObserver(() => { if (G.running) layout(); }).observe($('#gStage'));
 
 function update(dt) {
   const now = nowMs();
+  // 잡기를 누른 뒤 집게가 내려가고·올라가고·출구까지 가는 동안은 타이머가 멈춰요 (멈춘 시간만큼 마감을 뒤로 밀어요)
+  const busy = G.phase === 'play' && G.claw && G.claw.st !== 'idle';
+  if (busy && G.prevNow) G.endAt += now - G.prevNow;
+  G.prevNow = now;
+  if (busy !== G.wasBusy) {
+    G.wasBusy = busy;
+    $('#gTime').classList.toggle('paused', busy);
+    // 온라인: 방장이 내가 끝난 줄 알지 않게 마감을 알려줘요 (집게 도는 중엔 넉넉하게)
+    if (G.mode === 'online' && room.code && me) db.set(PATH.room(room.code) + '/players/' + me.pid + '/deadline', busy ? G.endAt + 20000 : G.endAt).catch(() => {});
+  }
   // 단계
   if (G.phase === 'count') {
     const n = Math.ceil((G.startAt - now) / 1000);
@@ -2322,7 +2335,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1842';
+const APP_VERSION = '20261023-2306';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
