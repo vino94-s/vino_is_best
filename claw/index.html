@@ -336,6 +336,13 @@ const HIDDEN4 = {
     lines: { good: ['네 아가씨, 브이 하겠습니다 ✌️', '실례지만… 오늘은 말랑하게 왔습니다'], bad: ['이런… 실례를 범했군요', '모자가 없으니 허전하군요'], start: ['네 아가씨, 모시겠습니다'], win: ['실례지만… 이겼습니다 ✌️'], lose: ['패배도 말랑하게…'], taunt: ['아가씨, 브이는 제가 먼저입니다'] } },
 };
 const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4];
+// 공용 캐릭터 카드에 없는 이 게임 전용 인형 (인형뽑기 기계에만 나와요)
+const EXTRA = [
+  { id: 'honey', name: '현꿀오소리', tier: 'common', img: 'plush/honey.png', color: '#4A3F3A', hi: '덤벼!',
+    lines: { good: ['꿀 냄새 난다! 덤벼!', '오소리는 겁이 없지'], bad: ['…놓쳤지만 안 쫄았어', '다시 덤벼!'], start: ['꿀 찾으러 왔다!'], win: ['꿀오소리 승리!'], lose: ['…다음엔 물어버린다'], taunt: ['송곳니 보여줄까?'] } },
+];
+const EXT = Object.fromEntries(EXTRA.map(e => [e.id, e]));
+for (const e of EXTRA) TIER_OF[e.id] = e.tier;
 const HID = Object.fromEntries(HIDS.map(h => [h.id, h]));
 // 오락실 기계 4대 (모두 같은 캐릭터 13명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
 const MACH = {
@@ -453,12 +460,12 @@ function loadScript(src) { return new Promise((res, rej) => { const s = document
 /* ══════════ 캐릭터 ══════════ */
 const CH = BUNG_CHARS.list.map(c => c.id);
 const fuseCard = {};
-const CHAR = id => (HID[id] ? HID[id].card : FUSE[id] ? (fuseCard[id] = fuseCard[id] || { id, name: FUSE[id].name, color: '#C89BFF' }) : BUNG_CHARS.get(id));
-const imgSrc = id => (FUSE[id] ? (SPR_URL['doll:' + id] || itemSrc('doll', id)) : HID[id] ? HID[id].img : '../characters/img/' + id + '.png');
-const say = (id, k) => (FUSE[id] ? say(Math.random() < 0.5 ? FUSE[id].a : FUSE[id].b, k) : HID[id] ? pick(HID[id].card.lines[k] || HID[id].card.lines.good) : BUNG_CHARS.line(id, k));
+const CHAR = id => (EXT[id] ? EXT[id] : HID[id] ? HID[id].card : FUSE[id] ? (fuseCard[id] = fuseCard[id] || { id, name: FUSE[id].name, color: '#C89BFF' }) : BUNG_CHARS.get(id));
+const imgSrc = id => (FUSE[id] ? (SPR_URL['doll:' + id] || itemSrc('doll', id)) : HID[id] ? HID[id].img : EXT[id] ? EXT[id].img : '../characters/img/' + id + '.png');
+const say = (id, k) => (FUSE[id] ? say(Math.random() < 0.5 ? FUSE[id].a : FUSE[id].b, k) : HID[id] ? pick(HID[id].card.lines[k] || HID[id].card.lines.good) : EXT[id] ? pick(EXT[id].lines[k] || EXT[id].lines.good) : BUNG_CHARS.line(id, k));
 const faceEl = (id, cls = '') => `<span class="face ${cls}" style="background-image:url(${imgSrc(id)})" title="${esc(CHAR(id).name)}"></span>`;
 const tierOf = id => TIER_OF[id] || 'common';
-const ALL_DOLLS = [...CH, ...HIDS.map(h => h.id), ...FUSE_LIST.map(f => f.id)];
+const ALL_DOLLS = [...CH, ...EXTRA.map(e => e.id), ...HIDS.map(h => h.id), ...FUSE_LIST.map(f => f.id)];
 // 컬렉션 = 한 번이라도 가져 본 인형 (팔거나 합성에 써도 남아요)
 function collSet(p) { const s = new Set(Object.keys((p && p.dex) || {})); for (const [id, n] of Object.entries((p && p.dolls) || {})) if (n > 0) s.add(id); return s; }
 const collCount = p => { const s = collSet(p); return ALL_DOLLS.filter(id => s.has(id)).length; };
@@ -891,8 +898,8 @@ function renderShop() {
     <div class="toprow"><button class="back" id="shBack">← 로비</button><h2>샵</h2><span class="money">${won(me.money)}</span></div>
     <div class="tabs">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit} ${typeCount(me, t)}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => CH.includes(id)).length}/${CH.length}${T === 'doll' ? ` · 히든 ${hidOwned || '?'}/${HIDS.length}` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
-      <div class="dex">${CH.map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? HIDS.map(h => (inv[h.id] || 0) ? `<span title="${h.card.name}">${itemImg(T, h.id)}</span>` : '<span class="q" title="히든 인형">?</span>').join('') : ''}</div>
+      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => CH.includes(id) || EXT[id]).length}/${CH.length + (T === 'doll' ? EXTRA.length : 0)}${T === 'doll' ? ` · 히든 ${hidOwned || '?'}/${HIDS.length}` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
+      <div class="dex">${[...CH, ...(T === 'doll' ? EXTRA.map(e => e.id) : [])].map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? HIDS.map(h => (inv[h.id] || 0) ? `<span title="${h.card.name}">${itemImg(T, h.id)}</span>` : '<span class="q" title="히든 인형">?</span>').join('') : ''}</div>
     </div>
     <div class="list">${own.length ? own.map(id => {
       const t = tierOf(id), pr = priceOf(T, id), n = inv[id];
@@ -947,7 +954,7 @@ function renderFuse() {
   el.innerHTML = `
     <div class="toprow"><button class="back" id="fuBack">← 로비</button><h2>🧪 합성소</h2><span class="chip" style="font-size:13px">📖 ${collCount(me)}/${ALL_DOLLS.length}</span></div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 ${CH.length + HIDS.length} · 합성 ${FUSE_LIST.length}</span></div>
+      <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 ${CH.length + EXTRA.length + HIDS.length} · 합성 ${FUSE_LIST.length}</span></div>
       <div class="coll">${ALL_DOLLS.map(id => `<span ${known(id) ? `data-zoom="${id}" role="button" tabindex="0"` : ''} title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : HID[id] ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
     </div>
     <p class="small muted">레시피 ${RECIPES.length}개 · <b style="color:var(--ink)">새 조합</b> 인형 37종도 있어요. 인형 2개를 넣으면 확률에 따라 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
@@ -1305,7 +1312,7 @@ function showOnlineResult(last) {
 
 /* ══════════ 인형 그림 (한 번만 미리 그려 둬요) ══════════ */
 const SPR = { doll: {}, keycap: {}, keyring: {}, clicker: {} }, SPR_URL = {};
-function itemSrc(type, id) { const k = type + ':' + id; if (!SPR_URL[k] && SPR[type] && SPR[type][id]) { try { SPR_URL[k] = SPR[type][id].toDataURL(); } catch (e) { reportErr('toDataURL ' + id, e); } } return SPR_URL[k] || (FUSE[id] ? 'fusion/' + id + '.png' : HID[id] ? HID[id].img : '../characters/img/' + id + '.png'); }
+function itemSrc(type, id) { const k = type + ':' + id; if (!SPR_URL[k] && SPR[type] && SPR[type][id]) { try { SPR_URL[k] = SPR[type][id].toDataURL(); } catch (e) { reportErr('toDataURL ' + id, e); } } return SPR_URL[k] || (FUSE[id] ? 'fusion/' + id + '.png' : HID[id] ? HID[id].img : EXT[id] ? EXT[id].img : '../characters/img/' + id + '.png'); }
 const mkCanvas = S => { const c = document.createElement('canvas'); c.width = c.height = S; return c; };
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255]; }
 function mixHex(h, to, f) { const a = hexRgb(h), b = hexRgb(to); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',')})`; }
@@ -1419,7 +1426,7 @@ function loadSprites() {
       im.onerror = () => res();
       im.src = dir + '/' + id + '.png?v=' + APP_VERSION; // 같은 이름으로 그림을 바꿔도 새 그림을 받아요
     });
-    return Promise.all([...FUSE_ART.map(id => art('fusion', id)), ...CH.map(id => art('plush', id))]);
+    return Promise.all([...FUSE_ART.map(id => art('fusion', id)), ...CH.map(id => art('plush', id)), ...EXTRA.map(e => art('plush', e.id))]);
   });
 }
 /* ── 합성 인형: 바탕 캐릭터 얼굴 + 다른 캐릭터들의 특징 부품(원본 그림에서 오려 냄) ── */
@@ -1656,7 +1663,7 @@ function setupDolls(rng) {
     if (G.mtype === 'doll') for (const h of HIDS) if (rng() < h.chance) return h.id;
     let r = rng() * 100, tier = 'common';
     for (const [k, t] of Object.entries(TIERS)) { if ((r -= t.w) < 0) { tier = k; break; } }
-    const ids = CH.filter(id => tierOf(id) === tier); return ids[Math.floor(rng() * ids.length)];
+    const ids = [...CH, ...(G.mtype === 'doll' ? EXTRA.map(e => e.id) : [])].filter(id => tierOf(id) === tier); return ids[Math.floor(rng() * ids.length)];
   };
   G.dolls = [];
   const mk = (x, z, y) => ({ id: pickId(), x, z, y, vx: 0, vy: 0, vz: 0, st: 'rest', wob: 0 });
@@ -2198,7 +2205,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1431';
+const APP_VERSION = '20261023-1449';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
