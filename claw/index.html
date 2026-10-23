@@ -336,7 +336,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 15(캐릭터 13 + 히든 2) + 합성 37 + 새 조합 37 = 컬렉션 89
+// 합성: 인형 2개 → 새 인형. 기본 15(캐릭터 13 + 히든 2) + 합성 37 + 새 조합 37 + 히든비노 조합 11 = 컬렉션 100
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_LIST = [
   // 1세대 (기본 + 기본)
@@ -372,10 +372,15 @@ const FUSE_LIST = [
   ['v34', '용궁따봉공주', 'v01', 'sp_yongwang'],
   // 3세대
   ['v35', '구름 위의 도사', 'v32', 'v25'], ['v36', '개굴농장 대표', 'v26', 'v27'], ['v37', '용궁 대제', 'v29', 'v32'],
+  // ── 히든비노 조합 11종 (b01~b11) ──
+  ['b01', '따봉 형님', 'sp_bino', 'eomji'], ['b02', '힙합 신사', 'sp_bino', 'juntak'], ['b03', '개굴 후드', 'sp_bino', 'kkaegul'],
+  ['b04', '주르륵 상투', 'sp_bino', 'goran'], ['b05', '상투 대감', 'sp_bino', 'yongwang'], ['b06', '꼬꼬 상투', 'sp_bino', 'myongradak'],
+  ['b07', '초코 힙스터', 'sp_bino', 'gana'], ['b08', '비노 형제', 'sp_bino', 'bino'], ['b09', '용궁 도령', 'sp_bino', 'sp_yongwang'],
+  ['b10', '상투 크루', 'b01', 'b02'], ['b11', '상투 황제', 'b10', 'b09'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
 const FUSE = {};
-const FUSE_ART = FUSE_LIST.map(f => f.id); // 74종 모두 직접 그린 그림 (fusion/<id>.png)
+const FUSE_ART = FUSE_LIST.map(f => f.id); // 합성 인형 모두 직접 그린 그림 (fusion/<id>.png)
 for (const f of FUSE_LIST) {
   f.gen = Math.max(FUSE[f.a] ? FUSE[f.a].gen : 0, FUSE[f.b] ? FUSE[f.b].gen : 0) + 1;
   FUSE[f.id] = f; TIER_OF[f.id] = 'fuse' + f.gen;
@@ -910,7 +915,7 @@ function renderFuse() {
     <div class="li recipe ${can(r) ? 'can' : ''}${r.alt ? ' alt' : ''}">
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
       <div class="rc">${pic(r.b)}<small>${nm(r.b)}<br><b>×${has(r.b)}</b></small></div><span class="op">→</span>
-      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : ''}</small></div>
+      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : ''}</small></div>
       <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성<br>${Math.round(FUSE_RATE * 100)}%</button>
     </div>`).join('');
   el.innerHTML = `
@@ -2148,7 +2153,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1114';
+const APP_VERSION = '20261023-1122';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
