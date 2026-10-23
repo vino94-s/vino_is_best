@@ -311,7 +311,7 @@ const TIERS = {
   fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
-  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden' };
+  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden', sp_goran: 'hidden', sp_juntak: 'hidden' };
 // 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.5% 확률로 이 인형이 돼요 (한 판 21개 기준 약 10%)
 const HIDDEN = {
   id: 'sp_yongwang', chance: 0.005, img: 'special-yongwang.png',
@@ -324,7 +324,18 @@ const HIDDEN2 = {
   card: { id: 'sp_bino', name: '히든비노', color: '#8A8F98', hi: '…',
     lines: { good: ['……뽑혔네.', '(후드 끈을 조용히 당김)'], bad: ['……', '(귀걸이만 반짝임)'], start: ['…왔다.'], win: ['……', '(무표정으로 상투를 고쳐 묶음)'], lose: ['…다음.'], taunt: ['(빤히 쳐다봄)'] } },
 };
-const HIDS = [HIDDEN, HIDDEN2];
+// 세 번째·네 번째 히든 인형: 히든 고란, 히든 준탁 (각각 인형 하나하나가 0.2% 확률)
+const HIDDEN3 = {
+  id: 'sp_goran', chance: 0.002, img: 'special-goran.png',
+  card: { id: 'sp_goran', name: '히든 고란', color: '#D2A06B', hi: '주르륵…',
+    lines: { good: ['츄릅… 송곳니로 꽉 물었다…', '주르륵… 히든이라 더 맛있어…'], bad: ['배고파서… 엎드려 있을래…', '주르륵… 놓쳤다…'], start: ['츄릅… 깡총…'], win: ['츄릅… 다 먹었다…'], lose: ['배고파… 주르륵…'], taunt: ['송곳니 보여줄까… 츄릅'] } },
+};
+const HIDDEN4 = {
+  id: 'sp_juntak', chance: 0.002, img: 'special-juntak.png',
+  card: { id: 'sp_juntak', name: '히든 준탁', color: '#F3E3B8', hi: '네 아가씨',
+    lines: { good: ['네 아가씨, 브이 하겠습니다 ✌️', '실례지만… 오늘은 말랑하게 왔습니다'], bad: ['이런… 실례를 범했군요', '모자가 없으니 허전하군요'], start: ['네 아가씨, 모시겠습니다'], win: ['실례지만… 이겼습니다 ✌️'], lose: ['패배도 말랑하게…'], taunt: ['아가씨, 브이는 제가 먼저입니다'] } },
+};
+const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4];
 const HID = Object.fromEntries(HIDS.map(h => [h.id, h]));
 // 오락실 기계 4대 (모두 같은 캐릭터 13명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
 const MACH = {
@@ -336,7 +347,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 15(캐릭터 13 + 히든 2) + 합성 37 + 새 조합 37 + 히든비노 조합 11 = 컬렉션 100
+// 합성: 인형 2개 → 새 인형. 기본 17(캐릭터 13 + 히든 4) + 합성 37 + 새 조합 37 + 히든비노 조합 11 = 컬렉션 100
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -2177,7 +2188,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261023-1350';
+const APP_VERSION = '20261023-1425';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
