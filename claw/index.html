@@ -389,7 +389,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 23(캐릭터 13 + 현꿀오소리 + 히든 9) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 = 컬렉션 138
+// 합성: 인형 2개 → 새 인형. 기본 23(캐릭터 13 + 현꿀오소리 + 히든 9) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 = 컬렉션 203
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -450,8 +450,37 @@ const FUSE_LIST = [
   ['o04', '초코꿀 오소리', 'honey', 'gana'], ['o05', '주르륵 오소리', 'honey', 'goran'], ['o06', '햇살꿀 오소리', 'honey', 'haetsal'],
   ['o07', '신사 오소리', 'honey', 'juntak'], ['o08', '오소리 대감', 'honey', 'yongwang'], ['o09', '무표정 오소리', 'honey', 'bino'],
   ['o10', '오소리 대장', 'o01', 'o08'],
+  // ── 히든햇살 조합 15종 (s01~s15) ──
+  ['s01', '따봉 공주', 'sp_haetsal', 'eomji'], ['s02', '연못 공주', 'sp_haetsal', 'kkaegul'], ['s03', '꼬꼬 공주', 'sp_haetsal', 'myongradak'],
+  ['s04', '초코 공주', 'sp_haetsal', 'gana'], ['s05', '주르륵 공주', 'sp_haetsal', 'goran'], ['s06', '햇살 자매', 'sp_haetsal', 'haetsal'],
+  ['s07', '장미 공주', 'sp_haetsal', 'juntak'], ['s08', '해님 대비', 'sp_haetsal', 'yongwang'], ['s09', '무표정 공주', 'sp_haetsal', 'bino'],
+  ['s10', '냥냥 공주', 'sp_haetsal', 'mandu'], ['s11', '꿀오소리 공주', 'sp_haetsal', 'honey'], ['s12', '해바다 공주', 'sp_haetsal', 'sp_yongwang'],
+  ['s13', '상투 공주', 'sp_haetsal', 'sp_bino'], ['s14', '햇살 왕국', 's06', 's01'], ['s15', '태양 여제', 's14', 's12'],
+  // ── 초희귀고란 조합 10종 (r01~r10) ──
+  ['r01', '따봉 사슴공주', 'sp_goran2', 'eomji'], ['r02', '연못 사슴공주', 'sp_goran2', 'kkaegul'], ['r03', '고란 자매', 'sp_goran2', 'goran'],
+  ['r04', '초코 사슴공주', 'sp_goran2', 'gana'], ['r05', '꼬꼬 사슴공주', 'sp_goran2', 'myongradak'], ['r06', '꿀오소리 사슴공주', 'sp_goran2', 'honey'],
+  ['r07', '사슴 대비', 'sp_goran2', 'yongwang'], ['r08', '고란 삼총사', 'sp_goran2', 'sp_goran'], ['r09', '햇살 사슴공주', 'sp_goran2', 'sp_haetsal'],
+  ['r10', '사슴 여왕', 'r07', 'r09'],
+  // ── 히든만두 조합 10종 (m01~m10) ──
+  ['m01', '만두 자매', 'sp_mandu', 'mandu'], ['m02', '따봉 만두공주', 'sp_mandu', 'eomji'], ['m03', '끄응 만두공주', 'sp_mandu', 'yeoni'],
+  ['m04', '왈왈 만두공주', 'sp_mandu', 'bongchum'], ['m05', '만세 만두공주', 'sp_mandu', 'yeongjun'], ['m06', '신사 만두공주', 'sp_mandu', 'juntak'],
+  ['m07', '무표정 만두공주', 'sp_mandu', 'bino'], ['m08', '만두와 사슴', 'sp_mandu', 'sp_goran2'], ['m09', '용궁 만두공주', 'sp_mandu', 'sp_yongwang'],
+  ['m10', '만두 황후', 'm01', 'm09'],
+  // ── 히든깨굴 조합 15종 (c01~c15) ──
+  ['c01', '개굴 자매', 'sp_kkaegul', 'kkaegul'], ['c02', '따봉 개구리공주', 'sp_kkaegul', 'eomji'], ['c03', '끄응 개구리공주', 'sp_kkaegul', 'yeoni'],
+  ['c04', '만세 개구리공주', 'sp_kkaegul', 'yeongjun'], ['c05', '꼬꼬 개구리공주', 'sp_kkaegul', 'myongradak'], ['c06', '왈왈 개구리공주', 'sp_kkaegul', 'bongchum'],
+  ['c07', '초코 개구리공주', 'sp_kkaegul', 'gana'], ['c08', '햇살 개구리공주', 'sp_kkaegul', 'haetsal'], ['c09', '장미 개구리공주', 'sp_kkaegul', 'juntak'],
+  ['c10', '꿀오소리 개구리공주', 'sp_kkaegul', 'honey'], ['c11', '연못 왕비', 'sp_kkaegul', 'sp_yongwang'], ['c12', '만두와 개구리', 'sp_kkaegul', 'sp_mandu'],
+  ['c13', '해님 연못공주', 'sp_kkaegul', 'sp_haetsal'], ['c14', '연못 왕국', 'c01', 'c02'], ['c15', '연못 여제', 'c14', 'c11'],
+  // ── 히든여니 조합 15종 (y01~y15) ──
+  ['y01', '여니 자매', 'sp_yeoni', 'yeoni'], ['y02', '장미 신사 커플', 'sp_yeoni', 'juntak'], ['y03', '따봉 장미공주', 'sp_yeoni', 'eomji'],
+  ['y04', '연못 장미공주', 'sp_yeoni', 'kkaegul'], ['y05', '냥냥 장미공주', 'sp_yeoni', 'mandu'], ['y06', '왈왈 장미공주', 'sp_yeoni', 'bongchum'],
+  ['y07', '꼬꼬 장미공주', 'sp_yeoni', 'myongradak'], ['y08', '초코 장미공주', 'sp_yeoni', 'gana'], ['y09', '무표정 장미공주', 'sp_yeoni', 'bino'],
+  ['y10', '용궁 장미공주', 'sp_yeoni', 'sp_yongwang'], ['y11', '장미와 상투', 'sp_yeoni', 'sp_bino'], ['y12', '장미와 개구리', 'sp_yeoni', 'sp_kkaegul'],
+  ['y13', '장미 정원 공주', 'sp_yeoni', 'sp_haetsal'], ['y14', '장미 정원', 'y01', 'y02'], ['y15', '장미 여왕', 'y14', 'y10'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
+const FUSE_TAG = {"s": "히든햇살", "r": "초희귀고란", "m": "히든만두", "c": "히든깨굴", "y": "히든여니"};
 const FUSE = {};
 const FUSE_ART = FUSE_LIST.map(f => f.id); // 합성 인형 모두 직접 그린 그림 (fusion/<id>.png)
 for (const f of FUSE_LIST) {
@@ -992,7 +1021,7 @@ function renderFuse() {
     <div class="li recipe ${can(r) ? 'can' : ''}${r.alt ? ' alt' : ''}">
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
       <div class="rc">${pic(r.b)}<small>${nm(r.b)}<br><b>×${has(r.b)}</b></small></div><span class="op">→</span>
-      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : r.id[0] === 'q' ? '<br><i class="alt-tag">히든 고란</i>' : r.id[0] === 'k' ? '<br><i class="alt-tag">히든 준탁</i>' : r.id[0] === 'o' ? '<br><i class="alt-tag">현꿀오소리</i>' : ''}</small></div>
+      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : r.id[0] === 'q' ? '<br><i class="alt-tag">히든 고란</i>' : r.id[0] === 'k' ? '<br><i class="alt-tag">히든 준탁</i>' : r.id[0] === 'o' ? '<br><i class="alt-tag">현꿀오소리</i>' : FUSE_TAG[r.id[0]] ? `<br><i class="alt-tag">${FUSE_TAG[r.id[0]]}</i>` : ''}</small></div>
       <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성</button>
     </div>`).join('');
   el.innerHTML = `
@@ -2347,7 +2376,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261024-1533';
+const APP_VERSION = '20261024-1543';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
