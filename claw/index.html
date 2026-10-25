@@ -317,7 +317,7 @@ const TIERS = {
   fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
-  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden', sp_goran: 'hidden', sp_juntak: 'hidden', sp_haetsal: 'hidden', sp_goran2: 'hidden', sp_mandu: 'hidden', sp_kkaegul: 'hidden', sp_yeoni: 'hidden' };
+  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden', sp_goran: 'hidden', sp_juntak: 'hidden', sp_haetsal: 'hidden', sp_goran2: 'hidden', sp_mandu: 'hidden', sp_kkaegul: 'hidden', sp_yeoni: 'hidden', sp_juntak2: 'hidden' };
 // 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.5% 확률로 이 인형이 돼요 (한 판 21개 기준 약 10%)
 const HIDDEN = {
   id: 'sp_yongwang', chance: 0.005, img: 'special-yongwang.png',
@@ -370,7 +370,13 @@ const HIDDEN9 = {
   card: { id: 'sp_yeoni', name: '히든여니', color: '#EDE3D6', hi: '어… 장미 받을래…?',
     lines: { good: ['어… 뽑혔네… 장미 줄게…', '미안… 근데 오늘은 좀 예쁘지…?'], bad: ['끄응… 장미가 걸렸어…', '역시 나는… 끄응…'], start: ['어… 꾸미고 와 봤어…'], win: ['이기려던 건 아닌데… 장미 받아…'], lose: ['괜찮아… 익숙해…'], taunt: ['미안… 근데 안 미안해 🌹'] } },
 };
-const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4, HIDDEN5, HIDDEN6, HIDDEN7, HIDDEN8, HIDDEN9];
+// 열 번째 히든 인형: 초희귀 준탁 (초희귀고란과 같은 조건: 0.1%, 50,000원, 합성 60%)
+const HIDDEN10 = {
+  id: 'sp_juntak2', chance: 0.001, img: 'special-juntak2.png',
+  card: { id: 'sp_juntak2', name: '초희귀 준탁', color: '#EFE2CB', hi: '네 아가씨, 건배하시죠 🥂',
+    lines: { good: ['실례지만… 초희귀라 건배 한 잔 하겠습니다 🥂', '네 아가씨, 오늘 밤은 제가 모시지요'], bad: ['이런… 샴페인을 쏟을 뻔했군요', '모자가 살짝 삐뚤어졌군요…'], start: ['네 아가씨, 파티에 오신 걸 환영합니다'], win: ['실례지만… 건배는 승자가 하는 겁니다 🥂'], lose: ['패배도 우아하게… 한 잔 더'], taunt: ['아가씨, 술은 안 드셨지요? 🥂'] } },
+};
+const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4, HIDDEN5, HIDDEN6, HIDDEN7, HIDDEN8, HIDDEN9, HIDDEN10];
 // 공용 캐릭터 카드에 없는 이 게임 전용 인형 (모든 기계에 나와요)
 const EXTRA = [
   { id: 'honey', name: '현꿀오소리', tier: 'common', img: 'plush/honey.png', color: '#4A3F3A', hi: '덤벼!',
@@ -389,7 +395,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 23(캐릭터 13 + 현꿀오소리 + 히든 9) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 = 컬렉션 223
+// 합성: 인형 2개 → 새 인형. 기본 24(캐릭터 13 + 현꿀오소리 + 히든 10) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 = 컬렉션 224
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -2384,7 +2390,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261024-1611';
+const APP_VERSION = '20261025-2236';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
