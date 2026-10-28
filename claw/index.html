@@ -317,7 +317,7 @@ const TIERS = {
   fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
-  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden', sp_goran: 'hidden', sp_juntak: 'hidden', sp_haetsal: 'hidden', sp_goran2: 'hidden', sp_mandu: 'hidden', sp_kkaegul: 'hidden', sp_yeoni: 'hidden', sp_juntak2: 'hidden' };
+  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden', sp_goran: 'hidden', sp_juntak: 'hidden', sp_haetsal: 'hidden', sp_goran2: 'hidden', sp_mandu: 'hidden', sp_kkaegul: 'hidden', sp_yeoni: 'hidden', sp_juntak2: 'hidden', sp_gana: 'hidden' };
 // 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.5% 확률로 이 인형이 돼요 (한 판 21개 기준 약 10%)
 const HIDDEN = {
   id: 'sp_yongwang', chance: 0.005, img: 'special-yongwang.png',
@@ -376,7 +376,13 @@ const HIDDEN10 = {
   card: { id: 'sp_juntak2', name: '초희귀 준탁', color: '#EFE2CB', hi: '네 아가씨, 건배하시죠 🥂',
     lines: { good: ['실례지만… 초희귀라 건배 한 잔 하겠습니다 🥂', '네 아가씨, 오늘 밤은 제가 모시지요'], bad: ['이런… 샴페인을 쏟을 뻔했군요', '모자가 살짝 삐뚤어졌군요…'], start: ['네 아가씨, 파티에 오신 걸 환영합니다'], win: ['실례지만… 건배는 승자가 하는 겁니다 🥂'], lose: ['패배도 우아하게… 한 잔 더'], taunt: ['아가씨, 술은 안 드셨지요? 🥂'] } },
 };
-const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4, HIDDEN5, HIDDEN6, HIDDEN7, HIDDEN8, HIDDEN9, HIDDEN10];
+// 열한 번째 히든 인형: 히든가나 (히든용왕과 같은 0.5%)
+const HIDDEN11 = {
+  id: 'sp_gana', chance: 0.005, img: 'special-gana.png',
+  card: { id: 'sp_gana', name: '히든가나', color: '#7A3E1E', hi: '메롱~ 히든 달달!',
+    lines: { good: ['메롱~ 히든이라 더 달달하지롱!', '너! 너! 초코 날개 봤지? 메롱~'], bad: ['으앙… 녹아내렸다…', '쓴맛 봤다… 카카오 100%…'], start: ['당 충전 완료~ 히든 모드 달달!'], win: ['메롱~ 달달하게 이겼지롱!'], lose: ['녹았다… 냉장고 보내줘…'], taunt: ['너! 너! 메롱~ 🍫'] } },
+};
+const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4, HIDDEN5, HIDDEN6, HIDDEN7, HIDDEN8, HIDDEN9, HIDDEN10, HIDDEN11];
 // 공용 캐릭터 카드에 없는 이 게임 전용 인형 (모든 기계에 나와요)
 const EXTRA = [
   { id: 'honey', name: '현꿀오소리', tier: 'common', img: 'plush/honey.png', color: '#4A3F3A', hi: '덤벼!',
@@ -395,7 +401,7 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
-// 합성: 인형 2개 → 새 인형. 기본 24(캐릭터 13 + 현꿀오소리 + 히든 10) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 = 컬렉션 224
+// 합성: 인형 2개 → 새 인형. 기본 25(캐릭터 13 + 현꿀오소리 + 히든 11) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 + 초희귀 준탁 조합 15 = 컬렉션 240
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -492,9 +498,15 @@ const FUSE_LIST = [
   ['x13', '만세 공주단', 'm05', 'c04'], ['x14', '끄응 공주단', 'm03', 'c03'], ['x15', '신사 공주단', 'm06', 'y02'],
   ['x16', '용궁 공주단', 'm09', 'y10'], ['x17', '다섯 공주 친구', 'x01', 'x03'], ['x18', '공주 연합', 'x02', 'x04'],
   ['x19', '공주들의 무도회', 'x05', 'x16'], ['x20', '다섯 공주 여제', 'x17', 'x18'],
+  // ── 초희귀 준탁 조합 15종 (j01~j15) ──
+  ['j01', '준탁 형님들', 'sp_juntak2', 'juntak'], ['j02', '따봉 건배', 'sp_juntak2', 'eomji'], ['j03', '연못 파티', 'sp_juntak2', 'kkaegul'],
+  ['j04', '치킨과 샴페인', 'sp_juntak2', 'myongradak'], ['j05', '초코 샴페인', 'sp_juntak2', 'gana'], ['j06', '안주 먹보 신사', 'sp_juntak2', 'goran'],
+  ['j07', '용궁 연회', 'sp_juntak2', 'yongwang'], ['j08', '무표정 바텐더', 'sp_juntak2', 'bino'], ['j09', '꿀주 신사', 'sp_juntak2', 'honey'],
+  ['j10', '준탁 파티', 'sp_juntak2', 'sp_juntak'], ['j11', '초희귀 커플', 'sp_juntak2', 'sp_goran2'], ['j12', '장미와 샴페인', 'sp_juntak2', 'sp_yeoni'],
+  ['j13', '용궁 무도회', 'sp_juntak2', 'sp_yongwang'], ['j14', '신사 클럽', 'j01', 'j10'], ['j15', '초희귀 연회', 'j14', 'j11'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
-const FUSE_TAG = {"x": "공주 연합", "s": "히든햇살", "r": "초희귀고란", "m": "히든만두", "c": "히든깨굴", "y": "히든여니"};
+const FUSE_TAG = {"j": "초희귀 준탁", "x": "공주 연합", "s": "히든햇살", "r": "초희귀고란", "m": "히든만두", "c": "히든깨굴", "y": "히든여니"};
 const FUSE = {};
 const FUSE_ART = FUSE_LIST.map(f => f.id); // 합성 인형 모두 직접 그린 그림 (fusion/<id>.png)
 for (const f of FUSE_LIST) {
@@ -2390,7 +2402,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261025-2236';
+const APP_VERSION = '20261028-1832';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
