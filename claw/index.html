@@ -298,7 +298,8 @@ const CFG = {
   oldPrefix: 'rooms/claw-',
   startMoney: 100000,         // 가입하면 주는 돈 (리셋 후 재가입 보상 10만원)
   daily: 20000,               // 매일 한국 시간 아침 6시에 충전 (6시 이후 첫 접속 때 들어가요)
-  dailyHour: 6,               // 하루가 바뀌는 시각 (한국 시간)
+  dailyHour: 6,
+  hangover: { below: 1000, amount: 50000, perDay: 10 }, // 돈이 1,000원 미만이면 '해장국' 무료 충전 (하루 10번, 한 번에 5만원)               // 하루가 바뀌는 시각 (한국 시간)
   packs: [{ n: 1, price: 1000 }, { n: 6, price: 5000 }, { n: 13, price: 10000 }],
   roundSec: 20,               // 한 판 제한시간 (20초 안에 최대한 많이)
   freeHits: 2,                // 기계는 2번까지 때릴 수 있어요
@@ -934,6 +935,7 @@ function renderLobby() {
         <div class="stat"><b>🎁 ${dollCount(me)}개</b><span>보유 상품</span></div>
       </div>
     </div>
+    ${hangBtn()}
     ${left ? `<div class="ban">${faceEl(OWNER.id)}<div><b>쫓겨났어요 <span id="banLeft">${fmtLeft(left)}</span></b><p class="small">기계를 세 번 때려서 사장님이 화났어요. 시간이 지나면 다시 할 수 있어요.</p></div></div>` : ''}
     <h3 style="margin-top:2px">오락실 기계 고르기</h3>
     ${machinePicker(selMachine, 'm')}
@@ -964,6 +966,7 @@ function renderLobby() {
     $('#jg', s).onclick = go; $('#jc', s).onkeydown = e => { if (e.key === 'Enter') go(); }; setTimeout(() => $('#jc', s).focus(), 50);
   });
   $('#lbBuy').onclick = () => openBuy();
+  bindHang(el, () => cur === 'lobby' && renderLobby());
   $('#lbShop').onclick = () => show('shop');
   $('#lbRank').onclick = () => show('rank');
   $('#lbFuse').onclick = () => show('fuse');
@@ -978,6 +981,25 @@ function renderLobby() {
   }, 500);
 }
 
+/* ══════════ 해장국 무료 충전 ══════════ */
+const hangLeft = p => { const H = CFG.hangover; return p && p.hangDay === todayKST() ? Math.max(0, H.perDay - (p.hangN || 0)) : H.perDay; };
+const canHang = p => !!p && (p.money || 0) < CFG.hangover.below && hangLeft(p) > 0;
+const hangBtn = () => canHang(me) ? `<button class="btn orange big" data-hang>🍲 이거받고 해장국이나 드쇼<small>${won(CFG.hangover.amount)} 무료 · 오늘 ${hangLeft(me)}번 남음</small></button>` : '';
+async function takeHangover(after) {
+  const H = CFG.hangover, today = todayKST();
+  const r = await txMe(c => {
+    if ((c.money || 0) >= H.below) return undefined;
+    if (c.hangDay !== today) { c.hangDay = today; c.hangN = 0; }
+    if ((c.hangN || 0) >= H.perDay) return undefined;
+    c.hangN = (c.hangN || 0) + 1; c.money = (c.money || 0) + H.amount; return c;
+  });
+  Sound.init();
+  if (r && r.committed) { Sound.play('coin'); toast(`🍲 ${won(H.amount)} 받았어요! 해장 잘 하쇼 (오늘 ${hangLeft(me)}번 남음)`); }
+  else toast(hangLeft(me) <= 0 ? '오늘 해장국은 다 드셨어요. 내일 아침 6시에 다시!' : '돈이 1,000원 넘게 있으면 못 받아요');
+  after && after();
+}
+function bindHang(root, after) { root.querySelectorAll('[data-hang]').forEach(b => b.onclick = () => { b.disabled = true; takeHangover(after); }); }
+
 /* ══════════ 크레딧 충전 ══════════ */
 function openBuy(onDone) {
   const close = modal(`<h2>크레딧 충전 🎟</h2><p class="muted small">잡기 한 번에 크레딧 1회가 써져요. 지금 <span class="money">${won(me.money)}</span> · 크레딧 ${me.credits || 0}회</p>
@@ -985,11 +1007,13 @@ function openBuy(onDone) {
       const save = p.n * CFG.packs[0].price - p.price;
       return `<button class="pack" data-i="${i}"><b>${p.n}회</b><span class="money">${won(p.price)}</span>${save > 0 ? `<em>${(save / 1000).toLocaleString()}천원 이득</em>` : '<em style="background:transparent">&nbsp;</em>'}</button>`;
     }).join('')}</div>
-    <button class="btn ghost" data-close>닫기</button>`, s => {
+    ${hangBtn()}
+    <button class="btn ghost" data-close>닫기</button>`, (s, close0) => {
+    bindHang(s, () => { close0(); openBuy(onDone); });
     s.querySelector('.packs').onclick = async e => {
       const b = e.target.closest('.pack'); if (!b) return;
       const p = CFG.packs[+b.dataset.i];
-      if ((me.money || 0) < p.price) { toast('돈이 모자라요. 인형을 팔거나 내일 충전을 기다려요'); return; }
+      if ((me.money || 0) < p.price) { toast(canHang(me) ? '돈이 모자라요. 아래 해장국 버튼을 눌러 보세요 🍲' : '돈이 모자라요. 인형을 팔거나 내일 충전을 기다려요'); return; }
       const r = await txMe(c => { if ((c.money || 0) < p.price) return undefined; c.money -= p.price; c.credits = (c.credits || 0) + p.n; return c; });
       if (r && r.committed) { Sound.init(); Sound.play('coin'); toast(`크레딧 ${p.n}회 충전!`); close(); onDone && onDone(); }
       else toast('돈이 모자라요');
@@ -2414,7 +2438,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261029-1335';
+const APP_VERSION = '20261029-1406';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
