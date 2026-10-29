@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261029a';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261029a';
-import { botMove, botGoStop } from './bot.js?v=20261029a';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261029a';
-import { botBet, botChoose } from './seotda-bot.js?v=20261029a';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261029a';
-import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261029a';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261029a';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261029b';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261029b';
+import { botMove, botGoStop } from './bot.js?v=20261029b';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261029b';
+import { botBet, botChoose } from './seotda-bot.js?v=20261029b';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261029b';
+import { createStore, applyResult, holdLoss, settleHeld, claimFreeCharge, freeChargeLeft } from './store.js?v=20261029b';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API, FREE_CHARGE } from './config.js?v=20261029b';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -378,8 +378,36 @@ function refreshWallet() {
   document.querySelectorAll('[data-wallet]').forEach(el => { el.textContent = won(S.me?.money || 0); });
   if (!$('#scr-lobby').classList.contains('hidden')) {
     const broke = $('#broke');
-    if (broke) broke.classList.toggle('hidden', (S.me?.money || 0) > 0);
+    if (broke) { broke.classList.toggle('hidden', (S.me?.money || 0) > 0); broke.replaceChildren(...brokeKids()); }
   }
+}
+// ── 0원 무료 충전: '이거받고 해장국이나 드쇼' (하루 FREE_CHARGE.perDay번, 한 번에 FREE_CHARGE.amount) ──
+const HAEJANG = '이거받고 해장국이나 드쇼';
+function brokeKids(onDone) {
+  const left = freeChargeLeft(S.me, FREE_CHARGE.perDay);
+  if (left <= 0) return [h('b', {}, '게임머니를 다 잃었어요'), `오늘 무료 충전 ${FREE_CHARGE.perDay}번을 다 받았어요. 내일 0시에 ${won(DAILY_CHARGE)}이 충전돼요.`];
+  return [
+    h('b', {}, '게임머니를 다 잃었어요'),
+    h('button', { class: 'btn gold haejang', onclick: e => takeFreeCharge(e.currentTarget, onDone) }, `🍲 ${HAEJANG}`),
+    h('small', {}, `무료 충전 ${won(FREE_CHARGE.amount)} · 오늘 ${left}번 남았어요`),
+  ];
+}
+async function takeFreeCharge(btn, onDone) {
+  if (btn) btn.disabled = true;
+  try {
+    const r = await claimFreeCharge(S.store, S.me.pid, FREE_CHARGE);
+    if (r.ok) {
+      Snd.win?.();
+      toast(`${won(FREE_CHARGE.amount)} 받았어요! 해장하고 다시 붙어요 (오늘 ${r.left}번 남음)`);
+      S.store.logCharge({ pid: S.me.pid, nick: S.me.nick, amount: FREE_CHARGE.amount, ts: Date.now(), note: 'free' }).catch(() => {});
+      onDone?.(true);
+    } else {
+      toast(r.reason === 'money' ? '게임머니가 0원일 때만 받을 수 있어요' : r.reason === 'limit' ? `오늘 무료 충전 ${FREE_CHARGE.perDay}번을 다 받았어요` : '충전하지 못했어요. 잠시 뒤에 다시 눌러 주세요');
+      onDone?.(false);
+    }
+  } catch (x) { console.error(x); toast('충전하지 못했어요. 잠시 뒤에 다시 눌러 주세요'); }
+  if (btn) btn.disabled = false;
+  refreshWallet();
 }
 
 // ───────────────── 게임 고르기 ─────────────────
@@ -416,8 +444,7 @@ function renderLobby() {
       h('div', { class: 'who' }, h('b', {}, me.nick),
         h('span', {}, '내 코드 ', h('button', { class: 'icon-btn', style: 'padding:1px 6px;font-size:12px', onclick: () => copy(me.code, '내 코드를 복사했어요') }, me.code))),
       h('div', { class: 'wallet' }, h('span', { class: 'money', 'data-wallet': '' }, won(me.money)), h('small', {}, '보유 자산'))),
-    h('div', { id: 'broke', class: `broke ${me.money > 0 ? 'hidden' : ''}` },
-      h('b', {}, '게임머니를 다 잃었어요'), `내일 0시에 ${won(DAILY_CHARGE)}이 충전돼요.`),
+    h('div', { id: 'broke', class: `broke ${me.money > 0 ? 'hidden' : ''}` }, ...brokeKids()),
     h('div', { class: 'kind-bar' },
       h('b', {}, KIND_NAME[S.kind]),
       h('button', { class: 'btn ghost small', onclick: renderSelect }, S.kind === 'seotda' ? '고스톱으로 바꾸기' : '섯다로 바꾸기')),
@@ -475,7 +502,9 @@ const ppSeg = (o) => seg(POINT_VALUES.map(v => ({ v, label: ppLabel(v) })), o.pp
 const bonusSeg = (o) => seg([0, 1, 2].map(v => ({ v, label: `${v}장` })), o.bonus, v => { o.bonus = v; });
 function needMoney() {
   if ((S.me.money || 0) > 0) return true;
-  toast(`게임머니가 없어요. 내일 0시에 ${won(DAILY_CHARGE)}이 충전돼요`);
+  let close = () => {};
+  close = openModal([h('div', { class: 'broke' }, ...brokeKids(ok => { if (ok) close(); })),
+    h('button', { class: 'btn ghost', onclick: () => close() }, '닫기')]);
   return false;
 }
 function openBotSetup() {

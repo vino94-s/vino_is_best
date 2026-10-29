@@ -1,5 +1,5 @@
 // 데이터 계층: Firebase Realtime Database (설정 시) / 이 브라우저 localStorage (미설정 시)
-import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261029a';
+import { FIREBASE_CONFIG, DAILY_CHARGE, START_MONEY } from './config.js?v=20261029b';
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const PID_CHARS = 'abcdefghijkmnopqrstuvwxyz0123456789';
@@ -325,6 +325,24 @@ export async function settleHeld(store, pid, { mode, win, delta, held }) {
   });
   return applied;
 }
+
+/** 0원일 때만 받는 무료 충전 ('이거받고 해장국이나 드쇼'). 한국 시간 하루 perDay번까지 */
+export async function claimFreeCharge(store, pid, { amount, perDay }) {
+  let res = { ok: false, reason: 'error', left: 0 };
+  await store.updateUser(pid, u => {
+    const today = todayKST();
+    const fc = u.freeCharge && u.freeCharge.day === today ? u.freeCharge : { day: today, n: 0 };
+    if ((u.money || 0) > 0) { res = { ok: false, reason: 'money', left: perDay - fc.n }; return undefined; }
+    if (fc.n >= perDay) { res = { ok: false, reason: 'limit', left: 0 }; return undefined; }
+    u.freeCharge = { day: today, n: fc.n + 1 };
+    u.money = amount;
+    res = { ok: true, left: perDay - fc.n - 1 };
+    return u;
+  });
+  return res;
+}
+/** 오늘 남은 무료 충전 횟수 */
+export const freeChargeLeft = (u, perDay) => perDay - (u?.freeCharge && u.freeCharge.day === todayKST() ? u.freeCharge.n : 0);
 
 export async function applyResult(store, code, { mode, win, delta }) {
   let applied = 0;
