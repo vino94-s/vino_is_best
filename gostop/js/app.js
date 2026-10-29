@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261022g';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261022g';
-import { botMove, botGoStop } from './bot.js?v=20261022g';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261022g';
-import { botBet, botChoose } from './seotda-bot.js?v=20261022g';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261022g';
-import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261022g';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261022g';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261029a';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261029a';
+import { botMove, botGoStop } from './bot.js?v=20261029a';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261029a';
+import { botBet, botChoose } from './seotda-bot.js?v=20261029a';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261029a';
+import { createStore, applyResult, holdLoss, settleHeld } from './store.js?v=20261029a';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API } from './config.js?v=20261029a';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -151,7 +151,9 @@ function confirmModal(title, body, okText = '확인', cancelText = '취소') {
 }
 const avatar = (charId, cls = '') => h('img', { class: `avatar ${cls}`, src: charById(charId).img, alt: charById(charId).name });
 function seg(options, value, onChange) {
-  const el = h('div', { class: 'seg', role: 'group' });
+  // 선택지가 많으면(7개 이상) 두 줄로 나눠서 좁은 휴대폰 화면에서도 글자가 안 찌그러지게
+  const wide = options.length > 6;
+  const el = h('div', { class: wide ? 'seg seg-wrap' : 'seg', role: 'group', style: wide ? `--cols:${Math.ceil(options.length / 2)}` : null });
   const draw = v => {
     el.replaceChildren(...options.map(o => h('button', {
       type: 'button', 'aria-pressed': String(o.v === v),
@@ -493,8 +495,8 @@ function openBotSetup() {
   ]);
 }
 const lastSdOpts = () => ({ char: S.me.char, bots: 2, level: 'normal', ante: 1000, cards: 2, ...ls.get('sdopts', {}) });
-const ANTES = [1000, 5000, 10000, 50000, 100000];
-const anteLabel = v => (v >= 10000 ? `${v / 10000}만원` : won(v));
+const ANTES = [1000, 5000, 10000, 50000, 100000, 500000, 1000000];
+const anteLabel = v => ppLabel(v);
 const anteSeg = o => seg(ANTES.map(v => ({ v, label: anteLabel(v) })), o.ante, v => { o.ante = v; });
 const cardsSeg = o => seg([{ v: 2, label: '2장 섯다' }, { v: 3, label: '3장 섯다' }], o.cards, v => { o.cards = v; });
 function openSeotdaSetup() {
