@@ -769,6 +769,16 @@ async function enter(code, player, recharged) {
   const CHAR_FIX = { '현이': 'honey' };
   const fix = CHAR_FIX[String(me.nick || '').trim()];
   if (fix) txMe(c => (c.charFixed === fix ? undefined : (c.char = fix, c.charFixed = fix, c)));
+  // 운영자 선물: 해당 닉네임이 다음 접속 때 한 번만 받아요 (key로 중복 지급 막음)
+  const GIFTS = [
+    { key: '20261029-goran-sp_goran2', nick: '고라니', id: 'sp_goran2', n: 10 },
+  ];
+  for (const g of GIFTS.filter(g => g.nick === String(me.nick || '').trim())) {
+    txMe(c => {
+      c.gifts = c.gifts || {}; if (c.gifts[g.key]) return undefined;
+      c.gifts[g.key] = Date.now(); addItem(c, 'doll', g.id, g.n); c.dex = c.dex || {}; c.dex[g.id] = true; return c;
+    }).then(r => { if (r && r.committed) setTimeout(() => toast(`🎁 운영자 선물! ${CHAR(g.id).name} ${g.n}개가 들어왔어요`, 3500), 600); });
+  }
   // 예전에 뽑아 둔 인형도 컬렉션에 기록
   txMe(c => { let ch = false; c.dex = c.dex || {}; for (const [id, n] of Object.entries(c.dolls || {})) if (n > 0 && !c.dex[id]) { c.dex[id] = true; ch = true; } return ch ? c : undefined; });
   if (recharged) setTimeout(() => toast(`오늘의 ${won(CFG.daily)} 충전 완료! 💰`), 300);
@@ -1294,6 +1304,7 @@ async function renderAdmin() {
         <button class="btn mini cyan" data-a="code" data-p="${p.pid}">🔑 새 코드</button>
         <button class="btn mini ghost" data-a="unban" data-p="${p.pid}">🚫 해제</button>
         <button class="btn mini ghost" data-a="char" data-p="${p.pid}">🎭 캐릭터</button>
+        <button class="btn mini ghost" data-a="gift" data-p="${p.pid}">🎁 인형 주기</button>
         <button class="btn mini ghost" data-a="del" data-p="${p.pid}" style="color:#FF9AA8">삭제</button>
       </div></div>`;
   const draw = () => {
@@ -1351,6 +1362,30 @@ async function renderAdmin() {
     } else if (a === 'code') {
       const code = await newCode(pid); log('new code');
       modal(`<h2>${esc(p.nick)}의 새 코드</h2><div class="bigcode">${code}</div><p class="small muted">예전 코드도 그대로 쓸 수 있어요.</p><button class="btn ghost" data-close>닫기</button>`);
+    } else if (a === 'gift') {
+      modal(`<h2>${esc(p.nick)}에게 인형 주기</h2>
+        <input class="inp" id="gfQ" type="search" placeholder="🔍 인형 이름 검색" autocomplete="off">
+        <div class="list" id="gfList" style="max-height:42dvh;overflow:auto"></div>
+        <label class="small muted" style="display:grid;gap:4px">개수 (빼려면 -)<input class="inp" id="gfN" inputmode="numeric" value="1"></label>
+        <button class="btn ghost" data-close>닫기</button>`, (sh, close) => {
+        let pickId = null;
+        const draw = () => {
+          const q = sh.querySelector('#gfQ').value.trim();
+          sh.querySelector('#gfList').innerHTML = ALL_DOLLS.filter(id => !q || CHAR(id).name.includes(q)).slice(0, 60)
+            .map(id => `<button class="li" data-g="${id}" style="border:0;color:inherit;text-align:left;cursor:pointer${id === pickId ? ';box-shadow:inset 0 0 0 2px var(--pink)' : ''}">${itemImg('doll', id)}<span class="grow nm">${esc(CHAR(id).name)}</span><span class="small muted">보유 ${(p.dolls || {})[id] || 0}</span></button>`).join('');
+        };
+        sh.querySelector('#gfQ').oninput = draw;
+        sh.querySelector('#gfList').onclick = async e => {
+          const bb = e.target.closest('[data-g]'); if (!bb) return;
+          pickId = bb.dataset.g; draw();
+          const n = Math.round(Number(sh.querySelector('#gfN').value)); if (!n) return toast('개수를 넣어 주세요');
+          if (!confirm(`${p.nick}에게 ${CHAR(pickId).name} ${n > 0 ? n + '개 주기' : -n + '개 빼기'}?`)) return;
+          await txp(c => { const have = (c.dolls || {})[pickId] || 0; addItem(c, 'doll', pickId, Math.max(n, -have)); if (n > 0) { c.dex = c.dex || {}; c.dex[pickId] = true; } return c; });
+          log(`gift ${pickId} ${n}`); toast(`${p.nick}에게 ${CHAR(pickId).name} ${n}개 적용했어요`); close(); renderAdmin();
+        };
+        draw();
+      });
+      return;
     } else if (a === 'char') {
       const opts = [...CH, ...EXTRA.map(e => e.id)];
       modal(`<h2>${esc(p.nick)} 캐릭터 바꾸기</h2><div class="charpick">${opts.map(id => `<button type="button" data-c="${id}" class="${id === p.char ? 'on' : ''}">${faceEl(id)}${esc(CHAR(id).name)}</button>`).join('')}</div><button class="btn ghost" data-close>닫기</button>`, (sh, close) => {
@@ -2438,7 +2473,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261029-1406';
+const APP_VERSION = '20261029-1811';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
