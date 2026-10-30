@@ -111,6 +111,7 @@ img.sil{filter:brightness(0) opacity(.42)}
 .tabs{display:flex;gap:6px;background:rgba(0,0,0,.25);padding:5px;border-radius:14px}
 .tabs button{flex:1;border:0;border-radius:10px;padding:10px 4px;background:transparent;font-weight:800;cursor:pointer;color:var(--muted)}
 .tabs button.on{background:var(--panel2);color:var(--ink)}
+.tabs.sub{background:rgba(0,0,0,.15);padding:4px}.tabs.sub button{padding:7px 2px;font-size:13px}
 .toprow{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .back{border:0;background:rgba(255,255,255,.1);border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer}
 /* 로그인 */
@@ -423,7 +424,7 @@ const EXTRA = [
 const EXT = Object.fromEntries(EXTRA.map(e => [e.id, e]));
 for (const e of EXTRA) TIER_OF[e.id] = e.tier;
 const HID = Object.fromEntries(HIDS.map(h => [h.id, h]));
-// 오락실 기계 4대 (모두 같은 캐릭터 13명). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
+// 오락실 기계 4대 (모두 같은 캐릭터·히든·합성 목록). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
 const MACH = {
   doll:    { name: '인형뽑기', unit: '인형', emoji: '🧸', R: 8,   floor: 15, total: 21, grip: 1,    slip: 1,    priceMul: 1,    neon: '#FF86C3', neon2: '#FF4FA3', note: '폭신한 캐릭터 인형' },
   keycap:  { name: '키캡뽑기', unit: '키캡', emoji: '⌨️', R: 6,   floor: 22, total: 30, grip: 1.05, slip: 1.1,  priceMul: 0.6,  neon: '#8FF3FF', neon2: '#2EC8F0', note: '작고 많지만 잘 미끄러져요' },
@@ -554,7 +555,7 @@ for (const [id, a, b] of ALT_RECIPES) FUSE[id].recipes.push({ a, b, alt: true })
 const RECIPES = FUSE_LIST.flatMap(f => f.recipes.map((r, i) => ({ ...r, id: f.id, ri: i, gen: f.gen })));
 // 판매가: 가장 싼 조합의 재료값 × 세대 배율 (비싼 조합 기준이면 싼 재료로 만들어 되파는 꼼수가 생겨요)
 for (const f of FUSE_LIST) f.price = Math.round({ 1: 1.5, 2: 1.6, 3: 1.8 }[f.gen] * Math.min(...f.recipes.map(r => basePrice(r.a) + basePrice(r.b))) / 100) * 100;
-const priceOf = (type, id) => FUSE[id] ? FUSE[id].price : Math.max(100, Math.round(TIERS[tierOf(id)].price * MACH[type].priceMul / 100) * 100);
+const priceOf = (type, id) => FUSE[id] ? (type === 'doll' ? FUSE[id].price : Math.max(100, Math.round(FUSE[id].price * MACH[type].priceMul / 100) * 100)) : Math.max(100, Math.round(TIERS[tierOf(id)].price * MACH[type].priceMul / 100) * 100);
 let selMachine = MACH[localStorage.getItem('claw-machine')] ? localStorage.getItem('claw-machine') : 'doll';
 // 가게 사장님은 용왕 (사극 말투 규칙을 따라요)
 const OWNER = {
@@ -593,9 +594,17 @@ const say = (id, k) => (FUSE[id] ? say(Math.random() < 0.5 ? FUSE[id].a : FUSE[i
 const faceEl = (id, cls = '') => `<span class="face ${cls}" style="background-image:url(${imgSrc(id)})" title="${esc(CHAR(id).name)}"></span>`;
 const tierOf = id => TIER_OF[id] || 'common';
 const ALL_DOLLS = [...CH, ...EXTRA.map(e => e.id), ...HIDS.map(h => h.id), ...FUSE_LIST.map(f => f.id)];
-// 컬렉션 = 한 번이라도 가져 본 인형 (팔거나 합성에 써도 남아요)
-function collSet(p) { const s = new Set(Object.keys((p && p.dex) || {})); for (const [id, n] of Object.entries((p && p.dolls) || {})) if (n > 0) s.add(id); return s; }
-const collCount = p => { const s = collSet(p); return ALL_DOLLS.filter(id => s.has(id)).length; };
+// 컬렉션 = 한 번이라도 가져 본 것 (팔거나 합성에 써도 남아요). 인형은 dex, 키캡·키링·클리커는 gdex[종류]에 기록해요.
+// 인형·키캡·키링·클리커는 모두 같은 목록(ALL_DOLLS)과 같은 레시피(RECIPES)를 써요.
+// 그래서 인형이나 합성 레시피를 새로 추가하면 키캡·키링·클리커에도 자동으로 똑같이 들어가요.
+const dexOf = (p, type = 'doll') => (type === 'doll' ? (p && p.dex) || {} : ((p && p.gdex) || {})[type] || {});
+function markDex(c, type, id) {
+  if (type === 'doll') { c.dex = c.dex || {}; c.dex[id] = true; }
+  else { c.gdex = c.gdex || {}; c.gdex[type] = c.gdex[type] || {}; c.gdex[type][id] = true; }
+}
+function collSet(p, type = 'doll') { const s = new Set(Object.keys(dexOf(p, type))); for (const [id, n] of Object.entries(invOf(p, type))) if (n > 0) s.add(id); return s; }
+const collCount = (p, type = 'doll') => { const s = collSet(p, type); return ALL_DOLLS.filter(id => s.has(id)).length; };
+const collTotal = p => MTYPES.reduce((a, t) => a + collCount(p, t), 0);
 
 /* ══════════ 소리 ══════════ */
 const Sound = {
@@ -796,11 +805,11 @@ async function enter(code, player, recharged) {
   for (const g of GIFTS.filter(g => g.nick === String(me.nick || '').trim())) {
     txMe(c => {
       c.gifts = c.gifts || {}; if (c.gifts[g.key]) return undefined;
-      c.gifts[g.key] = Date.now(); addItem(c, 'doll', g.id, g.n); c.dex = c.dex || {}; c.dex[g.id] = true; return c;
+      c.gifts[g.key] = Date.now(); addItem(c, 'doll', g.id, g.n); markDex(c, 'doll', g.id); return c;
     }).then(r => { if (r && r.committed) setTimeout(() => toast(`🎁 운영자 선물! ${CHAR(g.id).name} ${g.n}개가 들어왔어요`, 3500), 600); });
   }
   // 예전에 뽑아 둔 인형도 컬렉션에 기록
-  txMe(c => { let ch = false; c.dex = c.dex || {}; for (const [id, n] of Object.entries(c.dolls || {})) if (n > 0 && !c.dex[id]) { c.dex[id] = true; ch = true; } return ch ? c : undefined; });
+  txMe(c => { let ch = false; for (const t of MTYPES) { const dx = dexOf(c, t); for (const [id, n] of Object.entries(invOf(c, t))) if (n > 0 && !dx[id]) { markDex(c, t, id); ch = true; } } return ch ? c : undefined; });
   if (recharged) setTimeout(() => toast(`오늘의 ${won(CFG.daily)} 충전 완료! 💰`), 300);
   const q = new URLSearchParams(location.search).get('room');
   if (q) joinRoom(q);
@@ -845,7 +854,23 @@ function addItem(c, type, id, n) {
   if (type === 'doll') { c.dolls = c.dolls || {}; c.dolls[id] = (c.dolls[id] || 0) + n; if (c.dolls[id] <= 0) delete c.dolls[id]; }
   else { c.goods = c.goods || {}; c.goods[type] = c.goods[type] || {}; c.goods[type][id] = (c.goods[type][id] || 0) + n; if (c.goods[type][id] <= 0) delete c.goods[type][id]; }
 }
-const itemImg = (type, id, cls = 'item') => `<img class="${cls}" src="${itemSrc(type, id)}" alt="${esc(CHAR(id).name)} ${MACH[type].unit}">`;
+// 그림이 많은 화면(컬렉션 246종 × 4종류)은 처음 열 때 그림을 한꺼번에 만들면 멈칫해요. 빈 그림으로 먼저 보여 주고 프레임마다 조금씩 채워요
+const BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+let lazyOn = false;
+function srcAttr(type, id) {
+  if (SPR_URL[type + ':' + id] || !(SPR[type] && (SPR[type][id] || SPR.doll[id]))) return `src="${itemSrc(type, id)}"`;
+  if (!lazyOn) { lazyOn = true; requestAnimationFrame(fillLazy); }
+  return `src="${BLANK_IMG}" data-li="${type}|${id}"`;
+}
+function fillLazy() {
+  const t0 = performance.now();
+  for (const im of document.querySelectorAll('img[data-li]')) {
+    const [t, id] = im.dataset.li.split('|'); im.removeAttribute('data-li'); im.src = itemSrc(t, id);
+    if (performance.now() - t0 > 10) break;
+  }
+  if (document.querySelector('img[data-li]')) requestAnimationFrame(fillLazy); else lazyOn = false;
+}
+const itemImg = (type, id, cls = 'item') => `<img class="${cls}" ${srcAttr(type, id)} alt="${esc(CHAR(id).name)} ${MACH[type].unit}">`;
 function machinePicker(sel, attr) {
   return `<div class="machines">${MTYPES.map(t => { const m = MACH[t];
     return `<button type="button" class="mach ${t === sel ? 'on' : ''}" data-${attr}="${t}" style="--neon:${m.neon};--neon2:${m.neon2}">
@@ -958,7 +983,7 @@ function renderLobby() {
   el.innerHTML = `
     <div class="toprow"><h1 style="font-size:24px">술안먹고 뽑을수있지?</h1><button class="back" id="lbSnd">${Sound.on ? '🔊' : '🔇'}</button></div>
     <div class="card">
-      <div class="prof">${faceEl(me.char, 'l')}<div style="flex:1;min-width:0"><h2>${esc(me.nick)}</h2><p class="small muted">${esc(CHAR(me.char).name)} · ${esc(say(me.char, 'start'))}</p><p class="small" style="margin-top:4px">📖 인형 컬렉션 <b>${collCount(me)}</b>/${ALL_DOLLS.length}</p></div></div>
+      <div class="prof">${faceEl(me.char, 'l')}<div style="flex:1;min-width:0"><h2>${esc(me.nick)}</h2><p class="small muted">${esc(CHAR(me.char).name)} · ${esc(say(me.char, 'start'))}</p><p class="small" style="margin-top:4px">📖 컬렉션 ${MTYPES.map(t => `${MACH[t].emoji}<b>${collCount(me, t)}</b>`).join(' ')} <span class="muted">/ 각 ${ALL_DOLLS.length}</span></p></div></div>
       <div class="stats">
         <div class="stat"><b class="money">${won(me.money)}</b><span>보유자산</span></div>
         <div class="stat"><b>🎟 ${me.credits || 0}회</b><span>남은 크레딧</span></div>
@@ -1056,15 +1081,15 @@ let shopTab = 'doll';
 function renderShop() {
   if (!me) return show('login');
   const el = $('#s-shop'), T = shopTab, M = MACH[T], inv = invOf(me, T);
-  const own = (T === 'doll' ? ALL_DOLLS : [...CH, ...EXTRA.map(e => e.id)]).filter(id => (inv[id] || 0) > 0);
+  const own = ALL_DOLLS.filter(id => (inv[id] || 0) > 0);
   const hidOwned = HIDS.filter(h => (inv[h.id] || 0) > 0).length;
   const total = typeValue(me, T);
   el.innerHTML = `
     <div class="toprow"><button class="back" id="shBack">← 로비</button><h2>샵</h2><span class="money">${won(me.money)}</span></div>
     <div class="tabs">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit} ${typeCount(me, t)}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => CH.includes(id) || EXT[id]).length}/${CH.length + EXTRA.length}${T === 'doll' ? ` · 히든 ${hidOwned || '?'}/${HIDS.length}` : ''}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
-      <div class="dex">${[...CH, ...EXTRA.map(e => e.id)].map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${T === 'doll' ? HIDS.map(h => (inv[h.id] || 0) ? `<span title="${h.card.name}">${itemImg(T, h.id)}</span>` : '<span class="q" title="히든 인형">?</span>').join('') : ''}</div>
+      <div class="toprow"><b>${M.unit} 도감 ${own.filter(id => CH.includes(id) || EXT[id]).length}/${CH.length + EXTRA.length} · 히든 ${hidOwned || '?'}/${HIDS.length}</b><span class="small muted">전부 팔면 ${won(total)}</span></div>
+      <div class="dex">${[...CH, ...EXTRA.map(e => e.id)].map(id => `<span class="${(inv[id] || 0) ? '' : 'no'}">${itemImg(T, id)}</span>`).join('')}${HIDS.map(h => (inv[h.id] || 0) ? `<span title="${h.card.name}">${itemImg(T, h.id)}</span>` : `<span class="q" title="히든 ${M.unit}">?</span>`).join('')}</div>
     </div>
     <div class="list">${own.length ? own.map(id => {
       const t = tierOf(id), pr = priceOf(T, id), n = inv[id];
@@ -1100,15 +1125,16 @@ async function sell(type, items) {
 }
 
 /* ══════════ 합성소 ══════════ */
-let fuseOnlyCan = false;
+let fuseOnlyCan = false, fuseType = 'doll';
 function renderFuse() {
   if (!me) return show('login');
-  const el = $('#s-fuse'), inv = me.dolls || {}, got = collSet(me);
+  const T = MACH[fuseType] ? fuseType : 'doll', M = MACH[T];
+  const el = $('#s-fuse'), inv = invOf(me, T), got = collSet(me, T);
   const has = id => inv[id] || 0, known = id => got.has(id);
   const nm = id => (known(id) ? esc(CHAR(id).name) : '???');
-  const pic = id => (known(id) ? itemImg('doll', id) : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`);
-  const can = r => has(r.a) > 0 && has(r.b) > 0;
-  const genName = { 1: '1세대 합성 (기본 + 기본)', 2: '2세대 합성 (합성 인형이 재료)', 3: '3세대 최종 합성 ★' };
+  const pic = id => (known(id) ? itemImg(T, id) : `<img class="item sil" ${srcAttr(T, id)} alt="?">`);
+  const can = r => (r.a === r.b ? has(r.a) >= 2 : has(r.a) > 0 && has(r.b) > 0);
+  const genName = { 1: '1세대 합성 (기본 + 기본)', 2: `2세대 합성 (합성 ${M.unit}도 재료)`, 3: '3세대 최종 합성 ★' };
   const rows = gen => RECIPES.filter(r => r.gen === gen && (!fuseOnlyCan || can(r))).map(r => `
     <div class="li recipe ${can(r) ? 'can' : ''}${r.alt ? ' alt' : ''}">
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
@@ -1117,31 +1143,33 @@ function renderFuse() {
       <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성</button>
     </div>`).join('');
   el.innerHTML = `
-    <div class="toprow"><button class="back" id="fuBack">← 로비</button><h2>🧪 합성소</h2><span class="chip" style="font-size:13px">📖 ${collCount(me)}/${ALL_DOLLS.length}</span></div>
+    <div class="toprow"><button class="back" id="fuBack">← 로비</button><h2>🧪 합성소</h2><span class="chip" style="font-size:13px">📖 ${collCount(me, T)}/${ALL_DOLLS.length}</span></div>
+    <div class="tabs" id="fuType">${MTYPES.map(t => `<button data-t="${t}" class="${t === T ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit}</button>`).join('')}</div>
     <div class="card" style="display:grid;gap:10px">
-      <div class="toprow"><b>인형 컬렉션</b><span class="small muted">기본 ${CH.length + EXTRA.length + HIDS.length} · 합성 ${FUSE_LIST.length}</span></div>
-      <div class="coll">${ALL_DOLLS.map(id => `<span ${known(id) ? `data-zoom="${id}" role="button" tabindex="0"` : ''} title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg('doll', id) : HID[id] ? '<span class="q">?</span>' : `<img class="item sil" src="${itemSrc('doll', id)}" alt="?">`}</span>`).join('')}</div>
+      <div class="toprow"><b>${M.unit} 컬렉션</b><span class="small muted">기본 ${CH.length + EXTRA.length + HIDS.length} · 합성 ${FUSE_LIST.length}</span></div>
+      <div class="coll">${ALL_DOLLS.map(id => `<span ${known(id) ? `data-zoom="${id}" role="button" tabindex="0"` : ''} title="${known(id) ? esc(CHAR(id).name) : '???'}">${known(id) ? itemImg(T, id) : HID[id] ? '<span class="q">?</span>' : `<img class="item sil" ${srcAttr(T, id)} alt="?">`}</span>`).join('')}</div>
     </div>
-    <p class="small muted">레시피 ${RECIPES.length}개 · <b style="color:var(--ink)">새 조합</b> 인형 37종도 있어요. 인형 2개를 넣으면 확률에 따라 새 인형이 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성 인형도 샵에서 비싸게 팔 수 있어요.</p>
-    <button class="btn pink big" id="fuAuto">⚡ 자동 합성<small>가진 인형으로 만들 수 있는 조합을 알아서 합성해요</small></button>
+    <p class="small muted">레시피 ${RECIPES.length}개 · 인형·키캡·키링·클리커 모두 같은 레시피예요. 같은 종류 2개를 넣으면 확률에 따라 새 ${M.unit}이(가) 나와요. 실패하면 재료 중 1개가 사라지고 1개는 돌려받아요. 합성품도 샵에서 비싸게 팔 수 있어요.</p>
+    <button class="btn pink big" id="fuAuto">⚡ ${M.unit} 자동 합성<small>가진 ${M.unit}(으)로 만들 수 있는 조합을 알아서 합성해요</small></button>
     <div class="tabs" id="fuFilter"><button data-v="0">전체 레시피</button><button data-v="1">지금 만들 수 있는 것만</button></div>
     ${[1, 2, 3].map(gen => { const r = rows(gen); const all = FUSE_LIST.filter(f => f.gen === gen); return r || !fuseOnlyCan ? `<div class="gen-h"><span>${genName[gen]}</span><span class="small muted">${all.filter(f => known(f.id)).length}/${all.length}</span></div><div class="list">${r || '<p class="muted small">지금 만들 수 있는 게 없어요</p>'}</div>` : ''; }).join('')}
-    ${fuseOnlyCan && !RECIPES.some(can) ? '<p class="muted" style="text-align:center;padding:24px 0">지금 만들 수 있는 합성이 없어요. 인형을 더 뽑아 와요!</p>' : ''}`;
+    ${fuseOnlyCan && !RECIPES.some(can) ? `<p class="muted" style="text-align:center;padding:24px 0">지금 만들 수 있는 합성이 없어요. ${M.name} 한 판 하러 가요!</p>` : ''}`;
   $('#fuBack').onclick = () => show('lobby');
+  el.querySelector('#fuType').onclick = e => { const b = e.target.closest('[data-t]'); if (b && b.dataset.t !== fuseType) { fuseType = b.dataset.t; renderFuse(); window.scrollTo(0, 0); } };
   el.querySelectorAll('#fuFilter button').forEach(b => { b.classList.toggle('on', (b.dataset.v === '1') === fuseOnlyCan); b.onclick = () => { fuseOnlyCan = b.dataset.v === '1'; renderFuse(); }; });
-  el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => doFuse(b.dataset.f, +b.dataset.r || 0));
+  el.querySelectorAll('[data-f]').forEach(b => b.onclick = () => doFuse(T, b.dataset.f, +b.dataset.r || 0));
   $('#fuAuto').onclick = openAutoFuse;
-  el.querySelector('.coll').onclick = e => { const z = e.target.closest('[data-zoom]'); if (z) zoomDoll(z.dataset.zoom); else if (e.target.closest('span')) toast('아직 못 모은 인형이에요'); };
+  el.querySelector('.coll').onclick = e => { const z = e.target.closest('[data-zoom]'); if (z) zoomDoll(z.dataset.zoom, T); else if (e.target.closest('span')) toast(`아직 못 모은 ${M.unit}이에요`); };
 }
-function zoomDoll(id) {
-  const n = (me.dolls || {})[id] || 0, t = tierOf(id), F = FUSE[id];
+function zoomDoll(id, type = 'doll') {
+  const n = invOf(me, type)[id] || 0, t = tierOf(id), F = FUSE[id], unit = type === 'doll' ? '' : ' ' + MACH[type].unit;
   const how = F ? F.recipes.map(r => `${esc(CHAR(r.a).name)} + ${esc(CHAR(r.b).name)}`).join(' · ') : '';
-  modal(`<div class="zoom"><img src="${itemSrc('doll', id)}" alt="${esc(CHAR(id).name)}"></div>
-    <h2 style="text-align:center">${esc(CHAR(id).name)} <span class="chip tier-${t}" style="vertical-align:middle">${TIERS[t].name}</span></h2>
+  modal(`<div class="zoom"><img src="${itemSrc(type, id)}" alt="${esc(CHAR(id).name)}${unit}"></div>
+    <h2 style="text-align:center">${esc(CHAR(id).name)}${unit} <span class="chip tier-${t}" style="vertical-align:middle">${TIERS[t].name}</span></h2>
     <p class="muted" style="text-align:center">“${esc(say(id, 'good'))}”</p>
     <div class="card small" style="display:grid;gap:4px;text-align:center">
-      <span>보유 <b>${n}개</b> · 판매가 <b class="money">${won(priceOf('doll', id))}</b></span>
-      ${F ? `<span class="muted">만드는 법: ${how}</span>` : HID[id] ? `<span class="muted">인형뽑기 기계에서 ${HID[id].chance * 100}% 확률로 나타나는 히든 인형</span>` : '<span class="muted">인형뽑기 기계에서 뽑을 수 있어요</span>'}
+      <span>보유 <b>${n}개</b> · 판매가 <b class="money">${won(priceOf(type, id))}</b></span>
+      ${F ? `<span class="muted">만드는 법: ${how}${type === 'doll' ? '' : ` (${MACH[type].unit}끼리)`}</span>` : HID[id] ? `<span class="muted">오락실 기계 어디서나 ${+(HID[id].chance * 100).toFixed(2)}% 확률로 나타나는 히든</span>` : `<span class="muted">${MACH[type].name} 기계에서 뽑을 수 있어요</span>`}
     </div>
     <button class="btn ghost" data-close>닫기</button>`);
 }
@@ -1160,45 +1188,47 @@ function autoPick(inv, got, o) {
 }
 function openAutoFuse() {
   if (!me) return;
+  const T = fuseType, U = MACH[T].unit;
   const render = sh => {
-    const n = autoPick(me.dolls || {}, collSet(me), AUTO).length;
+    const n = autoPick(invOf(me, T), collSet(me, T), AUTO).length;
     sh.querySelector('#auCnt').textContent = n ? `지금 바로 합성할 수 있는 조합 ${n}개` : '지금 조건으로 합성할 수 있는 게 없어요';
     sh.querySelector('#auGo').disabled = !n;
     sh.querySelectorAll('[data-o]').forEach(b => b.classList.toggle('on', !!AUTO[b.dataset.o]));
   };
-  modal(`<h2>⚡ 자동 합성</h2>
+  modal(`<h2>⚡ ${MACH[T].emoji} ${U} 자동 합성</h2>
     <div class="list">
-      <button class="li auopt" data-o="newOnly"><span class="grow"><b>새 인형만 만들기</b><br><span class="small muted">컬렉션에 없는 인형만 노려요. 끄면 만들 수 있는 건 다 합성해요.</span></span><span class="sw"></span></button>
-      <button class="li auopt" data-o="keepOne"><span class="grow"><b>기본 인형 1개씩 남기기</b><br><span class="small muted">재료로 쓰는 기본 인형을 마지막 1개는 남겨 둬요.</span></span><span class="sw"></span></button>
-      <button class="li auopt" data-o="useHidden"><span class="grow"><b>히든 인형도 재료로 쓰기</b><br><span class="small muted">비싼 히든 인형까지 써요. 기본은 꺼져 있어요.</span></span><span class="sw"></span></button>
+      <button class="li auopt" data-o="newOnly"><span class="grow"><b>새 ${U}만 만들기</b><br><span class="small muted">컬렉션에 없는 ${U}만 노려요. 끄면 만들 수 있는 건 다 합성해요.</span></span><span class="sw"></span></button>
+      <button class="li auopt" data-o="keepOne"><span class="grow"><b>기본 ${U} 1개씩 남기기</b><br><span class="small muted">재료로 쓰는 기본 ${U}을(를) 마지막 1개는 남겨 둬요.</span></span><span class="sw"></span></button>
+      <button class="li auopt" data-o="useHidden"><span class="grow"><b>히든 ${U}도 재료로 쓰기</b><br><span class="small muted">비싼 히든까지 써요. 기본은 꺼져 있어요.</span></span><span class="sw"></span></button>
     </div>
     <p class="muted small" id="auCnt" style="text-align:center"></p>
     <div class="grid2"><button class="btn ghost" data-close>닫기</button><button class="btn pink" id="auGo">합성 시작</button></div>`, (sh, close) => {
     sh.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { AUTO[b.dataset.o] = !AUTO[b.dataset.o]; try { localStorage.setItem('claw-auto', JSON.stringify(AUTO)); } catch (e) {} render(sh); });
-    sh.querySelector('#auGo').onclick = () => { close(); runAutoFuse(); };
+    sh.querySelector('#auGo').onclick = () => { close(); runAutoFuse(T); };
     render(sh);
   });
 }
-async function runAutoFuse() {
+async function runAutoFuse(type = 'doll') {
   Sound.init();
   let log = [];
+  const U = MACH[type].unit;
   const r = await txMe(c => {
     log = [];
-    const inv = { ...(c.dolls || {}) }, got = collSet(c), opts = { ...AUTO };
+    const inv = { ...invOf(c, type) }, got = collSet(c, type), opts = { ...AUTO };
     for (let guard = 0; guard < 400; guard++) {
       const pickList = autoPick(inv, got, opts);
       if (!pickList.length) break;
       const rc = pickList[0];
       const ok = isLucky() || Math.random() < fuseRate(rc);
-      c.dex = c.dex || {}; c.dex[rc.a] = true; c.dex[rc.b] = true;
+      markDex(c, type, rc.a); markDex(c, type, rc.b);
       if (ok) {
-        addItem(c, 'doll', rc.a, -1); addItem(c, 'doll', rc.b, -1); addItem(c, 'doll', rc.id, 1);
+        addItem(c, type, rc.a, -1); addItem(c, type, rc.b, -1); addItem(c, type, rc.id, 1);
         inv[rc.a]--; inv[rc.b]--; inv[rc.id] = (inv[rc.id] || 0) + 1;
-        const isNew = !got.has(rc.id); got.add(rc.id); c.dex[rc.id] = true; c.fused = (c.fused || 0) + 1;
+        const isNew = !got.has(rc.id); got.add(rc.id); markDex(c, type, rc.id); c.fused = (c.fused || 0) + 1;
         log.push({ ok: true, id: rc.id, isNew });
       } else {
         const lost = Math.random() < 0.5 ? rc.a : rc.b;
-        addItem(c, 'doll', lost, -1); inv[lost]--; c.fuseFail = (c.fuseFail || 0) + 1;
+        addItem(c, type, lost, -1); inv[lost]--; c.fuseFail = (c.fuseFail || 0) + 1;
         log.push({ ok: false, id: rc.id, lost });
       }
     }
@@ -1211,28 +1241,28 @@ async function runAutoFuse() {
   Sound.play(okN ? 'win' : 'miss'); vib(okN ? [40, 40, 80] : 60);
   modal(`<h2 style="text-align:center">⚡ 자동 합성 끝!</h2>
     <p style="text-align:center" class="muted">${log.length}번 합성 · 성공 <b style="color:var(--green)">${okN}</b> · 실패 <b style="color:var(--red)">${log.length - okN}</b>${newIds.length ? ` · <b style="color:var(--yellow)">NEW ${newIds.length}종</b>` : ''}</p>
-    ${okN ? `<b>만든 인형</b><div class="res-dolls">${Object.entries(made).map(([id, n], i) => `<span style="position:relative;display:inline-block">${itemImg('doll', id).replace('<img ', `<img style="animation-delay:${i * 60}ms" title="${esc(CHAR(id).name)}" `)}${newIds.includes(id) ? '<span class="newtag" style="position:absolute;left:-6px;top:-6px;font-size:10px;padding:1px 5px">N</span>' : ''}${n > 1 ? `<small style="position:absolute;right:-2px;bottom:-2px;font-weight:900">×${n}</small>` : ''}</span>`).join('')}</div>` : ''}
+    ${okN ? `<b>만든 ${U}</b><div class="res-dolls">${Object.entries(made).map(([id, n], i) => `<span style="position:relative;display:inline-block">${itemImg(type, id).replace('<img ', `<img style="animation-delay:${i * 60}ms" title="${esc(CHAR(id).name)}" `)}${newIds.includes(id) ? '<span class="newtag" style="position:absolute;left:-6px;top:-6px;font-size:10px;padding:1px 5px">N</span>' : ''}${n > 1 ? `<small style="position:absolute;right:-2px;bottom:-2px;font-weight:900">×${n}</small>` : ''}</span>`).join('')}</div>` : ''}
     ${Object.keys(lost).length ? `<p class="small muted">실패로 잃은 재료: ${Object.entries(lost).map(([id, n]) => `${esc(CHAR(id).name)} ${n}개`).join(', ')}</p>` : ''}
     <button class="btn pink" data-close>확인</button>`, (sh, close, m) => { m.dataset.lock = '1'; sh.querySelector('[data-close]').onclick = () => { close(); renderFuse(); }; });
 }
-async function doFuse(fid, ri = 0) {
-  const F = FUSE[fid], f = { ...F, ...F.recipes[ri] };
+async function doFuse(type, fid, ri = 0) {
+  const F = FUSE[fid], f = { ...F, ...F.recipes[ri] }, U = MACH[type].unit;
   Sound.init();
-  const firstTime = !collSet(me).has(fid);
+  const firstTime = !collSet(me, type).has(fid);
   const ok = isLucky() || Math.random() < fuseRate(f);
   const lost = ok ? null : Math.random() < 0.5 ? f.a : f.b;
   const r = await txMe(c => {
-    const d = c.dolls || {};
-    if ((d[f.a] || 0) < 1 || (d[f.b] || 0) < 1) return undefined;
-    c.dex = c.dex || {}; c.dex[f.a] = true; c.dex[f.b] = true;
-    if (ok) { addItem(c, 'doll', f.a, -1); addItem(c, 'doll', f.b, -1); addItem(c, 'doll', fid, 1); c.dex[fid] = true; c.fused = (c.fused || 0) + 1; }
-    else { addItem(c, 'doll', lost, -1); c.fuseFail = (c.fuseFail || 0) + 1; }
+    const d = invOf(c, type);
+    if ((d[f.a] || 0) < 1 || (d[f.b] || 0) < 1 || (f.a === f.b && (d[f.a] || 0) < 2)) return undefined;
+    markDex(c, type, f.a); markDex(c, type, f.b);
+    if (ok) { addItem(c, type, f.a, -1); addItem(c, type, f.b, -1); addItem(c, type, fid, 1); markDex(c, type, fid); c.fused = (c.fused || 0) + 1; }
+    else { addItem(c, type, lost, -1); c.fuseFail = (c.fuseFail || 0) + 1; }
     return c;
   });
   if (!r || !r.committed) { toast('재료가 모자라요'); renderFuse(); return; }
   [0, 250, 500, 750, 1000].forEach((t, i) => setTimeout(() => Sound.tone(500 + i * 160, .08, 'square', .04), t));
-  modal(`<div class="fuse-stage"><img class="fa" src="${itemSrc('doll', f.a)}" alt=""><img class="fb" src="${itemSrc('doll', f.b)}" alt=""><span class="flash"></span>
-      <img class="fr" id="fuRes" src="${itemSrc('doll', ok ? fid : lost)}" alt=""></div>
+  modal(`<div class="fuse-stage"><img class="fa" src="${itemSrc(type, f.a)}" alt=""><img class="fb" src="${itemSrc(type, f.b)}" alt=""><span class="flash"></span>
+      <img class="fr" id="fuRes" src="${itemSrc(type, ok ? fid : lost)}" alt=""></div>
     <h2 style="text-align:center" id="fuMsg">합성 중…</h2><p class="muted" style="text-align:center;min-height:1.4em" id="fuSub"></p>
     <div class="grid2"><button class="btn ghost" data-close>닫기</button><button class="btn pink" id="fuAgain" disabled>한 번 더</button></div>`, (s, close, m) => {
     m.dataset.lock = '1';
@@ -1241,40 +1271,43 @@ async function doFuse(fid, ri = 0) {
       const res = $('#fuRes', s);
       if (ok) {
         res.classList.add('on'); Sound.play('win'); vib([40, 40, 80]);
-        $('#fuMsg', s).innerHTML = `${esc(f.name)}${firstTime ? '<span class="newtag">NEW!</span>' : ''}`;
-        $('#fuSub', s).textContent = `합성 성공! ${say(fid, 'good')} · 판매가 ${won(f.price)}`;
+        $('#fuMsg', s).innerHTML = `${esc(f.name)}${type === 'doll' ? '' : ' ' + U}${firstTime ? '<span class="newtag">NEW!</span>' : ''}`;
+        $('#fuSub', s).textContent = `합성 성공! ${say(fid, 'good')} · 판매가 ${won(priceOf(type, fid))}`;
       } else {
         res.classList.add('fail'); Sound.play('miss'); vib(60);
         $('#fuMsg', s).textContent = '펑! 합성 실패…';
-        $('#fuSub', s).textContent = `${CHAR(lost).name} 인형이 사라졌어요. ${CHAR(lost === f.a ? f.b : f.a).name}은(는) 돌려받았어요.`;
+        $('#fuSub', s).textContent = `${CHAR(lost).name} ${U} 하나가 사라졌어요. ${CHAR(lost === f.a ? f.b : f.a).name}은(는) 돌려받았어요.`;
       }
-      const again = $('#fuAgain', s), d = me.dolls || {};
-      again.disabled = !((d[f.a] || 0) > 0 && (d[f.b] || 0) > 0);
-      again.onclick = () => { close(); doFuse(fid, ri); };
+      const again = $('#fuAgain', s), d = invOf(me, type);
+      again.disabled = !((d[f.a] || 0) > 0 && (d[f.b] || 0) > 0 && (f.a !== f.b || (d[f.a] || 0) > 1));
+      again.onclick = () => { close(); doFuse(type, fid, ri); };
     }, 1400);
   });
 }
 
 /* ══════════ 랭킹 ══════════ */
-let rankTab = 'caught';
+let rankTab = 'caught', rankColl = 'doll';
 async function renderRank() {
   const el = $('#s-rank');
   el.innerHTML = `<div class="toprow"><button class="back" id="rkBack">← 로비</button><h2>랭킹</h2><span></span></div>
-    <div class="tabs"><button data-t="caught">🎁 뽑기</button><button data-t="money">💰 자산</button><button data-t="coll">📖 컬렉션</button><button data-t="wins">⚔️ 대결</button></div>
+    <div class="tabs" id="rkTabs"><button data-t="caught">🎁 뽑기</button><button data-t="money">💰 자산</button><button data-t="coll">📖 컬렉션</button><button data-t="wins">⚔️ 대결</button></div>
+    ${rankTab === 'coll' ? `<div class="tabs sub" id="rkColl">${MTYPES.map(t => `<button data-c="${t}" class="${t === rankColl ? 'on' : ''}">${MACH[t].emoji} ${MACH[t].unit}</button>`).join('')}</div>` : ''}
     <div class="list" id="rkList"><p class="muted" style="text-align:center">불러오는 중…</p></div>
     <h3 style="margin-top:8px">최근 대결</h3><div class="list" id="rkMatch"></div>`;
   $('#rkBack').onclick = () => show(!me ? 'login' : room.code ? 'room' : 'lobby');
-  el.querySelectorAll('.tabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === rankTab); b.onclick = () => { rankTab = b.dataset.t; renderRank(); }; });
+  el.querySelectorAll('#rkTabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === rankTab); b.onclick = () => { rankTab = b.dataset.t; renderRank(); }; });
+  el.querySelectorAll('#rkColl button').forEach(b => b.onclick = () => { rankColl = b.dataset.c; renderRank(); });
   const [ps, ms] = await Promise.all([db.get(PATH.players), db.get(PATH.matches)]);
   if (cur !== 'rank') return;
   const list = Object.values(ps || {}).filter(p => p && p.pid);
-  const key = { coll: p => collCount(p) * 1e6 + (p.caught || 0), caught: p => p.caught || 0, money: p => p.money || 0, wins: p => (p.onWins || 0) * 1e6 + (p.onGames || 0) }[rankTab];
+  const RC = rankColl, caughtOf = (p, t) => (p.caughtBy || {})[t] || (t === 'doll' && !p.caughtBy ? p.caught || 0 : 0);
+  const key = { coll: p => collCount(p, RC) * 1e6 + typeCount(p, RC) * 10 + Math.min(9, caughtOf(p, RC) / 1e5), caught: p => p.caught || 0, money: p => p.money || 0, wins: p => (p.onWins || 0) * 1e6 + (p.onGames || 0) }[rankTab];
   list.sort((a, b) => key(b) - key(a));
   $('#rkList').innerHTML = list.length ? list.slice(0, 50).map((p, i) => `
     <div class="li ${me && p.pid === me.pid ? 'me' : ''}"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(p.char || 'bino', 's')}
-      <div class="grow"><div class="nm">${esc(p.nick)}</div><div class="small muted">${MTYPES.map(t => MACH[t].unit + ' ' + ((p.caughtBy || {})[t] || (t === 'doll' && !p.caughtBy ? p.caught || 0 : 0))).join(' · ')}</div><div class="small muted">📖 컬렉션 ${collCount(p)}/${ALL_DOLLS.length} · 대결 ${p.onWins || 0}승 ${p.onGames || 0}판 · 최고 ${p.best || 0}개/판</div></div>
-      <div class="num">🎁 ${p.caught || 0}개<small>보유 ${dollCount(p)}개</small></div>
-      <div class="num money" style="min-width:86px">${won(p.money)}<small>보유자산</small></div></div>`).join('')
+      <div class="grow"><div class="nm">${esc(p.nick)}</div><div class="small muted">${MTYPES.map(t => MACH[t].unit + ' ' + ((p.caughtBy || {})[t] || (t === 'doll' && !p.caughtBy ? p.caught || 0 : 0))).join(' · ')}</div><div class="small muted">📖 ${MTYPES.map(t => MACH[t].emoji + collCount(p, t)).join(' ')} · 대결 ${p.onWins || 0}승 ${p.onGames || 0}판 · 최고 ${p.best || 0}개/판</div></div>
+      ${rankTab === 'coll' ? `<div class="num">📖 ${collCount(p, RC)}<small>/${ALL_DOLLS.length} ${MACH[RC].unit}</small></div>` : `<div class="num">🎁 ${p.caught || 0}개<small>보유 ${dollCount(p)}개</small></div>`}
+      ${rankTab === 'coll' ? '' : `<div class="num money" style="min-width:86px">${won(p.money)}<small>보유자산</small></div>`}</div>`).join('')
     : '<p class="muted" style="text-align:center">아직 아무도 없어요</p>';
   const mm = (Array.isArray(ms) ? ms : Object.values(ms || {})).filter(Boolean).slice(0, 15);
   $('#rkMatch').innerHTML = mm.length ? mm.map(m => `<div class="li" style="flex-wrap:wrap;gap:6px"><span class="small muted" style="width:100%">${MACH[m.machine || 'doll'].emoji} ${MACH[m.machine || 'doll'].name} · ${new Date(m.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
@@ -1383,25 +1416,28 @@ async function renderAdmin() {
       const code = await newCode(pid); log('new code');
       modal(`<h2>${esc(p.nick)}의 새 코드</h2><div class="bigcode">${code}</div><p class="small muted">예전 코드도 그대로 쓸 수 있어요.</p><button class="btn ghost" data-close>닫기</button>`);
     } else if (a === 'gift') {
-      modal(`<h2>${esc(p.nick)}에게 인형 주기</h2>
-        <input class="inp" id="gfQ" type="search" placeholder="🔍 인형 이름 검색" autocomplete="off">
+      modal(`<h2>${esc(p.nick)}에게 선물 주기</h2>
+        <div class="tabs sub" id="gfT">${MTYPES.map((t, i) => `<button data-t="${t}" class="${i ? '' : 'on'}">${MACH[t].emoji} ${MACH[t].unit}</button>`).join('')}</div>
+        <input class="inp" id="gfQ" type="search" placeholder="🔍 이름 검색" autocomplete="off">
         <div class="list" id="gfList" style="max-height:42dvh;overflow:auto"></div>
         <label class="small muted" style="display:grid;gap:4px">개수 (빼려면 -)<input class="inp" id="gfN" inputmode="numeric" value="1"></label>
         <button class="btn ghost" data-close>닫기</button>`, (sh, close) => {
-        let pickId = null;
+        let pickId = null, gT = 'doll';
+        sh.querySelector('#gfT').onclick = e => { const b = e.target.closest('[data-t]'); if (!b) return; gT = b.dataset.t; sh.querySelectorAll('#gfT button').forEach(x => x.classList.toggle('on', x === b)); draw(); };
         const draw = () => {
           const q = sh.querySelector('#gfQ').value.trim();
           sh.querySelector('#gfList').innerHTML = ALL_DOLLS.filter(id => !q || CHAR(id).name.includes(q)).slice(0, 60)
-            .map(id => `<button class="li" data-g="${id}" style="border:0;color:inherit;text-align:left;cursor:pointer${id === pickId ? ';box-shadow:inset 0 0 0 2px var(--pink)' : ''}">${itemImg('doll', id)}<span class="grow nm">${esc(CHAR(id).name)}</span><span class="small muted">보유 ${(p.dolls || {})[id] || 0}</span></button>`).join('');
+            .map(id => `<button class="li" data-g="${id}" style="border:0;color:inherit;text-align:left;cursor:pointer${id === pickId ? ';box-shadow:inset 0 0 0 2px var(--pink)' : ''}">${itemImg(gT, id)}<span class="grow nm">${esc(CHAR(id).name)}</span><span class="small muted">보유 ${invOf(p, gT)[id] || 0}</span></button>`).join('');
         };
         sh.querySelector('#gfQ').oninput = draw;
         sh.querySelector('#gfList').onclick = async e => {
           const bb = e.target.closest('[data-g]'); if (!bb) return;
           pickId = bb.dataset.g; draw();
           const n = Math.round(Number(sh.querySelector('#gfN').value)); if (!n) return toast('개수를 넣어 주세요');
-          if (!confirm(`${p.nick}에게 ${CHAR(pickId).name} ${n > 0 ? n + '개 주기' : -n + '개 빼기'}?`)) return;
-          await txp(c => { const have = (c.dolls || {})[pickId] || 0; addItem(c, 'doll', pickId, Math.max(n, -have)); if (n > 0) { c.dex = c.dex || {}; c.dex[pickId] = true; } return c; });
-          log(`gift ${pickId} ${n}`); toast(`${p.nick}에게 ${CHAR(pickId).name} ${n}개 적용했어요`); close(); renderAdmin();
+          const U = MACH[gT].unit;
+          if (!confirm(`${p.nick}에게 ${CHAR(pickId).name} ${U} ${n > 0 ? n + '개 주기' : -n + '개 빼기'}?`)) return;
+          await txp(c => { const have = invOf(c, gT)[pickId] || 0; addItem(c, gT, pickId, Math.max(n, -have)); if (n > 0) markDex(c, gT, pickId); return c; });
+          log(`gift ${gT} ${pickId} ${n}`); toast(`${p.nick}에게 ${CHAR(pickId).name} ${U} ${n}개 적용했어요`); close(); renderAdmin();
         };
         draw();
       });
@@ -1591,7 +1627,7 @@ function showOnlineResult(last) {
 
 /* ══════════ 인형 그림 (한 번만 미리 그려 둬요) ══════════ */
 const SPR = { doll: {}, keycap: {}, keyring: {}, clicker: {} }, SPR_URL = {};
-function itemSrc(type, id) { const k = type + ':' + id; if (!SPR_URL[k] && SPR[type] && SPR[type][id]) { try { SPR_URL[k] = SPR[type][id].toDataURL(); } catch (e) { reportErr('toDataURL ' + id, e); } } return SPR_URL[k] || (FUSE[id] ? 'fusion/' + id + '.png' : HID[id] ? HID[id].img : EXT[id] ? EXT[id].img : '../characters/img/' + id + '.png'); }
+function itemSrc(type, id) { const k = type + ':' + id; if (!SPR_URL[k] && SPR[type] && (SPR[type][id] || SPR.doll[id])) { try { SPR_URL[k] = sprOf(type, id).toDataURL(); } catch (e) { reportErr('toDataURL ' + id, e); } } return SPR_URL[k] || (FUSE[id] ? 'fusion/' + id + '.png' : HID[id] ? HID[id].img : EXT[id] ? EXT[id].img : '../characters/img/' + id + '.png'); }
 const mkCanvas = S => { const c = document.createElement('canvas'); c.width = c.height = S; return c; };
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16, n >> 8 & 255, n & 255]; }
 function mixHex(h, to, f) { const a = hexRgb(h), b = hexRgb(to); return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',')})`; }
@@ -1608,7 +1644,8 @@ function gloss(c, x, y, r, a = .4) {
   hg.addColorStop(0, `rgba(255,255,255,${a})`); hg.addColorStop(1, 'rgba(255,255,255,0)');
   g.globalCompositeOperation = 'source-atop'; g.fillStyle = hg; g.fillRect(0, 0, c.width, c.height); g.globalCompositeOperation = 'source-over';
 }
-const baseCol = id => { const c = CHAR(id).color; return /^#fff/i.test(c) ? '#E9E4F2' : c; };
+const baseCol = id => { const c = (CHAR(id) || {}).color; return !/^#[0-9a-f]{6}$/i.test(c || '') ? '#C89BFF' : /^#fff/i.test(c) ? '#E9E4F2' : c; };
+const GOODS_MAKER = { keycap: (id, im) => makeKeycap(id, im), keyring: (id, im) => makeKeyring(id, im), clicker: (id, im) => makeClicker(id, im) };
 // 키캡: 아래 스커트 + 위 면에 얼굴 인쇄
 function makeKeycap(id, im) {
   const S = 160, t = mkCanvas(S), g = t.getContext('2d'), col = baseCol(id);
@@ -1700,6 +1737,8 @@ function fallbackSprite(type, id) {
 function sprOf(type, id) {
   const t = SPR[type] || SPR.doll;
   if (t[id] && t[id].width) return t[id];
+  // 히든·합성 키캡·키링·클리커: 인형 그림을 얼굴 자리에 넣어 필요할 때 만들어요 (미리 다 만들면 휴대폰 메모리를 많이 써요)
+  if (GOODS_MAKER[type] && SPR.doll[id] && SPR.doll[id].width) { try { return (t[id] = GOODS_MAKER[type](id, SPR.doll[id])); } catch (e) { reportErr('goods ' + type + ' ' + id, e); } }
   t[id] = fallbackSprite(type, id); healSprite(id);
   return t[id];
 }
@@ -1711,6 +1750,7 @@ function healSprite(id) {
   im.onload = () => {
     SPR.doll[id] = makeHiddenSprite(im);
     if (EXT[id] || CH.includes(id)) { SPR.keycap[id] = makeKeycap(id, im); SPR.keyring[id] = makeKeyring(id, im); SPR.clicker[id] = makeClicker(id, im); }
+    else for (const t of Object.keys(GOODS_MAKER)) delete SPR[t][id]; // 새 인형 그림으로 다시 만들게
     for (const k of Object.keys(SPR_URL)) if (k.endsWith(':' + id)) delete SPR_URL[k];
   };
   im.onerror = () => { setTimeout(() => { healing[id] = 0; }, 15000); };
@@ -1975,7 +2015,7 @@ function surface(x, z, ex) {
 }
 function setupDolls(rng) {
   const pickId = () => {
-    if (G.mtype === 'doll') for (const h of HIDS) if (rng() < h.chance) return h.id;
+    for (const h of HIDS) if (rng() < h.chance) return h.id; // 히든은 모든 기계에서 같은 확률로 나와요
     let r = rng() * 100, tier = 'common';
     for (const [k, t] of Object.entries(TIERS)) { if ((r -= t.w) < 0) { tier = k; break; } }
     let ids = [...CH, ...EXTRA.map(e => e.id)].filter(id => tierOf(id) === tier); if (!ids.length) ids = CH;
@@ -2192,7 +2232,7 @@ function capture(d) {
   bubble(d.id, say(d.id, 'good'));
   if (G.mtype === 'clicker') [0, 90, 180].forEach(t => setTimeout(() => Sound.tone(2200, .03, 'square', .05), t));
   const ty = G.mtype;
-  txMe(c => { addItem(c, ty, d.id, 1); if (ty === 'doll') { c.dex = c.dex || {}; c.dex[d.id] = true; } c.caught = (c.caught || 0) + 1; c.caughtBy = c.caughtBy || {}; c.caughtBy[ty] = (c.caughtBy[ty] || 0) + 1; return c; });
+  txMe(c => { addItem(c, ty, d.id, 1); markDex(c, ty, d.id); c.caught = (c.caught || 0) + 1; c.caughtBy = c.caughtBy || {}; c.caughtBy[ty] = (c.caughtBy[ty] || 0) + 1; return c; });
   if (G.mode === 'online' && room.code) db.set(PATH.room(room.code) + '/players/' + me.pid + '/score', G.score).catch(() => {});
 }
 
@@ -2536,7 +2576,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261030-1700';
+const APP_VERSION = '20261030-1839';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
