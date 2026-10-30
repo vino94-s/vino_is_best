@@ -111,6 +111,9 @@ img.sil{filter:brightness(0) opacity(.42)}
 .tabs{display:flex;gap:6px;background:rgba(0,0,0,.25);padding:5px;border-radius:14px}
 .tabs button{flex:1;border:0;border-radius:10px;padding:10px 4px;background:transparent;font-weight:800;cursor:pointer;color:var(--muted)}
 .tabs button.on{background:var(--panel2);color:var(--ink)}
+.chip.live{color:#5BE3A6;font-size:12px}
+.sbar{display:block;height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden;margin:2px 0 4px}.sbar i{display:block;height:100%;background:linear-gradient(90deg,#FFD54A,#FF4FA3);border-radius:5px}
+button.li.dayrow{border:0;color:inherit;text-align:left;cursor:pointer;width:100%;font:inherit}
 .tabs.sub{background:rgba(0,0,0,.15);padding:4px}.tabs.sub button{padding:7px 2px;font-size:13px}
 .toprow{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .back{border:0;background:rgba(255,255,255,.1);border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer}
@@ -297,6 +300,7 @@ const CFG = {
   // 같은 닉네임으로 다시 가입하면 인형·키캡·키링·클리커·컬렉션을 돌려줘요.
   prefix: 'rooms/claw2-',
   oldPrefix: 'rooms/claw-',
+  creditWon: 1000,           // 소진 금액 계산: 크레딧 1회 = 1,000원 (1회 정가)
   startMoney: 100000,         // 가입하면 주는 돈 (리셋 후 재가입 보상 10만원)
   daily: 20000,               // 매일 한국 시간 아침 6시에 충전 (6시 이후 첫 접속 때 들어가요)
   dailyHour: 6,
@@ -576,6 +580,14 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const won = n => (Math.round(n) || 0).toLocaleString('ko-KR') + '원';
 const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
 // 충전 기준 '오늘': 한국 시간 아침 6시에 날짜가 바뀌어요 (새벽 0~6시는 전날로 쳐요)
+// 소진 기록용 날짜: 한국 시간 달력 날짜 (자정 기준)
+const dayKST = (t = Date.now()) => new Date(t + 9 * 3600e3).toISOString().slice(0, 10);
+// 쓴 돈 기록 — use: 쓴 크레딧(회), buy: 크레딧 충전에 쓴 돈(원). 날짜별(spend/날짜)과 누적(spendAll) 둘 다 남겨요
+function addSpend(c, k, n) {
+  const d = dayKST(); c.spend = c.spend || {}; const x = c.spend[d] = c.spend[d] || {}; x[k] = (x[k] || 0) + n;
+  c.spendAll = c.spendAll || {}; c.spendAll[k] = (c.spendAll[k] || 0) + n;
+  const ks = Object.keys(c.spend); if (ks.length > 120) ks.sort().slice(0, ks.length - 120).forEach(k2 => delete c.spend[k2]); // 120일만 보관
+}
 const todayKST = () => new Date(Date.now() + (9 - CFG.dailyHour) * 3600e3).toISOString().slice(0, 10);
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const genCode = (n = 6, cs = CODE_CHARS) => Array.from(crypto.getRandomValues(new Uint32Array(n)), v => cs[v % cs.length]).join('');
@@ -890,6 +902,7 @@ function show(name) {
   el.classList.remove('hidden');
   document.body.classList.toggle('playing', name === 'game');
   if (name !== 'game') stopLoop();
+  if (name !== 'admin' && spendOff) { spendOff(); spendOff = null; } // 어드민 소진 랭킹 실시간 구독 끄기
   ({ login: renderLogin, lobby: renderLobby, room: renderRoom, shop: renderShop, rank: renderRank, admin: renderAdmin, fuse: renderFuse }[name] || (() => {}))();
   if (name !== 'game') window.scrollTo(0, 0);
 }
@@ -1072,7 +1085,7 @@ function openBuy(onDone) {
       const b = e.target.closest('.pack'); if (!b) return;
       const p = CFG.packs[+b.dataset.i];
       if ((me.money || 0) < p.price) { toast(canHang(me) ? '돈이 모자라요. 아래 해장국 버튼을 눌러 보세요 🍲' : '돈이 모자라요. 인형을 팔거나 내일 충전을 기다려요'); return; }
-      const r = await txMe(c => { if ((c.money || 0) < p.price) return undefined; c.money -= p.price; c.credits = (c.credits || 0) + p.n; return c; });
+      const r = await txMe(c => { if ((c.money || 0) < p.price) return undefined; c.money -= p.price; c.credits = (c.credits || 0) + p.n; addSpend(c, 'buy', p.price); return c; });
       if (r && r.committed) { Sound.init(); Sound.play('coin'); toast(`크레딧 ${p.n}회 충전!`); close(); onDone && onDone(); }
       else toast('돈이 모자라요');
     };
@@ -1319,11 +1332,68 @@ async function renderRank() {
 }
 
 /* ══════════ 어드민 ══════════ */
-let adminQ = '', adminTarget = 'all';
+let adminQ = '', adminTarget = 'all', adminView = 'players', spendPeriod = 'today', spendOff = null;
+const ADMIN_TABS = () => `<div class="tabs" id="adView"><button data-v="players" class="${adminView === 'players' ? 'on' : ''}">👥 플레이어 관리</button><button data-v="spend" class="${adminView === 'spend' ? 'on' : ''}">💸 소진 랭킹</button></div>`;
+function bindAdminTabs(el) { el.querySelector('#adView').onclick = e => { const b = e.target.closest('[data-v]'); if (b && b.dataset.v !== adminView) { adminView = b.dataset.v; renderAdmin(); } }; }
+// ── 소진 랭킹: 플레이어가 쓴 크레딧을 돈으로 바꿔서(1회 = CFG.creditWon원) 순위를 실시간으로 보여줘요 ──
+function renderSpend(el) {
+  el.innerHTML = `<div class="toprow"><button class="back" id="adBack">← 나가기</button><h2>어드민</h2><span class="chip live">● 실시간</span></div>
+    ${ADMIN_TABS()}<div id="spBody"><p class="muted" style="text-align:center">불러오는 중…</p></div>`;
+  $('#adBack').onclick = () => { sessionStorage.removeItem('claw-admin'); show(me ? 'lobby' : 'login'); };
+  bindAdminTabs(el);
+  spendOff && spendOff();
+  let ps = [];
+  const W = CFG.creditWon, today = dayKST(), yday = dayKST(Date.now() - 864e5);
+  const days7 = Array.from({ length: 7 }, (_, i) => dayKST(Date.now() - i * 864e5));
+  const range = () => spendPeriod === 'all' ? null : spendPeriod === 'today' ? [today] : spendPeriod === 'yday' ? [yday] : spendPeriod === 'week' ? days7 : [spendPeriod];
+  const sumOf = p => {
+    const r = range();
+    if (!r) return { use: (p.spendAll || {}).use || 0, buy: (p.spendAll || {}).buy || 0 };
+    return r.reduce((a, d) => { const x = (p.spend || {})[d] || {}; return { use: a.use + (x.use || 0), buy: a.buy + (x.buy || 0) }; }, { use: 0, buy: 0 });
+  };
+  const label = () => ({ all: '전체 누적', today: `오늘 (${today.slice(5).replace('-', '/')})`, yday: `어제 (${yday.slice(5).replace('-', '/')})`, week: '최근 7일' }[spendPeriod] || spendPeriod.replace(/-/g, '/'));
+  const draw = () => {
+    const body = $('#spBody'); if (!body) return;
+    const rows = ps.map(p => ({ p, ...sumOf(p) })).filter(r => r.use || r.buy).sort((a, b) => b.use - a.use || b.buy - a.buy);
+    const tot = rows.reduce((a, r) => ({ use: a.use + r.use, buy: a.buy + r.buy }), { use: 0, buy: 0 });
+    // 날짜별 합계 (최근 14일)
+    const days = Array.from({ length: 14 }, (_, i) => dayKST(Date.now() - i * 864e5)).map(d => ({ d, use: ps.reduce((a, p) => a + (((p.spend || {})[d] || {}).use || 0), 0), buy: ps.reduce((a, p) => a + (((p.spend || {})[d] || {}).buy || 0), 0), n: ps.filter(p => ((p.spend || {})[d] || {}).use).length }));
+    const mx = Math.max(1, ...days.map(x => x.use));
+    const sel = range();
+    body.innerHTML = `
+      <div class="tabs sub" id="spPer">${[['today', '오늘'], ['yday', '어제'], ['week', '7일'], ['all', '전체']].map(([k, t]) => `<button data-p="${k}" class="${spendPeriod === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+      <label class="small muted" style="display:flex;gap:8px;align-items:center">📅 날짜 고르기<input class="inp" id="spDate" type="date" style="flex:1;padding:8px" max="${today}" value="${/^\d{4}-/.test(spendPeriod) ? spendPeriod : ''}"></label>
+      <div class="card" style="display:grid;gap:6px">
+        <div class="toprow"><b>${label()} 소진 금액</b><span class="small muted">${rows.length}명</span></div>
+        <div style="font:900 28px var(--d);color:var(--yellow)">${won(tot.use * W)}</div>
+        <div class="small muted">🎟 크레딧 ${tot.use.toLocaleString()}회 사용 (1회 = ${won(W)}) · 참고: 크레딧 충전에 쓴 돈 ${won(tot.buy)}</div>
+      </div>
+      <h3>소진 랭킹</h3>
+      <div class="list">${rows.length ? rows.map((r, i) => `<div class="li ${me && r.p.pid === me.pid ? 'me' : ''}"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(r.p.char || 'bino', 's')}
+        <div class="grow"><div class="nm">${esc(r.p.nick)}</div><div class="small muted">🎟 ${r.use.toLocaleString()}회 사용 · 충전 ${won(r.buy)} · 남은 ${won(r.p.money)} / 🎟${r.p.credits || 0}</div></div>
+        <div class="num money">${won(r.use * W)}<small>소진</small></div></div>`).join('') : '<p class="muted" style="text-align:center;padding:16px 0">이 기간에 쓴 사람이 없어요</p>'}</div>
+      <h3>날짜별 소진 (최근 14일)</h3>
+      <div class="list" id="spDays">${days.map(x => `<button class="li dayrow ${sel && sel.length === 1 && sel[0] === x.d ? 'me' : ''}" data-d="${x.d}">
+        <span style="width:52px;font-weight:800">${x.d.slice(5).replace('-', '/')}${x.d === today ? '<br><small class="muted">오늘</small>' : ''}</span>
+        <span class="grow"><span class="sbar"><i style="width:${x.use / mx * 100}%"></i></span><span class="small muted">${x.n}명 · 🎟${x.use}회 · 충전 ${won(x.buy)}</span></span>
+        <b class="num money">${won(x.use * W)}</b></button>`).join('')}</div>
+      <p class="small muted">소진 금액 = 잡기에 쓴 크레딧 × ${won(W)}. 돈으로 산 크레딧과 어드민이 준 크레딧 모두 쓸 때 들어가요. 충전에 쓴 돈은 같은 크레딧을 두 번 세지 않도록 합계에 넣지 않고 참고로만 보여 줘요. 이 기능을 올린 뒤부터 기록돼요.</p>`;
+    body.querySelector('#spPer').onclick = e => { const b = e.target.closest('[data-p]'); if (b) { spendPeriod = b.dataset.p; draw(); } };
+    body.querySelector('#spDate').onchange = e => { if (e.target.value) { spendPeriod = e.target.value; draw(); } };
+    body.querySelector('#spDays').onclick = e => { const b = e.target.closest('[data-d]'); if (b) { spendPeriod = b.dataset.d; draw(); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+  };
+  spendOff = db.on(PATH.players, v => {
+    if (cur !== 'admin' || adminView !== 'spend') { spendOff && spendOff(); spendOff = null; return; }
+    ps = Object.values(v || {}).filter(p => p && p.pid); draw();
+  });
+}
 async function renderAdmin() {
   if (sessionStorage.getItem('claw-admin') !== '1') return show(me ? 'lobby' : 'login');
   const el = $('#s-admin');
+  if (adminView === 'spend') return renderSpend(el);
+  spendOff && spendOff(); spendOff = null;
   el.innerHTML = `<div class="toprow"><button class="back" id="adBack">← 나가기</button><h2>어드민</h2><button class="back" id="adRe">새로고침</button></div>
+    ${ADMIN_TABS()}
     <input class="inp" id="adQ" type="search" placeholder="🔍 닉네임 검색" autocomplete="off" value="${esc(adminQ)}">
     <div class="card" style="display:grid;gap:10px">
       <b>일괄 충전 · 빼기</b>
@@ -1339,6 +1409,7 @@ async function renderAdmin() {
     <div class="list" id="adList"></div>`;
   $('#adBack').onclick = () => { sessionStorage.removeItem('claw-admin'); show(me ? 'lobby' : 'login'); };
   $('#adRe').onclick = renderAdmin;
+  bindAdminTabs(el);
   // 보유자산이 적은 순 (0원이 맨 위), 같으면 최근 가입 순
   const ps = Object.values((await db.get(PATH.players)) || {}).filter(p => p && p.pid)
     .sort((a, b) => (a.money || 0) - (b.money || 0) || (b.createdAt || 0) - (a.createdAt || 0));
@@ -2246,7 +2317,7 @@ async function grab() {
   if (G.phase !== 'play' || c.st !== 'idle' || G.kicked) return;
   if ((me.credits || 0) <= 0) { toast('크레딧이 없어요!'); openBuy(); return; }
   me.credits--; hudMoney();
-  txMe(p => { if ((p.credits || 0) <= 0) return undefined; p.credits--; return p; });
+  txMe(p => { if ((p.credits || 0) <= 0) return undefined; p.credits--; addSpend(p, 'use', 1); return p; });
   Sound.play('coin');
   G.canHit = false; hudHit();
   $('#gHint').style.opacity = 0;
@@ -2580,7 +2651,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261030-1843';
+const APP_VERSION = '20261030-1955';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
