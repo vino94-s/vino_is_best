@@ -699,6 +699,7 @@ async function newCode(pid) {
   throw new Error('코드를 만들지 못했어요. 다시 해 주세요');
 }
 async function register(nick, char) {
+  if (!CH.includes(char)) char = CH[0]; // 플레이어는 기본 캐릭터만 (히든·초희귀는 어드민만 줄 수 있어요)
   nick = nick.trim();
   if (nick.length < 2 || nick.length > 10) throw new Error('닉네임은 2~10글자로 해 주세요');
   const k = nickKey(nick);
@@ -1398,9 +1399,15 @@ async function renderAdmin() {
       });
       return;
     } else if (a === 'char') {
-      const opts = [...CH, ...EXTRA.map(e => e.id)];
-      modal(`<h2>${esc(p.nick)} 캐릭터 바꾸기</h2><div class="charpick">${opts.map(id => `<button type="button" data-c="${id}" class="${id === p.char ? 'on' : ''}">${faceEl(id)}${esc(CHAR(id).name)}</button>`).join('')}</div><button class="btn ghost" data-close>닫기</button>`, (sh, close) => {
-        sh.querySelector('.charpick').onclick = async e => {
+      // 어드민만 히든·초희귀 인형을 캐릭터로 줄 수 있어요 (플레이어는 가입 때 기본 캐릭터만 고를 수 있어요)
+      const pickBtn = id => `<button type="button" data-c="${id}" class="${id === p.char ? 'on' : ''}">${faceEl(id)}${esc(CHAR(id).name)}</button>`;
+      const isRare = h => h.card.name.includes('초희귀'), rare = HIDS.filter(isRare), hid = HIDS.filter(h => !isRare(h));
+      modal(`<h2>${esc(p.nick)} 캐릭터 바꾸기</h2>
+        <b class="small">기본 캐릭터</b><div class="charpick">${[...CH, ...EXTRA.map(e => e.id)].map(pickBtn).join('')}</div>
+        <b class="small" style="color:var(--yellow)">✨ 히든 (어드민 전용)</b><div class="charpick">${hid.map(h => pickBtn(h.id)).join('')}</div>
+        <b class="small" style="color:var(--pink)">💎 초희귀 (어드민 전용)</b><div class="charpick">${rare.map(h => pickBtn(h.id)).join('')}</div>
+        <button class="btn ghost" data-close>닫기</button>`, (sh, close) => {
+        sh.onclick = async e => {
           const bb = e.target.closest('[data-c]'); if (!bb) return;
           const id = bb.dataset.c;
           await txp(c => { c.char = id; c.charFixed = id; return c; }); log('char ' + id); close(); toast(`${p.nick} 캐릭터를 ${CHAR(id).name}(으)로 바꿨어요`); renderAdmin();
@@ -2484,7 +2491,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261029-2034';
+const APP_VERSION = '20261030-1514';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
