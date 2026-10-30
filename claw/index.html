@@ -1685,6 +1685,37 @@ function makeHiddenSprite(im) {
   else { g.fillStyle = '#D4AF37'; g.beginPath(); g.arc(S / 2, S / 2, S * .4, 0, Math.PI * 2); g.fill(); }
   return c;
 }
+// 그림을 아직 못 불러왔거나 불러오다 실패해도 기계가 텅 비지 않게, 대신 쓸 그림을 바로 만들고 뒤에서 다시 불러와요
+const healing = {};
+function fallbackSprite(type, id) {
+  try {
+    if (type === 'keycap') return makeKeycap(id, null);
+    if (type === 'keyring') return makeKeyring(id, null);
+    if (type === 'clicker') return makeClicker(id, null);
+    if (FUSE[id] && FUSE_LOOK[id]) return makeFusionSprite(FUSE[id]);
+    if (HID[id]) return makeHiddenSprite(null);
+    return makeSprite(id, null);
+  } catch (e) { return makeHiddenSprite(null); }
+}
+function sprOf(type, id) {
+  const t = SPR[type] || SPR.doll;
+  if (t[id] && t[id].width) return t[id];
+  t[id] = fallbackSprite(type, id); healSprite(id);
+  return t[id];
+}
+function healSprite(id) {
+  if (healing[id] || id == null) return; healing[id] = 1;
+  const src = FUSE[id] ? 'fusion/' + id + '.png' : HID[id] ? HID[id].img : EXT[id] ? EXT[id].img : CH.includes(id) ? 'plush/' + id + '.png' : null;
+  if (!src) return;
+  const im = new Image();
+  im.onload = () => {
+    SPR.doll[id] = makeHiddenSprite(im);
+    if (EXT[id] || CH.includes(id)) { SPR.keycap[id] = makeKeycap(id, im); SPR.keyring[id] = makeKeyring(id, im); SPR.clicker[id] = makeClicker(id, im); }
+    for (const k of Object.keys(SPR_URL)) if (k.endsWith(':' + id)) delete SPR_URL[k];
+  };
+  im.onerror = () => { setTimeout(() => { healing[id] = 0; }, 15000); };
+  im.src = src + '?v=' + APP_VERSION + '&r=' + Date.now();
+}
 // 얼굴이 아니라 온몸이 그려진 캐릭터는 인형뽑기에서 그림을 그대로 써요 (인형 사진이 있으면 그걸로 덮어써요)
 const FULL_BODY = new Set(['gana']);
 function loadSprites() {
@@ -1698,12 +1729,13 @@ function loadSprites() {
     im.src = imgSrc(id);
   }))]).then(() => {
     for (const f of FUSE_LIST) SPR.doll[f.id] = FUSE_LOOK[f.id] ? makeFusionSprite(f) : mkCanvas(160); // 그림은 아래에서 불러와요
+    for (const e of EXTRA) for (const t of ['doll', 'keycap', 'keyring', 'clicker']) SPR[t][e.id] = fallbackSprite(t, e.id); // 사진이 늦거나 실패해도 비지 않게
     // 직접 그린 합성 인형 그림(fusion/<id>.png)과 기본 캐릭터 인형 사진(plush/<id>.png)은 그대로 써요
-    const art = (dir, id) => new Promise(res => {
+    const art = (dir, id, again) => new Promise(res => {
       const im = new Image();
       im.onload = () => { SPR.doll[id] = makeHiddenSprite(im); res(); };
-      im.onerror = () => res();
-      im.src = dir + '/' + id + '.png?v=' + APP_VERSION; // 같은 이름으로 그림을 바꿔도 새 그림을 받아요
+      im.onerror = () => { if (again) res(); else setTimeout(() => art(dir, id, true).then(res), 800); }; // 실패하면 한 번 더
+      im.src = dir + '/' + id + '.png?v=' + APP_VERSION + (again ? '&r=' + Date.now() : ''); // 같은 이름으로 그림을 바꿔도 새 그림을 받아요
     });
     return Promise.all([...FUSE_ART.map(id => art('fusion', id)), ...CH.map(id => art('plush', id)), ...EXTRA.map(e => art('plush', e.id).then(() => {
       // 키캡·키링·클리커는 인형 사진으로 만들어요
@@ -1946,7 +1978,8 @@ function setupDolls(rng) {
     if (G.mtype === 'doll') for (const h of HIDS) if (rng() < h.chance) return h.id;
     let r = rng() * 100, tier = 'common';
     for (const [k, t] of Object.entries(TIERS)) { if ((r -= t.w) < 0) { tier = k; break; } }
-    const ids = [...CH, ...EXTRA.map(e => e.id)].filter(id => tierOf(id) === tier); return ids[Math.floor(rng() * ids.length)];
+    let ids = [...CH, ...EXTRA.map(e => e.id)].filter(id => tierOf(id) === tier); if (!ids.length) ids = CH;
+    return ids[Math.floor(rng() * ids.length)] || CH[0];
   };
   G.dolls = [];
   const mk = (x, z, y) => ({ id: pickId(), x, z, y, vx: 0, vy: 0, vz: 0, st: 'rest', wob: 0 });
@@ -1984,10 +2017,13 @@ function startRound({ mode, seed, startAt, machine = 'doll' }) {
     score: 0, caught: [], prizes: [], parts: [], canHit: false, kicked: false, shake: 0, ended: false, lastCount: -1, lastSec: -1,
     claw: { x: W * 0.62, z: D * 0.5, y: REST_Y, tx: W * 0.62, tz: D * 0.5, vx: 0, vz: 0, pvx: 0, pvz: 0, sway: 0, swayV: 0, swayZ: 0, open: 1, st: 'idle', t: 0, held: null, slipAt: -1, trav: 0 },
   });
+  G.rid = (G.rid || 0) + 1; // 판 번호: 지난 판에서 예약해 둔 결과 창이 새 판 위에 뜨지 않게 해요
   setupDolls(G.rng);
+  if (!G.dolls.length) setupDolls(mulberry32(seed + 1)); // 혹시라도 비면 한 번 더 깔아요
   G.prevNow = 0; G.wasBusy = false; $('#gTime').classList.remove('paused');
   const hd = G.dolls.find(d => HID[d.id]);
-  if (hd) setTimeout(() => { if (cur === 'game') { bubble(hd.id, '…기계 안에서 뭔가 반짝인다?! ✨'); Sound.play('win'); } }, 700);
+  const rid0 = G.rid;
+  if (hd) setTimeout(() => { if (cur === 'game' && G.rid === rid0) { bubble(hd.id, '…기계 안에서 뭔가 반짝인다?! ✨'); Sound.play('win'); } }, 700);
   show('game');
   $('#gHint').style.opacity = 1;
   $('#gScore').textContent = '0';
@@ -2258,24 +2294,25 @@ function keepAndLeave() {
       close();
       if (G.ended) return;
       if (G.claw.held) { G.claw.held.st = 'gone'; G.claw.held = null; }
-      finishRound();
+      finishRound({ quiet: true });
       if (G.mode === 'online' && room.code) show('room'); else show('lobby');
       toast(G.score ? `🎁 ${unit} ${G.score}개를 가지고 나왔어요` : '판을 끝냈어요');
     };
   });
 }
-function finishRound() {
-  if (G.ended) return; G.ended = true; G.phase = 'over'; G.canHit = false; hudGrab(); hudHit();
+function finishRound({ quiet = false } = {}) {
+  if (G.ended) return; G.ended = true; const rid = G.rid; G.phase = 'over'; G.canHit = false; hudGrab(); hudHit();
   txMe(c => { c.games = (c.games || 0) + 1; c.best = Math.max(c.best || 0, G.score); return c; });
   if (G.mode === 'online') {
     if (room.code) db.update(PATH.room(room.code) + '/players/' + me.pid, { score: G.score, done: true, kicked: !!G.kicked }).catch(() => {});
     const v = room.data;
     if (v && v.last && v.last.round === G.onlineRound && !G.resultShown) showOnlineResult(v.last);
-    else setTimeout(() => { if (!G.resultShown && cur === 'game') toast('다른 사람들이 끝나길 기다리는 중…', 3000); }, 600);
+    else if (!quiet) setTimeout(() => { if (G.rid === rid && !G.resultShown && cur === 'game') toast('다른 사람들이 끝나길 기다리는 중…', 3000); }, 600);
     return;
   }
+  if (quiet) return; // '뽑은 것만 가져가기'로 나가면 결과 창 없이 바로 로비로 가요
   setTimeout(() => {
-    if (cur !== 'game') return;
+    if (cur !== 'game' || G.rid !== rid || G.phase !== 'over') return; // 그 사이 새 판을 시작했으면 지난 판 결과는 안 띄워요
     const kicked = G.kicked;
     modal(`<h2 style="text-align:center">${kicked ? '🚫 쫓겨났어요' : G.score ? `${G.M.emoji} ${G.M.unit} ${G.score}개 뽑았어요!` : '하나도 못 뽑았어요…'}</h2>
       <p class="muted" style="text-align:center">${kicked ? `사장님이 ${CFG.banSec / 60}분 동안 못 들어오게 했어요.` : esc(say(me.char, G.score ? 'win' : 'lose'))}</p>
@@ -2296,7 +2333,7 @@ function drawDoll(d, alpha) {
   const clip = d.st === 'fall' && inChute(d.x, d.z, 0.5) && d.y < R * 2;
   if (clip) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, G.w, P(0, 0, CHUTE.z0)[1]); ctx.clip(); }
   if (alpha != null) ctx.globalAlpha = alpha;
-  ctx.drawImage(SPR[G.mtype][d.id], sx - size / 2 * (1 + w), sy - size * 0.95 * (1 - w), size * (1 + w), size * (1 - w));
+  ctx.drawImage(sprOf(G.mtype, d.id), sx - size / 2 * (1 + w), sy - size * 0.95 * (1 - w), size * (1 + w), size * (1 - w));
   const tr = tierOf(d.id);
   if ((tr === 'legend' || tr === 'hidden') && d.st !== 'gone') {
     const t = performance.now() / (tr === 'hidden' ? 220 : 300), r = size * (tr === 'hidden' ? 0.5 : 0.42), n = tr === 'hidden' ? 5 : 3;
@@ -2359,7 +2396,7 @@ function draw() {
   let clawDrawn = false;
   for (const d of list) {
     if (!clawDrawn && d.z < c.z - 1) { drawClaw(); clawDrawn = true; }
-    drawDoll(d);
+    try { drawDoll(d); } catch (e) { ctx.globalAlpha = 1; reportErr('doll ' + d.id, e); } // 인형 하나가 말썽이어도 나머지는 그려요
   }
   if (!clawDrawn) drawClaw();
   if (aim) drawAim(aim);
@@ -2369,7 +2406,7 @@ function draw() {
   if (G.door) for (const p of G.prizes) {
     const t = p.t, pop = t < 0.35 ? easeBack(t / 0.35) : t > 1.2 ? Math.max(0, 1 - (t - 1.2) / 0.4) : 1;
     const size = Math.min(G.door.w * 0.9, 70) * pop;
-    ctx.drawImage(SPR[G.mtype][p.id], G.door.x - size / 2, G.door.y - size * 0.95 - (t < 0.35 ? 0 : 6 * Math.sin(t * 8) * (1.2 - Math.min(t, 1.2))), size, size);
+    ctx.drawImage(sprOf(G.mtype, p.id), G.door.x - size / 2, G.door.y - size * 0.95 - (t < 0.35 ? 0 : 6 * Math.sin(t * 8) * (1.2 - Math.min(t, 1.2))), size, size);
   }
   for (const p of G.parts) { ctx.save(); ctx.globalAlpha = clamp(p.life * 1.5, 0, 1); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); }
 }
@@ -2499,7 +2536,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261030-1542';
+const APP_VERSION = '20261030-1700';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
