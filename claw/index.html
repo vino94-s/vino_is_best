@@ -434,6 +434,9 @@ const MACH = {
 const MTYPES = Object.keys(MACH);
 // 난이도: 처음보다 10% 쉽게 (잡히는 확률 ×1.1, 미끄러지는 확률 ×0.9)
 const EASY = { grip: 1.1, slip: 0.9 };
+// 키캡·키링·클리커 기계에서는 히든급(히든·초희귀)이 나올 확률과 잡힐 확률이 각각 20% 더 높아요 (인형뽑기는 그대로)
+const GOODS_HIDDEN_BOOST = 1.2;
+const hidBoost = type => (type === 'doll' ? 1 : GOODS_HIDDEN_BOOST);
 // 합성: 인형 2개 → 새 인형. 기본 31(캐릭터 13 + 현꿀오소리 + 헤존구 + 히든 16) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 + 초희귀 준탁 조합 15 = 컬렉션 246
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
@@ -1169,7 +1172,7 @@ function zoomDoll(id, type = 'doll') {
     <p class="muted" style="text-align:center">“${esc(say(id, 'good'))}”</p>
     <div class="card small" style="display:grid;gap:4px;text-align:center">
       <span>보유 <b>${n}개</b> · 판매가 <b class="money">${won(priceOf(type, id))}</b></span>
-      ${F ? `<span class="muted">만드는 법: ${how}${type === 'doll' ? '' : ` (${MACH[type].unit}끼리)`}</span>` : HID[id] ? `<span class="muted">오락실 기계 어디서나 ${+(HID[id].chance * 100).toFixed(2)}% 확률로 나타나는 히든</span>` : `<span class="muted">${MACH[type].name} 기계에서 뽑을 수 있어요</span>`}
+      ${F ? `<span class="muted">만드는 법: ${how}${type === 'doll' ? '' : ` (${MACH[type].unit}끼리)`}</span>` : HID[id] ? `<span class="muted">${MACH[type].name} 기계에서 ${+(HID[id].chance * hidBoost(type) * 100).toFixed(2)}% 확률로 나타나는 히든</span>` : `<span class="muted">${MACH[type].name} 기계에서 뽑을 수 있어요</span>`}
     </div>
     <button class="btn ghost" data-close>닫기</button>`);
 }
@@ -2015,7 +2018,7 @@ function surface(x, z, ex) {
 }
 function setupDolls(rng) {
   const pickId = () => {
-    for (const h of HIDS) if (rng() < h.chance) return h.id; // 히든은 모든 기계에서 같은 확률로 나와요
+    for (const h of HIDS) if (rng() < h.chance * hidBoost(G.mtype)) return h.id; // 히든은 모든 기계에서 나와요 (인형 외 기계는 20% 더 자주)
     let r = rng() * 100, tier = 'common';
     for (const [k, t] of Object.entries(TIERS)) { if ((r -= t.w) < 0) { tier = k; break; } }
     let ids = [...CH, ...EXTRA.map(e => e.id)].filter(id => tierOf(id) === tier); if (!ids.length) ids = CH;
@@ -2203,7 +2206,8 @@ function evalGrab() {
   const covered = G.dolls.some(o => o !== d && o.st === 'rest' && o.y > d.y + R * 0.5 && Math.hypot(o.x - d.x, o.z - d.z) < R * 1.5);
   const cf = clamp(1.2 - (dist / (R * 1.3)) ** 2, 0, 1);
   const T = TIERS[tierOf(d.id)];
-  const p = Math.min(0.95, T.grip * G.M.grip * EASY.grip * cf * (covered ? 0.3 : 1) * (0.88 + Math.random() * 0.24));
+  const hb = tierOf(d.id) === 'hidden' ? hidBoost(G.mtype) : 1; // 인형 외 기계의 히든급은 20% 더 잘 잡혀요
+  const p = Math.min(0.95, T.grip * hb * G.M.grip * EASY.grip * cf * (covered ? 0.3 : 1) * (0.88 + Math.random() * 0.24));
   if (isLucky() || Math.random() < p) {
     c.held = d; d.st = 'held';
     const journey = (REST_Y - c.y) + Math.hypot(CHUTE.cx - c.x, CHUTE.cz - c.z);
@@ -2576,7 +2580,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261030-1839';
+const APP_VERSION = '20261030-1843';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
