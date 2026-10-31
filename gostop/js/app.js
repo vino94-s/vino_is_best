@@ -1,12 +1,12 @@
 // 손모가지 조심! — 화면과 게임 진행
-import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261029b';
-import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261029b';
-import { botMove, botGoStop } from './bot.js?v=20261029b';
-import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261029b';
-import { botBet, botChoose } from './seotda-bot.js?v=20261029b';
-import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261029b';
-import { createStore, applyResult, holdLoss, settleHeld, claimFreeCharge, freeChargeLeft } from './store.js?v=20261029b';
-import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API, FREE_CHARGE } from './config.js?v=20261029b';
+import { CARDS, MONTHS, RIBBON_NAME } from './cards.js?v=20261031a';
+import { newGame, applyPlay, applyGoStop, legalMoves, scoreDetail, withGo } from './engine.js?v=20261031a';
+import { botMove, botGoStop } from './bot.js?v=20261031a';
+import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261031a';
+import { botBet, botChoose } from './seotda-bot.js?v=20261031a';
+import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261031a';
+import { createStore, applyResult, holdLoss, settleHeld, claimFreeCharge, freeChargeLeft } from './store.js?v=20261031a';
+import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API, FREE_CHARGE } from './config.js?v=20261031a';
 
 // ───────────────── 유틸 ─────────────────
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -1115,6 +1115,10 @@ class Game {
     const opps = [];
     for (let k = 1; k < s.n; k++) opps.push((me + k) % s.n);
     const fresh = new Set(s.floor.filter(id => !this.prevFloor.includes(id)));
+    // 방금 상대가 먹은 패 살짝 강조
+    const prevCaps = this.prevCaps || [];
+    const fresh2 = new Set(this.prevCapsGid === this.gid ? s.caps.flatMap((c, i) => c.filter(id => !(prevCaps[i] || []).includes(id))) : []);
+    if (this.prevCapsVer !== s.ver) { this.prevCaps = s.caps.map(c => c.slice()); this.prevCapsGid = this.gid; this.prevCapsVer = s.ver; }
 
     const tbar = h('div', { class: 'tbar' },
       h('button', { class: 'icon-btn', onclick: () => this.quit(false) }, '나가기'),
@@ -1122,7 +1126,7 @@ class Game {
       h('button', { class: 'icon-btn', 'aria-label': Snd.on ? '소리 끄기' : '소리 켜기', onclick: () => { Snd.toggle(); this.render(); } }, Snd.on ? '🔊' : '🔇'),
       h('button', { id: 'btn-chat', class: 'icon-btn', onclick: () => this.toggleChat() }, '채팅', this.chatBadge));
 
-    const oppEls = h('div', { class: 'opps', style: `--opp-n:${opps.length}` }, opps.map((i, k) => {
+    const oppEls = h('div', { class: `opps n${opps.length}`, style: `--opp-n:${opps.length}` }, opps.map((i, k) => {
       const p = s.seats[i];
       const { g, d } = groupCaps(s.caps[i]);
       const piCount = d.piVal;
@@ -1130,12 +1134,17 @@ class Game {
         h('div', { class: 'head' }, this.avWrap(i, p.char, `down ${k === opps.length - 1 && opps.length > 1 ? 'r' : ''}`),
           h('div', { class: 'nm' }, p.name, h('small', {}, p.isBot ? `봇 · ${{ easy: '쉬움', normal: '보통', hard: '어려움' }[p.level]}` : `손패 ${s.hands[i].length}장`)),
           h('span', { class: 'pts' }, d.total)),
-        h('div', { class: 'chips' },
-          h('span', {}, `광${g.gwang.length}`), h('span', {}, `열${g.yeol.length}`), h('span', {}, `띠${g.tti.length}`), h('span', {}, `피${piCount}`),
+        // 상대가 먹은 패를 항상 펼쳐서 보여줌 (광·열·띠·피). 누르면 크게 보기
+        h('div', { class: 'opp-caps' },
+          [['광', g.gwang, g.gwang.length], ['열', g.yeol, g.yeol.length], ['띠', g.tti, g.tti.length], ['피', g.pi, piCount]].map(([lb, ids, cnt]) =>
+            h('div', { class: `og ${ids.length ? '' : 'empty'}` },
+              h('span', { class: 'ol' }, lb, h('b', {}, cnt)),
+              h('div', { class: 'ostrip' }, ids.map(id => h('span', { class: 'w' }, cardEl(id, `mini ${fresh2.has(id) ? 'fresh' : ''}`))))))),
+        (s.goCount[i] || s.shake[i] || s.bomb[i] || s.ppeokCount[i]) ? h('div', { class: 'chips' },
           s.goCount[i] ? h('span', { class: 'go' }, `${s.goCount[i]}고`) : null,
           s.shake[i] ? h('span', { class: 'go' }, '흔들') : null,
           s.bomb[i] ? h('span', { class: 'go' }, '폭탄') : null,
-          s.ppeokCount[i] ? h('span', {}, `뻑${s.ppeokCount[i]}`) : null));
+          s.ppeokCount[i] ? h('span', {}, `뻑${s.ppeokCount[i]}`) : null) : null);
     }));
 
     // 바닥: 월별로 묶기
@@ -1524,7 +1533,7 @@ class SeotdaGame extends Game {
       h('button', { class: 'icon-btn', 'aria-label': Snd.on ? '소리 끄기' : '소리 켜기', onclick: () => { Snd.toggle(); this.render(); } }, Snd.on ? '🔊' : '🔇'),
       h('button', { id: 'btn-chat', class: 'icon-btn', onclick: () => this.toggleChat() }, '채팅', this.chatBadge));
 
-    const oppEls = h('div', { class: 'opps', style: `--opp-n:${opps.length}` }, opps.map((i, k) => {
+    const oppEls = h('div', { class: `opps n${opps.length}`, style: `--opp-n:${opps.length}` }, opps.map((i, k) => {
       const p = s.seats[i];
       const shown = ended && r.hands?.[i];
       const turn = s.phase === 'bet' && s.turn === i;

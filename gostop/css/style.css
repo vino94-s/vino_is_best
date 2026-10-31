@@ -190,6 +190,19 @@ img { display: block; }
 .opp .nm small { display: block; font-weight: 400; color: var(--on-felt-muted); }
 .pts { font-family: var(--f-stamp); font-size: 22px; color: var(--gold); margin-left: auto; line-height: 1; }
 .chips { display: flex; gap: 4px; flex-wrap: wrap; font-size: 12px; }
+/* 상대가 먹은 패: 항상 펼쳐 보기. 칸이 좁으면 카드가 자동으로 겹쳐짐 */
+.opp-caps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 6px; --ocw: 20px; }
+.opps.n2 .opp-caps, .opps.n3 .opp-caps { grid-template-columns: repeat(2, minmax(0, 1fr)); --ocw: 16px; }
+.opp-caps .og { min-width: 0; display: grid; gap: 1px; }
+.opp-caps .ol { font-size: 11px; color: var(--on-felt-muted); line-height: 1.1; white-space: nowrap; }
+.opp-caps .ol b { color: var(--on-felt, #fff); margin-left: 2px; }
+.opp-caps .og.empty .ol { opacity: .55; }
+.opp-caps .ostrip { display: flex; min-width: 0; height: calc(var(--ocw) * 1.62); }
+.opp-caps .ostrip .w { flex: 0 1 var(--ocw); min-width: 3px; }
+.opp-caps .ostrip .w:last-child { flex: none; }
+.opp-caps .card.mini { --cw: var(--ocw); --ch: calc(var(--ocw) * 1.62); padding: 0; box-shadow: 0 0 0 1px rgba(0, 0, 0, .45), -1px 0 2px rgba(0, 0, 0, .35); border-radius: 3px; }
+.opp-caps .card.mini.fresh { box-shadow: 0 0 0 2px var(--gold), 0 0 6px var(--gold); }
+@media (min-width: 700px) { .opp-caps { --ocw: 24px; } .opps.n2 .opp-caps, .opps.n3 .opp-caps { grid-template-columns: repeat(4, minmax(0, 1fr)); --ocw: 22px; } }
 .chips span { background: rgba(0, 0, 0, .3); border-radius: 5px; padding: 1px 5px; }
 .chips .go { background: var(--red); color: #fff; font-weight: 700; }
 
