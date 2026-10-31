@@ -323,7 +323,7 @@ const TIERS = {
   fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
 };
 const TIER_OF = { yeoni: 'common', kkaegul: 'common', mandu: 'common', goran: 'common', bongchum: 'common',
-  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden', sp_goran: 'hidden', sp_juntak: 'hidden', sp_haetsal: 'hidden', sp_goran2: 'hidden', sp_mandu: 'hidden', sp_kkaegul: 'hidden', sp_yeoni: 'hidden', sp_juntak2: 'hidden', sp_gana: 'hidden', sp_yeongjun: 'hidden', sp_eomji: 'hidden', sp_myongradak: 'hidden', sp_bongchum: 'hidden', sp_jongu: 'hidden' };
+  eomji: 'rare', yeongjun: 'rare', haetsal: 'rare', myongradak: 'rare', gana: 'rare', juntak: 'epic', yongwang: 'epic', bino: 'legend', sp_yongwang: 'hidden', sp_bino: 'hidden', sp_goran: 'hidden', sp_juntak: 'hidden', sp_haetsal: 'hidden', sp_goran2: 'hidden', sp_mandu: 'hidden', sp_kkaegul: 'hidden', sp_yeoni: 'hidden', sp_juntak2: 'hidden', sp_gana: 'hidden', sp_yeongjun: 'hidden', sp_eomji: 'hidden', sp_myongradak: 'hidden', sp_bongchum: 'hidden', sp_jongu: 'hidden', sp_byeolnara: 'hidden' };
 // 히든 인형: 인형뽑기 기계에 깔리는 인형 하나하나가 0.5% 확률로 이 인형이 돼요 (한 판 21개 기준 약 10%)
 const HIDDEN = {
   id: 'sp_yongwang', chance: 0.005, img: 'special-yongwang.png',
@@ -417,13 +417,21 @@ const HIDDEN16 = {
   card: { id: 'sp_jongu', name: '히든존구', color: '#8A5A3A', hi: '쿠키 하나 줄까~? 😉',
     lines: { good: ['히든이라 더 바삭하지~ 🍪', '초코칩 콕콕! 뽑혔다~'], bad: ['앗… 부스러기 떨어졌다…', '쿠키가 눅눅해졌어…'], start: ['오븐 예열 완료~ 🍪'], win: ['바삭하게 이겼지~ 😉'], lose: ['부스러기만 남았다…'], taunt: ['쿠키 줄 테니 져 줄래? 😛'] } },
 };
-const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4, HIDDEN5, HIDDEN6, HIDDEN7, HIDDEN8, HIDDEN9, HIDDEN10, HIDDEN11, HIDDEN12, HIDDEN13, HIDDEN14, HIDDEN15, HIDDEN16];
+// 열일곱 번째 히든 인형: 히든별나라 (히든용왕과 같은 0.5%)
+const HIDDEN17 = {
+  id: 'sp_byeolnara', chance: 0.005, img: 'special-byeolnara.png',
+  card: { id: 'sp_byeolnara', name: '히든별나라', color: '#2E3A78', hi: '반짝~ 별나라에 온 걸 환영해 😜',
+    lines: { good: ['반짝! 히든이라 별빛 두 배 😜', '윙크 한 번에 별이 쏟아진다~'], bad: ['앗… 별 하나 떨어졌다…', '졸려서 놓쳤어… 하암~'], start: ['파자마 입고 별나라 출동~ ✨'], win: ['메롱~ 별나라 공주님이 이겼지롱 😜'], lose: ['하암… 꿈나라로 퇴근할래…'], taunt: ['별빛 윙크 받아라~ 😉✨'] } },
+};
+const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4, HIDDEN5, HIDDEN6, HIDDEN7, HIDDEN8, HIDDEN9, HIDDEN10, HIDDEN11, HIDDEN12, HIDDEN13, HIDDEN14, HIDDEN15, HIDDEN16, HIDDEN17];
 // 공용 캐릭터 카드에 없는 이 게임 전용 인형 (모든 기계에 나와요)
 const EXTRA = [
   { id: 'honey', name: '현꿀오소리', tier: 'common', img: 'plush/honey.png', color: '#4A3F3A', hi: '덤벼!',
     lines: { good: ['꿀 냄새 난다! 덤벼!', '오소리는 겁이 없지'], bad: ['…놓쳤지만 안 쫄았어', '다시 덤벼!'], start: ['꿀 찾으러 왔다!'], win: ['꿀오소리 승리!'], lose: ['…다음엔 물어버린다'], taunt: ['송곳니 보여줄까?'] } },
   { id: 'jongu', name: '헤존구', tier: 'common', img: 'plush/jongu.png', color: '#7B4A2E', hi: '…헤헤 존구',
     lines: { good: ['헤헤… 뽑혔네… 견과류 맛 봐…', '혀 내밀고 기다렸지롱~'], bad: ['…부스러기 흘렸다', '헤… 반쪽 날아갔네'], start: ['헤헤… 존구 왔다'], win: ['헤헤헤… 이겼다 존구~'], lose: ['…코코아 가루만 남았다'], taunt: ['헤~ 메롱 존구 😛'] } },
+  { id: 'byeolnara', name: '별나라', tier: 'common', img: 'plush/byeolnara.png', color: '#F5C431', hi: '헤헤… 반짝 별나라!',
+    lines: { good: ['반짝! 헤헤 뽑혔다~', '별똥별처럼 슝~ 들어왔지롱'], bad: ['하암… 졸다가 놓쳤다…', '수면 모자 벗겨졌어…'], start: ['잘 자기 전에 한 판만~ 반짝!'], win: ['헤헤헤… 별처럼 빛나는 승리!'], lose: ['…꿈속에서 다시 할래'], taunt: ['메롱~ 앞니 반짝 😛'] } },
 ];
 const EXT = Object.fromEntries(EXTRA.map(e => [e.id, e]));
 for (const e of EXTRA) TIER_OF[e.id] = e.tier;
@@ -441,7 +449,7 @@ const EASY = { grip: 1.1, slip: 0.9 };
 // 키캡·키링·클리커 기계에서는 히든급(히든·초희귀)이 나올 확률과 잡힐 확률이 각각 20% 더 높아요 (인형뽑기는 그대로)
 const GOODS_HIDDEN_BOOST = 1.2;
 const hidBoost = type => (type === 'doll' ? 1 : GOODS_HIDDEN_BOOST);
-// 합성: 인형 2개 → 새 인형. 기본 31(캐릭터 13 + 현꿀오소리 + 헤존구 + 히든 16) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 + 초희귀 준탁 조합 15 = 컬렉션 246
+// 합성: 인형 2개 → 새 인형. 기본 33(캐릭터 13 + 현꿀오소리 + 헤존구 + 별나라 + 히든 17) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 + 초희귀 준탁 조합 15 + 별나라·히든별나라 2 + 히든가나·영준·엄지·묭라닥·봉춘·존구·별나라 조합 105 = 컬렉션 353
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -544,11 +552,56 @@ const FUSE_LIST = [
   ['j07', '용궁 연회', 'sp_juntak2', 'yongwang'], ['j08', '무표정 바텐더', 'sp_juntak2', 'bino'], ['j09', '꿀주 신사', 'sp_juntak2', 'honey'],
   ['j10', '준탁 파티', 'sp_juntak2', 'sp_juntak'], ['j11', '초희귀 커플', 'sp_juntak2', 'sp_goran2'], ['j12', '장미와 샴페인', 'sp_juntak2', 'sp_yeoni'],
   ['j13', '용궁 무도회', 'sp_juntak2', 'sp_yongwang'], ['j14', '신사 클럽', 'j01', 'j10'], ['j15', '초희귀 연회', 'j14', 'j11'],
+  // ── 히든가나 조합 15종 (a01~a15) · 그림이 오기 전까지는 재료 두 인형을 합친 그림으로 보여줘요 ──
+  ['a01', '초코 쌍둥이', 'sp_gana', 'gana'], ['a02', '천사 따봉', 'sp_gana', 'eomji'], ['a03', '초코 만세', 'sp_gana', 'yeongjun'],
+  ['a04', '초코 용궁', 'sp_gana', 'yongwang'], ['a05', '초콜릿 신사', 'sp_gana', 'juntak'], ['a06', '녹는 햇살 초코', 'sp_gana', 'haetsal'],
+  ['a07', '초코 먹보', 'sp_gana', 'goran'], ['a08', '초코 연못', 'sp_gana', 'kkaegul'], ['a09', '초코 츄르', 'sp_gana', 'mandu'],
+  ['a10', '초코 무표정', 'sp_gana', 'bino'], ['a11', '꿀초코 날개', 'sp_gana', 'honey'], ['a12', '초코칩 천사', 'sp_gana', 'sp_jongu'],
+  ['a13', '초코 별사탕', 'sp_gana', 'sp_byeolnara'], ['a14', '악동 초코 파티', 'a01', 'a12'], ['a15', '초코 천국', 'a14', 'a13'],
+  // ── 히든영준 조합 15종 (e01~e15) · 그림이 오기 전까지는 재료 두 인형을 합친 그림으로 보여줘요 ──
+  ['e01', '만세 형제', 'sp_yeongjun', 'yeongjun'], ['e02', '만세 따봉', 'sp_yeongjun', 'eomji'], ['e03', '미안 만세', 'sp_yeongjun', 'yeoni'],
+  ['e04', '용궁 만세', 'sp_yeongjun', 'yongwang'], ['e05', '해님 만세', 'sp_yeongjun', 'haetsal'], ['e06', '깡총 만세', 'sp_yeongjun', 'kkaegul'],
+  ['e07', '새 친구 꼬꼬', 'sp_yeongjun', 'myongradak'], ['e08', '짹짹 왈왈', 'sp_yeongjun', 'bongchum'], ['e09', '무표정 만세', 'sp_yeongjun', 'bino'],
+  ['e10', '헤헤 짹', 'sp_yeongjun', 'jongu'], ['e11', '닭과 새 합창단', 'sp_yeongjun', 'sp_myongradak'], ['e12', '별 보며 만세', 'sp_yeongjun', 'sp_byeolnara'],
+  ['e13', '용궁 축제 만세', 'sp_yeongjun', 'sp_yongwang'], ['e14', '만세 합창단', 'e01', 'e11'], ['e15', '히든 만세 축제', 'e14', 'e12'],
+  // ── 히든엄지 조합 15종 (u01~u15) · 그림이 오기 전까지는 재료 두 인형을 합친 그림으로 보여줘요 ──
+  ['u01', '쌍따봉', 'sp_eomji', 'eomji'], ['u02', '미안 따봉', 'sp_eomji', 'yeoni'], ['u03', '용왕 따봉', 'sp_eomji', 'yongwang'],
+  ['u04', '신사 따봉', 'sp_eomji', 'juntak'], ['u05', '먹보 따봉', 'sp_eomji', 'goran'], ['u06', '츄르 따봉', 'sp_eomji', 'mandu'],
+  ['u07', '치킨 따봉', 'sp_eomji', 'myongradak'], ['u08', '초코 따봉', 'sp_eomji', 'gana'], ['u09', '꿀 따봉', 'sp_eomji', 'honey'],
+  ['u10', '별빛 따봉', 'sp_eomji', 'byeolnara'], ['u11', '왈왈 따봉', 'sp_eomji', 'sp_bongchum'], ['u12', '쿠키 따봉', 'sp_eomji', 'sp_jongu'],
+  ['u13', '무표정 엄지', 'sp_eomji', 'sp_bino'], ['u14', '따봉 대잔치', 'u01', 'u06'], ['u15', '전설의 엄지척', 'u14', 'u11'],
+  // ── 히든묭라닥 조합 15종 (d01~d15) · 그림이 오기 전까지는 재료 두 인형을 합친 그림으로 보여줘요 ──
+  ['d01', '꼬꼬 형제', 'sp_myongradak', 'myongradak'], ['d02', '미안 꼬꼬', 'sp_myongradak', 'yeoni'], ['d03', '용궁 꼬꼬', 'sp_myongradak', 'yongwang'],
+  ['d04', '신사의 닭', 'sp_myongradak', 'juntak'], ['d05', '아침 해 꼬끼오', 'sp_myongradak', 'haetsal'], ['d06', '먹보 닭', 'sp_myongradak', 'goran'],
+  ['d07', '연못 꼬꼬', 'sp_myongradak', 'kkaegul'], ['d08', '치와와 꼬꼬', 'sp_myongradak', 'bongchum'], ['d09', '무표정 치킨', 'sp_myongradak', 'bino'],
+  ['d10', '초코 치킨', 'sp_myongradak', 'gana'], ['d11', '꿀 치킨', 'sp_myongradak', 'honey'], ['d12', '별밤 꼬끼오', 'sp_myongradak', 'sp_byeolnara'],
+  ['d13', '황금 해 꼬끼오', 'sp_myongradak', 'sp_haetsal'], ['d14', '꼬꼬 대합창', 'd01', 'd05'], ['d15', '황금 치킨 전설', 'd14', 'd12'],
+  // ── 히든봉춘 조합 15종 (p01~p15) · 그림이 오기 전까지는 재료 두 인형을 합친 그림으로 보여줘요 ──
+  ['p01', '왈왈 형제', 'sp_bongchum', 'bongchum'], ['p02', '강아지 친구', 'sp_bongchum', 'yeoni'], ['p03', '만세 왈왈', 'sp_bongchum', 'yeongjun'],
+  ['p04', '용궁 왈왈', 'sp_bongchum', 'yongwang'], ['p05', '해님 산책', 'sp_bongchum', 'haetsal'], ['p06', '먹보 강아지', 'sp_bongchum', 'goran'],
+  ['p07', '연못 산책', 'sp_bongchum', 'kkaegul'], ['p08', '냥멍 낮잠', 'sp_bongchum', 'mandu'], ['p09', '무표정 산책', 'sp_bongchum', 'bino'],
+  ['p10', '초코 금지 왈', 'sp_bongchum', 'gana'], ['p11', '쿠키 간식 왈', 'sp_bongchum', 'jongu'], ['p12', '별 보는 강아지', 'sp_bongchum', 'sp_byeolnara'],
+  ['p13', '히든 산책단', 'sp_bongchum', 'sp_yeoni'], ['p14', '왈왈 대소동', 'p01', 'p02'], ['p15', '전설의 치와와', 'p14', 'p12'],
+  // ── 히든존구 조합 15종 (z01~z15) · 그림이 오기 전까지는 재료 두 인형을 합친 그림으로 보여줘요 ──
+  ['z01', '쿠키 형제', 'sp_jongu', 'jongu'], ['z02', '따봉 쿠키', 'sp_jongu', 'eomji'], ['z03', '미안 쿠키', 'sp_jongu', 'yeoni'],
+  ['z04', '용궁 쿠키', 'sp_jongu', 'yongwang'], ['z05', '쿠키와 샴페인', 'sp_jongu', 'juntak'], ['z06', '쿠키 먹보', 'sp_jongu', 'goran'],
+  ['z07', '만세 쿠키', 'sp_jongu', 'yeongjun'], ['z08', '츄르 쿠키', 'sp_jongu', 'mandu'], ['z09', '무표정 쿠키', 'sp_jongu', 'bino'],
+  ['z10', '꿀 쿠키', 'sp_jongu', 'honey'], ['z11', '별 쿠키', 'sp_jongu', 'byeolnara'], ['z12', '치킨 쿠키', 'sp_jongu', 'sp_myongradak'],
+  ['z13', '쿠키 먹방', 'sp_jongu', 'sp_goran'], ['z14', '쿠키 공장', 'z01', 'z10'], ['z15', '전설의 쿠키', 'z14', 'z12'],
+  // ── 히든별나라 조합 15종 (t01~t15) · 그림이 오기 전까지는 재료 두 인형을 합친 그림으로 보여줘요 ──
+  ['t01', '별나라 친구', 'sp_byeolnara', 'byeolnara'], ['t02', '별빛 미안', 'sp_byeolnara', 'yeoni'], ['t03', '바다 별밤', 'sp_byeolnara', 'yongwang'],
+  ['t04', '별빛 신사', 'sp_byeolnara', 'juntak'], ['t05', '해와 별', 'sp_byeolnara', 'haetsal'], ['t06', '별사탕 먹보', 'sp_byeolnara', 'goran'],
+  ['t07', '별 보는 개구리', 'sp_byeolnara', 'kkaegul'], ['t08', '꿈나라 고양이', 'sp_byeolnara', 'mandu'], ['t09', '무표정 별밤', 'sp_byeolnara', 'bino'],
+  ['t10', '꿀잠 오소리', 'sp_byeolnara', 'honey'], ['t11', '잘자 따봉', 'sp_byeolnara', 'eomji'], ['t12', '별빛 공주', 'sp_byeolnara', 'sp_yeoni'],
+  ['t13', '꿈속 용궁', 'sp_byeolnara', 'sp_yongwang'], ['t14', '별나라 파자마 파티', 't01', 't08'], ['t15', '별나라 여왕', 't14', 't12'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
-const FUSE_TAG = {"j": "초희귀 준탁", "x": "공주 연합", "s": "히든햇살", "r": "초희귀고란", "m": "히든만두", "c": "히든깨굴", "y": "히든여니"};
+const FUSE_TAG = {"a": "히든가나", "e": "히든영준", "u": "히든엄지", "d": "히든묭라닥", "p": "히든봉춘", "z": "히든존구", "t": "히든별나라", "j": "초희귀 준탁", "x": "공주 연합", "s": "히든햇살", "r": "초희귀고란", "m": "히든만두", "c": "히든깨굴", "y": "히든여니"};
 const FUSE = {};
-const FUSE_ART = FUSE_LIST.map(f => f.id); // 합성 인형 모두 직접 그린 그림 (fusion/<id>.png)
+// 아직 그림(fusion/<id>.png)이 없는 조합은 재료 두 인형을 겹친 그림을 자동으로 만들어요. 그림을 받으면 여기서 그 글자를 빼면 돼요
+const COMBO_ONLY = new Set(['a', 'e', 'u', 'd', 'p', 'z', 't']);
+const isComboOnly = id => COMBO_ONLY.has(id[0]);
+const FUSE_ART = FUSE_LIST.filter(f => !isComboOnly(f.id)).map(f => f.id); // 직접 그린 합성 인형 그림 (fusion/<id>.png)
 for (const f of FUSE_LIST) {
   f.gen = Math.max(FUSE[f.a] ? FUSE[f.a].gen : 0, FUSE[f.b] ? FUSE[f.b].gen : 0) + 1;
   FUSE[f.id] = f; TIER_OF[f.id] = 'fuse' + f.gen;
@@ -1855,8 +1908,20 @@ function loadSprites() {
       // 키캡·키링·클리커는 인형 사진으로 만들어요
       const im = new Image();
       return new Promise(res => { im.onload = () => { SPR.keycap[e.id] = makeKeycap(e.id, im); SPR.keyring[e.id] = makeKeyring(e.id, im); SPR.clicker[e.id] = makeClicker(e.id, im); res(); }; im.onerror = () => res(); im.src = e.img + '?v=' + APP_VERSION; });
-    }))]);
+    }))]).then(() => { for (const f of FUSE_LIST) if (isComboOnly(f.id)) SPR.doll[f.id] = makeComboSprite(f); });
   });
+}
+// 그림이 아직 없는 합성 인형: 재료 두 인형을 나란히 겹치고 반짝이를 붙여요 (키캡·키링·클리커는 이 그림으로 다시 만들어져요)
+function makeComboSprite(f) {
+  const S = 160, c = mkCanvas(S), g = c.getContext('2d');
+  const A = SPR.doll[f.a], B = SPR.doll[f.b], k = f.gen >= 3 ? 0.72 : 0.68;
+  g.save(); g.globalAlpha = 0.9; const glow = g.createRadialGradient(S / 2, S * .55, 4, S / 2, S * .55, S * .5);
+  glow.addColorStop(0, f.gen >= 3 ? 'rgba(255,215,80,.55)' : 'rgba(200,155,255,.5)'); glow.addColorStop(1, 'rgba(200,155,255,0)'); g.fillStyle = glow; g.fillRect(0, 0, S, S); g.restore();
+  if (B && B.width) g.drawImage(B, S * .30, S * .2, S * k, S * k);
+  if (A && A.width) g.drawImage(A, S * .02, S * .1, S * k * 1.08, S * k * 1.08);
+  const star = (x, y, r, col) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); g.fillStyle = col; g.fill(); g.lineWidth = 2; g.strokeStyle = '#2A1240'; g.stroke(); };
+  star(S * .86, S * .14, 13, '#FFD54A'); star(S * .1, S * .86, 8, '#FF86C3'); if (f.gen >= 2) star(S * .9, S * .82, 9, '#8FF3FF');
+  return c;
 }
 /* ── 합성 인형: 바탕 캐릭터 얼굴 + 다른 캐릭터들의 특징 부품(원본 그림에서 오려 냄) ── */
 const RAW = {};
@@ -2651,7 +2716,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 /* ══════════ 새 버전 자동 반영 ══════════ */
 // 휴대폰 브라우저가 예전 페이지를 기억하고 있으면 고친 내용이 안 보여요.
 // 올릴 때마다 version.txt와 APP_VERSION을 같이 바꾸면, 예전 페이지는 새 버전을 알아채고 한 번 새로고침해요.
-const APP_VERSION = '20261030-1955';
+const APP_VERSION = '20261031-1517';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
