@@ -146,6 +146,7 @@ button.li.dayrow{border:0;color:inherit;text-align:left;cursor:pointer;width:100
 .dex .face{width:100%;height:auto;aspect-ratio:1}
 .dex span.no .face{filter:grayscale(1);opacity:.28}
 .tier-hidden{color:#FFF;background:linear-gradient(90deg,#FF4FA3,#FFD54A,#4FE3FF)!important}
+.tier-special{color:#3A2400;background:linear-gradient(90deg,#FFF3B0,#FFD54A,#D4A017)!important;box-shadow:0 0 10px rgba(255,200,40,.8)}
 .q{display:grid;place-items:center;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 30%,#5B2BB0,#1E0B45);box-shadow:inset 0 0 0 2px #D4AF37;font:400 22px/1 var(--d);color:#FFD54A;text-shadow:0 0 8px rgba(255,213,74,.7)}
 .tier-common{color:#9FE3C1}.tier-rare{color:#7CC7FF}.tier-epic{color:#E0A6FF}.tier-legend{color:#FFD54A}
 .mini{padding:9px 10px;font-size:13px;border-radius:11px;box-shadow:0 3px 0 #B8880A}
@@ -237,6 +238,8 @@ button.li.dayrow{border:0;color:inherit;text-align:left;cursor:pointer;width:100
 .mach[disabled]{cursor:default}
 .li img.item,.dex img.item{width:44px;height:44px;object-fit:contain;flex:none}
 .dex img.item{width:100%;height:auto;aspect-ratio:1}
+img.gold{filter:drop-shadow(0 0 4px #FFE27A) drop-shadow(0 0 10px rgba(255,190,30,.85));animation:goldpulse 1.6s ease-in-out infinite}
+@keyframes goldpulse{50%{filter:drop-shadow(0 0 7px #FFF3B0) drop-shadow(0 0 16px rgba(255,200,40,1))}}
 .dex .no img{filter:grayscale(1);opacity:.28}
 .mode-note{font-size:12px;color:var(--muted);text-align:center}
 #bungBack{position:fixed;z-index:2147483000;left:env(safe-area-inset-left);top:40%;width:30px;height:46px;border-radius:0 14px 14px 0;display:flex;align-items:center;justify-content:center;background:rgba(15,20,25,.5);color:#fff;border:1px solid rgba(255,255,255,.3);border-left:0;text-decoration:none;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);touch-action:manipulation}
@@ -318,6 +321,7 @@ const TIERS = {
   epic:   { name: '에픽', price: 2500, grip: 0.52, slip: 0.46, w: 18 },   // 약 +17%
   legend: { name: '전설', price: 6000, grip: 0.42, slip: 0.56, w: 7 },    // 약 +22%
   hidden: { name: '히든', price: 50000, grip: 0.34, slip: 0.62, w: 0 },
+  special: { name: '스페셜', price: 6000000, grip: 0.28, slip: 0.68, w: 0 }, // 초희귀(히든급)보다 잘 안 잡히고 잘 미끄러져요
   fuse1:  { name: '합성', price: 0, grip: 0.5, slip: 0.5, w: 0 },
   fuse2:  { name: '합성+', price: 0, grip: 0.5, slip: 0.5, w: 0 },
   fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
@@ -435,7 +439,16 @@ const EXTRA = [
 ];
 const EXT = Object.fromEntries(EXTRA.map(e => [e.id, e]));
 for (const e of EXTRA) TIER_OF[e.id] = e.tier;
-const HID = Object.fromEntries(HIDS.map(h => [h.id, h]));
+// 스페셜 인형: 게임 설명·컬렉션·합성 목록에는 나오지 않는 숨은 인형 (컬렉션 개수에도 안 들어가요)
+// 초희귀(0.1%)보다 드물게 0.05% · 잡기도 더 어려움 · 판매가 600만원(모든 기계 같음) · 나오면 빵빠레 + 금빛 아우라
+const SPECIALS = [
+  { id: 'sx_hoesik', chance: 0.0005, img: 'special-hoesik.png',
+    card: { id: 'sx_hoesik', name: '회식하는 운영진', color: '#C8963E', hi: '짠~! 🍻',
+      lines: { good: ['짠~!! 오늘은 운영진이 쏜다 🍻', '건배! 회식 자리 뽑혔다~'], bad: ['앗… 맥주 쏟았다…', '2차는 다음에…'], start: ['오늘 회식 장소는 여기다~ 🍻'], win: ['짠~! 회식 성공!'], lose: ['…법카 한도 초과'], taunt: ['한 잔 받아~ 🍺'] } } },
+];
+for (const x of SPECIALS) TIER_OF[x.id] = 'special';
+const SPC = Object.fromEntries(SPECIALS.map(x => [x.id, x]));
+const HID = Object.fromEntries([...HIDS, ...SPECIALS].map(h => [h.id, h])); // 이름·그림·대사 찾기용 (스페셜 포함). 히든 목록 자체는 HIDS
 // 오락실 기계 4대 (모두 같은 캐릭터·히든·합성 목록). R=크기, floor/total=깔리는 개수, grip/slip=잡기·미끄러짐 배율, priceMul=판매가 배율
 const MACH = {
   doll:    { name: '인형뽑기', unit: '인형', emoji: '🧸', R: 8,   floor: 15, total: 21, grip: 1,    slip: 1,    priceMul: 1,    neon: '#FF86C3', neon2: '#FF4FA3', note: '폭신한 캐릭터 인형' },
@@ -615,7 +628,7 @@ for (const [id, a, b] of ALT_RECIPES) FUSE[id].recipes.push({ a, b, alt: true })
 const RECIPES = FUSE_LIST.flatMap(f => f.recipes.map((r, i) => ({ ...r, id: f.id, ri: i, gen: f.gen })));
 // 판매가: 가장 싼 조합의 재료값 × 세대 배율 (비싼 조합 기준이면 싼 재료로 만들어 되파는 꼼수가 생겨요)
 for (const f of FUSE_LIST) f.price = Math.round({ 1: 1.5, 2: 1.6, 3: 1.8 }[f.gen] * Math.min(...f.recipes.map(r => basePrice(r.a) + basePrice(r.b))) / 100) * 100;
-const priceOf = (type, id) => FUSE[id] ? (type === 'doll' ? FUSE[id].price : Math.max(100, Math.round(FUSE[id].price * MACH[type].priceMul / 100) * 100)) : Math.max(100, Math.round(TIERS[tierOf(id)].price * MACH[type].priceMul / 100) * 100);
+const priceOf = (type, id) => SPC[id] ? TIERS.special.price : FUSE[id] ? (type === 'doll' ? FUSE[id].price : Math.max(100, Math.round(FUSE[id].price * MACH[type].priceMul / 100) * 100)) : Math.max(100, Math.round(TIERS[tierOf(id)].price * MACH[type].priceMul / 100) * 100);
 let selMachine = MACH[localStorage.getItem('claw-machine')] ? localStorage.getItem('claw-machine') : 'doll';
 // 가게 사장님은 용왕 (사극 말투 규칙을 따라요)
 const OWNER = {
@@ -707,6 +720,13 @@ const Sound = {
       case 'kick': [420, 320, 220].forEach((f, i) => this.tone(f, .22, 'sawtooth', .06, 0, i * .16)); break;
       case 'end': this.tone(660, .2, 'square', .05); this.tone(440, .35, 'square', .05, 0, .18); break;
     }
+  },
+  // 빵빠레: 트럼펫 느낌 (빠-바-바-밤~ 빠바밤!)
+  fanfare() {
+    this.init();
+    const N = [[523, 0, .12], [523, .14, .12], [523, .28, .12], [659, .42, .5], [587, .95, .14], [659, 1.1, .14], [784, 1.25, .7]];
+    for (const [f, t, d] of N) { this.tone(f, d, 'sawtooth', .05, 0, t); this.tone(f * 2, d, 'square', .018, 0, t); this.tone(f / 2, d, 'triangle', .06, 0, t); }
+    [1047, 1319, 1568, 2093].forEach((f, i) => this.tone(f, .3, 'triangle', .03, 0, 1.3 + i * .06));
   },
 };
 
@@ -938,7 +958,7 @@ function fillLazy() {
   }
   if (document.querySelector('img[data-li]')) requestAnimationFrame(fillLazy); else lazyOn = false;
 }
-const itemImg = (type, id, cls = 'item') => `<img class="${cls}" ${srcAttr(type, id)} alt="${esc(CHAR(id).name)} ${MACH[type].unit}">`;
+const itemImg = (type, id, cls = 'item') => `<img class="${cls}${SPC[id] ? ' gold' : ''}" ${srcAttr(type, id)} alt="${esc(CHAR(id).name)} ${MACH[type].unit}">`;
 function machinePicker(sel, attr) {
   return `<div class="machines">${MTYPES.map(t => { const m = MACH[t];
     return `<button type="button" class="mach ${t === sel ? 'on' : ''}" data-${attr}="${t}" style="--neon:${m.neon};--neon2:${m.neon2}">
@@ -1150,7 +1170,7 @@ let shopTab = 'doll';
 function renderShop() {
   if (!me) return show('login');
   const el = $('#s-shop'), T = shopTab, M = MACH[T], inv = invOf(me, T);
-  const own = ALL_DOLLS.filter(id => (inv[id] || 0) > 0);
+  const own = [...SPECIALS.map(x => x.id), ...ALL_DOLLS].filter(id => (inv[id] || 0) > 0); // 스페셜은 가지고 있을 때만 보여요
   const hidOwned = HIDS.filter(h => (inv[h.id] || 0) > 0).length;
   const total = typeValue(me, T);
   el.innerHTML = `
@@ -1553,7 +1573,7 @@ async function renderAdmin() {
         sh.querySelector('#gfT').onclick = e => { const b = e.target.closest('[data-t]'); if (!b) return; gT = b.dataset.t; sh.querySelectorAll('#gfT button').forEach(x => x.classList.toggle('on', x === b)); draw(); };
         const draw = () => {
           const q = sh.querySelector('#gfQ').value.trim();
-          sh.querySelector('#gfList').innerHTML = ALL_DOLLS.filter(id => !q || CHAR(id).name.includes(q)).slice(0, 60)
+          sh.querySelector('#gfList').innerHTML = [...ALL_DOLLS, ...SPECIALS.map(x => x.id)].filter(id => !q || CHAR(id).name.includes(q)).slice(0, 60)
             .map(id => `<button class="li" data-g="${id}" style="border:0;color:inherit;text-align:left;cursor:pointer${id === pickId ? ';box-shadow:inset 0 0 0 2px var(--pink)' : ''}">${itemImg(gT, id)}<span class="grow nm">${esc(CHAR(id).name)}</span><span class="small muted">보유 ${invOf(p, gT)[id] || 0}</span></button>`).join('');
         };
         sh.querySelector('#gfQ').oninput = draw;
@@ -1887,7 +1907,7 @@ function healSprite(id) {
 const FULL_BODY = new Set(['gana']);
 function loadSprites() {
   makeShadow();
-  const hidden = HIDS.map(h => new Promise(res => { const im = new Image(); im.onload = () => { RAW[h.id] = im; SPR.doll[h.id] = makeHiddenSprite(im); res(); }; im.onerror = () => { SPR.doll[h.id] = makeHiddenSprite(null); res(); }; im.src = h.img + '?v=' + ART_V; }));
+  const hidden = [...HIDS, ...SPECIALS].map(h => new Promise(res => { const im = new Image(); im.onload = () => { RAW[h.id] = im; SPR.doll[h.id] = makeHiddenSprite(im); res(); }; im.onerror = () => { SPR.doll[h.id] = makeHiddenSprite(null); res(); }; im.src = h.img + '?v=' + ART_V; }));
   return Promise.all([...hidden, ...CH.map(id => new Promise(res => {
     const im = new Image();
     const build = img => { if (img) RAW[id] = img; SPR.doll[id] = FULL_BODY.has(id) && img ? makeHiddenSprite(img) : makeSprite(id, img); SPR.keycap[id] = makeKeycap(id, img); SPR.keyring[id] = makeKeyring(id, img); SPR.clicker[id] = makeClicker(id, img); res(); };
@@ -2155,6 +2175,7 @@ function surface(x, z, ex) {
 }
 function setupDolls(rng) {
   const pickId = () => {
+    for (const x of SPECIALS) if (rng() < x.chance * hidBoost(G.mtype)) return x.id; // 스페셜 (가장 드물어요)
     for (const h of HIDS) if (rng() < h.chance * hidBoost(G.mtype)) return h.id; // 히든은 모든 기계에서 나와요 (인형 외 기계는 20% 더 자주)
     let r = rng() * 100, tier = 'common';
     for (const [k, t] of Object.entries(TIERS)) { if ((r -= t.w) < 0) { tier = k; break; } }
@@ -2201,9 +2222,10 @@ function startRound({ mode, seed, startAt, machine = 'doll' }) {
   setupDolls(G.rng);
   if (!G.dolls.length) setupDolls(mulberry32(seed + 1)); // 혹시라도 비면 한 번 더 깔아요
   G.prevNow = 0; G.wasBusy = false; $('#gTime').classList.remove('paused');
-  const hd = G.dolls.find(d => HID[d.id]);
+  const sd = G.dolls.find(d => SPC[d.id]), hd = sd || G.dolls.find(d => HID[d.id]);
   const rid0 = G.rid;
-  if (hd) setTimeout(() => { if (cur === 'game' && G.rid === rid0) { bubble(hd.id, '…기계 안에서 뭔가 반짝인다?! ✨'); Sound.play('win'); } }, 700);
+  if (sd) setTimeout(() => { if (cur === 'game' && G.rid === rid0) { banner('🎺 스페셜 인형 등장!! 🎺'); bubble(sd.id, say(sd.id, 'start')); Sound.fanfare(); vib([80, 60, 80, 60, 200]); } }, 600);
+  else if (hd) setTimeout(() => { if (cur === 'game' && G.rid === rid0) { bubble(hd.id, '…기계 안에서 뭔가 반짝인다?! ✨'); Sound.play('win'); } }, 700);
   show('game');
   $('#gHint').style.opacity = 1;
   $('#gScore').textContent = '0';
@@ -2343,7 +2365,7 @@ function evalGrab() {
   const covered = G.dolls.some(o => o !== d && o.st === 'rest' && o.y > d.y + R * 0.5 && Math.hypot(o.x - d.x, o.z - d.z) < R * 1.5);
   const cf = clamp(1.2 - (dist / (R * 1.3)) ** 2, 0, 1);
   const T = TIERS[tierOf(d.id)];
-  const hb = tierOf(d.id) === 'hidden' ? hidBoost(G.mtype) : 1; // 인형 외 기계의 히든급은 20% 더 잘 잡혀요
+  const hb = tierOf(d.id) === 'hidden' || tierOf(d.id) === 'special' ? hidBoost(G.mtype) : 1; // 인형 외 기계의 히든급은 20% 더 잘 잡혀요
   const p = Math.min(0.95, T.grip * hb * G.M.grip * EASY.grip * cf * (covered ? 0.3 : 1) * (0.88 + Math.random() * 0.24));
   if (isLucky() || Math.random() < p) {
     c.held = d; d.st = 'held';
@@ -2367,7 +2389,8 @@ function capture(d) {
   const cols = ['#FF4FA3', '#4FE3FF', '#FFD54A', '#6EE7A8', '#C89BFF', '#fff'];
   for (let i = 0; i < 30; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, v = 180 + Math.random() * 260; G.parts.push({ x: dx, y: dy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: Math.random() * 6, vr: (Math.random() - .5) * 14, c: cols[i % cols.length], life: 0.9 + Math.random() * 0.6, s: 3 + Math.random() * 4 }); }
   $('#gScore').textContent = G.score;
-  if (HID[d.id]) { banner('✨ 히든 획득!! ✨'); vib([60, 40, 60, 40, 120]); [0, 300].forEach(t => setTimeout(() => Sound.play('win'), t)); }
+  if (SPC[d.id]) { banner('🎺 스페셜 획득!!! 🎺'); vib([100, 60, 100, 60, 300]); setTimeout(() => Sound.fanfare(), 150); }
+  else if (HID[d.id]) { banner('✨ 히든 획득!! ✨'); vib([60, 40, 60, 40, 120]); [0, 300].forEach(t => setTimeout(() => Sound.play('win'), t)); }
   else banner('+1 획득!');
   Sound.play('win'); vib([30, 40, 30]);
   bubble(d.id, say(d.id, 'good'));
@@ -2508,12 +2531,26 @@ function finishRound({ quiet = false } = {}) {
 }
 
 /* ── 그리기 ── */
+// 스페셜 인형 금빛 아우라: 숨 쉬듯 커졌다 작아지는 금빛 + 돌아가는 빛줄기 + 반짝이
+function goldAura(x, y, size) {
+  const t = performance.now() / 1000, pulse = 1 + Math.sin(t * 4) * 0.08, r = size * 0.85 * pulse;
+  ctx.save();
+  const g = ctx.createRadialGradient(x, y, size * 0.1, x, y, r);
+  g.addColorStop(0, 'rgba(255,236,140,.85)'); g.addColorStop(0.45, 'rgba(255,200,40,.45)'); g.addColorStop(1, 'rgba(255,180,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 0.35; ctx.fillStyle = '#FFE27A';
+  for (let i = 0; i < 8; i++) { const a = t * 0.8 + i * Math.PI / 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r * 1.1, a - 0.08, a + 0.08); ctx.closePath(); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  for (let i = 0; i < 6; i++) { const a = -t * 1.6 + i * Math.PI / 3, rr = r * 0.8; ctx.fillStyle = i % 2 ? '#FFF6C8' : '#FFD54A'; star(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.7, size * 0.07 * (1 + 0.3 * Math.sin(t * 6 + i))); }
+  ctx.restore();
+}
 function drawDoll(d, alpha) {
   const [sx, sy, s] = P(d.x, d.y, d.z), size = 2 * R * 1.38 * G.u * s;
   const w = d.wob > 0 ? Math.sin(d.wob * 22) * d.wob * 0.1 : 0;
   const clip = d.st === 'fall' && inChute(d.x, d.z, 0.5) && d.y < R * 2;
   if (clip) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, G.w, P(0, 0, CHUTE.z0)[1]); ctx.clip(); }
   if (alpha != null) ctx.globalAlpha = alpha;
+  if (SPC[d.id] && d.st !== 'gone') goldAura(sx, sy - size * 0.45, size);
   ctx.drawImage(sprOf(G.mtype, d.id), sx - size / 2 * (1 + w), sy - size * 0.95 * (1 - w), size * (1 + w), size * (1 - w));
   const tr = tierOf(d.id);
   if ((tr === 'legend' || tr === 'hidden') && d.st !== 'gone') {
@@ -2721,7 +2758,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 const ART_V = '20261031a';
 // 합성 인형 그림은 게임용 가벼운 사본(fusion/w/<id>.webp, 256px)을 먼저 쓰고, 없으면 원본 PNG를 써요
 const fuseImg = (id, png) => (png ? 'fusion/' + id + '.png' : 'fusion/w/' + id + '.webp');
-const APP_VERSION = '20261031-1608';
+const APP_VERSION = '20261031-1635';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
