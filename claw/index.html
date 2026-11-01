@@ -323,7 +323,7 @@ const TIERS = {
   epic:   { name: '에픽', price: 2500, grip: 0.52, slip: 0.46, w: 18 },   // 약 +17%
   legend: { name: '전설', price: 6000, grip: 0.42, slip: 0.56, w: 7 },    // 약 +22%
   hidden: { name: '히든', price: 50000, grip: 0.34, slip: 0.62, w: 0 },
-  special: { name: '스페셜', price: 6000000, grip: 0.28, slip: 0.68, w: 0 }, // 초희귀(히든급)보다 잘 안 잡히고 잘 미끄러져요
+  special: { name: '스페셜', price: 6000000, grip: 0.18, slip: 0.60, w: 0 }, // 잡힐 확률·미끄러질 확률 모두 낮게 (잡기가 훨씬 어렵고, 잡으면 덜 떨어뜨려요)
   fuse1:  { name: '합성', price: 0, grip: 0.5, slip: 0.5, w: 0 },
   fuse2:  { name: '합성+', price: 0, grip: 0.5, slip: 0.5, w: 0 },
   fuse3:  { name: '합성★', price: 0, grip: 0.5, slip: 0.5, w: 0 },
@@ -442,9 +442,9 @@ const EXTRA = [
 const EXT = Object.fromEntries(EXTRA.map(e => [e.id, e]));
 for (const e of EXTRA) TIER_OF[e.id] = e.tier;
 // 스페셜 인형: 게임 설명·컬렉션·합성 목록에는 나오지 않는 숨은 인형 (컬렉션 개수에도 안 들어가요)
-// 초희귀(0.1%)보다 드물게 0.05% · 잡기도 더 어려움 · 판매가 600만원(모든 기계 같음) · 나오면 빵빠레 + 금빛 아우라
+// 초희귀(0.1%)보다 훨씬 드물게 0.01% · 잡기도 더 어려움 · 판매가 600만원(모든 기계 같음) · 나오면 빵빠레 + 금빛 아우라
 const SPECIALS = [
-  { id: 'sx_hoesik', chance: 0.0005, img: 'special-hoesik.png',
+  { id: 'sx_hoesik', chance: 0.0001, img: 'special-hoesik.png',
     card: { id: 'sx_hoesik', name: '회식하는 운영진', color: '#C8963E', hi: '짠~! 🍻',
       lines: { good: ['짠~!! 오늘은 운영진이 쏜다 🍻', '건배! 회식 자리 뽑혔다~'], bad: ['앗… 맥주 쏟았다…', '2차는 다음에…'], start: ['오늘 회식 장소는 여기다~ 🍻'], win: ['짠~! 회식 성공!'], lose: ['…법카 한도 초과'], taunt: ['한 잔 받아~ 🍺'] } } },
 ];
@@ -2794,7 +2794,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 const ART_V = '20261031a';
 // 합성 인형 그림은 게임용 가벼운 사본(fusion/w/<id>.webp, 256px)을 먼저 쓰고, 없으면 원본 PNG를 써요
 const fuseImg = (id, png) => (png ? 'fusion/' + id + '.png' : 'fusion/w/' + id + '.webp');
-const APP_VERSION = '20261031-1640';
+const APP_VERSION = '20261101-1102';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
