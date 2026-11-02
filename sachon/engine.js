@@ -118,17 +118,19 @@
   }
   function setCh(s, i, ch) { return s.slice(0, i) + ch + s.slice(i + 1); }
   function nextLayout(cur, rnd) { var n; do { n = Math.floor(rnd() * LAYOUTS.length); } while (n === cur && LAYOUTS.length > 1); return n; }
-  function newGame(rnd) { var lay = Math.floor(rnd() * LAYOUTS.length); return { bd: deal(lay, rnd), lay: lay, st: 1, sh: 0, sc: {}, lm: { n: 0 } }; }
+  // one=true: 단판 (판 하나를 다 지우면 끝)
+  function newGame(rnd, one) { var lay = Math.floor(rnd() * LAYOUTS.length), g = { bd: deal(lay, rnd), lay: lay, st: 1, sh: 0, sc: {}, lm: { n: 0 } }; if (one) g.one = 1; return g; }
   // 판이 비면 다음 모양, 이어지는 쌍이 없으면 섞기
   function fix(g, rnd) {
+    if (!count(g.bd) && g.one) { g.end = 1; return g; }
     if (!count(g.bd)) { g.st = (g.st || 1) + 1; g.lay = nextLayout(g.lay, rnd); g.bd = deal(g.lay, rnd); }
     else if (!hasMove(g.bd)) { g.bd = reshuffle(g.bd, rnd); g.sh = (g.sh || 0) + 1; }
     return g;
   }
-  function copy(g) { return { bd: g.bd, lay: g.lay || 0, st: g.st || 1, sh: g.sh || 0, sc: Object.assign({}, g.sc || {}), lm: Object.assign({ n: 0 }, g.lm || {}) }; }
+  function copy(g) { var n = { bd: g.bd, lay: g.lay || 0, st: g.st || 1, sh: g.sh || 0, sc: Object.assign({}, g.sc || {}), lm: Object.assign({ n: 0 }, g.lm || {}) }; if (g.one) n.one = 1; if (g.end) n.end = 1; return n; }
   // 한 쌍 지우기. 길이 없으면 null
   function applyMove(g, i, j, by, rnd) {
-    if (!g || !findPath(g.bd, i, j)) return null;
+    if (!g || g.end || !findPath(g.bd, i, j)) return null;
     var n = copy(g);
     n.bd = setCh(setCh(n.bd, i, '.'), j, '.');
     n.sc[by] = (n.sc[by] || 0) + 1;
@@ -138,7 +140,7 @@
   // 아이템 '1쌍 없애기': 이어지는 쌍을 먼저, 없으면 같은 그림 아무 쌍
   function removeAnyPair(g, by, rnd) {
     rnd = rnd || Math.random;
-    if (!g || !count(g.bd)) return null;
+    if (!g || g.end || !count(g.bd)) return null;
     var mv = allMoves(g.bd), pair = null;
     if (mv.length) pair = mv[Math.floor(rnd() * mv.length)];
     else { var m = byKind(g.bd); for (var k in m) if (m[k].length >= 2) { pair = [m[k][0], m[k][1]]; break; } }

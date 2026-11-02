@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#1B0B3D">
-<meta name="description" content="인형뽑기 인형으로 하는 사천성! 60초 동안 한 판을 같이 보며 최대 4명이 동시에 같은 그림 맞추기.">
+<meta name="description" content="인형뽑기 인형으로 하는 사천성! 같은 판을 같이 보며 최대 4명이 동시에 같은 그림 맞추기. 시간제·단판.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="사천성 가봤니?">
-<meta property="og:description" content="같은 그림 맞추기! 60초 동안 한 판에서 최대 4명이 동시에 대결해요.">
+<meta property="og:description" content="같은 그림 맞추기! 한 판에서 최대 4명이 동시에 대결해요. 시간제·단판 골라서.">
 <meta property="og:image" content="https://vino94-s.github.io/vino_is_best/sachon/thumb.jpg">
 <meta property="og:image:width" content="800">
 <meta property="og:image:height" content="800">
@@ -130,8 +130,9 @@ body.playing #bungBack{display:none}
 .badge-x{color:#fff;background:var(--red);border-radius:6px;padding:1px 6px;font-size:11px;font-weight:900;margin-left:4px}
 
 /* ── 게임 화면 ── */
-#game{position:fixed;inset:0;display:flex;flex-direction:column;padding:max(8px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));gap:8px;max-width:620px;margin:0 auto;user-select:none;-webkit-user-select:none;overscroll-behavior:none;touch-action:manipulation}
-.g-top{display:flex;align-items:center;gap:10px}
+#game{position:fixed;inset:0;display:flex;flex-direction:column;padding:max(8px,env(safe-area-inset-top)) 4px max(8px,env(safe-area-inset-bottom));gap:7px;max-width:620px;margin:0 auto;user-select:none;-webkit-user-select:none;overscroll-behavior:none;touch-action:manipulation}
+.g-top{display:flex;align-items:center;gap:10px;padding:0 4px}
+.g-players,.g-items{padding:0 4px}
 .g-quit{border:0;background:rgba(255,255,255,.12);width:38px;height:38px;border-radius:12px;font-weight:900;font-size:16px;cursor:pointer;flex:none}
 .g-timebox{flex:1;display:grid;gap:4px}
 .g-timerow{display:flex;justify-content:space-between;align-items:baseline}
@@ -150,9 +151,10 @@ body.playing #bungBack{display:none}
 .gp.lead::after{content:"👑";position:absolute;top:-9px;left:-3px;font-size:14px}
 .gp.choc{background:#5A2E14}
 .g-wrap{flex:1;position:relative;min-height:0;display:grid;place-items:center}
-#board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);touch-action:manipulation;contain:layout paint}
-.t{position:absolute;border-radius:7px;background:var(--k);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6),0 3px 0 rgba(0,0,0,.4);display:grid;place-items:center;transition:transform .16s ease-out,opacity .16s ease-out}
-.t img{width:90%;height:90%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
+#board{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);touch-action:none;contain:layout}
+.t{position:absolute;border-radius:7px;background:var(--k);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.6),0 3px 0 rgba(0,0,0,.4);display:grid;place-items:center}
+.t.gone{transition:transform .12s ease-out,opacity .12s ease-out}
+.t img{width:92%;height:92%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
 .t.sel{transform:translateY(-3px) scale(1.08);box-shadow:0 0 0 3px #fff,0 0 0 6px var(--pink),0 5px 0 rgba(0,0,0,.4);z-index:2}
 .t.hint{box-shadow:0 0 0 3px var(--cyan),0 3px 0 rgba(0,0,0,.4);animation:hint .45s ease-in-out infinite alternate;z-index:2}
 @keyframes hint{to{transform:scale(1.13)}}
@@ -224,7 +226,7 @@ body.playing #bungBack{display:none}
 <div id="toast" role="status" aria-live="polite"></div>
 <a id="bungBack" href="../" aria-label="게임 나가기" title="게임 나가기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
 <script src="../characters/bung-chars.js"></script>
-<script src="engine.js?v=20261102a"></script>
+<script src="engine.js?v=20261102b"></script>
 <script>
 'use strict';
 /* ══════════ 설정 ══════════ */
@@ -240,14 +242,15 @@ const CFG = {
   prefix: 'rooms/sachon-',
   startMoney: 100000,                    // 가입 선물
   stakes: [10000, 30000, 50000, 100000], // 판돈
-  roundSec: 60,                          // 한 판 60초
+  secs: [30, 45, 60],                    // 시간제 게임 시간 (기본 30초)
+  singleCap: 180,                        // 단판 안전장치: 3분이 지나면 그대로 끝
   timeBonus: 10,                         // '햇살 연장전' +10초
   blindSec: 3,                           // '초코 범벅' 3초
   hintSec: 3,
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261102-2';
+const APP_VERSION = '20261102-3';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -256,6 +259,9 @@ const ITEMS = {
   hint:  { name: '엄지 따봉 힌트',  short: '힌트',     icon: 'eomji',    price: 2000, limit: 5, desc: '따봉! 지금 이어지는 한 쌍을 3초 동안 반짝반짝 알려줘요.' },
 };
 const ITEM_KEYS = ['pair', 'blind', 'time', 'hint'];
+// 게임 방식: 시간제(정해진 시간 동안 판이 이어짐) · 단판(판 하나를 다 지우면 끝)
+const RULES = { time: { name: '⏱ 시간제', desc: '정해진 시간 동안 맞추기. 판을 다 지우면 새 판이 이어져요' }, single: { name: '🀄 단판', desc: '판 하나를 다 지우면 끝. 시간 제한 없이 누가 더 많이 지우나' } };
+const ruleLabel = (rule, sec) => (rule === 'single' ? '단판' : `시간제 ${sec}초`);
 const BOT_LV = {
   easy:   { name: '쉬움', gap: [3000, 4600] },
   normal: { name: '보통', gap: [2000, 3200] },
@@ -594,13 +600,13 @@ function renderLobby() {
         <div style="text-align:right"><div class="small muted">보유 금액</div><div class="money" style="font-size:22px">${won(me.money)}</div></div></div>
       ${itemsMini(me)}
     </div>
-    <button class="btn pink big" id="lbSolo">🤖 봇이랑 바로 대결<small>봇 1~3명과 같은 판에서 60초</small></button>
+    <button class="btn pink big" id="lbSolo">🤖 봇이랑 바로 대결<small>봇 1~3명과 같은 판에서 · 시간제/단판</small></button>
     <div class="grid2"><button class="btn cyan" id="lbMake">🏠 방 만들기<small>친구 최대 4명</small></button><button class="btn" id="lbJoin">🔑 방 코드 입장<small>5자리 숫자</small></button></div>
     <div class="grid2"><button class="btn orange" id="lbShop">🛒 상점</button><button class="btn ghost" id="lbRank">🏆 랭킹</button></div>
     <div class="card howto"><b>사천성 규칙</b><ul>
       <li>같은 그림 두 개를 차례로 누르면, 꺾이는 곳이 <b>2번 이하</b>인 선으로 이어질 때 지워져요. 선은 판 바깥 테두리로도 지나가요.</li>
       <li>모두 <b>같은 판</b>에서 동시에 맞춰요. 먼저 누른 사람이 가져가요!</li>
-      <li>60초 동안 가장 많은 쌍을 지운 사람이 판돈을 전부 가져가요. 판이 다 지워지면 새 모양 판이 이어서 나와요.</li>
+      <li><b>⏱ 시간제</b>(30·45·60초): 시간 안에 가장 많이 지운 사람이 판돈을 전부 가져가요. 판이 다 지워지면 새 모양 판이 이어서 나와요.</li><li><b>🀄 단판</b>: 판 하나를 다 지우면 끝. 가장 많이 지운 사람이 이겨요.</li>
       <li>이어지는 쌍이 하나도 없으면 남은 패를 자동으로 섞어요.</li>
     </ul></div>
     <div class="grid2"><button class="btn ghost" id="lbSound">${Sound.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button><button class="btn ghost" id="lbOut">로그아웃</button></div>
@@ -619,13 +625,21 @@ function renderLobby() {
 function stakePicker(sel, money, attr = 'stk') {
   return `<div class="grid4">${CFG.stakes.map(s => `<button class="btn sm ${s === sel ? 'pink on' : 'ghost'}" data-${attr}="${s}" ${money != null && money < s ? 'disabled' : ''}>${wonShort(s)}</button>`).join('')}</div>`;
 }
+function rulePicker(rule, sec, pre, dis) {
+  return `<div class="grid2">${Object.keys(RULES).map(k => `<button class="btn sm ${k === rule ? 'pink on' : 'ghost'}" data-${pre}rule="${k}" ${dis ? 'disabled' : ''}>${RULES[k].name}</button>`).join('')}</div>
+    ${rule === 'time' ? `<div class="grid3">${CFG.secs.map(x => `<button class="btn sm ${x === sec ? 'cyan on' : 'ghost'}" data-${pre}sec="${x}" ${dis ? 'disabled' : ''}>${x}초</button>`).join('')}</div>` : ''}
+    <p class="small muted">${RULES[rule].desc}</p>`;
+}
 function openSolo() {
   if (!me) return;
   let stake = Number(localStorage.getItem('sachon-stake')) || CFG.stakes[0], bots = Number(localStorage.getItem('sachon-bots')) || 3, lv = localStorage.getItem('sachon-lv') || 'normal';
   if (!CFG.stakes.includes(stake)) stake = CFG.stakes[0];
   if (!BOT_LV[lv]) lv = 'normal';
+  let rule = localStorage.getItem('sachon-rule') === 'single' ? 'single' : 'time', sec = Number(localStorage.getItem('sachon-sec')) || CFG.secs[0];
+  if (!CFG.secs.includes(sec)) sec = CFG.secs[0];
   const draw = s => {
     s.innerHTML = `<h2>🤖 봇이랑 대결</h2>
+      <b>게임 방식</b>${rulePicker(rule, sec, 's')}
       <b>판돈</b>${stakePicker(stake, me.money)}
       <b>봇 수</b><div class="grid3">${[1, 2, 3].map(n => `<button class="btn sm ${n === bots ? 'cyan on' : 'ghost'}" data-b="${n}">${n}명</button>`).join('')}</div>
       <b>봇 실력</b><div class="grid3">${Object.keys(BOT_LV).map(k => `<button class="btn sm ${k === lv ? 'cyan on' : 'ghost'}" data-l="${k}">${BOT_LV[k].name}</button>`).join('')}</div>
@@ -640,7 +654,9 @@ function openSolo() {
       if (b.dataset.stk) { stake = Number(b.dataset.stk); draw(s); }
       else if (b.dataset.b) { bots = Number(b.dataset.b); draw(s); }
       else if (b.dataset.l) { lv = b.dataset.l; draw(s); }
-      else if (b.id === 'soGo') { localStorage.setItem('sachon-stake', stake); localStorage.setItem('sachon-bots', bots); localStorage.setItem('sachon-lv', lv); close(); startSolo(stake, bots, lv); }
+      else if (b.dataset.srule) { rule = b.dataset.srule; draw(s); }
+      else if (b.dataset.ssec) { sec = Number(b.dataset.ssec); draw(s); }
+      else if (b.id === 'soGo') { localStorage.setItem('sachon-stake', stake); localStorage.setItem('sachon-bots', bots); localStorage.setItem('sachon-lv', lv); localStorage.setItem('sachon-rule', rule); localStorage.setItem('sachon-sec', sec); close(); startSolo(stake, bots, lv, rule, sec); }
       else if (b.hasAttribute('data-close')) close();
     });
   });
@@ -789,7 +805,7 @@ async function createRoom() {
   for (let i = 0; i < 20 && !code; i++) {
     const c = genCode(5, '0123456789');
     const r = await db.tx(PATH.room(c), v => (v && db.now() - (v.updatedAt || 0) < 6 * 3600e3 ? undefined : {
-      host: me.pid, status: 'waiting', round: 0, stake: CFG.stakes[0], botLv: 'normal', createdAt: db.now(), updatedAt: db.now(), players: { [me.pid]: seatOf() } }));
+      host: me.pid, status: 'waiting', round: 0, stake: CFG.stakes[0], botLv: 'normal', rule: 'time', sec: CFG.secs[0], createdAt: db.now(), updatedAt: db.now(), players: { [me.pid]: seatOf() } }));
     if (r.committed && r.value && r.value.host === me.pid) code = c;
   }
   if (!code) return toast('방을 만들지 못했어요');
@@ -854,6 +870,7 @@ function renderRoom() {
   const link = location.origin + location.pathname + '?room=' + room.code;
   const last = v.last;
   const lv = BOT_LV[v.botLv] ? v.botLv : 'normal';
+  const rRule = v.rule === 'single' ? 'single' : 'time', rSec = CFG.secs.includes(v.sec) ? v.sec : CFG.secs[0];
   el.innerHTML = `
     <div class="toprow"><button class="back" id="rmBack">← 나가기</button><h2>대결 방</h2><span class="chip">${ids.length}/${CFG.maxPlayers}명</span></div>
     <div class="card" style="display:grid;gap:10px"><p class="small muted" style="text-align:center">방 코드</p><div class="roomcode">${room.code}</div>
@@ -862,11 +879,12 @@ function renderRoom() {
       return `<div class="seat" style="border-bottom:3px solid ${SEAT_COLORS[i]}">${faceEl(p.char)}<div style="min-width:0"><div class="nm" style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.nick)}${id === v.host ? ' 👑' : ''}</div>
         <div class="small muted">${p.bot ? `🤖 ${BOT_LV[lv].name}` : `<span class="dot ${p.online ? '' : 'off'}"></span> ${id === me.pid ? '나' : p.online ? '접속 중' : '자리 비움'}`}</div></div>
         ${p.bot && isHost && !playing ? `<button class="x" data-rmbot="${id}" aria-label="봇 빼기">✕</button>` : ''}</div>`; }).join('')}</div>
-    <div class="card" style="display:grid;gap:10px"><b>판돈 ${isHost ? '' : `<span class="muted small">(방장이 정해요)</span>`}</b>${stakePicker(v.stake, null, 'rstk')}
+    <div class="card" style="display:grid;gap:10px"><b>게임 방식 ${isHost ? '' : `<span class="muted small">(방장이 정해요)</span>`}</b>${rulePicker(rRule, rSec, 'r', !isHost || playing)}
+      <b>판돈</b>${stakePicker(v.stake, null, 'rstk')}
       <div class="row" style="justify-content:space-between"><b>봇 실력</b><div class="row" style="gap:6px">${Object.keys(BOT_LV).map(k => `<button class="btn sm ${k === lv ? 'cyan on' : 'ghost'}" data-rlv="${k}">${BOT_LV[k].name}</button>`).join('')}</div></div>
       <p class="small muted">이긴 사람이 모두의 판돈 <b class="money">${won(v.stake * ids.length)}</b>을 가져가요. 내 돈 <b class="money">${won(me.money)}</b></p></div>
     ${last ? `<div class="card"><b>지난 판 결과</b><div class="list" style="margin-top:8px">${last.list.map((p, i) => `<div class="li">${p.win ? '<span class="rk">👑</span>' : `<span class="rk">${i + 1}</span>`}${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}</div><b class="num">${p.score}쌍<small>${p.bot ? '' : (p.payout - last.stake >= 0 ? '+' : '') + won(p.payout - last.stake)}</small></b></div>`).join('')}</div></div>` : ''}
-    ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || playing ? 'disabled' : ''}>${playing ? '게임 중…' : ids.length < 2 ? '친구나 봇을 넣어 주세요' : `${CFG.roundSec}초 대결 시작! (${wonShort(v.stake)})`}</button>`
+    ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || playing ? 'disabled' : ''}>${playing ? '게임 중…' : ids.length < 2 ? '친구나 봇을 넣어 주세요' : `${ruleLabel(rRule, rSec)} 대결 시작! (${wonShort(v.stake)})`}</button>`
       : `<div class="card" style="text-align:center">${playing ? '게임 중…' : '방장이 시작하길 기다리는 중…'}</div>`}
     <div class="grid2"><button class="btn orange" id="rmShop">🛒 상점</button><button class="btn ghost" id="rmRank">🏆 랭킹</button></div>`;
   $('#rmBack').onclick = async () => { await leaveRoom(); show('lobby'); };
@@ -880,6 +898,8 @@ function renderRoom() {
   if (!isHost || playing) return;
   el.querySelectorAll('[data-rstk]').forEach(b => b.onclick = () => hostTx(v2 => { v2.stake = Number(b.dataset.rstk); }));
   el.querySelectorAll('[data-rlv]').forEach(b => b.onclick = () => hostTx(v2 => { v2.botLv = b.dataset.rlv; }));
+  el.querySelectorAll('[data-rrule]').forEach(b => b.onclick = () => hostTx(v2 => { v2.rule = b.dataset.rrule; }));
+  el.querySelectorAll('[data-rsec]').forEach(b => b.onclick = () => hostTx(v2 => { v2.sec = Number(b.dataset.rsec); }));
   el.querySelectorAll('[data-addbot]').forEach(b => b.onclick = () => hostTx(v2 => {
     const ids2 = Object.keys(v2.players || {}); if (ids2.length >= CFG.maxPlayers) return;
     const used = new Set(ids2.map(id => v2.players[id].char));
@@ -907,11 +927,12 @@ async function startOnline() {
     if (await payStake(id, key, stake)) paid.push(id);
     else { for (const x of paid) await refund(x, key.replace(/^b-/, 'r-'), stake); toast(`${v.players[id].nick}님 판돈을 걷지 못했어요`); return renderRoom(); }
   }
-  const g0 = SC.newGame(Math.random);
+  const rule = v.rule === 'single' ? 'single' : 'time', sec = CFG.secs.includes(v.sec) ? v.sec : CFG.secs[0];
+  const g0 = SC.newGame(Math.random, rule === 'single');
   await db.tx(PATH.room(code), v2 => {
     if (!v2 || v2.host !== me.pid || v2.status === 'playing') return undefined;
-    v2.status = 'playing'; v2.round = round; v2.startAt = db.now() + 4000; v2.inRound = {}; v2.roundStake = stake;
-    ids.forEach(id => { if (v2.players[id]) { v2.inRound[id] = true; v2.players[id].dl = v2.startAt + CFG.roundSec * 1000; } });
+    v2.status = 'playing'; v2.round = round; v2.startAt = db.now() + 4000; v2.inRound = {}; v2.roundStake = stake; v2.roundRule = rule; v2.roundSec = sec;
+    ids.forEach(id => { if (v2.players[id]) { v2.inRound[id] = true; v2.players[id].dl = v2.startAt + (rule === 'single' ? CFG.singleCap : sec) * 1000; } });
     v2.g = g0; v2.fx = null; v2.updatedAt = db.now();
     return v2;
   });
@@ -955,10 +976,11 @@ let TW = 32, TH = 35;
 function newG(o) {
   Object.assign(G, { on: true, ended: false, resultShown: false, mode: o.mode, round: o.round || 0, code: o.code || null, me: me.pid, players: o.players, startAt: o.startAt, dl: o.dl, stake: o.stake,
     botLv: o.botLv || 'normal', g: o.g, used: {}, blindUntil: 0, blindOf: {}, fxSeen: new Set(), botNext: {}, botBusy: {}, sel: -1, pending: new Set(), pendPairs: 0,
-    V: { bd: null, st: 0, sh: 0, lmN: 0 }, lastSec: -1, overShown: false, countShown: -1, key: o.key || null });
+    V: { bd: null, st: 0, sh: 0, lmN: 0 }, lastSec: -1, overShown: false, countShown: -1, key: o.key || null,
+    rule: o.rule === 'single' ? 'single' : 'time', sec: o.sec || CFG.secs[0], endSeen: 0, total: SC.count(o.g.bd) });
 }
 const colorOf = id => { const i = G.players.findIndex(p => p.id === id); return SEAT_COLORS[i < 0 ? 0 : i]; };
-function startSolo(stake, nBots, lv) {
+function startSolo(stake, nBots, lv, rule = 'time', sec = CFG.secs[0]) {
   if (!me) return;
   const key = 'solo-' + Date.now().toString(36) + genCode(3).toLowerCase();
   payStake(me.pid, 'b-' + key, stake).then(ok => {
@@ -968,17 +990,18 @@ function startSolo(stake, nBots, lv) {
     for (let i = 0; i < nBots; i++) { const ch = pick(KINDS.filter(k => !used.has(k))); used.add(ch); bots.push({ id: 'bot' + (i + 1), nick: '봇 ' + nameOf(ch), char: ch, bot: true }); }
     const players = [{ id: me.pid, nick: me.nick, char: me.char }, ...bots];
     const startAt = Date.now() + 3000, dl = {};
-    players.forEach(p => { dl[p.id] = startAt + CFG.roundSec * 1000; });
-    newG({ mode: 'solo', players, startAt, dl, stake, botLv: lv, g: SC.newGame(Math.random), key });
+    players.forEach(p => { dl[p.id] = startAt + (rule === 'single' ? CFG.singleCap : sec) * 1000; });
+    newG({ mode: 'solo', players, startAt, dl, stake, botLv: lv, g: SC.newGame(Math.random, rule === 'single'), key, rule, sec });
     beginGame();
   });
 }
 function startOnlineGame(v) {
   const ids = roomIds(v).filter(id => v.inRound[id]);
   const players = ids.map(id => ({ id, nick: v.players[id].nick, char: v.players[id].char, bot: !!v.players[id].bot }));
-  const dl = {}; ids.forEach(id => { dl[id] = v.players[id].dl || v.startAt + CFG.roundSec * 1000; });
+  const rule = v.roundRule === 'single' ? 'single' : 'time', sec = v.roundSec || CFG.secs[0];
+  const dl = {}; ids.forEach(id => { dl[id] = v.players[id].dl || v.startAt + (rule === 'single' ? CFG.singleCap : sec) * 1000; });
   closeModal();
-  newG({ mode: 'online', round: v.round, code: room.code, players, startAt: v.startAt, dl, stake: v.roundStake || v.stake, botLv: v.botLv, g: v.g });
+  newG({ mode: 'online', round: v.round, code: room.code, players, startAt: v.startAt, dl, stake: v.roundStake || v.stake, botLv: v.botLv, g: v.g, rule, sec });
   beginGame();
 }
 function beginGame() {
@@ -1006,20 +1029,26 @@ function buildBoard() {
     b.appendChild(frag);
     b.addEventListener('pointerdown', onBoardTap);
     addEventListener('resize', () => { if (G.on) layoutBoard(); });
+    addEventListener('scroll', () => { G.rect = null; }, { passive: true });
   }
   layoutBoard();
 }
+// 판 바깥 테두리(선이 지나가는 길)는 0.3칸만 남기고 나머지를 패에 써요
+const EDGE = 0.3;
+let OX = 10, OY = 11, BW = 0, BH = 0;
 function layoutBoard() {
   const wrap = $('#gWrap'), W = wrap.clientWidth, H = wrap.clientHeight;
-  const tw = Math.floor(Math.min(W / (SC.COLS + 1), H / ((SC.ROWS + 1) * 1.1)));
-  TW = Math.max(18, tw); TH = Math.round(TW * 1.1);
-  const b = $('#board'); b.style.width = (SC.COLS + 1) * TW + 'px'; b.style.height = (SC.ROWS + 1) * TH + 'px';
-  const svg = $('#paths'); svg.setAttribute('width', (SC.COLS + 1) * TW); svg.setAttribute('height', (SC.ROWS + 1) * TH);
+  const tw = Math.floor(Math.min(W / (SC.COLS + EDGE * 2), H / ((SC.ROWS + EDGE * 2) * 1.1)));
+  TW = Math.max(18, tw); TH = Math.round(TW * 1.1); OX = Math.round(TW * EDGE); OY = Math.round(TH * EDGE);
+  BW = OX * 2 + SC.COLS * TW; BH = OY * 2 + SC.ROWS * TH;
+  const b = $('#board'); b.style.width = BW + 'px'; b.style.height = BH + 'px';
+  const svg = $('#paths'); svg.setAttribute('width', BW); svg.setAttribute('height', BH);
   for (let i = 0; i < SC.N; i++) {
     const t = TILES[i], r = i / SC.COLS | 0, c = i % SC.COLS;
-    t.style.left = ((c + 1) * TW - (TW - 3) / 2) + 'px'; t.style.top = ((r + 1) * TH - (TH - 3) / 2) + 'px';
-    t.style.width = (TW - 3) + 'px'; t.style.height = (TH - 3) + 'px';
+    t.style.left = (OX + c * TW + 1) + 'px'; t.style.top = (OY + r * TH + 1) + 'px';
+    t.style.width = (TW - 2) + 'px'; t.style.height = (TH - 2) + 'px';
   }
+  G.rect = null;
 }
 function setTile(i, ch) {
   const t = TILES[i];
@@ -1029,7 +1058,8 @@ function setTile(i, ch) {
 }
 function hideTile(i) { const t = TILES[i]; if (!t.classList.contains('off')) { t.classList.remove('sel', 'hint'); t.classList.add('gone'); } if (G.sel === i) G.sel = -1; }
 function renderFull() { const bd = G.V.bd; for (let i = 0; i < SC.N; i++) setTile(i, bd[i]); G.sel = -1; clearHints(); }
-const pxOf = ([r, c]) => [c * TW, r * TH];
+// 테두리 포함 좌표 → 화면 좌표 (바깥 테두리 칸은 판 가장자리 여백 안에 그려요)
+const pxOf = ([r, c]) => [c <= 0 ? OX * 0.45 : c > SC.COLS ? BW - OX * 0.45 : OX + (c - 0.5) * TW, r <= 0 ? OY * 0.45 : r > SC.ROWS ? BH - OY * 0.45 : OY + (r - 0.5) * TH];
 function drawPath(pts, color) {
   const svg = $('#paths');
   const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
@@ -1040,7 +1070,7 @@ function drawPath(pts, color) {
 }
 function poof(i, txt = '✨') {
   const r = i / SC.COLS | 0, c = i % SC.COLS, d = document.createElement('div');
-  d.className = 'poof'; d.textContent = txt; d.style.left = (c + 1) * TW + 'px'; d.style.top = (r + 1) * TH + 'px';
+  d.className = 'poof'; d.textContent = txt; d.style.left = (OX + (c + 0.5) * TW) + 'px'; d.style.top = (OY + (r + 0.5) * TH) + 'px';
   $('#board').appendChild(d); setTimeout(() => d.remove(), 520);
 }
 function banner(text) { const b = $('#gBanner'); b.textContent = text; b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); }
@@ -1055,7 +1085,7 @@ function syncG(g) {
     G.pending.clear();
     V.bd = g.bd; V.st = g.st; V.sh = g.sh || 0;
     renderFull();
-    $('#gStage').textContent = `${g.st}판 · ${SC.LAYOUTS[g.lay || 0].name}`;
+    $('#gStage').textContent = G.rule === 'single' ? `단판 · ${SC.LAYOUTS[g.lay || 0].name}` : `${G.sec}초 · ${g.st}판 · ${SC.LAYOUTS[g.lay || 0].name}`;
     if (stCh) { banner(`🎉 ${g.st}판! ${SC.LAYOUTS[g.lay || 0].name}`); Sound.play('item'); }
     if (shCh) banner('🔀 이어지는 쌍이 없어 섞었어요');
   } else {
@@ -1073,19 +1103,21 @@ function syncG(g) {
   }
   V.lmN = lm.n || 0;
   G.g = g;
+  if (g.end && !G.endSeen) { G.endSeen = now(); if (G.sel >= 0) { TILES[G.sel].classList.remove('sel'); G.sel = -1; } clearHints(); banner('🎉 판 클리어!'); Sound.play('item'); }
   renderPlayers();
 }
 
 /* ── 누르기 ── */
-function canPlay() { const t = now(); return G.on && !G.ended && t >= G.startAt && t < G.dl[G.me] && t >= G.blindUntil; }
+function canPlay() { const t = now(); return G.on && !G.ended && !G.endSeen && t >= G.startAt && t < G.dl[G.me] && t >= G.blindUntil; }
 function onBoardTap(e) {
+  e.preventDefault();
   if (!canPlay()) return;
-  const rect = e.currentTarget.getBoundingClientRect();
-  const c = Math.round((e.clientX - rect.left) / TW) - 1, r = Math.round((e.clientY - rect.top) / TH) - 1;
+  // 판 위치는 화면 크기가 바뀔 때만 다시 재요 (누를 때마다 레이아웃 계산을 하지 않게)
+  const rect = G.rect || (G.rect = e.currentTarget.getBoundingClientRect());
+  const c = Math.floor((e.clientX - rect.left - OX) / TW), r = Math.floor((e.clientY - rect.top - OY) / TH);
   if (r < 0 || c < 0 || r >= SC.ROWS || c >= SC.COLS) return;
   const i = r * SC.COLS + c;
   if (G.V.bd[i] === '.') return;
-  e.preventDefault();
   if (G.sel === i) { TILES[i].classList.remove('sel'); G.sel = -1; return; }
   if (G.sel >= 0 && G.V.bd[G.sel] === G.V.bd[i]) {
     const a = G.sel, path = SC.findPath(G.V.bd, a, i);
@@ -1121,7 +1153,8 @@ function renderItems() {
   if (G.overShown) return renderWatch();
   $('#gItems').classList.remove('watching');
   $('#gItems').innerHTML = ITEM_KEYS.map(k => { const it = ITEMS[k], n = (me.items || {})[k] || 0, left = it.limit - (G.used[k] || 0);
-    return `<button class="gi" data-it="${k}" ${n <= 0 || left <= 0 ? 'disabled' : ''}><img src="${imgOf(it.icon)}" alt=""><span class="nm">${it.short}</span><span class="small muted" style="font-size:10px">이번 판 ${Math.max(0, left)}번</span><span class="n">${n}</span></button>`; }).join('');
+    const off = k === 'time' && G.rule === 'single';
+    return `<button class="gi" data-it="${k}" ${n <= 0 || left <= 0 || off ? 'disabled' : ''} ${off ? 'title="단판에서는 못 써요"' : ''}><img src="${imgOf(it.icon)}" alt=""><span class="nm">${it.short}</span><span class="small muted" style="font-size:10px">이번 판 ${Math.max(0, left)}번</span><span class="n">${n}</span></button>`; }).join('');
 }
 $('#gItems').addEventListener('click', e => { const b = e.target.closest('[data-it]'); if (b && !b.disabled) useItem(b.dataset.it); });
 async function useItem(k) {
@@ -1150,6 +1183,7 @@ async function applyItem(k) {
     return true;
   }
   if (k === 'time') {
+    if (G.rule === 'single') { toast('단판에서는 시간 추가를 못 써요'); return false; }
     if (G.mode === 'solo') G.dl[G.me] += CFG.timeBonus * 1000;
     else {
       const r = await db.tx(PATH.room(G.code) + '/players/' + G.me + '/dl', d => (d == null ? null : d > db.now() ? d + CFG.timeBonus * 1000 : undefined)).catch(() => ({ committed: false }));
@@ -1181,7 +1215,7 @@ async function applyItem(k) {
 }
 
 /* ── 내 시간이 끝난 뒤: 시간을 늘린 사람이 계속 하는 걸 지켜봐요 ── */
-const baseEnd = () => G.startAt + CFG.roundSec * 1000;
+const baseEnd = () => G.startAt + (G.rule === 'single' ? CFG.singleCap : G.sec) * 1000;
 function stillPlaying(t) { return G.players.filter(p => p.id !== G.me && t < G.dl[p.id]); }
 function renderWatch() {
   const t = now(), el = $('#gItems'), playing = stillPlaying(t);
@@ -1198,14 +1232,26 @@ function renderWatch() {
 function scoreOf(id) { const sc = (G.g && G.g.sc) || {}; return (sc[id] || 0) + (id === G.me ? G.pendPairs : 0); }
 function renderPlayers() {
   if (!G.on) return;
+  const el = $('#gPlayers');
+  if (el._game !== G.startAt) {
+    el._game = G.startAt;
+    el.innerHTML = G.players.map((p, i) => `<div class="gp ${p.id === G.me ? 'me' : ''}" style="--pc:${SEAT_COLORS[i]}">${faceEl(p.char)}<div style="min-width:0;flex:1"><div class="nm">${esc(p.id === G.me ? '나' : p.bot ? p.nick.replace(/^봇 /, '') : p.nick)}</div><div class="st"></div></div><span class="sc">0</span></div>`).join('');
+    el._cells = [...el.children].map(d => ({ d, st: d.querySelector('.st'), sc: d.querySelector('.sc'), k: '' }));
+  }
   const t = now(), top = Math.max(...G.players.map(p => scoreOf(p.id)));
-  const html = G.players.map((p, i) => { const s = scoreOf(p.id), done = t >= G.dl[p.id] && t >= G.startAt, choc = (G.blindOf[p.id] || 0) > t || (p.id === G.me && G.blindUntil > t);
-    return `<div class="gp ${p.id === G.me ? 'me' : ''} ${top > 0 && s === top ? 'lead' : ''} ${choc ? 'choc' : ''}" style="--pc:${SEAT_COLORS[i]}">${faceEl(p.char)}<div style="min-width:0;flex:1"><div class="nm">${esc(p.id === G.me ? '나' : p.bot ? p.nick.replace(/^봇 /, '') : p.nick)}</div><div class="st">${choc ? '🍫 초코!' : done ? '⏰ 끝' : t >= baseEnd() ? `☀️ ${Math.ceil((G.dl[p.id] - t) / 1000)}초` : G.dl[p.id] > baseEnd() ? '☀️ 연장' : p.bot ? '🤖' : ''}</div></div><span class="sc">${s}</span></div>`; }).join('');
-  const el = $('#gPlayers'); if (el._h !== html) { el._h = html; el.innerHTML = html; }
+  G.players.forEach((p, i) => {
+    const c = el._cells[i], s = scoreOf(p.id), done = (t >= G.dl[p.id] && t >= G.startAt) || !!G.endSeen, choc = (G.blindOf[p.id] || 0) > t || (p.id === G.me && G.blindUntil > t);
+    const st = choc ? '🍫 초코!' : done ? '⏰ 끝' : G.rule === 'time' && t >= baseEnd() ? `☀️ ${Math.ceil((G.dl[p.id] - t) / 1000)}초` : G.rule === 'time' && G.dl[p.id] > baseEnd() ? '☀️ 연장' : p.bot ? '🤖' : '';
+    const k = s + '|' + st + '|' + (top > 0 && s === top) + '|' + choc;
+    if (c.k === k) return; c.k = k;
+    c.sc.textContent = s; c.st.textContent = st;
+    c.d.classList.toggle('lead', top > 0 && s === top); c.d.classList.toggle('choc', choc);
+  });
 }
 
 /* ── 봇 ── */
 function botTick(t) {
+  if (G.endSeen) return;
   const lv = BOT_LV[G.botLv] || BOT_LV.normal;
   for (const p of G.players) {
     if (!p.bot || t < G.startAt || t >= G.dl[p.id]) continue;
@@ -1249,6 +1295,7 @@ function onlineTick(v) {
 function checkFinalize(v, t) {
   if (!v || v.status !== 'playing' || v.round !== G.round) return;
   if (finalizerOf(v) !== me.pid) return;
+  if (v.g && v.g.end && G.endSeen && t > G.endSeen + 1000) return finalize(v.round);
   const ids = Object.keys(v.inRound || {});
   const done = id => { const p = v.players[id]; return !p || (!p.bot && !p.online) || t > (p.dl || 0) + 1200; };
   if (t > v.startAt + 2000 && ids.every(done)) finalize(v.round);
@@ -1268,16 +1315,17 @@ function frame() {
   const mine = t >= G.startAt && t >= G.dl[G.me];
   const watchDl = mine ? Math.max(0, ...stillPlaying(t).map(p => G.dl[p.id])) : 0;
   const left = mine ? Math.max(0, watchDl - t) : Math.max(0, G.dl[G.me] - Math.max(t, G.startAt)), sec = Math.ceil(left / 1000);
-  const key = (mine ? 'w' : 'm') + sec;
+  const remain = G.rule === 'single' ? SC.count(G.V.bd || '') : 0;
+  const key = (mine ? 'w' : 'm') + sec + (G.rule === 'single' ? '|' + remain : '');
   if (key !== G.lastSec) {
     G.lastSec = key; const tm = $('#gTime');
-    tm.textContent = mine ? (left > 0 ? `관전 ${sec}` : '끝') : sec;
-    tm.classList.toggle('hurry', !mine && sec <= 10 && sec > 0); tm.classList.toggle('watch', mine);
+    tm.textContent = G.rule === 'single' && !mine ? `남은 ${remain}패` : mine ? (left > 0 ? `관전 ${sec}` : '끝') : sec;
+    tm.classList.toggle('hurry', G.rule === 'time' && !mine && sec <= 10 && sec > 0); tm.classList.toggle('watch', mine);
     $('#gBar').classList.toggle('watch', mine);
     renderPlayers();
     if (G.overShown) renderWatch();
   }
-  $('#gBar').style.transform = `scaleX(${Math.min(1, left / (CFG.roundSec * 1000))})`;
+  $('#gBar').style.transform = `scaleX(${G.rule === 'single' && !mine ? Math.min(1, remain / (G.total || 1)) : Math.min(1, left / (G.sec * 1000))})`;
   // 초코
   const bl = G.blindUntil > t;
   $('#blind').classList.toggle('hidden', !bl);
@@ -1294,7 +1342,7 @@ function frame() {
   if (G.mode === 'solo' || (room.data && finalizerOf(room.data) === me.pid)) botTick(t);
   // 끝
   const all = Math.max(...Object.values(G.dl));
-  if (G.mode === 'solo') { if (t > all + 400 && !G.ended) endSolo(); }
+  if (G.mode === 'solo') { if (!G.ended && (t > all + 400 || (G.endSeen && t > G.endSeen + 1000))) endSolo(); }
   else if ((G.tickAt || 0) + 500 < t) { G.tickAt = t; checkFinalize(room.data, t); }
 }
 function endSolo() {
@@ -1314,7 +1362,7 @@ function showResult(list, stake, myId, onBack, backLabel, again) {
   if (mine.win) { Sound.play('win'); vib([40, 50, 40, 50, 80]); } else Sound.play('end');
   modal(`<h2 style="text-align:center">${draw ? '무승부 · 판돈 돌려받기' : mine.win ? '👑 우승!' : '대결 끝!'}</h2>
     <p style="text-align:center" class="muted">${faceEl(me.char, 's')} ${esc(say(me.char, mine.win ? 'win' : 'lose'))}</p>
-    <div class="card" style="text-align:center"><span class="small muted">이번 판</span><div class="money" style="font-size:30px;color:${delta >= 0 ? 'var(--yellow)' : 'var(--red)'}">${delta >= 0 ? '+' : '−'}${won(Math.abs(delta))}</div><span class="small muted">판돈 ${won(stake)} · 내 기록 ${mine.score}쌍</span></div>
+    <div class="card" style="text-align:center"><span class="small muted">이번 판</span><div class="money" style="font-size:30px;color:${delta >= 0 ? 'var(--yellow)' : 'var(--red)'}">${delta >= 0 ? '+' : '−'}${won(Math.abs(delta))}</div><span class="small muted">${ruleLabel(G.rule, G.sec)} · 판돈 ${won(stake)} · 내 기록 ${mine.score}쌍</span></div>
     <div class="list">${list.map((p, i) => `<div class="li ${p.id === myId ? 'me' : ''}"><span class="rk">${p.win ? '👑' : i + 1}</span>${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}</div><b class="num">${p.score}쌍<small>${p.bot ? '봇' : (p.payout - stake >= 0 ? '+' : '−') + won(Math.abs(p.payout - stake))}</small></b></div>`).join('')}</div>
     <div class="grid2">${again ? '<button class="btn pink" id="rsAgain">한 판 더!</button>' : ''}<button class="btn ${again ? 'ghost' : 'pink'}" id="rsBack" ${again ? '' : 'style="grid-column:1/-1"'}>${backLabel}</button></div>`, (s, close, m) => {
     m.dataset.lock = '1';
