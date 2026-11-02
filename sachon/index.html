@@ -182,6 +182,16 @@ body.playing #bungBack{display:none}
 .gi .nm{font-size:10.5px;font-weight:800;line-height:1.1;white-space:nowrap}
 .gi .n{position:absolute;top:-4px;right:-2px;background:var(--pink);color:#fff;font:400 13px/1 var(--d);border-radius:99px;padding:3px 6px;min-width:20px}
 .gi[disabled]{filter:grayscale(.85) brightness(.6)}
+.g-time.watch{color:var(--cyan)}
+.g-bar i.watch{background:linear-gradient(90deg,var(--cyan),#B26BFF)}
+#gItems.watching{display:block}
+.w-panel{border-radius:16px;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--line);padding:9px 12px;display:grid;gap:6px}
+.w-panel .w-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font:400 18px/1.1 var(--d)}
+.w-panel .w-top small{font:700 12px var(--f);color:var(--muted)}
+.w-panel .w-row{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800}
+.w-panel .w-row .face{width:24px;height:24px}
+.w-panel .w-row b{margin-left:auto;font:400 17px/1 var(--d);color:var(--cyan)}
+.w-panel .w-row.ext b{color:var(--yellow)}
 </style>
 </head>
 <body>
@@ -237,7 +247,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261102-1';
+const APP_VERSION = '20261102-2';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -1108,6 +1118,8 @@ function doMatch(a, b, path) {
 /* ── 아이템 ── */
 function renderItems() {
   if (!G.on) return;
+  if (G.overShown) return renderWatch();
+  $('#gItems').classList.remove('watching');
   $('#gItems').innerHTML = ITEM_KEYS.map(k => { const it = ITEMS[k], n = (me.items || {})[k] || 0, left = it.limit - (G.used[k] || 0);
     return `<button class="gi" data-it="${k}" ${n <= 0 || left <= 0 ? 'disabled' : ''}><img src="${imgOf(it.icon)}" alt=""><span class="nm">${it.short}</span><span class="small muted" style="font-size:10px">이번 판 ${Math.max(0, left)}번</span><span class="n">${n}</span></button>`; }).join('');
 }
@@ -1168,13 +1180,27 @@ async function applyItem(k) {
   return false;
 }
 
+/* ── 내 시간이 끝난 뒤: 시간을 늘린 사람이 계속 하는 걸 지켜봐요 ── */
+const baseEnd = () => G.startAt + CFG.roundSec * 1000;
+function stillPlaying(t) { return G.players.filter(p => p.id !== G.me && t < G.dl[p.id]); }
+function renderWatch() {
+  const t = now(), el = $('#gItems'), playing = stillPlaying(t);
+  el.classList.add('watching');
+  const rows = playing.sort((a, b) => G.dl[b.id] - G.dl[a.id]).map(p => {
+    const ext = G.dl[p.id] > baseEnd();
+    return `<div class="w-row ${ext ? 'ext' : ''}">${faceEl(p.char)}<span>${esc(p.nick)}</span><span class="small muted">${ext ? '☀️ 연장 시간으로 플레이 중' : '플레이 중'} · ${scoreOf(p.id)}쌍</span><b>${Math.ceil((G.dl[p.id] - t) / 1000)}초</b></div>`;
+  }).join('');
+  const html = `<div class="w-panel"><div class="w-top"><span>⏰ 게임 종료 · 내 기록 ${scoreOf(G.me)}쌍</span><small>${playing.length ? '👀 관전 중' : '결과 정리 중…'}</small></div>${rows || '<div class="small muted">모두 끝났어요. 곧 결과가 나와요</div>'}</div>`;
+  if (el._h !== html) { el._h = html; el.innerHTML = html; }
+}
+
 /* ── 사람들 점수 줄 ── */
 function scoreOf(id) { const sc = (G.g && G.g.sc) || {}; return (sc[id] || 0) + (id === G.me ? G.pendPairs : 0); }
 function renderPlayers() {
   if (!G.on) return;
   const t = now(), top = Math.max(...G.players.map(p => scoreOf(p.id)));
   const html = G.players.map((p, i) => { const s = scoreOf(p.id), done = t >= G.dl[p.id] && t >= G.startAt, choc = (G.blindOf[p.id] || 0) > t || (p.id === G.me && G.blindUntil > t);
-    return `<div class="gp ${p.id === G.me ? 'me' : ''} ${top > 0 && s === top ? 'lead' : ''} ${choc ? 'choc' : ''}" style="--pc:${SEAT_COLORS[i]}">${faceEl(p.char)}<div style="min-width:0;flex:1"><div class="nm">${esc(p.id === G.me ? '나' : p.bot ? p.nick.replace(/^봇 /, '') : p.nick)}</div><div class="st">${choc ? '🍫 초코!' : done ? '⏰ 끝' : p.bot ? '🤖' : ''}</div></div><span class="sc">${s}</span></div>`; }).join('');
+    return `<div class="gp ${p.id === G.me ? 'me' : ''} ${top > 0 && s === top ? 'lead' : ''} ${choc ? 'choc' : ''}" style="--pc:${SEAT_COLORS[i]}">${faceEl(p.char)}<div style="min-width:0;flex:1"><div class="nm">${esc(p.id === G.me ? '나' : p.bot ? p.nick.replace(/^봇 /, '') : p.nick)}</div><div class="st">${choc ? '🍫 초코!' : done ? '⏰ 끝' : t >= baseEnd() ? `☀️ ${Math.ceil((G.dl[p.id] - t) / 1000)}초` : G.dl[p.id] > baseEnd() ? '☀️ 연장' : p.bot ? '🤖' : ''}</div></div><span class="sc">${s}</span></div>`; }).join('');
   const el = $('#gPlayers'); if (el._h !== html) { el._h = html; el.innerHTML = html; }
 }
 
@@ -1203,7 +1229,11 @@ function botTick(t) {
 /* ── 온라인: 방 소식이 올 때마다 ── */
 function onlineTick(v) {
   if (v.g) syncG(v.g);
-  for (const p of G.players) if (v.players[p.id] && v.players[p.id].dl) G.dl[p.id] = v.players[p.id].dl;
+  for (const p of G.players) {
+    const d = v.players[p.id] && v.players[p.id].dl; if (!d) continue;
+    if (p.id !== G.me && G.dl[p.id] && d > G.dl[p.id] + 1000) { toast(`☀️ ${p.nick}님이 시간을 ${CFG.timeBonus}초 늘렸어요!`, 1800); banner(`☀️ ${p.nick} +${CFG.timeBonus}초`); }
+    G.dl[p.id] = d;
+  }
   for (const [k, f] of Object.entries(v.fx || {})) {
     if (G.fxSeen.has(k)) continue; G.fxSeen.add(k);
     for (const id of f.to || []) G.blindOf[id] = Math.max(G.blindOf[id] || 0, f.until);
@@ -1235,10 +1265,17 @@ function frame() {
   if (pre > 0) { const n = Math.ceil(pre / 1000); if (G.countShown !== n) { G.countShown = n; cnt.textContent = n; Sound.play('count'); } }
   else if (G.countShown !== 0) { G.countShown = 0; cnt.textContent = '시작!'; Sound.play('go'); setTimeout(() => { if (G.countShown === 0) cnt.textContent = ''; }, 600); }
   // 내 시계
-  const left = Math.max(0, G.dl[G.me] - Math.max(t, G.startAt)), sec = Math.ceil(left / 1000);
-  if (sec !== G.lastSec) {
-    G.lastSec = sec; const tm = $('#gTime'); tm.textContent = sec; tm.classList.toggle('hurry', sec <= 10 && sec > 0);
+  const mine = t >= G.startAt && t >= G.dl[G.me];
+  const watchDl = mine ? Math.max(0, ...stillPlaying(t).map(p => G.dl[p.id])) : 0;
+  const left = mine ? Math.max(0, watchDl - t) : Math.max(0, G.dl[G.me] - Math.max(t, G.startAt)), sec = Math.ceil(left / 1000);
+  const key = (mine ? 'w' : 'm') + sec;
+  if (key !== G.lastSec) {
+    G.lastSec = key; const tm = $('#gTime');
+    tm.textContent = mine ? (left > 0 ? `관전 ${sec}` : '끝') : sec;
+    tm.classList.toggle('hurry', !mine && sec <= 10 && sec > 0); tm.classList.toggle('watch', mine);
+    $('#gBar').classList.toggle('watch', mine);
     renderPlayers();
+    if (G.overShown) renderWatch();
   }
   $('#gBar').style.transform = `scaleX(${Math.min(1, left / (CFG.roundSec * 1000))})`;
   // 초코
@@ -1248,7 +1285,9 @@ function frame() {
   // 내 시간이 끝나면
   if (t >= G.dl[G.me] && t >= G.startAt && !G.overShown) {
     G.overShown = true; if (G.sel >= 0) { TILES[G.sel].classList.remove('sel'); G.sel = -1; }
-    const ov = $('#gOver'); ov.innerHTML = '⏰ 시간 끝!<br><span class="small muted" style="font-family:var(--f)">다른 사람이 끝날 때까지 기다려요</span>'; ov.classList.remove('hidden');
+    clearHints();
+    banner(stillPlaying(t).length ? '⏰ 게임 종료! 관전 중' : '⏰ 게임 종료!');
+    renderWatch(); G.lastSec = '';
     Sound.play('end');
   }
   // 봇 (혼자 하기, 또는 온라인 방장)
