@@ -250,7 +250,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261102-3';
+const APP_VERSION = '20261102-4';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -609,7 +609,7 @@ function renderLobby() {
       <li><b>⏱ 시간제</b>(30·45·60초): 시간 안에 가장 많이 지운 사람이 판돈을 전부 가져가요. 판이 다 지워지면 새 모양 판이 이어서 나와요.</li><li><b>🀄 단판</b>: 판 하나를 다 지우면 끝. 가장 많이 지운 사람이 이겨요.</li>
       <li>이어지는 쌍이 하나도 없으면 남은 패를 자동으로 섞어요.</li>
     </ul></div>
-    <div class="grid2"><button class="btn ghost" id="lbSound">${Sound.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button><button class="btn ghost" id="lbOut">로그아웃</button></div>
+    <div class="grid3"><button class="btn ghost" id="lbSound">${Sound.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'}</button><button class="btn ghost" id="lbAdmin">🔐 어드민</button><button class="btn ghost" id="lbOut">로그아웃</button></div>
     <p class="mode-note">${db.mode === 'local' ? '오프라인 모드 · 이 기기에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
   $('#lbSolo').onclick = openSolo;
   $('#lbMake').onclick = createRoom;
@@ -621,6 +621,7 @@ function renderLobby() {
   $('#lbRank').onclick = () => show('rank');
   $('#lbSound').onclick = () => { Sound.on = !Sound.on; localStorage.setItem('sachon-sound', Sound.on ? '1' : '0'); renderLobby(); };
   $('#lbOut').onclick = logout;
+  $('#lbAdmin').onclick = () => (sessionStorage.getItem('sachon-admin') === '1' ? show('admin') : adminLogin());
 }
 function stakePicker(sel, money, attr = 'stk') {
   return `<div class="grid4">${CFG.stakes.map(s => `<button class="btn sm ${s === sel ? 'pink on' : 'ghost'}" data-${attr}="${s}" ${money != null && money < s ? 'disabled' : ''}>${wonShort(s)}</button>`).join('')}</div>`;
