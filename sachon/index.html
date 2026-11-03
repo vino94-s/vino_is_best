@@ -253,7 +253,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261103-1';
+const APP_VERSION = '20261103-2';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -372,6 +372,7 @@ class LocalDB {
   on(p, cb) { const s = { p, cb }; this.subs.add(s); setTimeout(() => this.subs.has(s) && cb(clone(this._get(p))), 0); return () => this.subs.delete(s); }
   now() { return Date.now(); }
   onDisconnect(p, v) { this.discon.push([p, v]); }
+  onConnected(cb) { setTimeout(() => cb(true), 0); return () => {}; }
 }
 class FireDB {
   constructor() { this.mode = 'firebase'; this.offset = 0; }
@@ -395,6 +396,7 @@ class FireDB {
   on(p, cb) { const r = this.ref(p), f = s => cb(s.val()); r.on('value', f); return () => r.off('value', f); }
   now() { return Date.now() + this.offset; }
   onDisconnect(p, v) { this.ref(p).onDisconnect().set(v); }
+  onConnected(cb) { const r = this.db.ref('.info/connected'), f = s => cb(!!s.val()); r.on('value', f); return () => r.off('value', f); }
 }
 let db = null;
 const PFX = CFG.prefix;
@@ -604,7 +606,7 @@ function renderLobby() {
       ${itemsMini(me)}
     </div>
     <button class="btn pink big" id="lbSolo">🤖 봇이랑 바로 대결<small>봇 1~3명과 같은 판에서 · 시간제/단판</small></button>
-    <div class="grid2"><button class="btn cyan" id="lbMake">🏠 방 만들기<small>친구 최대 4명</small></button><button class="btn" id="lbJoin">🔑 방 코드 입장<small>5자리 숫자</small></button></div>
+    <div class="grid2"><button class="btn cyan" id="lbMake">🏠 방 만들기<small>1대1~4명 · 봇 추가</small></button><button class="btn" id="lbJoin">🔑 방 코드 입장<small>5자리 숫자</small></button></div>
     <div class="grid2"><button class="btn orange" id="lbShop">🛒 상점</button><button class="btn ghost" id="lbRank">🏆 랭킹</button></div>
     <div class="card howto"><b>사천성 규칙</b><ul>
       <li>같은 그림 두 개를 차례로 누르면, 꺾이는 곳이 <b>2번 이하</b>인 선으로 이어질 때 지워져요. 선은 판 바깥 테두리로도 지나가요.</li>
@@ -830,18 +832,27 @@ async function joinRoom(code) {
   if (!r.value) return toast('없는 방 코드예요');
   enterRoom(code);
 }
+// 내가 이 방에 있다는 표시. 휴대폰이 잠깐 잠들거나 카톡에 다녀와서 연결이 끊겼다 붙어도 다시 '접속 중'으로 써요
+function markOnline() {
+  if (!room.code || !me) return;
+  const op = PATH.room(room.code) + '/players/' + me.pid + '/online';
+  db.tx(PATH.room(room.code) + '/players/' + me.pid, p => (p == null ? null : p.online ? undefined : (p.online = true, p))).catch(() => {});
+  db.onDisconnect(op, false);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { markOnline(); roomWatch(); } });
 function enterRoom(code) {
-  room.off && room.off();
+  room.off && room.off(); room.connOff && room.connOff();
   room.code = code; room.data = null;
   const op = PATH.room(code) + '/players/' + me.pid + '/online';
   db.set(op, true).catch(() => {}); db.onDisconnect(op, false);
+  room.connOff = db.onConnected(c => { if (c && room.code === code) markOnline(); });
   room.off = db.on(PATH.room(code), onRoom);
   const u = new URL(location.href); u.searchParams.set('room', code); history.replaceState(null, '', u);
   show('room');
 }
 async function leaveRoom() {
   const code = room.code; if (!code) return;
-  room.off && room.off(); room.off = null; room.code = null; room.data = null;
+  room.off && room.off(); room.off = null; room.connOff && room.connOff(); room.connOff = null; room.code = null; room.data = null;
   const u = new URL(location.href); u.searchParams.delete('room'); history.replaceState(null, '', u);
   const pid = me ? me.pid : null; if (!pid) return;
   await db.tx(PATH.room(code), v => {
@@ -862,11 +873,19 @@ function onRoom(v) {
     if (cur === 'room' || (G.on && G.mode === 'online')) { toast('방이 없어졌어요'); if (G.on) stopGame(); show('lobby'); }
     return;
   }
-  if (v.status === 'playing' && v.round && v.round !== G.round && v.inRound && v.inRound[me.pid] && v.g) startOnlineGame(v);
+  roomWatch();
   if (G.on && G.mode === 'online' && v.round === G.round) onlineTick(v);
   if (v.last && v.last.round === G.round && G.mode === 'online' && !G.resultShown) showOnlineResult(v);
   if (cur === 'room') renderRoom();
 }
+function needJoin(v) {
+  if (!v || !me || v.status !== 'playing' || !v.round || !v.g || !v.inRound || !v.inRound[me.pid]) return false;
+  if (G.on && G.mode === 'online' && G.round === v.round) return false;      // 이미 하는 중
+  if (G.quitRound === v.round) return false;                                 // 스스로 나간 판
+  const p = v.players[me.pid]; return !!p && db.now() < (p.dl || 0);
+}
+function roomWatch() { const v = room.data; if (room.code && needJoin(v)) startOnlineGame(v); }
+setInterval(roomWatch, 1000);  // 소식을 놓쳤을 때를 위한 안전장치
 function renderRoom() {
   const v = room.data, el = $('#s-room');
   if (!v || !me) { el.innerHTML = '<p class="muted">방 여는 중…</p>'; return; }
@@ -883,12 +902,15 @@ function renderRoom() {
       return `<div class="seat" style="border-bottom:3px solid ${SEAT_COLORS[i]}">${faceEl(p.char)}<div style="min-width:0"><div class="nm" style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.nick)}${id === v.host ? ' 👑' : ''}</div>
         <div class="small muted">${p.bot ? `🤖 ${BOT_LV[lv].name}` : `<span class="dot ${p.online ? '' : 'off'}"></span> ${id === me.pid ? '나' : p.online ? '접속 중' : '자리 비움'}`}</div></div>
         ${p.bot && isHost && !playing ? `<button class="x" data-rmbot="${id}" aria-label="봇 빼기">✕</button>` : ''}</div>`; }).join('')}</div>
+    <p class="small muted" style="text-align:center">👥 사람 ${ids.filter(id => !v.players[id].bot).length}명 · 🤖 봇 ${ids.filter(id => v.players[id].bot).length}명 — 2명부터 시작돼요(1대1 OK). ${isHost ? '빈자리의 <b>+ 봇 넣기</b>로 봇을 넣고, ✕로 빼요.' : '봇은 방장이 넣어요.'}</p>
     <div class="card" style="display:grid;gap:10px"><b>게임 방식 ${isHost ? '' : `<span class="muted small">(방장이 정해요)</span>`}</b>${rulePicker(rRule, rSec, 'r', !isHost || playing)}
       <b>판돈</b>${stakePicker(v.stake, null, 'rstk')}
       <div class="row" style="justify-content:space-between"><b>봇 실력</b><div class="row" style="gap:6px">${Object.keys(BOT_LV).map(k => `<button class="btn sm ${k === lv ? 'cyan on' : 'ghost'}" data-rlv="${k}">${BOT_LV[k].name}</button>`).join('')}</div></div>
       <p class="small muted">이긴 사람이 모두의 판돈 <b class="money">${won(v.stake * ids.length)}</b>을 가져가요. 내 돈 <b class="money">${won(me.money)}</b></p></div>
     ${last ? `<div class="card"><b>지난 판 결과</b><div class="list" style="margin-top:8px">${last.list.map((p, i) => `<div class="li">${p.win ? '<span class="rk">👑</span>' : `<span class="rk">${i + 1}</span>`}${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}</div><b class="num">${p.score}쌍<small>${p.bot ? '' : (p.payout - last.stake >= 0 ? '+' : '') + won(p.payout - last.stake)}</small></b></div>`).join('')}</div></div>` : ''}
-    ${isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || playing ? 'disabled' : ''}>${playing ? '게임 중…' : ids.length < 2 ? '친구나 봇을 넣어 주세요' : `${ruleLabel(rRule, rSec)} 대결 시작! (${wonShort(v.stake)})`}</button>`
+    ${playing && v.inRound && v.inRound[me.pid] && !(G.on && G.round === v.round) && db.now() < ((v.players[me.pid] || {}).dl || 0) ? `<button class="btn pink big" id="rmBackIn">▶ 게임으로 돌아가기</button>`
+      : playing && !(v.inRound && v.inRound[me.pid]) ? `<div class="card" style="text-align:center">이번 판은 다른 사람들이 하는 중이에요. 끝나면 같이 해요</div>`
+      : isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || playing ? 'disabled' : ''}>${playing ? '게임 중…' : ids.length < 2 ? '친구나 봇을 넣어 주세요' : `${ids.length === 2 ? '1대1 ' : ids.length + '인 '}${ruleLabel(rRule, rSec)} 시작! (${wonShort(v.stake)})`}</button>`
       : `<div class="card" style="text-align:center">${playing ? '게임 중…' : '방장이 시작하길 기다리는 중…'}</div>`}
     <div class="grid2"><button class="btn orange" id="rmShop">🛒 상점</button><button class="btn ghost" id="rmRank">🏆 랭킹</button></div>`;
   $('#rmBack').onclick = async () => { await leaveRoom(); show('lobby'); };
@@ -896,7 +918,8 @@ function renderRoom() {
   $('#rmShare').onclick = () => { if (navigator.share) navigator.share({ title: '사천성 가봤니?', text: `사천성 대결! 방 코드 ${room.code}`, url: link }).catch(() => {}); else { navigator.clipboard?.writeText(link); toast('초대 링크를 복사했어요'); } };
   $('#rmShop').onclick = () => show('shop');
   $('#rmRank').onclick = () => show('rank');
-  const st = $('#rmStart'); if (st) st.onclick = startOnline;
+  const st = $('#rmStart'); if (st) st.onclick = () => startOnline();
+  const bi = $('#rmBackIn'); if (bi) bi.onclick = () => { G.quitRound = 0; roomWatch(); };
   const hostTx = fn => db.tx(PATH.room(room.code), v2 => { if (!v2 || v2.status === 'playing' || v2.host !== me.pid) return undefined; fn(v2); v2.updatedAt = db.now(); return v2; });
   el.querySelectorAll('[data-rstk],[data-rlv]').forEach(b => { if (!isHost || playing) b.disabled = true; });
   if (!isHost || playing) return;
@@ -913,11 +936,16 @@ function renderRoom() {
   }));
   el.querySelectorAll('[data-rmbot]').forEach(b => b.onclick = () => hostTx(v2 => { delete v2.players[b.dataset.rmbot]; }));
 }
-async function startOnline() {
+async function startOnline(skipAway) {
   const v = room.data, code = room.code;
   if (!v || v.host !== me.pid || v.status === 'playing') return;
+  const away = roomIds(v).filter(id => !v.players[id].bot && !v.players[id].online && id !== me.pid);
+  if (away.length && !skipAway) {
+    return modal(`<h2>자리 비운 사람이 있어요</h2><p class="muted">${away.map(id => `<b>${esc(v.players[id].nick)}</b>`).join(', ')}님이 지금 연결이 끊겨 있어요. 휴대폰 화면이 꺼졌거나 다른 앱에 가 있을 수 있어요.</p>
+      <div class="grid2"><button class="btn ghost" data-close>조금 기다리기</button><button class="btn orange" id="awGo">빼고 시작</button></div>`, (s, close) => { $('#awGo', s).onclick = () => { close(); startOnline(true); }; });
+  }
   const btn = $('#rmStart'); if (btn) btn.disabled = true;
-  const ids = roomIds(v).filter(id => v.players[id].bot || v.players[id].online);
+  const ids = roomIds(v).filter(id => v.players[id].bot || v.players[id].online || id === me.pid);
   if (ids.length < 2) { toast('2명 이상이어야 해요'); return renderRoom(); }
   const stake = v.stake, round = (v.round || 0) + 1, key = `b-${code}-${v.createdAt}-${round}`;
   const humans = ids.filter(id => !v.players[id].bot);
@@ -1005,6 +1033,7 @@ function startOnlineGame(v) {
   const rule = v.roundRule === 'single' ? 'single' : 'time', sec = v.roundSec || CFG.secs[0];
   const dl = {}; ids.forEach(id => { dl[id] = v.players[id].dl || v.startAt + (rule === 'single' ? CFG.singleCap : sec) * 1000; });
   closeModal();
+  db.set(PATH.room(room.code) + '/players/' + me.pid + '/ack', v.round).catch(() => {});  // '나 시작했어요' 표시
   newG({ mode: 'online', round: v.round, code: room.code, players, startAt: v.startAt, dl, stake: v.roundStake || v.stake, botLv: v.botLv, g: v.g, rule, sec });
   beginGame();
 }
@@ -1238,16 +1267,19 @@ function scoreOf(id) { const sc = (G.g && G.g.sc) || {}; return (sc[id] || 0) + 
 function renderPlayers() {
   if (!G.on) return;
   const el = $('#gPlayers');
-  if (el._game !== G.startAt) {
-    el._game = G.startAt;
+  const gk = G.startAt + '|' + G.players.map(p => p.id).join(',');
+  if (el._game !== gk || !el._cells || el._cells.length !== G.players.length) {
+    el._game = gk;
     el.innerHTML = G.players.map((p, i) => `<div class="gp ${p.id === G.me ? 'me' : ''}" style="--pc:${SEAT_COLORS[i]}">${faceEl(p.char)}<div style="min-width:0;flex:1"><div class="nm">${esc(p.id === G.me ? '나' : p.bot ? p.nick.replace(/^봇 /, '') : p.nick)}</div><div class="st"></div></div><span class="sc">0</span></div>`).join('');
     el._cells = [...el.children].map(d => ({ d, st: d.querySelector('.st'), sc: d.querySelector('.sc'), k: '' }));
   }
   const t = now(), top = Math.max(...G.players.map(p => scoreOf(p.id)));
   G.players.forEach((p, i) => {
     const c = el._cells[i], s = scoreOf(p.id), done = (t >= G.dl[p.id] && t >= G.startAt) || !!G.endSeen, choc = (G.blindOf[p.id] || 0) > t || (p.id === G.me && G.blindUntil > t);
-    const st = choc ? '🍫 초코!' : done ? '⏰ 끝' : G.rule === 'time' && t >= baseEnd() ? `☀️ ${Math.ceil((G.dl[p.id] - t) / 1000)}초` : G.rule === 'time' && G.dl[p.id] > baseEnd() ? '☀️ 연장' : p.bot ? '🤖' : '';
-    const k = s + '|' + st + '|' + (top > 0 && s === top) + '|' + choc;
+    const rp = G.mode === 'online' && room.data && room.data.players ? room.data.players[p.id] : null;
+    const waiting = rp && !p.bot && p.id !== G.me && rp.ack !== G.round;
+    const st = waiting ? (rp.online ? '⏳ 연결 중' : '📵 끊김') : choc ? '🍫 초코!' : done ? '⏰ 끝' : G.rule === 'time' && t >= baseEnd() ? `☀️ ${Math.ceil((G.dl[p.id] - t) / 1000)}초` : G.rule === 'time' && G.dl[p.id] > baseEnd() ? '☀️ 연장' : p.bot ? '🤖' : '';
+    const k = s + '|' + st + '|' + waiting + '|' + (top > 0 && s === top) + '|' + choc;
     if (c.k === k) return; c.k = k;
     c.sc.textContent = s; c.st.textContent = st;
     c.d.classList.toggle('lead', top > 0 && s === top); c.d.classList.toggle('choc', choc);
@@ -1382,7 +1414,7 @@ $('#gQuit').onclick = () => {
     $('#qGo', s).onclick = () => {
       close();
       if (G.mode === 'solo') { const mine = scoreOf(G.me); settle(me.pid, 's-' + G.key, { payout: 0, stake: G.stake, score: mine, win: false }); stopGame(); show('lobby'); }
-      else { G.dl[G.me] = 0; stopGame(); G.resultShown = false; show('room'); }
+      else { G.quitRound = G.round; stopGame(); G.resultShown = false; show('room'); }
     };
   });
 };
