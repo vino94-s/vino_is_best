@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" id="vp" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#1B0B3D">
 <meta name="description" content="인형뽑기 인형으로 하는 사천성! 같은 판을 같이 보며 최대 4명이 동시에 같은 그림 맞추기. 시간제·단판.">
@@ -34,9 +34,10 @@
   --f:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;--d:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   color-scheme:dark}
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+html,body{margin:0;min-height:100%;touch-action:manipulation;-ms-touch-action:manipulation;background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 body{background:radial-gradient(140% 70% at 50% -10%,#4A1C96 0%,#2A0F5C 40%,var(--bg) 75%) fixed var(--bg)}
-button,input,select{font:inherit;color:inherit}
+button,input,select{font:inherit;color:inherit;touch-action:manipulation}
+input,select,textarea{font-size:16px!important}
 .hidden{display:none!important}
 .screen{min-height:100dvh;max-width:540px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px max(36px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
 h1,h2,h3{font-family:var(--d);font-weight:400;margin:0;letter-spacing:.01em}
@@ -130,7 +131,9 @@ body.playing #bungBack{display:none}
 .badge-x{color:#fff;background:var(--red);border-radius:6px;padding:1px 6px;font-size:11px;font-weight:900;margin-left:4px}
 
 /* ── 게임 화면 ── */
-#game{position:fixed;inset:0;display:flex;flex-direction:column;padding:max(8px,env(safe-area-inset-top)) 4px max(8px,env(safe-area-inset-bottom));gap:7px;max-width:620px;margin:0 auto;user-select:none;-webkit-user-select:none;overscroll-behavior:none;touch-action:manipulation}
+#game{position:fixed;inset:0;display:flex;flex-direction:column;padding:max(8px,env(safe-area-inset-top)) 4px max(8px,env(safe-area-inset-bottom));gap:7px;max-width:620px;margin:0 auto;user-select:none;-webkit-user-select:none;overscroll-behavior:none;touch-action:none;-webkit-touch-callout:none}
+#game *{touch-action:none;-webkit-touch-callout:none}
+body.playing{overflow:hidden;position:fixed;inset:0;overscroll-behavior:none}
 .g-top{display:flex;align-items:center;gap:10px;padding:0 4px}
 .g-players,.g-items{padding:0 4px}
 .g-quit{border:0;background:rgba(255,255,255,.12);width:38px;height:38px;border-radius:12px;font-weight:900;font-size:16px;cursor:pointer;flex:none}
@@ -250,7 +253,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261102-4';
+const APP_VERSION = '20261103-1';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -1006,6 +1009,7 @@ function startOnlineGame(v) {
   beginGame();
 }
 function beginGame() {
+  resetZoom();
   show('game');
   renderPlayers(); renderItems();
   buildBoard();
@@ -1390,6 +1394,41 @@ async function checkVersion() {
     if (v && v !== APP_VERSION && !G.on) location.reload();
   } catch (e) {}
 }
+
+/* ══════════ 화면 확대·축소 막기 ══════════ */
+(function lockZoom() {
+  const VP = 'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
+  const vp = document.getElementById('vp');
+  // 혹시 확대됐으면 원래 크기로 돌려놔요 (메타 태그를 다시 넣으면 브라우저가 배율을 다시 적용해요)
+  window.resetZoom = () => { if (!vp) return; vp.setAttribute('content', VP + ',width=device-width'); requestAnimationFrame(() => vp.setAttribute('content', VP)); };
+  // 아이폰 사파리: 두 손가락 확대(gesture 이벤트)
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+  // 두 손가락 이상 움직이면 막아요
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  // 빠르게 두 번 탭하면 확대되는 것 막기. 막으면 click이 안 생기니까 버튼은 직접 눌러줘요
+  let lastEnd = 0;
+  document.addEventListener('touchend', e => {
+    const now = e.timeStamp || Date.now();
+    const quick = now - lastEnd < 350; lastEnd = now;
+    if (!quick) return;
+    const t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    e.preventDefault();
+    const b = t && t.closest && t.closest('button,a,[data-it],label');
+    if (b && !b.disabled) b.click();
+  }, { passive: false });
+  // PC: Ctrl + 휠 / Ctrl + +,-,0 확대 막기
+  addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
+  addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '0', '_'].includes(e.key)) e.preventDefault(); });
+  // 길게 누르기 메뉴·드래그 막기 (게임 화면)
+  document.addEventListener('contextmenu', e => { if (document.body.classList.contains('playing')) e.preventDefault(); });
+  document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+  // 화면 방향이 바뀌거나 앱으로 돌아오면 배율을 다시 맞춰요
+  addEventListener('orientationchange', () => setTimeout(resetZoom, 300));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) resetZoom(); });
+  if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (visualViewport.scale > 1.01 && document.body.classList.contains('playing')) resetZoom(); });
+})();
 
 /* ══════════ 시작 ══════════ */
 (async function boot() {
