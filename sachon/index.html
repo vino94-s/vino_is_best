@@ -149,6 +149,10 @@ body.playing #bungBack{display:none}
 .adrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .adrow .inp{flex:1;min-width:90px;width:auto}
 .adrow .btn{flex:none}
+.presets{display:flex;gap:6px;align-items:center}
+.presets .lb{font-size:12px;color:var(--muted);font-weight:800;flex:none}
+.presets button{flex:1;border:0;border-radius:10px;padding:8px 4px;background:rgba(255,255,255,.1);box-shadow:inset 0 0 0 1px var(--line);font-weight:800;font-size:13.5px;cursor:pointer}
+.presets button.on{background:var(--yellow);color:#2A0E3F;box-shadow:none}
 .badge-x{color:#fff;background:var(--red);border-radius:6px;padding:1px 6px;font-size:11px;font-weight:900;margin-left:4px}
 
 /* ── 게임 화면 ── */
@@ -274,7 +278,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261103-4';
+const APP_VERSION = '20261103-5';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -736,6 +740,14 @@ async function renderRank() {
 
 /* ══════════ 어드민 ══════════ */
 let adminQ = '';
+const ADMIN_PRESETS = [20000, 50000, 100000];
+// 빠른 금액 버튼: 누르면 바로 옆 금액 칸에 그 금액이 들어가요 (다시 누르면 비워요)
+function pickPreset(btn, input) {
+  const wrap = btn.closest('.presets'), on = btn.classList.contains('on');
+  wrap.querySelectorAll('[data-pre]').forEach(x => x.classList.remove('on'));
+  if (on) { input.value = ''; return; }
+  btn.classList.add('on'); input.value = btn.dataset.pre;
+}
 async function adminLog(act) { try { await db.push(PATH.log, { at: Date.now(), ...act }); } catch (e) {} }
 async function renderAdmin() {
   if (sessionStorage.getItem('sachon-admin') !== '1') return show(me ? 'lobby' : 'login');
@@ -743,6 +755,7 @@ async function renderAdmin() {
   el.innerHTML = `<div class="toprow"><button class="back" id="adBack">← 나가기</button><h2>어드민</h2><button class="back" id="adRe">새로고침</button></div>
     <div class="card" style="display:grid;gap:10px">
       <b>모든 플레이어 일괄 돈 넣기 · 빼기</b>
+      <div class="presets" data-presets="bk"><span class="lb">빠른 금액</span>${ADMIN_PRESETS.map(n => `<button type="button" data-pre="${n}">${wonShort(n)}</button>`).join('')}</div>
       <div class="adrow"><input class="inp sm" id="bkMoney" inputmode="numeric" placeholder="금액 (예: 50000)"><button class="btn sm" id="bkAdd">➕ 넣기</button><button class="btn sm orange" id="bkSub">➖ 빼기</button></div>
       <p class="small muted">빼기는 0원 아래로 내려가지 않아요. 플레이어별로는 아래 목록에서 해요.</p>
     </div>
@@ -760,6 +773,7 @@ async function renderAdmin() {
       <div class="top">${faceEl(p.char, 's')}<div class="grow"><div class="nm">${esc(p.nick)}${p.blocked ? '<span class="badge-x">코드 정지</span>' : ''}</div>
         <div class="small muted">${p.games || 0}판 ${p.wins || 0}승 · 최고 ${p.best || 0}쌍 · 손익 ${won(p.profit || 0)}</div></div><b class="money" data-money>${won(p.money)}</b></div>
       <div class="small muted">아이템 ${ITEM_KEYS.map(k => `${ITEMS[k].short} <b style="color:var(--ink)">${(p.items || {})[k] || 0}</b>`).join(' · ')}</div>
+      <div class="presets"><span class="lb">빠른 금액</span>${ADMIN_PRESETS.map(n => `<button type="button" data-pre="${n}">${wonShort(n)}</button>`).join('')}</div>
       <div class="adrow"><input class="inp sm" data-amt inputmode="numeric" placeholder="금액"><button class="btn sm" data-act="m+">+ 돈</button><button class="btn sm orange" data-act="m-">− 돈</button></div>
       <div class="adrow"><select class="inp sm" data-item>${ITEM_KEYS.map(k => `<option value="${k}">${ITEMS[k].name} (${ITEMS[k].short})</option>`).join('')}</select><input class="inp sm" data-qty inputmode="numeric" value="1" style="max-width:64px;min-width:52px"><button class="btn sm cyan" data-act="i+">+</button><button class="btn sm orange" data-act="i-">−</button></div>
       <div class="adrow"><button class="btn sm ghost" data-act="code">🔑 새 코드 발급</button><button class="btn sm ghost" data-act="block">${p.blocked ? '✅ 코드 다시 켜기' : '⛔ 코드 정지'}</button></div>
@@ -782,7 +796,12 @@ async function renderAdmin() {
     toast('완료했어요'); renderAdmin();
   };
   $('#bkAdd').onclick = () => bulk(1); $('#bkSub').onclick = () => bulk(-1);
+  el.querySelector('[data-presets="bk"]').onclick = e => { const b = e.target.closest('[data-pre]'); if (b) pickPreset(b, $('#bkMoney')); };
+  $('#bkMoney').oninput = () => el.querySelectorAll('[data-presets="bk"] [data-pre]').forEach(x => x.classList.toggle('on', x.dataset.pre === $('#bkMoney').value.replace(/[^\d]/g, '')));
+  $('#adList').addEventListener('input', e => { const a = e.target.closest('[data-amt]'); if (!a) return; const box = a.closest('[data-pid]'); box.querySelectorAll('[data-pre]').forEach(x => x.classList.toggle('on', x.dataset.pre === a.value.replace(/[^\d]/g, ''))); });
   $('#adList').onclick = async e => {
+    const pb = e.target.closest('[data-pre]');
+    if (pb) { pickPreset(pb, $('[data-amt]', pb.closest('[data-pid]'))); return; }
     const b = e.target.closest('[data-act]'); if (!b) return;
     const box = b.closest('[data-pid]'), pid = box.dataset.pid, p = byId[pid]; if (!p) return;
     const act = b.dataset.act;
