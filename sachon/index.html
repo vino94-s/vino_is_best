@@ -274,7 +274,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261103-3';
+const APP_VERSION = '20261103-4';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -751,7 +751,9 @@ async function renderAdmin() {
     <div class="list" id="adList"></div>`;
   $('#adBack').onclick = () => { sessionStorage.removeItem('sachon-admin'); show(me ? 'lobby' : 'login'); };
   $('#adRe').onclick = renderAdmin;
-  const ps = Object.values((await db.get(PATH.players)) || {}).filter(p => p && p.pid).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  // 보유 잔액이 낮은 순 (0원이 맨 위), 같으면 최근 가입 순
+  const byMoney = (a, b) => (a.money || 0) - (b.money || 0) || (b.createdAt || 0) - (a.createdAt || 0);
+  const ps = Object.values((await db.get(PATH.players)) || {}).filter(p => p && p.pid).sort(byMoney);
   if (cur !== 'admin') return;
   const byId = Object.fromEntries(ps.map(p => [p.pid, p]));
   const row = p => `<div class="li adm" data-pid="${p.pid}">
@@ -764,8 +766,9 @@ async function renderAdmin() {
     </div>`;
   const draw = () => {
     const q = adminQ.trim().toLowerCase();
+    ps.sort(byMoney);
     const list = q ? ps.filter(p => String(p.nick || '').toLowerCase().includes(q)) : ps;
-    $('#adInfo').textContent = `플레이어 ${ps.length}명${q ? ` · 검색 ${list.length}명` : ''} · 총 ${won(ps.reduce((a, p) => a + (p.money || 0), 0))}`;
+    $('#adInfo').textContent = `보유 잔액 낮은 순 · 플레이어 ${ps.length}명${q ? ` · 검색 ${list.length}명` : ''} · 총 ${won(ps.reduce((a, p) => a + (p.money || 0), 0))}`;
     $('#adList').innerHTML = list.map(row).join('') || '<p class="muted" style="text-align:center">없어요</p>';
   };
   draw();
@@ -816,7 +819,7 @@ async function renderAdmin() {
         adminLog({ act: to ? 'block' : 'unblock', nick: p.nick });
       }
       box.outerHTML = row(p);
-      $('#adInfo').textContent = `플레이어 ${ps.length}명 · 총 ${won(ps.reduce((a, x) => a + (x.money || 0), 0))}`;
+      $('#adInfo').textContent = `보유 잔액 낮은 순 · 플레이어 ${ps.length}명 · 총 ${won(ps.reduce((a, x) => a + (x.money || 0), 0))}`;
     } catch (er) { toast('실패했어요: ' + (er.message || er)); }
     finally { b.disabled = false; }
   };
