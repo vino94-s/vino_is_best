@@ -770,12 +770,18 @@ class FireDB {
   constructor() { this.mode = 'firebase'; this.offset = 0; }
   async init() {
     const V = '10.12.2';
-    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
-    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
-    this.app = firebase.initializeApp(CFG.firebase, 'claw');
+    if (!window.firebase || !firebase.initializeApp) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+    if (!firebase.database) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
+    this.app = (firebase.apps || []).find(a => a.name === 'claw') || firebase.initializeApp(CFG.firebase, 'claw');
     this.db = this.app.database();
-    this.db.ref('.info/serverTimeOffset').on('value', s => { this.offset = s.val() || 0; });
-    await Promise.race([this.db.ref(CFG.prefix + 'nicks').get(), sleep(9000).then(() => { throw new Error('timeout'); })]);
+    if (!this.offOn) { this.offOn = true; this.db.ref('.info/serverTimeOffset').on('value', s => { this.offset = s.val() || 0; }); }
+    // 서버와 실제로 연결될 때까지 기다려요 (휴대폰이 막 깨어났을 땐 몇 초 걸려요)
+    await new Promise((res, rej) => {
+      const r = this.db.ref('.info/connected');
+      const f = s => { if (s.val()) { clearTimeout(t); r.off('value', f); res(); } };
+      const t = setTimeout(() => { r.off('value', f); rej(new Error('timeout')); }, 12000);
+      r.on('value', f);
+    });
   }
   ref(p) { return this.db.ref(p); }
   async get(p) { return (await this.ref(p).get()).val(); }
@@ -842,31 +848,54 @@ async function oldAccount(nick) {
 async function isOldCode(code) {
   code = String(code || '').trim().toUpperCase();
   if (!/^[A-Z2-9]{6}$/.test(code)) return false;
-  try { return !!(await db.get(CFG.oldPrefix + 'acc-' + code)); } catch (e) { return false; }
+  try { return !!(await withTimeout(db.get(CFG.oldPrefix + 'acc-' + code))); } catch (e) { return false; }
 }
 function resetNotice() {
   modal(`<h2>회원 리셋 안내</h2><p>오류를 고치면서 모든 계정을 새로 시작하게 됐어요. <b>다시 가입</b>해 주세요.</p>
     <div class="card small" style="display:grid;gap:6px"><span>🎁 다시 가입하면 <b class="money">${won(CFG.startMoney)}</b>을 넣어 드려요.</span><span>🧸 <b>예전과 같은 닉네임</b>으로 가입하면 갖고 있던 인형·키캡·키링·클리커와 컬렉션이 그대로 돌아와요.</span></div>
     <button class="btn pink" data-close>다시 가입하러 가기</button>`, s => { s.querySelector('[data-close]').addEventListener('click', () => { const b = document.querySelector('.tabs [data-t="new"]'); if (b) b.click(); }); });
 }
+const withTimeout = (pr, ms = 10000) => Promise.race([pr, sleep(ms).then(() => { throw new Error('network'); })]);
+// 코드 저장: localStorage + 쿠키(1년) 두 군데. 하나가 지워져도 다른 하나로 들어와요
+const CODE_KEY = 'claw-code';
+function savedCode() {
+  let c = null;
+  try { c = localStorage.getItem(CODE_KEY); } catch (e) {}
+  if (!c) { const m = document.cookie.match(/(?:^|;\s*)claw_code=([A-Z2-9]{6})/); if (m) c = m[1]; }
+  return c && /^[A-Z2-9]{6}$/.test(c) ? c : null;
+}
+function saveCode(code) {
+  try { localStorage.setItem(CODE_KEY, code); } catch (e) {}
+  // 브라우저가 저장 공간이 모자랄 때 이 사이트 저장소(내 코드)를 지우지 않도록 부탁해요
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) {}
+  try { document.cookie = `claw_code=${code}; max-age=31536000; path=/; SameSite=Lax; Secure`; } catch (e) {}
+}
+function clearCode() {
+  try { localStorage.removeItem(CODE_KEY); } catch (e) {}
+  try { document.cookie = 'claw_code=; max-age=0; path=/; SameSite=Lax; Secure'; } catch (e) {}
+}
+// 연결 문제면 throw, 코드가 정말 없으면 null
 async function login(code) {
   code = String(code || '').trim().toUpperCase();
   if (!/^[A-Z2-9]{6}$/.test(code)) return null;
-  const acc = await db.get(PATH.acc(code));
+  const acc = await withTimeout(db.get(PATH.acc(code)));
   if (!acc || !acc.pid) return null;
-  const p0 = await db.get(PATH.player(acc.pid));
+  const p0 = await withTimeout(db.get(PATH.player(acc.pid)));
   if (!p0) return null;
   const today = todayKST();
   let recharged = false;
   if (p0.lastDaily !== today) {
-    const r = await db.tx(PATH.player(acc.pid), cur => {
-      if (!cur) return cur;
-      if (cur.lastDaily === today) return undefined;
-      cur.money = (cur.money || 0) + CFG.daily; cur.lastDaily = today; return cur;
-    });
-    recharged = r.committed && r.value && r.value.lastDaily === today;
+    try {
+      const r = await withTimeout(db.tx(PATH.player(acc.pid), cur => {
+        if (!cur) return cur;
+        if (cur.lastDaily === today) return undefined;
+        cur.money = (cur.money || 0) + CFG.daily; cur.lastDaily = today; return cur;
+      }));
+      recharged = r.committed && r.value && r.value.lastDaily === today;
+    } catch (e) { /* 충전은 다음 접속 때 다시 해요. 로그인은 막지 않아요 */ }
   }
-  return { player: await db.get(PATH.player(acc.pid)), recharged };
+  const p1 = await withTimeout(db.get(PATH.player(acc.pid))).catch(() => p0);
+  return { player: p1 || p0, recharged };
 }
 function setMe(v) {
   if (!v) return;
@@ -875,7 +904,7 @@ function setMe(v) {
   if (cur === 'lobby') renderLobby();
 }
 async function enter(code, player, recharged) {
-  myCode = code; localStorage.setItem('claw-code', code);
+  myCode = code; saveCode(code);
   me = player; me.dolls = me.dolls || {};
   meOff && meOff();
   let gotFirst; const first = new Promise(r => { gotFirst = r; });
@@ -914,13 +943,16 @@ function confirmGone(pid) {
   goneT = setTimeout(async () => {
     if (!me || me.pid !== pid) return;
     let v;
-    try { v = await db.get(PATH.player(pid)); } catch (e) { return; }
+    try { v = await withTimeout(db.get(PATH.player(pid))); } catch (e) { return; }
+    if (v !== null || !me || me.pid !== pid) return;
+    await sleep(3000);  // 잠깐 못 읽은 걸 삭제로 오해하지 않게 한 번 더 확인
+    try { v = await withTimeout(db.get(PATH.player(pid))); } catch (e) { return; }
     if (v === null && me && me.pid === pid) { toast('계정이 삭제됐어요'); logout(); }
   }, 1500);
 }
 function logout() {
   meOff && meOff(); meOff = null; me = null; myCode = null;
-  localStorage.removeItem('claw-code');
+  clearCode();
   show('login');
 }
 async function txMe(fn) {
@@ -1008,7 +1040,7 @@ function owner(kind, ms = 2400) {
 
 /* ══════════ 로그인 ══════════ */
 function renderLogin() {
-  const saved = localStorage.getItem('claw-code');
+  const saved = savedCode();
   let pickChar = CH[Math.floor(Math.random() * CH.length)];
   const el = $('#s-login');
   el.innerHTML = `
@@ -1038,6 +1070,7 @@ function renderLogin() {
     const nick = $('#lgNick').value; const btn = $('#lgGo'); btn.disabled = true;
     try {
       const { code, restored } = await register(nick, pickChar);
+      saveCode(code);  // 시작하기를 누르기 전에 창을 닫아도 다음에 자동으로 들어와요
       const r = await login(code);
       modal(`<h2>내 입장 코드</h2><div class="bigcode">${code}</div>
         ${restored ? `<div class="card small" style="border-color:var(--green)">🎉 예전 계정을 찾았어요! 인형 등 <b>${restored.dolls}개</b>와 컬렉션 <b>${restored.coll}종</b>을 되찾았고, <b class="money">${won(CFG.startMoney)}</b>도 넣어 드렸어요.</div>` : `<div class="card small">🎁 가입 선물로 <b class="money">${won(CFG.startMoney)}</b>을 넣어 드렸어요.</div>`}
@@ -1048,7 +1081,8 @@ function renderLogin() {
     btn.disabled = false;
   };
   const doLogin = async code => {
-    const r = await login(code).catch(() => null);
+    let r;
+    try { r = await login(code); } catch (e) { toast('연결이 불안정해요. 잠시 뒤 다시 해 주세요'); return; }
     if (!r) { if (await isOldCode(code)) resetNotice(); else toast('없는 코드예요'); return; }
     enter(code.trim().toUpperCase(), r.player, r.recharged);
   };
@@ -2794,21 +2828,22 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 const ART_V = '20261031a';
 // 합성 인형 그림은 게임용 가벼운 사본(fusion/w/<id>.webp, 256px)을 먼저 쓰고, 없으면 원본 PNG를 써요
 const fuseImg = (id, png) => (png ? 'fusion/' + id + '.png' : 'fusion/w/' + id + '.webp');
-const APP_VERSION = '20261101-1102';
+const APP_VERSION = '20261104-1500';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
     const v = (await r.text()).trim();
     if (!v || v === APP_VERSION) return;
-    if (G.running) return; // 판 하는 중에는 끊지 않아요
+    if (G.running || cur === 'game' || cur === 'room' || cur === 'admin' || (typeof room !== 'undefined' && room.code)) return; // 판·대결 방·어드민에서는 끊지 않아요
+    if (document.querySelector('#modalRoot .modal')) return; // 코드 안내 창 같은 게 떠 있으면 기다려요
     if (sessionStorage.getItem('claw-reloaded') === v) return; // 같은 버전으로 계속 새로고침하지 않게
     sessionStorage.setItem('claw-reloaded', v);
     const u = new URL(location.href); u.searchParams.set('v', v);
     location.replace(u.toString());
   } catch (e) {}
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(checkVersion, 3000); });
 setInterval(checkVersion, 5 * 60 * 1000);
 
 /* ══════════ 시작 ══════════ */
@@ -2816,17 +2851,29 @@ setInterval(checkVersion, 5 * 60 * 1000);
   checkVersion();
   const force = new URLSearchParams(location.search).get('local') === '1';
   const sprites = loadSprites();
-  if (!force) {
-    try { db = new FireDB(); await db.init(); }
-    catch (e) { console.warn('Firebase 연결 실패, 이 기기 저장 모드로 바꿔요', e); db = null; }
+  const bootMsg = (t, sub) => { const el = $('#s-boot'); if (el) el.innerHTML = `<h1 style="font-size:34px;text-align:center">술안먹고<br>뽑을수있지?</h1><p style="text-align:center;font-weight:800">${t}</p>${sub ? `<p class="muted small" style="text-align:center">${sub}</p>` : ''}`; };
+  if (force) { db = new LocalDB(); await db.init(); }
+  else {
+    // 연결이 늦어도 '오프라인 모드'로 넘어가지 않고, 연결될 때까지 다시 시도해요
+    db = new FireDB();
+    const slow = setTimeout(() => { if (cur === 'boot') bootMsg('서버에 연결하는 중…'); }, 2500);
+    for (let n = 1; ; n++) {
+      try { await db.init(); clearTimeout(slow); break; }
+      catch (e) { console.warn('Firebase 연결 재시도', n, e); bootMsg('서버에 연결하는 중…', n > 1 ? `${n}번째 시도 중이에요. 와이파이나 데이터가 켜져 있는지 확인해 주세요` : ''); await sleep(Math.min(6000, 1000 * n)); }
+    }
   }
-  if (!db) { db = new LocalDB(); await db.init(); }
   await sprites;
-  const saved = localStorage.getItem('claw-code');
+  const saved = savedCode();
   if (saved) {
-    const r = await login(saved).catch(() => null);
-    if (r) return enter(saved, r.player, r.recharged);
-    if (await isOldCode(saved)) { localStorage.removeItem('claw-code'); show('login'); resetNotice(); return; }
+    for (let n = 1; ; n++) {
+      let r;
+      try { r = await login(saved); }
+      catch (e) { bootMsg('내 코드로 들어가는 중…', n > 1 ? `연결이 불안정해서 다시 시도하고 있어요 (${n}번째)` : ''); await sleep(Math.min(6000, 1000 * n)); continue; }
+      if (r) return enter(saved, r.player, r.recharged);
+      if (await isOldCode(saved)) { clearCode(); show('login'); resetNotice(); return; }
+      toast('저장된 코드를 찾지 못했어요. 코드를 다시 확인해 주세요', 3000);
+      break;
+    }
   }
   show('login');
 })();

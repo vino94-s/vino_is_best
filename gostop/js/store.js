@@ -13,6 +13,7 @@ export function todayKST() {
   return d.toISOString().slice(0, 10);
 }
 
+export const withTimeout = (pr, ms = 10000) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('연결이 불안정해요. 잠시 뒤 다시 해 주세요')), ms))]);
 function loadScript(src) {
   return new Promise((res, rej) => {
     const s = document.createElement('script');
@@ -28,12 +29,20 @@ class FirebaseStore {
   constructor() { this.mode = 'firebase'; }
   async init() {
     const V = '10.12.2';
-    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
-    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
-    // eslint-disable-next-line no-undef
-    this.app = firebase.initializeApp(FIREBASE_CONFIG);
-    // eslint-disable-next-line no-undef
-    this.db = firebase.database();
+    /* eslint-disable no-undef */
+    if (!window.firebase || !firebase.initializeApp) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+    if (!firebase.database) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
+    // 다시 시도할 때 앱을 새로 만들지 않아요
+    this.app = (firebase.apps || []).find(a => a.name === '[DEFAULT]') || firebase.initializeApp(FIREBASE_CONFIG);
+    this.db = this.app.database();
+    /* eslint-enable no-undef */
+    // 서버와 실제로 연결될 때까지 기다려요 (휴대폰이 막 깨어났을 땐 몇 초 걸려요)
+    await new Promise((res, rej) => {
+      const r = this.db.ref('.info/connected');
+      const f = s => { if (s.val()) { clearTimeout(t); r.off('value', f); res(); } };
+      const t = setTimeout(() => { r.off('value', f); rej(new Error('timeout')); }, 12000);
+      r.on('value', f);
+    });
   }
   ref(p) { return this.db.ref(p); }
   async get(p) { return (await this.ref(p).get()).val(); }
@@ -79,27 +88,31 @@ class FirebaseStore {
     await this.ref('users/' + code).remove();
     return { pid };
   }
+  // 연결 문제면 throw, 코드가 정말 없으면 null
   async login(code) {
     code = code.trim().toUpperCase();
     if (!/^[A-Z2-9]{6}$/.test(code)) return null;
-    let acc = await this.get('accounts/' + code);
+    let acc = await withTimeout(this.get('accounts/' + code));
     let migrated = false;
-    if (!acc || !acc.pid) { acc = await this._migrateLegacy(code); migrated = !!acc; }
+    if (!acc || !acc.pid) { acc = await withTimeout(this._migrateLegacy(code)); migrated = !!acc; }
     if (!acc) return null;
     const pid = acc.pid;
-    const p0 = await this.get('players/' + pid);
+    const p0 = await withTimeout(this.get('players/' + pid));
     if (!p0) return null;
     const today = todayKST();
     let recharged = false;
     if (p0.lastDaily !== today) {
-      const r = await this.ref('players/' + pid).transaction(cur => {
-        if (!cur) return cur;
-        if (cur.lastDaily === today) return undefined;
-        cur.money = (cur.money || 0) + DAILY_CHARGE; cur.lastDaily = today; return cur;
-      });
-      recharged = r.committed && r.snapshot.val()?.lastDaily === today;
+      try {
+        const r = await withTimeout(this.ref('players/' + pid).transaction(cur => {
+          if (!cur) return cur;
+          if (cur.lastDaily === today) return undefined;
+          cur.money = (cur.money || 0) + DAILY_CHARGE; cur.lastDaily = today; return cur;
+        }));
+        recharged = r.committed && r.snapshot.val()?.lastDaily === today;
+      } catch { /* 충전은 다음 접속 때 다시 해요. 로그인은 막지 않아요 */ }
     }
-    return { user: { ...(await this.get('players/' + pid)), code }, recharged, migrated };
+    const p1 = await withTimeout(this.get('players/' + pid)).catch(() => p0);
+    return { user: { ...(p1 || p0), code }, recharged, migrated };
   }
   getUser(pid) { return this.get('players/' + pid); }
   watchUser(pid, cb) { const r = this.ref('players/' + pid); const f = s => cb(s.val()); r.on('value', f); return () => r.off('value', f); }
@@ -281,10 +294,16 @@ class LocalStore {
   joinRoom() { this._noOnline(); }
 }
 
-export async function createStore() {
-  if (isFirebaseConfigured()) {
+// Firebase가 설정돼 있으면 연결될 때까지 다시 시도해요. 예전처럼 조용히 '이 브라우저 저장'으로 넘어가면
+// 저장된 코드를 못 찾아서 로그인이 풀린 것처럼 보였어요. (?local=1 일 때만 이 브라우저 저장)
+export async function createStore(onRetry) {
+  const forceLocal = new URLSearchParams(location.search).get('local') === '1';
+  if (isFirebaseConfigured() && !forceLocal) {
     const s = new FirebaseStore();
-    try { await s.init(); return s; } catch (e) { console.error(e); }
+    for (let n = 1; ; n++) {
+      try { await s.init(); return s; }
+      catch (e) { console.warn('Firebase 연결 재시도', n, e); onRetry && onRetry(n); await new Promise(r => setTimeout(r, Math.min(6000, 1000 * n))); }
+    }
   }
   const l = new LocalStore(); await l.init(); return l;
 }

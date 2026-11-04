@@ -5,7 +5,7 @@ import { botMove, botGoStop } from './bot.js?v=20261031a';
 import { newSeotda, applyBet, applyChoose, legalBets, needsChoice, handInfo, bestPair, showHand, potOf, BET_LABEL } from './seotda.js?v=20261031a';
 import { botBet, botChoose } from './seotda-bot.js?v=20261031a';
 import { CHARACTERS, charById, EVENT_INFO, tauntFor } from './characters.js?v=20261031a';
-import { createStore, applyResult, holdLoss, settleHeld, claimFreeCharge, freeChargeLeft } from './store.js?v=20261031a';
+import { createStore, applyResult, holdLoss, settleHeld, claimFreeCharge, freeChargeLeft } from './store.js?v=20261104a';
 import { ADMIN, POINT_VALUES, TURN_TIMEOUT_SEC, DAILY_CHARGE, SHEET_API, FREE_CHARGE } from './config.js?v=20261031a';
 
 // ───────────────── 유틸 ─────────────────
@@ -149,6 +149,22 @@ function confirmModal(title, body, okText = '확인', cancelText = '취소') {
     ]);
   });
 }
+// 내 코드: localStorage + 쿠키(1년) 두 군데에 저장. 하나가 지워져도 다른 하나로 들어와요
+function savedCode() {
+  let c = ls.get('code', null);
+  if (!c) { const m = document.cookie.match(/(?:^|;\s*)smj_code=([A-Z2-9]{6})/); if (m) c = m[1]; }
+  return c && /^[A-Z2-9]{6}$/.test(String(c).toUpperCase()) ? String(c).toUpperCase() : null;
+}
+function saveCode(code) {
+  ls.set('code', code);
+  // 브라우저가 저장 공간이 모자랄 때 이 사이트 저장소(내 코드)를 지우지 않도록 부탁해요
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) {}
+  try { document.cookie = `smj_code=${code}; max-age=31536000; path=/; SameSite=Lax; Secure`; } catch { /* 무시 */ }
+}
+function clearCode() {
+  ls.del('code');
+  try { document.cookie = 'smj_code=; max-age=0; path=/; SameSite=Lax; Secure'; } catch { /* 무시 */ }
+}
 const avatar = (charId, cls = '') => h('img', { class: `avatar ${cls}`, src: charById(charId).img, alt: charById(charId).name });
 function seg(options, value, onChange) {
   // 선택지가 많으면(7개 이상) 두 줄로 나눠서 좁은 휴대폰 화면에서도 글자가 안 찌그러지게
@@ -281,7 +297,7 @@ class Chat {
 
 // ───────────────── 로그인 ─────────────────
 function renderLogin(errMsg = '') {
-  const codeIn = h('input', { class: 'field code', maxlength: 6, placeholder: '내 코드', 'aria-label': '내 코드', autocomplete: 'off', value: ls.get('code', '') || '' });
+  const codeIn = h('input', { class: 'field code', maxlength: 6, placeholder: '내 코드', 'aria-label': '내 코드', autocomplete: 'off', value: savedCode() || '' });
   const err = h('p', { class: 'err' }, errMsg);
   const nickIn = h('input', { class: 'field', maxlength: 10, placeholder: '닉네임 (2~10자)', 'aria-label': '닉네임' });
   let char = CHARACTERS[Math.floor(Math.random() * CHARACTERS.length)].id;
@@ -307,6 +323,7 @@ function renderLogin(errMsg = '') {
         regBtn.disabled = true;
         try {
           const u = await S.store.register(nick, char);
+          saveCode(u.code);  // 시작 버튼을 누르기 전에 창을 닫아도 다음에 자동으로 들어와요
           logCodeToSheet(u, u.code);
           showIssuedCode(u, () => doLogin(u.code));
         } catch (x) { err2.textContent = x.message; }
@@ -342,7 +359,7 @@ async function doLogin(code) {
   const res = await S.store.login(code);
   if (!res) return false;
   S.me = res.user;
-  ls.set('code', S.me.code);
+  saveCode(S.me.code);
   S.unsubMe?.();
   S.unsubMe = S.store.watchUser(S.me.pid, u => { if (u && S.me) { S.rawMoney = u.money || 0; S.me = { ...u, code: S.me.code }; syncMoney(); } });
   if (res.migrated) logCodeToSheet(S.me, S.me.code);
@@ -357,7 +374,7 @@ async function doLogin(code) {
   return true;
 }
 function logout() {
-  S.unsubMe?.(); S.unsubMe = null; S.me = null; ls.del('code');
+  S.unsubMe?.(); S.unsubMe = null; S.me = null; clearCode();
   renderLogin();
 }
 // 봇 판 중에는 먼저 걷어 둔 '선패배' 금액(S.held)을 더해서 판 시작 때 돈으로 보여준다
@@ -1824,12 +1841,20 @@ async function renderAdmin(filter = '') {
 }
 
 // ───────────────── 시작 ─────────────────
+function bootMsg(text) { const n = document.querySelector('#scr-boot .mode-note'); if (n) n.textContent = text; }
 (async function boot() {
-  S.store = await createStore();
+  const slow = setTimeout(() => bootMsg('서버에 연결하는 중…'), 2500);
+  S.store = await createStore(n => bootMsg(`서버에 연결하는 중… (${n + 1}번째 시도 · 와이파이나 데이터를 확인해 주세요)`));
+  clearTimeout(slow);
   setTimeout(preloadCards, 300);
-  const saved = ls.get('code', null);
+  const saved = savedCode();
   if (saved) {
-    try { if (await doLogin(saved)) return; } catch (e) { console.error(e); }
+    // 연결 문제로 실패하면 계속 다시 시도해요. 코드가 정말 없을 때만 로그인 화면으로
+    for (let n = 1; ; n++) {
+      try { if (await doLogin(saved)) return; break; }
+      catch (e) { console.warn('저장된 코드 로그인 재시도', n, e); bootMsg(n > 1 ? `내 코드로 들어가는 중… 연결을 다시 시도하고 있어요 (${n}번째)` : '내 코드로 들어가는 중…'); await new Promise(r => setTimeout(r, Math.min(6000, 1000 * n))); }
+    }
+    return renderLogin('저장된 코드를 찾지 못했어요. 코드를 다시 확인해 주세요');
   }
   renderLogin();
 })();

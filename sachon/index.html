@@ -278,7 +278,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261104-1';
+const APP_VERSION = '20261104-2';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -483,6 +483,8 @@ function savedCode() {
 }
 function saveCode(code) {
   try { localStorage.setItem(CODE_KEY, code); } catch (e) {}
+  // 브라우저가 저장 공간이 모자랄 때 이 사이트 저장소(내 코드)를 지우지 않도록 부탁해요
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) {}
   try { document.cookie = `sachon_code=${code}; max-age=31536000; path=/; SameSite=Lax; Secure`; } catch (e) {}
 }
 function clearCode() {
