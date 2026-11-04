@@ -212,6 +212,27 @@ body.playing{overflow:hidden;position:fixed;inset:0;overscroll-behavior:none}
 .gi .nm{font-size:10.5px;font-weight:800;line-height:1.1;white-space:nowrap}
 .gi .n{position:absolute;top:-4px;right:-2px;background:var(--pink);color:#fff;font:400 13px/1 var(--d);border-radius:99px;padding:3px 6px;min-width:20px}
 .gi[disabled]{filter:grayscale(.85) brightness(.6)}
+.noitem{grid-column:1/-1;border-radius:14px;padding:12px;text-align:center;background:rgba(0,0,0,.3);box-shadow:inset 0 0 0 1px var(--line);font:400 17px/1.3 var(--d);color:var(--muted)}
+#gCombo{position:absolute;right:6px;top:4px;z-index:9;pointer-events:none;font:400 26px/1 var(--d);color:var(--yellow);text-shadow:0 0 12px rgba(255,140,0,.9),0 3px 0 #A44A00;opacity:0}
+#gCombo.on{animation:combo .9s ease-out forwards}
+@keyframes combo{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.15)}30%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+.qbtn{position:relative}
+.qbtn .dotn{position:absolute;top:-6px;right:-4px;background:var(--red);color:#fff;font:400 13px/1 var(--d);border-radius:99px;padding:4px 7px;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.qsec{display:grid;gap:8px}
+.qsec h3{font-size:19px;display:flex;justify-content:space-between;align-items:baseline}
+.qsec h3 small{font:700 12px var(--f);color:var(--muted)}
+.qrow{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:10px 12px}
+.qrow.can{background:rgba(255,213,74,.14);box-shadow:inset 0 0 0 2px var(--yellow)}
+.qrow.fin{opacity:.55}
+.qrow .ic{font-size:24px;text-align:center}
+.qrow .ic .face{display:block;margin:0 auto;width:36px;height:36px}
+.qrow .tt{font-weight:800;font-size:14px;line-height:1.3}
+.qrow .pg{height:7px;border-radius:99px;background:rgba(0,0,0,.4);overflow:hidden;margin-top:5px}
+.qrow .pg i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green))}
+.qrow .nn{font-size:11.5px;color:var(--muted);margin-top:3px}
+.qrow .rw{display:grid;justify-items:end;gap:4px}
+.qrow .rw b{font:400 15px/1 var(--d);color:var(--yellow);white-space:nowrap}
+.qrow .rw .btn{padding:7px 12px;font-size:14px;border-radius:10px;box-shadow:0 3px 0 #B8880A}
 .g-time.watch{color:var(--cyan)}
 .g-bar i.watch{background:linear-gradient(90deg,var(--cyan),#B26BFF)}
 #gItems.watching{display:block}
@@ -232,6 +253,7 @@ body.playing{overflow:hidden;position:fixed;inset:0;overscroll-behavior:none}
 <section class="screen hidden" id="s-shop"></section>
 <section class="screen hidden" id="s-rank"></section>
 <section class="screen hidden" id="s-admin"></section>
+<section class="screen hidden" id="s-quest"></section>
 <section class="hidden" id="game">
   <div class="g-top">
     <button class="g-quit" id="gQuit" aria-label="나가기">✕</button>
@@ -247,6 +269,7 @@ body.playing{overflow:hidden;position:fixed;inset:0;overscroll-behavior:none}
     <div class="g-cover hidden" id="gOver"></div>
     <div class="count" id="gCount"></div>
     <div class="banner" id="gBanner"></div>
+    <div id="gCombo"></div>
   </div>
   <div class="g-items" id="gItems"></div>
 </section>
@@ -280,7 +303,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261104-3';
+const APP_VERSION = '20261104-4';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -291,7 +314,8 @@ const ITEMS = {
 const ITEM_KEYS = ['pair', 'blind', 'time', 'hint'];
 // 게임 방식: 시간제(정해진 시간 동안 판이 이어짐) · 단판(판 하나를 다 지우면 끝)
 const RULES = { time: { name: '⏱ 시간제', desc: '정해진 시간 동안 맞추기. 판을 다 지우면 새 판이 이어져요' }, single: { name: '🀄 단판', desc: '판 하나를 다 지우면 끝. 시간 제한 없이 누가 더 많이 지우나' } };
-const ruleLabel = (rule, sec) => (rule === 'single' ? '단판' : `시간제 ${sec}초`);
+const ruleLabel = (rule, sec, noItem) => (rule === 'single' ? '단판' : `시간제 ${sec}초`) + (noItem ? ' · 노템전' : '');
+const itemPicker = (noItem, pre, dis) => `<div class="grid2"><button class="btn sm ${!noItem ? 'cyan on' : 'ghost'}" data-${pre}ni="0" ${dis ? 'disabled' : ''}>🎒 아이템 사용</button><button class="btn sm ${noItem ? 'orange on' : 'ghost'}" data-${pre}ni="1" ${dis ? 'disabled' : ''}>🚫 노템전</button></div><p class="small muted">${noItem ? '노템전: 아무도 아이템을 못 써요. 순수 실력 대결!' : '상점에서 산 아이템을 판마다 쓸 수 있어요'}</p>`;
 const BOT_LV = {
   easy:   { name: '쉬움', gap: [3000, 4600] },
   normal: { name: '보통', gap: [2000, 3200] },
@@ -441,18 +465,122 @@ const PATH = {
 /* ══════════ 계정 (닉네임별 개인 코드) ══════════ */
 let me = null, myCode = null, meOff = null;
 const emptyPlayer = (pid, nick, char) => ({ pid, nick, char, money: CFG.startMoney, items: { pair: 0, blind: 0, time: 0, hint: 1 }, codeV: 1,
-  games: 0, wins: 0, pairs: 0, best: 0, profit: 0, createdAt: Date.now(), lastDaily: todayKST() });
+  games: 0, wins: 0, pairs: 0, best: 0, profit: 0, createdAt: Date.now(), lastDaily: todayKST(), q: { att: { streak: 1, last: todayKST(), got: 0 } } });
 // 하루가 바뀌는 시각: 한국 시간 아침 6시
 const todayKST = () => new Date(Date.now() + (9 - CFG.dailyHour) * 3600e3).toISOString().slice(0, 10);
+/* ══════════ 퀘스트 ══════════ */
+const COMBO_MS = 3000;  // 이 시간 안에 다음 쌍을 지우면 콤보가 이어져요
+// 도전 퀘스트: 단계를 깰 때마다 다음 목표로 (연속 출석은 출석이 끊기면 처음부터 다시 받을 수 있어요)
+const LADDERS = [
+  { id: 'att', icon: '📅', name: n => `${n}일 연속 출석`, steps: [2, 3, 5, 7, 10, 14, 21, 30], pay: [20000, 30000, 50000, 80000, 120000, 180000, 300000, 500000], val: p => qOf(p).att.streak || 0, unit: '일', note: '하루라도 빠지면 처음부터 다시 받을 수 있어요' },
+  { id: 'combo', icon: '🔥', name: n => `연속 콤보 ${n}회 달성`, steps: [3, 5, 8, 12, 16, 20, 25], pay: [20000, 40000, 70000, 120000, 200000, 300000, 500000], val: p => qOf(p).bestCombo || 0, unit: '콤보', note: '3초 안에 다음 쌍을 지우면 콤보가 이어져요' },
+  { id: 'wstreak', icon: '👑', name: n => `${n}연승 달성`, steps: [2, 3, 5, 7, 10, 15], pay: [30000, 50000, 100000, 180000, 300000, 500000], val: p => qOf(p).bestWinStreak || 0, unit: '연승' },
+  { id: 'pairs1', icon: '⚡', name: n => `1게임 ${n}번 격파 달성`, steps: [10, 20, 30, 40, 50, 60, 80], pay: [15000, 30000, 50000, 80000, 120000, 200000, 350000], val: p => p.best || 0, unit: '번' },
+  { id: 'wins', icon: '🏆', name: n => `누적 ${n}승`, steps: [1, 5, 10, 20, 30, 50, 100, 200], pay: [10000, 30000, 50000, 80000, 100000, 150000, 300000, 500000], val: p => p.wins || 0, unit: '승' },
+  { id: 'games', icon: '🎮', name: n => `누적 ${n}판 플레이`, steps: [5, 20, 50, 100, 200, 500], pay: [10000, 30000, 60000, 100000, 200000, 400000], val: p => p.games || 0, unit: '판' },
+];
+// 오늘의 퀘스트: 매일 아침 6시에 새로
+const DAILIES = [
+  { id: 'games', icon: '🎲', name: '오늘 3판 하기', goal: 3, pay: 20000 },
+  { id: 'wins', icon: '🥇', name: '오늘 1번 이기기', goal: 1, pay: 20000 },
+  { id: 'pairs', icon: '🀄', name: '오늘 40쌍 지우기', goal: 40, pay: 30000 },
+  { id: 'noitem', icon: '🚫', name: '오늘 노템전 1판', goal: 1, pay: 20000 },
+  { id: 'combo5', icon: '🔥', name: '오늘 5콤보 1번', goal: 1, pay: 30000 },
+];
+// 캐릭터 블록 격파: 누적. 깰 때마다 목표가 커져요 (20 → 60 → 120 → 200 → 300 …)
+const charGoal = L => 10 * L * (L + 1);
+const charPay = L => 10000 + 10000 * L;
+function qOf(p) {
+  const q = (p && p.q) || {};
+  q.kills = q.kills || {}; q.klv = q.klv || {}; q.lad = q.lad || {}; q.att = q.att || {}; q.day = q.day || {}; q.day.got = q.day.got || {}; q.rec = q.rec || {};
+  return q;
+}
+function dayOf(q) { const t = todayKST(); if (q.day.d !== t) q.day = { d: t, got: {} }; return q.day; }
+// 지금 상태의 퀘스트 목록 (화면과 받기 검증에 같이 써요)
+function questRows(p) {
+  const q = qOf(p), rows = [], day = q.day.d === todayKST() ? q.day : { got: {} };
+  for (const d of DAILIES) {
+    const cur = day[d.id] || 0, got = !!day.got[d.id];
+    rows.push({ sec: 'daily', key: 'd:' + d.id, icon: d.icon, title: d.name, cur: Math.min(cur, d.goal), goal: d.goal, pay: d.pay, done: !got && cur >= d.goal, fin: got,
+      apply: c => { const qq = qOf(c); dayOf(qq).got[d.id] = true; c.q = qq; } });
+  }
+  for (const L of LADDERS) {
+    const i = L.id === 'att' ? (q.att.got || 0) : (q.lad[L.id] || 0), v = L.val(p);
+    if (i >= L.steps.length) { rows.push({ sec: 'ladder', key: 'l:' + L.id + ':max', icon: L.icon, title: L.name(L.steps[L.steps.length - 1]) + ' · 모두 완료!', cur: 1, goal: 1, pay: 0, done: false, fin: true, note: L.note }); continue; }
+    const goal = L.steps[i];
+    rows.push({ sec: 'ladder', key: 'l:' + L.id + ':' + i, icon: L.icon, title: L.name(goal), cur: Math.min(v, goal), goal, pay: L.pay[i], done: v >= goal, step: `${i + 1}/${L.steps.length}단계`, note: L.note, unit: L.unit,
+      apply: c => { const qq = qOf(c); if (L.id === 'att') qq.att.got = (qq.att.got || 0) + 1; else qq.lad[L.id] = (qq.lad[L.id] || 0) + 1; c.q = qq; } });
+  }
+  for (const k of KINDS) {
+    const lv = (q.klv[k] || 0) + 1, goal = charGoal(lv), cur = q.kills[k] || 0;
+    rows.push({ sec: 'char', key: 'c:' + k + ':' + lv, char: k, title: `${nameOf(k)} 블록 ${goal}개 격파`, cur: Math.min(cur, goal), goal, pay: charPay(lv), done: cur >= goal, step: `Lv.${lv}`,
+      apply: c => { const qq = qOf(c); qq.klv[k] = (qq.klv[k] || 0) + 1; c.q = qq; } });
+  }
+  return rows;
+}
+const claimable = p => questRows(p).filter(r => r.done);
+// 받기: 서버의 최신 내 정보로 다시 확인하고 한 번만 줘요
+async function claimQuest(keys) {
+  let total = 0, n = 0;
+  const r = await txMe(c => {
+    total = 0; n = 0;
+    for (const key of keys) {
+      const row = questRows(c).find(x => x.key === key && x.done);
+      if (!row) continue;
+      row.apply(c); c.money = (c.money || 0) + row.pay; total += row.pay; n++;
+    }
+    return n ? c : undefined;
+  }).catch(() => null);
+  if (r && r.committed && n) { Sound.play('win'); toast(`📜 퀘스트 보상 ${n}개 · +${won(total)}!`, 2600); }
+  else if (!r) toast('연결이 불안정해요. 다시 눌러 주세요');
+  return n;
+}
+async function claimAll() {
+  // 캐릭터 격파는 한 번에 여러 단계를 깰 수도 있어서, 받을 게 없어질 때까지 반복해요
+  let sum = 0;
+  for (let i = 0; i < 10; i++) { const ks = claimable(me).map(r => r.key); if (!ks.length) break; const n = await claimQuest(ks); if (!n) break; sum += n; }
+  return sum;
+}
+// 판이 끝날 때 내 기록 남기기 (같은 판은 한 번만)
+async function recordQuest(key, { win, score, kills, combo, noItem }) {
+  if (!me) return;
+  await txMe(c => {
+    const q = qOf(c);
+    if (q.rec[key]) return undefined;
+    q.rec[key] = Date.now();
+    const ks = Object.keys(q.rec); if (ks.length > 40) ks.sort((a, b) => q.rec[a] - q.rec[b]).slice(0, ks.length - 40).forEach(k => delete q.rec[k]);
+    for (const [k, n] of Object.entries(kills || {})) if (n > 0 && KINDS.includes(k)) q.kills[k] = (q.kills[k] || 0) + n;
+    q.bestCombo = Math.max(q.bestCombo || 0, combo || 0);
+    q.winStreak = win ? (q.winStreak || 0) + 1 : 0;
+    q.bestWinStreak = Math.max(q.bestWinStreak || 0, q.winStreak);
+    const d = dayOf(q);
+    d.games = (d.games || 0) + 1; if (win) d.wins = (d.wins || 0) + 1;
+    d.pairs = (d.pairs || 0) + (score || 0); if (noItem) d.noitem = (d.noitem || 0) + 1; if ((combo || 0) >= 5) d.combo5 = (d.combo5 || 0) + 1;
+    c.q = q; return c;
+  }).catch(() => {});
+}
 /* ── 매일 충전 ── */
 let dailyBusy = false;
 async function dailyCheck() {
-  if (!me || dailyBusy || me.lastDaily === todayKST()) return;
-  dailyBusy = true;
   const today = todayKST();
+  if (!me || dailyBusy || (me.lastDaily === today && me.q && me.q.att && me.q.att.last === today)) return;
+  dailyBusy = true;
+  const yday = new Date(Date.parse(today) - 864e5).toISOString().slice(0, 10);
+  let paid = false, streak = 0;
   try {
-    const r = await txMe(c => { if (c.lastDaily === today) return undefined; c.money = (c.money || 0) + CFG.daily; c.lastDaily = today; return c; });
-    if (r && r.committed) { Sound.play('item'); toast(`☀️ 오늘의 ${won(CFG.daily)} 충전 완료!`, 2600); }
+    const r = await txMe(c => {
+      let ch = false; paid = false;
+      if (c.lastDaily !== today) { c.money = (c.money || 0) + CFG.daily; c.lastDaily = today; paid = true; ch = true; }
+      const q = qOf(c);
+      if (q.att.last !== today) {
+        q.att.streak = q.att.last === yday ? (q.att.streak || 0) + 1 : 1;
+        if (q.att.streak === 1) q.att.got = 0;   // 출석이 끊겼으면 출석 퀘스트를 처음부터 다시
+        q.att.last = today; c.q = q; ch = true;
+      }
+      streak = q.att.streak;
+      return ch ? c : undefined;
+    });
+    if (r && r.committed && paid) { Sound.play('item'); toast(`☀️ 오늘의 ${won(CFG.daily)} 충전 완료! · 📅 ${streak}일 연속 출석`, 2800); }
   } catch (e) { /* 연결이 안 좋으면 다음에 다시 해요 */ }
   dailyBusy = false;
 }
@@ -535,6 +663,7 @@ function setMe(v) {
   me = v; me.items = me.items || {};
   if (cur === 'lobby') renderLobby();
   if (cur === 'shop') renderShop();
+  if (cur === 'quest') renderQuest();
   if (cur === 'room') renderRoom();
   if (G.on) renderItems();
 }
@@ -619,7 +748,7 @@ function show(name) {
   const el = name === 'game' ? $('#game') : $('#s-' + name);
   el.classList.remove('hidden');
   document.body.classList.toggle('playing', name === 'game');
-  ({ login: renderLogin, lobby: renderLobby, room: renderRoom, shop: renderShop, rank: renderRank, admin: renderAdmin }[name] || (() => {}))();
+  ({ login: renderLogin, lobby: renderLobby, room: renderRoom, shop: renderShop, rank: renderRank, admin: renderAdmin, quest: renderQuest }[name] || (() => {}))();
   if (name !== 'game') window.scrollTo(0, 0);
 }
 
@@ -703,7 +832,7 @@ function renderLobby() {
     ${hangBtn()}
     <button class="btn pink big" id="lbSolo">🤖 봇이랑 바로 대결<small>봇 1~3명과 같은 판에서 · 시간제/단판</small></button>
     <div class="grid2"><button class="btn cyan" id="lbMake">🏠 방 만들기<small>1대1~4명 · 봇 추가</small></button><button class="btn" id="lbJoin">🔑 방 코드 입장<small>5자리 숫자</small></button></div>
-    <div class="grid2"><button class="btn orange" id="lbShop">🛒 상점</button><button class="btn ghost" id="lbRank">🏆 랭킹</button></div>
+    <div class="grid3"><button class="btn qbtn ${claimable(me).length ? '' : 'ghost'}" id="lbQuest">📜 퀘스트${claimable(me).length ? `<span class="dotn">${claimable(me).length}</span>` : ''}</button><button class="btn orange" id="lbShop">🛒 상점</button><button class="btn ghost" id="lbRank">🏆 랭킹</button></div>
     <div class="card howto"><b>사천성 규칙</b><ul>
       <li>같은 그림 두 개를 차례로 누르면, 꺾이는 곳이 <b>2번 이하</b>인 선으로 이어질 때 지워져요. 선은 판 바깥 테두리로도 지나가요.</li>
       <li>모두 <b>같은 판</b>에서 동시에 맞춰요. 먼저 누른 사람이 가져가요!</li>
@@ -720,6 +849,7 @@ function renderLobby() {
     $('#jGo', s).onclick = go; $('#jc', s).onkeydown = e => { if (e.key === 'Enter') go(); }; setTimeout(() => $('#jc', s).focus(), 50);
   });
   $('#lbShop').onclick = () => show('shop');
+  $('#lbQuest').onclick = () => show('quest');
   $('#lbRank').onclick = () => show('rank');
   $('#lbSound').onclick = () => { Sound.on = !Sound.on; localStorage.setItem('sachon-sound', Sound.on ? '1' : '0'); renderLobby(); };
   $('#lbOut').onclick = logout;
@@ -740,9 +870,11 @@ function openSolo() {
   if (!BOT_LV[lv]) lv = 'normal';
   let rule = localStorage.getItem('sachon-rule') === 'single' ? 'single' : 'time', sec = Number(localStorage.getItem('sachon-sec')) || CFG.secs[0];
   if (!CFG.secs.includes(sec)) sec = CFG.secs[0];
+  let noItem = localStorage.getItem('sachon-noitem') === '1';
   const draw = s => {
     s.innerHTML = `<h2>🤖 봇이랑 대결</h2>
       <b>게임 방식</b>${rulePicker(rule, sec, 's')}
+      <b>아이템</b>${itemPicker(noItem, 's')}
       <b>판돈</b>${stakePicker(stake, me.money)}
       <b>봇 수</b><div class="grid3">${[1, 2, 3].map(n => `<button class="btn sm ${n === bots ? 'cyan on' : 'ghost'}" data-b="${n}">${n}명</button>`).join('')}</div>
       <b>봇 실력</b><div class="grid3">${Object.keys(BOT_LV).map(k => `<button class="btn sm ${k === lv ? 'cyan on' : 'ghost'}" data-l="${k}">${BOT_LV[k].name}</button>`).join('')}</div>
@@ -759,11 +891,33 @@ function openSolo() {
       else if (b.dataset.l) { lv = b.dataset.l; draw(s); }
       else if (b.dataset.srule) { rule = b.dataset.srule; draw(s); }
       else if (b.dataset.ssec) { sec = Number(b.dataset.ssec); draw(s); }
-      else if (b.id === 'soGo') { localStorage.setItem('sachon-stake', stake); localStorage.setItem('sachon-bots', bots); localStorage.setItem('sachon-lv', lv); localStorage.setItem('sachon-rule', rule); localStorage.setItem('sachon-sec', sec); close(); startSolo(stake, bots, lv, rule, sec); }
+      else if (b.dataset.sni) { noItem = b.dataset.sni === '1'; draw(s); }
+      else if (b.id === 'soGo') { localStorage.setItem('sachon-stake', stake); localStorage.setItem('sachon-bots', bots); localStorage.setItem('sachon-lv', lv); localStorage.setItem('sachon-rule', rule); localStorage.setItem('sachon-sec', sec); localStorage.setItem('sachon-noitem', noItem ? '1' : '0'); close(); startSolo(stake, bots, lv, rule, sec, noItem); }
       else if (b.hasAttribute('data-hang')) { b.disabled = true; takeHangover(() => draw(s)); }
       else if (b.hasAttribute('data-close')) close();
     });
   });
+}
+
+/* ══════════ 퀘스트 화면 ══════════ */
+function renderQuest() {
+  if (!me) return show('login');
+  const el = $('#s-quest'), rows = questRows(me), can = rows.filter(r => r.done), sum = can.reduce((a, r) => a + r.pay, 0);
+  const row = r => `<div class="qrow ${r.done ? 'can' : ''} ${r.fin ? 'fin' : ''}">
+      <div class="ic">${r.char ? faceEl(r.char) : r.icon}</div>
+      <div style="min-width:0"><div class="tt">${esc(r.title)}${r.step ? ` <span class="chip">${r.step}</span>` : ''}</div>
+        <div class="pg"><i style="width:${Math.round(100 * r.cur / (r.goal || 1))}%"></i></div>
+        <div class="nn">${r.fin && !r.pay ? '완료' : `${r.cur.toLocaleString('ko-KR')} / ${r.goal.toLocaleString('ko-KR')}${r.unit ? ' ' + r.unit : ''}`}${r.note ? ` · ${r.note}` : ''}</div></div>
+      <div class="rw">${r.pay ? `<b>+${wonShort(r.pay)}</b>` : ''}${r.done ? `<button class="btn" data-claim="${r.key}">받기</button>` : r.fin ? '<span class="small muted">✔ 받음</span>' : ''}</div></div>`;
+  const chars = rows.filter(r => r.sec === 'char').sort((a, b) => b.done - a.done || b.cur / b.goal - a.cur / a.goal);
+  el.innerHTML = `<div class="toprow"><button class="back" id="qBack">← 뒤로</button><h2>📜 퀘스트</h2><span class="money">${won(me.money)}</span></div>
+    ${can.length ? `<button class="btn pink big" id="qAll">🎁 모두 받기<small>${can.length}개 · +${won(sum)}</small></button>` : '<p class="small muted" style="text-align:center">게임을 하면 퀘스트가 채워져요. 다 채우면 여기서 돈을 받아요!</p>'}
+    <div class="qsec"><h3>📅 오늘의 퀘스트 <small>매일 아침 ${CFG.dailyHour}시에 새로</small></h3>${rows.filter(r => r.sec === 'daily').map(row).join('')}</div>
+    <div class="qsec"><h3>🏅 도전 퀘스트 <small>깰 때마다 다음 단계로</small></h3>${rows.filter(r => r.sec === 'ladder').map(row).join('')}</div>
+    <div class="qsec"><h3>🧸 캐릭터 블록 격파 <small>누적 · 깰 때마다 목표가 커져요</small></h3>${chars.map(row).join('')}</div>`;
+  $('#qBack').onclick = () => show(room.code ? 'room' : 'lobby');
+  const all = $('#qAll'); if (all) all.onclick = async () => { all.disabled = true; await claimAll(); if (cur === 'quest') renderQuest(); };
+  el.querySelectorAll('[data-claim]').forEach(b => b.onclick = async () => { b.disabled = true; await claimQuest([b.dataset.claim]); if (cur === 'quest') renderQuest(); });
 }
 
 /* ══════════ 상점 ══════════ */
@@ -1079,6 +1233,7 @@ function renderRoom() {
         ${p.bot && isHost && !playing ? `<button class="x" data-rmbot="${id}" aria-label="봇 빼기">✕</button>` : ''}</div>`; }).join('')}</div>
     <p class="small muted" style="text-align:center" id="rmSeatHint">👥 사람 ${ids.filter(id => !v.players[id].bot).length}명 · 🤖 봇 ${ids.filter(id => v.players[id].bot).length}명 — 2명부터 시작돼요(1대1 OK). ${isHost ? '빈자리의 <b>+ 봇 넣기</b>로 봇을 넣고, ✕로 빼요.' : '봇은 방장이 넣어요.'}</p>
     <div class="card" style="display:grid;gap:10px"><b>게임 방식 ${isHost ? '' : `<span class="muted small">(방장이 정해요)</span>`}</b>${rulePicker(rRule, rSec, 'r', !isHost || playing)}
+      <b>아이템</b>${itemPicker(!!v.noItem, 'r', !isHost || playing)}
       <b>판돈</b>${stakePicker(v.stake, null, 'rstk')}
       <div class="row" style="justify-content:space-between"><b>봇 실력</b><div class="row" style="gap:6px">${Object.keys(BOT_LV).map(k => `<button class="btn sm ${k === lv ? 'cyan on' : 'ghost'}" data-rlv="${k}">${BOT_LV[k].name}</button>`).join('')}</div></div>
       <p class="small muted">이긴 사람이 모두의 판돈 <b class="money">${won(v.stake * ids.length)}</b>을 가져가요. 내 돈 <b class="money">${won(me.money)}</b></p>
@@ -1086,7 +1241,7 @@ function renderRoom() {
     ${last ? `<div class="card"><b>지난 판 결과</b><div class="list" style="margin-top:8px">${last.list.map((p, i) => `<div class="li">${p.win ? '<span class="rk">👑</span>' : `<span class="rk">${i + 1}</span>`}${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}</div><b class="num">${p.score}쌍<small>${p.bot ? '' : (p.payout - last.stake >= 0 ? '+' : '') + won(p.payout - last.stake)}</small></b></div>`).join('')}</div></div>` : ''}
     ${playing && v.inRound && v.inRound[me.pid] && !(G.on && G.round === v.round) && db.now() < ((v.players[me.pid] || {}).dl || 0) ? `<button class="btn pink big" id="rmBackIn">▶ 게임으로 돌아가기</button>`
       : playing && !(v.inRound && v.inRound[me.pid]) ? `<div class="card" style="text-align:center">이번 판은 다른 사람들이 하는 중이에요. 끝나면 같이 해요</div>`
-      : isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || playing ? 'disabled' : ''}>${playing ? '게임 중…' : ids.length < 2 ? '친구나 봇을 넣어 주세요' : `${ids.length === 2 ? '1대1 ' : ids.length + '인 '}${ruleLabel(rRule, rSec)} 시작! (${wonShort(v.stake)})`}</button>`
+      : isHost ? `<button class="btn pink big" id="rmStart" ${ids.length < 2 || playing ? 'disabled' : ''}>${playing ? '게임 중…' : ids.length < 2 ? '친구나 봇을 넣어 주세요' : `${ids.length === 2 ? '1대1 ' : ids.length + '인 '}${ruleLabel(rRule, rSec, v.noItem)} 시작! (${wonShort(v.stake)})`}</button>`
       : `<div class="card" style="text-align:center">${playing ? '게임 중…' : '방장이 시작하길 기다리는 중…'}</div>`}
     <div class="grid2"><button class="btn orange" id="rmShop">🛒 상점</button><button class="btn ghost" id="rmRank">🏆 랭킹</button></div>`;
   $('#rmBack').onclick = async () => { await leaveRoom(); show('lobby'); };
@@ -1106,6 +1261,7 @@ function renderRoom() {
   el.querySelectorAll('[data-rstk]').forEach(b => b.onclick = () => hostTx(v2 => { v2.stake = Number(b.dataset.rstk); }));
   el.querySelectorAll('[data-rlv]').forEach(b => b.onclick = () => hostTx(v2 => { v2.botLv = b.dataset.rlv; }));
   el.querySelectorAll('[data-rrule]').forEach(b => b.onclick = () => hostTx(v2 => { v2.rule = b.dataset.rrule; }));
+  el.querySelectorAll('[data-rni]').forEach(b => b.onclick = () => hostTx(v2 => { v2.noItem = b.dataset.rni === '1' || null; }));
   el.querySelectorAll('[data-rsec]').forEach(b => b.onclick = () => hostTx(v2 => { v2.sec = Number(b.dataset.rsec); }));
   el.querySelectorAll('[data-addbot]').forEach(b => b.onclick = () => hostTx(v2 => {
     const ids2 = Object.keys(v2.players || {}); if (ids2.length >= CFG.maxPlayers) return;
@@ -1143,7 +1299,7 @@ async function startOnline(skipAway) {
   const g0 = SC.newGame(Math.random, rule === 'single');
   await db.tx(PATH.room(code), v2 => {
     if (!v2 || v2.host !== me.pid || v2.status === 'playing') return undefined;
-    v2.status = 'playing'; v2.round = round; v2.startAt = db.now() + 4000; v2.inRound = {}; v2.roundStake = stake; v2.roundRule = rule; v2.roundSec = sec;
+    v2.status = 'playing'; v2.round = round; v2.startAt = db.now() + 4000; v2.inRound = {}; v2.roundStake = stake; v2.roundRule = rule; v2.roundSec = sec; v2.roundNoItem = v.noItem ? true : null;
     ids.forEach(id => { if (v2.players[id]) { v2.inRound[id] = true; v2.players[id].dl = v2.startAt + (rule === 'single' ? CFG.singleCap : sec) * 1000; } });
     v2.g = g0; v2.fx = null; v2.updatedAt = db.now();
     return v2;
@@ -1177,8 +1333,9 @@ function showOnlineResult(v) {
   G.resultShown = true;
   const L = v.last, mine = L.list.find(p => p.id === me.pid);
   if (mine) settle(me.pid, L.key, { payout: mine.payout, stake: L.stake, score: mine.score, win: mine.win }); // 방장이 이미 했으면 그냥 넘어가요
+  const qp = mine ? recordMine('q-' + L.key, mine) : null;
   stopGame();
-  showResult(L.list, L.stake, me.pid, () => show(room.code ? 'room' : 'lobby'), '방으로');
+  showResult(L.list, L.stake, me.pid, () => show(room.code ? 'room' : 'lobby'), '방으로', false, qp);
 }
 
 /* ══════════ 게임 ══════════ */
@@ -1189,10 +1346,11 @@ function newG(o) {
   Object.assign(G, { on: true, ended: false, resultShown: false, mode: o.mode, round: o.round || 0, code: o.code || null, me: me.pid, players: o.players, startAt: o.startAt, dl: o.dl, stake: o.stake,
     botLv: o.botLv || 'normal', g: o.g, used: {}, blindUntil: 0, blindOf: {}, fxSeen: new Set(), botNext: {}, botBusy: {}, sel: -1, pending: new Set(), pendPairs: 0,
     V: { bd: null, st: 0, sh: 0, lmN: 0 }, lastSec: -1, overShown: false, countShown: -1, key: o.key || null,
-    rule: o.rule === 'single' ? 'single' : 'time', sec: o.sec || CFG.secs[0], endSeen: 0, total: SC.count(o.g.bd) });
+    rule: o.rule === 'single' ? 'single' : 'time', sec: o.sec || CFG.secs[0], endSeen: 0, total: SC.count(o.g.bd),
+    noItem: !!o.noItem, kills: {}, combo: 0, maxCombo: 0, lastHit: 0, recorded: false });
 }
 const colorOf = id => { const i = G.players.findIndex(p => p.id === id); return SEAT_COLORS[i < 0 ? 0 : i]; };
-function startSolo(stake, nBots, lv, rule = 'time', sec = CFG.secs[0]) {
+function startSolo(stake, nBots, lv, rule = 'time', sec = CFG.secs[0], noItem = false) {
   if (!me) return;
   const key = 'solo-' + Date.now().toString(36) + genCode(3).toLowerCase();
   payStake(me.pid, 'b-' + key, stake).then(ok => {
@@ -1203,7 +1361,7 @@ function startSolo(stake, nBots, lv, rule = 'time', sec = CFG.secs[0]) {
     const players = [{ id: me.pid, nick: me.nick, char: me.char }, ...bots];
     const startAt = Date.now() + 3000, dl = {};
     players.forEach(p => { dl[p.id] = startAt + (rule === 'single' ? CFG.singleCap : sec) * 1000; });
-    newG({ mode: 'solo', players, startAt, dl, stake, botLv: lv, g: SC.newGame(Math.random, rule === 'single'), key, rule, sec });
+    newG({ mode: 'solo', players, startAt, dl, stake, botLv: lv, g: SC.newGame(Math.random, rule === 'single'), key, rule, sec, noItem });
     beginGame();
   });
 }
@@ -1214,7 +1372,7 @@ function startOnlineGame(v) {
   const dl = {}; ids.forEach(id => { dl[id] = v.players[id].dl || v.startAt + (rule === 'single' ? CFG.singleCap : sec) * 1000; });
   closeModal();
   db.set(PATH.room(room.code) + '/players/' + me.pid + '/ack', v.round).catch(() => {});  // '나 시작했어요' 표시
-  newG({ mode: 'online', round: v.round, code: room.code, players, startAt: v.startAt, dl, stake: v.roundStake || v.stake, botLv: v.botLv, g: v.g, rule, sec });
+  newG({ mode: 'online', round: v.round, code: room.code, players, startAt: v.startAt, dl, stake: v.roundStake || v.stake, botLv: v.botLv, g: v.g, rule, sec, noItem: !!v.roundNoItem });
   beginGame();
 }
 function beginGame() {
@@ -1299,7 +1457,7 @@ function syncG(g) {
     G.pending.clear();
     V.bd = g.bd; V.st = g.st; V.sh = g.sh || 0;
     renderFull();
-    $('#gStage').textContent = G.rule === 'single' ? `단판 · ${SC.LAYOUTS[g.lay || 0].name}` : `${G.sec}초 · ${g.st}판 · ${SC.LAYOUTS[g.lay || 0].name}`;
+    $('#gStage').textContent = (G.rule === 'single' ? `단판 · ${SC.LAYOUTS[g.lay || 0].name}` : `${G.sec}초 · ${g.st}판 · ${SC.LAYOUTS[g.lay || 0].name}`) + (G.noItem ? ' · 노템전' : '');
     if (stCh) { banner(`🎉 ${g.st}판! ${SC.LAYOUTS[g.lay || 0].name}`); Sound.play('item'); }
     if (shCh) banner('🔀 이어지는 쌍이 없어 섞었어요');
   } else {
@@ -1341,9 +1499,19 @@ function onBoardTap(e) {
   } else if (G.sel >= 0) TILES[G.sel].classList.remove('sel');
   G.sel = i; TILES[i].classList.add('sel'); Sound.play('tap');
 }
+function countHit(ch, sign = 1) {
+  const k = KINDS[SC.KC.indexOf(ch)]; if (!k) return;
+  G.kills[k] = Math.max(0, (G.kills[k] || 0) + 2 * sign);
+  if (sign < 0) return;
+  const t = performance.now();
+  G.combo = t - G.lastHit <= COMBO_MS ? G.combo + 1 : 1; G.lastHit = t;
+  G.maxCombo = Math.max(G.maxCombo, G.combo);
+  if (G.combo >= 2) { const c = $('#gCombo'); c.textContent = `🔥 ${G.combo}콤보!`; c.classList.remove('on'); void c.offsetWidth; c.classList.add('on'); }
+}
 function doMatch(a, b, path) {
   drawPath(path, colorOf(G.me)); Sound.play('match'); vib(12);
   clearHints();
+  const hitCh = G.V.bd[a]; countHit(hitCh);
   if (G.mode === 'solo') { const ng = SC.applyMove(G.g, a, b, G.me); if (ng) syncG(ng); return; }
   // 온라인: 화면에서 먼저 지우고, 서버에서 확인해요 (먼저 누른 사람이 가져가요)
   hideTile(a); hideTile(b);
@@ -1356,7 +1524,7 @@ function doMatch(a, b, path) {
     .then(r => {
       if (!G.on || G.round !== round) return;
       G.pending.delete(a); G.pending.delete(b); G.pendPairs = Math.max(0, G.pendPairs - 1);
-      if (!r.committed) toast('앗, 한발 늦었어요!', 1200);
+      if (!r.committed) { toast('앗, 한발 늦었어요!', 1200); countHit(hitCh, -1); }
       const v = room.data; if (v && v.g) syncG(r.committed && r.value ? (v.g.lm && r.value.lm && v.g.lm.n >= r.value.lm.n ? v.g : r.value) : v.g);
     });
 }
@@ -1366,12 +1534,14 @@ function renderItems() {
   if (!G.on) return;
   if (G.overShown) return renderWatch();
   $('#gItems').classList.remove('watching');
+  if (G.noItem) { $('#gItems').innerHTML = '<div class="noitem">🚫 노템전 · 아이템 없이 실력으로!</div>'; return; }
   $('#gItems').innerHTML = ITEM_KEYS.map(k => { const it = ITEMS[k], n = (me.items || {})[k] || 0, left = it.limit - (G.used[k] || 0);
     const off = k === 'time' && G.rule === 'single';
     return `<button class="gi" data-it="${k}" ${n <= 0 || left <= 0 || off ? 'disabled' : ''} ${off ? 'title="단판에서는 못 써요"' : ''}><img src="${imgOf(it.icon)}" alt=""><span class="nm">${it.short}</span><span class="small muted" style="font-size:10px">이번 판 ${Math.max(0, left)}번</span><span class="n">${n}</span></button>`; }).join('');
 }
 $('#gItems').addEventListener('click', e => { const b = e.target.closest('[data-it]'); if (b && !b.disabled) useItem(b.dataset.it); });
 async function useItem(k) {
+  if (G.noItem) return toast('노템전에서는 아이템을 못 써요');
   if (!canPlay() || G.itemBusy) { if (G.on && now() < G.blindUntil) toast('초코 때문에 안 보여요!'); return; }
   const it = ITEMS[k];
   if ((G.used[k] || 0) >= it.limit) return toast(`이번 판엔 ${it.limit}번까지만 써요`);
@@ -1570,20 +1740,34 @@ function endSolo() {
   list.forEach(p => { p.win = winners.includes(p); p.payout = top === 0 ? stake : p.win ? Math.floor(pot / winners.length) : 0; });
   const mine = list.find(p => p.id === me.pid);
   settle(me.pid, 's-' + G.key, { payout: mine.payout, stake, score: mine.score, win: mine.win });
+  const qp = recordMine('q-' + G.key, mine);
   stopGame();
-  showResult(list, stake, me.pid, () => show('lobby'), '로비로', true);
+  showResult(list, stake, me.pid, () => show('lobby'), '로비로', true, qp);
 }
-function showResult(list, stake, myId, onBack, backLabel, again) {
+function recordMine(key, mine) {
+  if (G.recorded) return null; G.recorded = true;
+  const before = claimable(me).length;
+  return recordQuest(key, { win: !!mine.win, score: mine.score || 0, kills: G.kills, combo: G.maxCombo, noItem: G.noItem })
+    .then(() => Math.max(0, claimable(me).length - before));
+}
+function showResult(list, stake, myId, onBack, backLabel, again, qp) {
   const mine = list.find(p => p.id === myId) || { win: false, payout: 0, score: 0 };
   const delta = mine.payout - stake, draw = list.every(p => p.score === 0);
   if (mine.win) { Sound.play('win'); vib([40, 50, 40, 50, 80]); } else Sound.play('end');
   modal(`<h2 style="text-align:center">${draw ? '무승부 · 판돈 돌려받기' : mine.win ? '👑 우승!' : '대결 끝!'}</h2>
     <p style="text-align:center" class="muted">${faceEl(me.char, 's')} ${esc(say(me.char, mine.win ? 'win' : 'lose'))}</p>
-    <div class="card" style="text-align:center"><span class="small muted">이번 판</span><div class="money" style="font-size:30px;color:${delta >= 0 ? 'var(--yellow)' : 'var(--red)'}">${delta >= 0 ? '+' : '−'}${won(Math.abs(delta))}</div><span class="small muted">${ruleLabel(G.rule, G.sec)} · 판돈 ${won(stake)} · 내 기록 ${mine.score}쌍</span></div>
+    <div class="card" style="text-align:center"><span class="small muted">이번 판</span><div class="money" style="font-size:30px;color:${delta >= 0 ? 'var(--yellow)' : 'var(--red)'}">${delta >= 0 ? '+' : '−'}${won(Math.abs(delta))}</div><span class="small muted">${ruleLabel(G.rule, G.sec, G.noItem)} · 판돈 ${won(stake)} · 내 기록 ${mine.score}쌍</span></div>
     <div class="list">${list.map((p, i) => `<div class="li ${p.id === myId ? 'me' : ''}"><span class="rk">${p.win ? '👑' : i + 1}</span>${faceEl(p.char, 's')}<div class="grow nm">${esc(p.nick)}</div><b class="num">${p.score}쌍<small>${p.bot ? '봇' : (p.payout - stake >= 0 ? '+' : '−') + won(Math.abs(p.payout - stake))}</small></b></div>`).join('')}</div>
     <div class="grid2">${again ? '<button class="btn pink" id="rsAgain">한 판 더!</button>' : ''}<button class="btn ${again ? 'ghost' : 'pink'}" id="rsBack" ${again ? '' : 'style="grid-column:1/-1"'}>${backLabel}</button></div>`, (s, close, m) => {
     m.dataset.lock = '1';
     $('#rsBack', s).onclick = () => { close(); onBack(); };
+    // 이번 판으로 새로 깬 퀘스트가 있으면 알려줘요
+    if (qp) qp.then(n => {
+      if (!document.body.contains(s)) return;
+      const tot = claimable(me).length; if (!tot) return;
+      const d = document.createElement('button'); d.className = 'btn'; d.innerHTML = `📜 ${n ? `퀘스트 ${n}개 달성!` : '받을 수 있는 퀘스트가 있어요'}<small>${tot}개 받으러 가기 · 최고 콤보 ${G.maxCombo}</small>`;
+      d.onclick = () => { close(); show('quest'); }; s.insertBefore(d, s.lastElementChild);
+    });
     const a = $('#rsAgain', s); if (a) a.onclick = () => { close(); show('lobby'); openSolo(); };
   });
 }
@@ -1593,7 +1777,7 @@ $('#gQuit').onclick = () => {
   modal(`<h2>나가기</h2><p class="muted">${msg}</p><div class="grid2"><button class="btn ghost" data-close>계속하기</button><button class="btn orange" id="qGo">나가기</button></div>`, (s, close) => {
     $('#qGo', s).onclick = () => {
       close();
-      if (G.mode === 'solo') { const mine = scoreOf(G.me); settle(me.pid, 's-' + G.key, { payout: 0, stake: G.stake, score: mine, win: false }); stopGame(); show('lobby'); }
+      if (G.mode === 'solo') { const mine = scoreOf(G.me); settle(me.pid, 's-' + G.key, { payout: 0, stake: G.stake, score: mine, win: false }); recordMine('q-' + G.key, { win: false, score: mine }); stopGame(); show('lobby'); }
       else { G.quitRound = G.round; stopGame(); G.resultShown = false; show('room'); }
     };
   });
