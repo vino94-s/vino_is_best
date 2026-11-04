@@ -278,7 +278,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261103-5';
+const APP_VERSION = '20261104-1';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -403,12 +403,18 @@ class FireDB {
   constructor() { this.mode = 'firebase'; this.offset = 0; }
   async init() {
     const V = '10.12.2';
-    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
-    await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
-    this.app = firebase.initializeApp(CFG.firebase, 'sachon');
+    if (!window.firebase || !firebase.initializeApp) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+    if (!firebase.database) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
+    this.app = (firebase.apps || []).find(a => a.name === 'sachon') || firebase.initializeApp(CFG.firebase, 'sachon');
     this.db = this.app.database();
-    this.db.ref('.info/serverTimeOffset').on('value', s => { this.offset = s.val() || 0; });
-    await Promise.race([this.db.ref(CFG.prefix + 'nicks').get(), sleep(9000).then(() => { throw new Error('timeout'); })]);
+    if (!this.offOn) { this.offOn = true; this.db.ref('.info/serverTimeOffset').on('value', s => { this.offset = s.val() || 0; }); }
+    // 서버와 실제로 연결될 때까지 기다려요 (휴대폰이 막 깨어났을 땐 몇 초 걸려요)
+    await new Promise((res, rej) => {
+      const r = this.db.ref('.info/connected');
+      const f = s => { if (s.val()) { clearTimeout(t); r.off('value', f); res(); } };
+      const t = setTimeout(() => { r.off('value', f); rej(new Error('timeout')); }, 12000);
+      r.on('value', f);
+    });
   }
   ref(p) { return this.db.ref(p); }
   async get(p) { return (await this.ref(p).get()).val(); }
@@ -455,16 +461,33 @@ async function register(nick, char) {
   await db.set(PATH.player(pid), emptyPlayer(pid, nick, char));
   return newCode(pid, 1);
 }
+const withTimeout = (pr, ms = 10000) => Promise.race([pr, sleep(ms).then(() => { throw new Error('network'); })]);
+// 연결 문제면 throw, 코드가 정말 틀렸으면 { err }
 async function login(code) {
   code = String(code || '').trim().toUpperCase();
   if (!/^[A-Z2-9]{6}$/.test(code)) return { err: '코드는 6자리예요' };
-  const acc = await db.get(PATH.acc(code));
+  const acc = await withTimeout(db.get(PATH.acc(code)));
   if (!acc || !acc.pid) return { err: '없는 코드예요' };
-  const p = await db.get(PATH.player(acc.pid));
+  const p = await withTimeout(db.get(PATH.player(acc.pid)));
   if (!p) return { err: '없는 코드예요' };
-  if ((acc.v || 1) !== (p.codeV || 1)) return { err: '새 코드가 발급돼서 이 코드는 더 못 써요' };
+  if ((acc.v || 1) !== (p.codeV || 1)) return { err: '새 코드가 발급돼서 이 코드는 더 못 써요', replaced: true };
   if (p.blocked) return { err: '운영자가 정지한 코드예요. 운영자에게 물어봐 주세요' };
   return { player: p, code };
+}
+const CODE_KEY = 'sachon-code';
+function savedCode() {
+  let c = null;
+  try { c = localStorage.getItem(CODE_KEY); } catch (e) {}
+  if (!c) { const m = document.cookie.match(/(?:^|;\s*)sachon_code=([A-Z2-9]{6})/); if (m) c = m[1]; }
+  return c && /^[A-Z2-9]{6}$/.test(c) ? c : null;
+}
+function saveCode(code) {
+  try { localStorage.setItem(CODE_KEY, code); } catch (e) {}
+  try { document.cookie = `sachon_code=${code}; max-age=31536000; path=/; SameSite=Lax; Secure`; } catch (e) {}
+}
+function clearCode() {
+  try { localStorage.removeItem(CODE_KEY); } catch (e) {}
+  try { document.cookie = 'sachon_code=; max-age=0; path=/; SameSite=Lax; Secure'; } catch (e) {}
 }
 function setMe(v) {
   if (!v) return;
@@ -475,7 +498,7 @@ function setMe(v) {
   if (G.on) renderItems();
 }
 async function enter(code, player) {
-  myCode = code; localStorage.setItem('sachon-code', code);
+  myCode = code; saveCode(code);
   me = player; me.items = me.items || {};
   meOff && meOff();
   const pid = me.pid;
@@ -494,13 +517,16 @@ function confirmGone(pid) {
   clearTimeout(goneT);
   goneT = setTimeout(async () => {
     if (!me || me.pid !== pid) return;
-    let v; try { v = await db.get(PATH.player(pid)); } catch (e) { return; }
+    let v; try { v = await withTimeout(db.get(PATH.player(pid))); } catch (e) { return; }
+    if (v !== null || !me || me.pid !== pid) return;
+    await sleep(3000);
+    try { v = await withTimeout(db.get(PATH.player(pid))); } catch (e) { return; }
     if (v === null && me && me.pid === pid) { toast('계정이 삭제됐어요'); logout(); }
   }, 1500);
 }
 function logout() {
   meOff && meOff(); meOff = null; me = null; myCode = null;
-  localStorage.removeItem('sachon-code');
+  clearCode();
   if (room.code) leaveRoom();
   if (G.on) stopGame();
   show('login');
@@ -557,7 +583,7 @@ function show(name) {
 
 /* ══════════ 로그인 ══════════ */
 function renderLogin() {
-  const saved = localStorage.getItem('sachon-code');
+  const saved = savedCode();
   let pickChar = pick(KINDS);
   const el = $('#s-login');
   el.innerHTML = `
@@ -587,6 +613,7 @@ function renderLogin() {
     const btn = $('#lgGo'); btn.disabled = true;
     try {
       const code = await register($('#lgNick').value, pickChar);
+      saveCode(code);
       const r = await login(code);
       modal(`<h2>내 입장 코드</h2><div class="bigcode">${code}</div>
         <div class="card small">🎁 가입 선물로 <b class="money">${won(CFG.startMoney)}</b>과 엄지 따봉 힌트 1개를 넣어 드렸어요.</div>
@@ -597,8 +624,8 @@ function renderLogin() {
     btn.disabled = false;
   };
   const doLogin = async code => {
-    const r = await login(code).catch(() => ({ err: '연결이 불안정해요. 다시 해 주세요' }));
-    if (r.err) { toast(r.err); return; }
+    const r = await login(code).catch(() => ({ err: '연결이 불안정해요. 잠시 뒤 다시 해 주세요' }));
+    if (r.err) { if (r.replaced && code === savedCode()) { clearCode(); renderLogin(); } toast(r.err); return; }
     enter(r.code, r.player);
   };
   $('#lgEnter').onclick = () => doLogin($('#lgCodeIn').value);
@@ -1528,7 +1555,7 @@ $('#gQuit').onclick = () => {
 async function checkVersion() {
   try {
     const v = (await (await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' })).text()).trim();
-    if (v && v !== APP_VERSION && !G.on) location.reload();
+    if (v && v !== APP_VERSION && !G.on && !room.code && ['login', 'lobby'].includes(cur) && !document.querySelector('#modalRoot .modal')) location.reload();
   } catch (e) {}
 }
 
@@ -1568,17 +1595,34 @@ async function checkVersion() {
 })();
 
 /* ══════════ 시작 ══════════ */
+function bootMsg(text, sub) {
+  $('#s-boot').innerHTML = `<div style="margin:auto;text-align:center;display:grid;gap:10px;justify-items:center"><img src="img/eomji.webp" alt="" style="width:72px;height:72px;object-fit:contain"><b style="font:400 20px/1.3 var(--d)">${esc(text)}</b>${sub ? `<p class="small muted">${esc(sub)}</p>` : ''}</div>`;
+}
 (async function boot() {
   const qs = new URLSearchParams(location.search);
   if (qs.get('local') === '1') db = new LocalDB();
   else {
-    try { db = new FireDB(); await db.init(); }
-    catch (e) { console.warn('Firebase 연결 실패, 이 기기 저장으로 시작', e); db = new LocalDB(); toast('온라인 연결이 안 돼서 오프라인 모드로 시작해요', 3000); }
+    db = new FireDB();
+    const slow = setTimeout(() => { if (cur === 'boot') bootMsg('서버에 연결하는 중…'); }, 2500);
+    for (let n = 1; ; n++) {
+      try { await db.init(); clearTimeout(slow); break; }
+      catch (e) { console.warn('Firebase 연결 재시도', n, e); bootMsg('서버에 연결하는 중…', n > 1 ? `${n}번째 시도 중이에요. 와이파이나 데이터가 켜져 있는지 확인해 주세요` : ''); await sleep(Math.min(6000, 1000 * n)); }
+    }
   }
-  const saved = localStorage.getItem('sachon-code');
-  if (saved) { const r = await login(saved).catch(() => ({ err: 1 })); if (!r.err) return enter(r.code, r.player); }
+  if (db.mode === 'firebase') { setInterval(checkVersion, 120000); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(checkVersion, 3000); }); }
+  const saved = savedCode();
+  if (saved) {
+    for (let n = 1; ; n++) {
+      let r;
+      try { r = await login(saved); }
+      catch (e) { bootMsg('내 코드로 들어가는 중…', n > 1 ? `연결이 불안정해서 다시 시도하고 있어요 (${n}번째)` : ''); await sleep(Math.min(6000, 1000 * n)); continue; }
+      if (!r.err) return enter(r.code, r.player);
+      if (r.replaced) clearCode();
+      toast(r.err, 3000);
+      break;
+    }
+  }
   show('login');
-  if (db.mode === 'firebase') { setInterval(checkVersion, 120000); document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); }); }
 })();
 </script>
 </body>
