@@ -79,7 +79,7 @@ def write_csv():
     with LINK_LOG.with_suffix(".csv").open("w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
         for r in rows:
-            w.writerow([r[0], r[1], r[2], r[3], r[4], "'" + str(r[5])])
+            w.writerow([r[0], r[1], r[2], r[3], r[4], "#" + str(r[5])])
 
 
 def main():
