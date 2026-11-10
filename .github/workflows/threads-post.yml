@@ -4,10 +4,9 @@
 name: threads-post
 on:
   schedule:
-    - cron: "31 22 * * *"  # 07:31 KST
-    - cron: "11 3 * * *"   # 12:11 KST
-    - cron: "1 12 * * *"   # 21:01 KST
-    - cron: "31 12 * * *"  # 21:31 KST
+    # GitHub 예약 실행은 늦거나 빠지는 일이 있어서 15분마다 돌린다.
+    # 시간이 안 된 글은 게시하지 않으므로, 글이 없을 땐 바로 끝난다.
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
 permissions:
   contents: write
