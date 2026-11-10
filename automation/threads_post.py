@@ -72,6 +72,16 @@ def coupang_deeplink(urls):
         return [d["shortenUrl"] for d in json.load(r)["data"]]
 
 
+def write_csv():
+    """구글시트가 IMPORTDATA로 읽는 공개 CSV (번호/게시일시/상품명/쿠팡 링크/쓰레드 글 링크/게시 ID)."""
+    import csv
+    rows = [json.loads(l) for l in LINK_LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
+    with LINK_LOG.with_suffix(".csv").open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        for r in rows:
+            w.writerow([r[0], r[1], r[2], r[3], r[4], "'" + str(r[5])])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
@@ -133,6 +143,7 @@ def main():
         row = [p["no"], now.strftime("%Y-%m-%d %H:%M"), p.get("product", ""), " ".join(p["final_links"]), p.get("permalink", ""), p["posted_id"]]
         with LINK_LOG.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        write_csv()
         print("SHEET_ROW", json.dumps(row, ensure_ascii=False))
 
 
