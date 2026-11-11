@@ -277,7 +277,7 @@ body.playing{overflow:hidden;position:fixed;inset:0;overscroll-behavior:none}
 <div id="toast" role="status" aria-live="polite"></div>
 <a id="bungBack" href="../" aria-label="게임 나가기" title="게임 나가기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></a>
 <script src="../characters/bung-chars.js"></script>
-<script src="engine.js?v=20261102b"></script>
+<script src="engine.js?v=20261111a"></script>
 <script>
 'use strict';
 /* ══════════ 설정 ══════════ */
@@ -303,7 +303,7 @@ const CFG = {
   maxPlayers: 4,
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261104-4';
+const APP_VERSION = '20261111-1';
 // 상점 아이템 (값은 모두 달라요. 한 판에 쓸 수 있는 횟수 limit)
 const ITEMS = {
   pair:  { name: '용왕의 어명',     short: '1쌍 삭제', icon: 'yongwang', price: 9000, limit: 3, desc: '“여봐라, 한 쌍 없애라!” 보드에서 같은 그림 한 쌍을 바로 지우고 1쌍을 얻어요.' },
@@ -323,9 +323,8 @@ const BOT_LV = {
 };
 const SEAT_COLORS = ['#FFD54A', '#4FE3FF', '#FF6FB7', '#7CF0A0'];
 
-/* ══════════ 캐릭터 (인형뽑기 기본 인형 16종) ══════════ */
+/* ══════════ 캐릭터 (인형뽑기 기본 인형 15종) ══════════ */
 const EXTRA_CH = {
-  honey: { id: 'honey', name: '현꿀오소리', hi: '덤벼!', lines: { start: ['꿀 찾으러 왔다!'], good: ['꿀 냄새 난다! 덤벼!'], bad: ['…안 쫄았어'], win: ['꿀오소리 승리!'], lose: ['…다음엔 물어버린다'], taunt: ['송곳니 보여줄까?'] } },
   jongu: { id: 'jongu', name: '헤존구', hi: '…헤헤 존구', lines: { start: ['헤헤… 존구 왔다'], good: ['혀 내밀고 기다렸지롱~'], bad: ['…부스러기 흘렸다'], win: ['헤헤헤… 이겼다 존구~'], lose: ['…코코아 가루만 남았다'], taunt: ['헤~ 메롱 존구 😛'] } },
   byeolnara: { id: 'byeolnara', name: '별나라', hi: '헤헤… 반짝 별나라!', lines: { start: ['잘 자기 전에 한 판만~ 반짝!'], good: ['반짝! 헤헤~'], bad: ['하암… 졸았다…'], win: ['헤헤헤… 별처럼 빛나는 승리!'], lose: ['…꿈속에서 다시 할래'], taunt: ['메롱~ 앞니 반짝 😛'] } },
 };
@@ -673,6 +672,9 @@ async function enter(code, player) {
   meOff && meOff();
   const pid = me.pid;
   myCodeV = me.codeV || 1;
+  if (!KINDS.includes(me.char)) {  // 없어진 캐릭터(현꿀오소리)였으면 비노로 바꿔요
+    txMe(c => (KINDS.includes(c.char) ? undefined : (c.char = 'bino', c))).then(r => { if (r && r.committed) toast('현꿀오소리가 없어져서 캐릭터를 비노로 바꿨어요', 3000); }).catch(() => {});
+  }
   meOff = db.on(PATH.player(pid), v => {
     if (!v) { confirmGone(pid); return; }
     if (v.blocked || (v.codeV || 1) !== myCodeV) { toast(v.blocked ? '운영자가 코드를 정지했어요' : '새 코드가 발급됐어요. 새 코드로 들어와 주세요', 3500); logout(); return; }
@@ -1425,7 +1427,7 @@ function layoutBoard() {
 function setTile(i, ch) {
   const t = TILES[i];
   if (ch === '.') { t.className = 't off'; return; }
-  if (t._k !== ch) { t._k = ch; const ki = SC.KC.indexOf(ch); t.firstChild.src = imgOf(KINDS[ki]); t.style.setProperty('--k', KCOL[ki]); }
+  if (t._k !== ch) { t._k = ch; const ki = SC.KC.indexOf(ch); t.firstChild.src = imgOf(KINDS[ki]); t.style.setProperty('--k', KCOL[ki] || '#ddd'); }
   t.className = 't';
 }
 function hideTile(i) { const t = TILES[i]; if (!t.classList.contains('off')) { t.classList.remove('sel', 'hint'); t.classList.add('gone'); } if (G.sel === i) G.sel = -1; }

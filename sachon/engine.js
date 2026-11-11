@@ -4,9 +4,9 @@
 (function (root) {
   'use strict';
   var ROWS = 12, COLS = 10, N = ROWS * COLS, PR = ROWS + 2, PC = COLS + 2;
-  // 인형뽑기 기계의 기본 인형 16종 (공용 캐릭터 13명 + 현꿀오소리·헤존구·별나라)
+  // 인형뽑기 기계의 기본 인형 15종 (공용 캐릭터 13명 + 헤존구·별나라). 현꿀오소리는 2026-11-11에 뺐어요
   var KINDS = ['eomji', 'yeoni', 'yeongjun', 'yongwang', 'juntak', 'haetsal', 'goran', 'kkaegul',
-    'mandu', 'myongradak', 'bongchum', 'bino', 'gana', 'honey', 'jongu', 'byeolnara'];
+    'mandu', 'myongradak', 'bongchum', 'bino', 'gana', 'jongu', 'byeolnara'];
 
   // 판 모양 15종 (# = 패). 판이 다 지워지면 다른 모양으로 이어서 계속해요.
   var LAYOUTS = [
@@ -35,7 +35,7 @@
 
   function rng(seed) { var a = seed >>> 0; return function () { a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   function shuffle(a, rnd) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-  var KC = 'abcdefghijklmnop';
+  var KC = 'abcdefghijklmop';  // 'n'은 옛 현꿀오소리 자리라 비워 둬요 (헤존구 o·별나라 p 글자 그대로)
   function kindOf(ch) { return KINDS[KC.indexOf(ch)]; }
 
   // 테두리를 포함한 칸 배열 (1 = 패 있음)
