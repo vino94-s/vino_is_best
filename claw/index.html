@@ -432,8 +432,6 @@ const HIDDEN17 = {
 const HIDS = [HIDDEN, HIDDEN2, HIDDEN3, HIDDEN4, HIDDEN5, HIDDEN6, HIDDEN7, HIDDEN8, HIDDEN9, HIDDEN10, HIDDEN11, HIDDEN12, HIDDEN13, HIDDEN14, HIDDEN15, HIDDEN16, HIDDEN17];
 // 공용 캐릭터 카드에 없는 이 게임 전용 인형 (모든 기계에 나와요)
 const EXTRA = [
-  { id: 'honey', name: '현꿀오소리', tier: 'common', img: 'plush/honey.png', color: '#4A3F3A', hi: '덤벼!',
-    lines: { good: ['꿀 냄새 난다! 덤벼!', '오소리는 겁이 없지'], bad: ['…놓쳤지만 안 쫄았어', '다시 덤벼!'], start: ['꿀 찾으러 왔다!'], win: ['꿀오소리 승리!'], lose: ['…다음엔 물어버린다'], taunt: ['송곳니 보여줄까?'] } },
   { id: 'jongu', name: '헤존구', tier: 'common', img: 'plush/jongu.png', color: '#7B4A2E', hi: '…헤헤 존구',
     lines: { good: ['헤헤… 뽑혔네… 견과류 맛 봐…', '혀 내밀고 기다렸지롱~'], bad: ['…부스러기 흘렸다', '헤… 반쪽 날아갔네'], start: ['헤헤… 존구 왔다'], win: ['헤헤헤… 이겼다 존구~'], lose: ['…코코아 가루만 남았다'], taunt: ['헤~ 메롱 존구 😛'] } },
   { id: 'byeolnara', name: '별나라', tier: 'common', img: 'plush/byeolnara.png', color: '#F5C431', hi: '헤헤… 반짝 별나라!',
@@ -467,7 +465,7 @@ const EASY = { grip: 1.1, slip: 0.9 };
 // 키캡·키링·클리커 기계에서는 히든급(히든·초희귀)이 나올 확률과 잡힐 확률이 각각 20% 더 높아요 (인형뽑기는 그대로)
 const GOODS_HIDDEN_BOOST = 1.2;
 const hidBoost = type => (type === 'doll' ? 1 : GOODS_HIDDEN_BOOST);
-// 합성: 인형 2개 → 새 인형. 기본 33(캐릭터 13 + 현꿀오소리 + 헤존구 + 별나라 + 히든 17) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 현꿀오소리 10 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 65 + 공주 연합 20 + 초희귀 준탁 조합 15 + 별나라·히든별나라 2 + 히든가나·영준·엄지·묭라닥·봉춘·존구·별나라 조합 105 = 컬렉션 353
+// 합성: 인형 2개 → 새 인형. 기본 32(캐릭터 13 + 헤존구 + 별나라 + 히든 17) + 합성 37 + 새 조합 37 + 히든비노 11 + 히든 고란·준탁 20 + 히든햇살·초희귀고란·히든만두·히든깨굴·히든여니 조합 61 + 공주 연합 19 + 초희귀 준탁 조합 14 + 히든별나라 1 + 히든가나·영준·엄지·묭라닥·봉춘·존구·별나라 조합 100 = 컬렉션 332 (2026-11-11 현꿀오소리 관련 21종 삭제)
 const FUSE_RATE = 0.6;   // 합성 성공 확률 60%. 실패하면 재료 2개 중 1개(무작위)만 사라지고 1개는 돌려받아요
 const FUSE_RATE_HIDDEN_BINO = 0.45; // 히든비노가 재료로 들어가는 조합은 45%
 // '비노' 닉네임은 뽑기·합성·기계 때리기 행운이 전부 100% 성공 (화면에는 표시하지 않아요)
@@ -523,20 +521,15 @@ const FUSE_LIST = [
   ['k04', '왈왈 준탁', 'sp_juntak', 'bongchum'], ['k05', '만세 준탁', 'sp_juntak', 'yeongjun'], ['k06', '무표정 준탁', 'sp_juntak', 'bino'],
   ['k07', '힙합 준탁', 'sp_juntak', 'sp_bino'], ['k08', '용궁 준탁', 'sp_juntak', 'sp_yongwang'], ['k09', '준탁과 고라니', 'sp_juntak', 'sp_goran'],
   ['k10', '준탁 패밀리', 'k01', 'k02'],
-  // ── 현꿀오소리 조합 10종 (o01~o10) ──
-  ['o01', '꿀따봉 오소리', 'honey', 'eomji'], ['o02', '개굴 오소리', 'honey', 'kkaegul'], ['o03', '꼬꼬 오소리', 'honey', 'myongradak'],
-  ['o04', '초코꿀 오소리', 'honey', 'gana'], ['o05', '주르륵 오소리', 'honey', 'goran'], ['o06', '햇살꿀 오소리', 'honey', 'haetsal'],
-  ['o07', '신사 오소리', 'honey', 'juntak'], ['o08', '오소리 대감', 'honey', 'yongwang'], ['o09', '무표정 오소리', 'honey', 'bino'],
-  ['o10', '오소리 대장', 'o01', 'o08'],
   // ── 히든햇살 조합 15종 (s01~s15) ──
   ['s01', '따봉 공주', 'sp_haetsal', 'eomji'], ['s02', '연못 공주', 'sp_haetsal', 'kkaegul'], ['s03', '꼬꼬 공주', 'sp_haetsal', 'myongradak'],
   ['s04', '초코 공주', 'sp_haetsal', 'gana'], ['s05', '주르륵 공주', 'sp_haetsal', 'goran'], ['s06', '햇살 자매', 'sp_haetsal', 'haetsal'],
   ['s07', '장미 공주', 'sp_haetsal', 'juntak'], ['s08', '해님 대비', 'sp_haetsal', 'yongwang'], ['s09', '무표정 공주', 'sp_haetsal', 'bino'],
-  ['s10', '냥냥 공주', 'sp_haetsal', 'mandu'], ['s11', '꿀오소리 공주', 'sp_haetsal', 'honey'], ['s12', '해바다 공주', 'sp_haetsal', 'sp_yongwang'],
+  ['s10', '냥냥 공주', 'sp_haetsal', 'mandu'], ['s12', '해바다 공주', 'sp_haetsal', 'sp_yongwang'],
   ['s13', '상투 공주', 'sp_haetsal', 'sp_bino'], ['s14', '햇살 왕국', 's06', 's01'], ['s15', '태양 여제', 's14', 's12'],
   // ── 초희귀고란 조합 10종 (r01~r10) ──
   ['r01', '따봉 사슴공주', 'sp_goran2', 'eomji'], ['r02', '연못 사슴공주', 'sp_goran2', 'kkaegul'], ['r03', '고란 자매', 'sp_goran2', 'goran'],
-  ['r04', '초코 사슴공주', 'sp_goran2', 'gana'], ['r05', '꼬꼬 사슴공주', 'sp_goran2', 'myongradak'], ['r06', '꿀오소리 사슴공주', 'sp_goran2', 'honey'],
+  ['r04', '초코 사슴공주', 'sp_goran2', 'gana'], ['r05', '꼬꼬 사슴공주', 'sp_goran2', 'myongradak'], 
   ['r07', '사슴 대비', 'sp_goran2', 'yongwang'], ['r08', '고란 삼총사', 'sp_goran2', 'sp_goran'], ['r09', '햇살 사슴공주', 'sp_goran2', 'sp_haetsal'],
   ['r10', '사슴 여왕', 'r07', 'r09'],
   // ── 히든만두 조합 10종 (m01~m10) ──
@@ -548,7 +541,7 @@ const FUSE_LIST = [
   ['c01', '개굴 자매', 'sp_kkaegul', 'kkaegul'], ['c02', '따봉 개구리공주', 'sp_kkaegul', 'eomji'], ['c03', '끄응 개구리공주', 'sp_kkaegul', 'yeoni'],
   ['c04', '만세 개구리공주', 'sp_kkaegul', 'yeongjun'], ['c05', '꼬꼬 개구리공주', 'sp_kkaegul', 'myongradak'], ['c06', '왈왈 개구리공주', 'sp_kkaegul', 'bongchum'],
   ['c07', '초코 개구리공주', 'sp_kkaegul', 'gana'], ['c08', '햇살 개구리공주', 'sp_kkaegul', 'haetsal'], ['c09', '장미 개구리공주', 'sp_kkaegul', 'juntak'],
-  ['c10', '꿀오소리 개구리공주', 'sp_kkaegul', 'honey'], ['c11', '연못 왕비', 'sp_kkaegul', 'sp_yongwang'], ['c12', '만두와 개구리', 'sp_kkaegul', 'sp_mandu'],
+  ['c11', '연못 왕비', 'sp_kkaegul', 'sp_yongwang'], ['c12', '만두와 개구리', 'sp_kkaegul', 'sp_mandu'],
   ['c13', '해님 연못공주', 'sp_kkaegul', 'sp_haetsal'], ['c14', '연못 왕국', 'c01', 'c02'], ['c15', '연못 여제', 'c14', 'c11'],
   // ── 히든여니 조합 15종 (y01~y15) ──
   ['y01', '여니 자매', 'sp_yeoni', 'yeoni'], ['y02', '장미 신사 커플', 'sp_yeoni', 'juntak'], ['y03', '따봉 장미공주', 'sp_yeoni', 'eomji'],
@@ -560,21 +553,21 @@ const FUSE_LIST = [
   ['x01', '햇살 만두 자매', 'sp_haetsal', 'sp_mandu'], ['x02', '사슴 개구리 공주', 'sp_goran2', 'sp_kkaegul'], ['x03', '사슴 장미 공주', 'sp_goran2', 'sp_yeoni'],
   ['x04', '만두 장미 공주', 'sp_mandu', 'sp_yeoni'], ['x05', '따봉 공주단', 's01', 'y03'], ['x06', '연못 공주단', 's02', 'r02'],
   ['x07', '꼬꼬 공주단', 's03', 'c05'], ['x08', '초코 공주단', 's04', 'y08'], ['x09', '왈왈 공주단', 'm04', 'c06'],
-  ['x10', '냥냥 공주단', 's10', 'y05'], ['x11', '꿀오소리 공주단', 'r06', 'c10'], ['x12', '무표정 공주단', 'm07', 'y09'],
+  ['x10', '냥냥 공주단', 's10', 'y05'], ['x12', '무표정 공주단', 'm07', 'y09'],
   ['x13', '만세 공주단', 'm05', 'c04'], ['x14', '끄응 공주단', 'm03', 'c03'], ['x15', '신사 공주단', 'm06', 'y02'],
   ['x16', '용궁 공주단', 'm09', 'y10'], ['x17', '다섯 공주 친구', 'x01', 'x03'], ['x18', '공주 연합', 'x02', 'x04'],
   ['x19', '공주들의 무도회', 'x05', 'x16'], ['x20', '다섯 공주 여제', 'x17', 'x18'],
   // ── 초희귀 준탁 조합 15종 (j01~j15) ──
   ['j01', '준탁 형님들', 'sp_juntak2', 'juntak'], ['j02', '따봉 건배', 'sp_juntak2', 'eomji'], ['j03', '연못 파티', 'sp_juntak2', 'kkaegul'],
   ['j04', '치킨과 샴페인', 'sp_juntak2', 'myongradak'], ['j05', '초코 샴페인', 'sp_juntak2', 'gana'], ['j06', '안주 먹보 신사', 'sp_juntak2', 'goran'],
-  ['j07', '용궁 연회', 'sp_juntak2', 'yongwang'], ['j08', '무표정 바텐더', 'sp_juntak2', 'bino'], ['j09', '꿀주 신사', 'sp_juntak2', 'honey'],
+  ['j07', '용궁 연회', 'sp_juntak2', 'yongwang'], ['j08', '무표정 바텐더', 'sp_juntak2', 'bino'], 
   ['j10', '준탁 파티', 'sp_juntak2', 'sp_juntak'], ['j11', '초희귀 커플', 'sp_juntak2', 'sp_goran2'], ['j12', '장미와 샴페인', 'sp_juntak2', 'sp_yeoni'],
   ['j13', '용궁 무도회', 'sp_juntak2', 'sp_yongwang'], ['j14', '신사 클럽', 'j01', 'j10'], ['j15', '초희귀 연회', 'j14', 'j11'],
   // ── 히든가나 조합 15종 (a01~a15) ──
   ['a01', '초코 쌍둥이', 'sp_gana', 'gana'], ['a02', '천사 따봉', 'sp_gana', 'eomji'], ['a03', '초코 만세', 'sp_gana', 'yeongjun'],
   ['a04', '초코 용궁', 'sp_gana', 'yongwang'], ['a05', '초콜릿 신사', 'sp_gana', 'juntak'], ['a06', '녹는 햇살 초코', 'sp_gana', 'haetsal'],
   ['a07', '초코 먹보', 'sp_gana', 'goran'], ['a08', '초코 연못', 'sp_gana', 'kkaegul'], ['a09', '초코 츄르', 'sp_gana', 'mandu'],
-  ['a10', '초코 무표정', 'sp_gana', 'bino'], ['a11', '꿀초코 날개', 'sp_gana', 'honey'], ['a12', '초코칩 천사', 'sp_gana', 'sp_jongu'],
+  ['a10', '초코 무표정', 'sp_gana', 'bino'], ['a12', '초코칩 천사', 'sp_gana', 'sp_jongu'],
   ['a13', '초코 별사탕', 'sp_gana', 'sp_byeolnara'], ['a14', '악동 초코 파티', 'a01', 'a12'], ['a15', '초코 천국', 'a14', 'a13'],
   // ── 히든영준 조합 15종 (e01~e15) ──
   ['e01', '만세 형제', 'sp_yeongjun', 'yeongjun'], ['e02', '만세 따봉', 'sp_yeongjun', 'eomji'], ['e03', '미안 만세', 'sp_yeongjun', 'yeoni'],
@@ -585,14 +578,14 @@ const FUSE_LIST = [
   // ── 히든엄지 조합 15종 (u01~u15) ──
   ['u01', '쌍따봉', 'sp_eomji', 'eomji'], ['u02', '미안 따봉', 'sp_eomji', 'yeoni'], ['u03', '용왕 따봉', 'sp_eomji', 'yongwang'],
   ['u04', '신사 따봉', 'sp_eomji', 'juntak'], ['u05', '먹보 따봉', 'sp_eomji', 'goran'], ['u06', '츄르 따봉', 'sp_eomji', 'mandu'],
-  ['u07', '치킨 따봉', 'sp_eomji', 'myongradak'], ['u08', '초코 따봉', 'sp_eomji', 'gana'], ['u09', '꿀 따봉', 'sp_eomji', 'honey'],
+  ['u07', '치킨 따봉', 'sp_eomji', 'myongradak'], ['u08', '초코 따봉', 'sp_eomji', 'gana'], 
   ['u10', '별빛 따봉', 'sp_eomji', 'byeolnara'], ['u11', '왈왈 따봉', 'sp_eomji', 'sp_bongchum'], ['u12', '쿠키 따봉', 'sp_eomji', 'sp_jongu'],
   ['u13', '무표정 엄지', 'sp_eomji', 'sp_bino'], ['u14', '따봉 대잔치', 'u01', 'u06'], ['u15', '전설의 엄지척', 'u14', 'u11'],
   // ── 히든묭라닥 조합 15종 (d01~d15) ──
   ['d01', '꼬꼬 형제', 'sp_myongradak', 'myongradak'], ['d02', '미안 꼬꼬', 'sp_myongradak', 'yeoni'], ['d03', '용궁 꼬꼬', 'sp_myongradak', 'yongwang'],
   ['d04', '신사의 닭', 'sp_myongradak', 'juntak'], ['d05', '아침 해 꼬끼오', 'sp_myongradak', 'haetsal'], ['d06', '먹보 닭', 'sp_myongradak', 'goran'],
   ['d07', '연못 꼬꼬', 'sp_myongradak', 'kkaegul'], ['d08', '치와와 꼬꼬', 'sp_myongradak', 'bongchum'], ['d09', '무표정 치킨', 'sp_myongradak', 'bino'],
-  ['d10', '초코 치킨', 'sp_myongradak', 'gana'], ['d11', '꿀 치킨', 'sp_myongradak', 'honey'], ['d12', '별밤 꼬끼오', 'sp_myongradak', 'sp_byeolnara'],
+  ['d10', '초코 치킨', 'sp_myongradak', 'gana'], ['d12', '별밤 꼬끼오', 'sp_myongradak', 'sp_byeolnara'],
   ['d13', '황금 해 꼬끼오', 'sp_myongradak', 'sp_haetsal'], ['d14', '꼬꼬 대합창', 'd01', 'd05'], ['d15', '황금 치킨 전설', 'd14', 'd12'],
   // ── 히든봉춘 조합 15종 (p01~p15) ──
   ['p01', '왈왈 형제', 'sp_bongchum', 'bongchum'], ['p02', '강아지 친구', 'sp_bongchum', 'yeoni'], ['p03', '만세 왈왈', 'sp_bongchum', 'yeongjun'],
@@ -604,13 +597,13 @@ const FUSE_LIST = [
   ['z01', '쿠키 형제', 'sp_jongu', 'jongu'], ['z02', '따봉 쿠키', 'sp_jongu', 'eomji'], ['z03', '미안 쿠키', 'sp_jongu', 'yeoni'],
   ['z04', '용궁 쿠키', 'sp_jongu', 'yongwang'], ['z05', '쿠키와 샴페인', 'sp_jongu', 'juntak'], ['z06', '쿠키 먹보', 'sp_jongu', 'goran'],
   ['z07', '만세 쿠키', 'sp_jongu', 'yeongjun'], ['z08', '츄르 쿠키', 'sp_jongu', 'mandu'], ['z09', '무표정 쿠키', 'sp_jongu', 'bino'],
-  ['z10', '꿀 쿠키', 'sp_jongu', 'honey'], ['z11', '별 쿠키', 'sp_jongu', 'byeolnara'], ['z12', '치킨 쿠키', 'sp_jongu', 'sp_myongradak'],
-  ['z13', '쿠키 먹방', 'sp_jongu', 'sp_goran'], ['z14', '쿠키 공장', 'z01', 'z10'], ['z15', '전설의 쿠키', 'z14', 'z12'],
+  ['z11', '별 쿠키', 'sp_jongu', 'byeolnara'], ['z12', '치킨 쿠키', 'sp_jongu', 'sp_myongradak'],
+  ['z13', '쿠키 먹방', 'sp_jongu', 'sp_goran'], ['z14', '쿠키 공장', 'z01', 'z06'], ['z15', '전설의 쿠키', 'z14', 'z12'],
   // ── 히든별나라 조합 15종 (t01~t15) ──
   ['t01', '별나라 친구', 'sp_byeolnara', 'byeolnara'], ['t02', '별빛 미안', 'sp_byeolnara', 'yeoni'], ['t03', '바다 별밤', 'sp_byeolnara', 'yongwang'],
   ['t04', '별빛 신사', 'sp_byeolnara', 'juntak'], ['t05', '해와 별', 'sp_byeolnara', 'haetsal'], ['t06', '별사탕 먹보', 'sp_byeolnara', 'goran'],
   ['t07', '별 보는 개구리', 'sp_byeolnara', 'kkaegul'], ['t08', '꿈나라 고양이', 'sp_byeolnara', 'mandu'], ['t09', '무표정 별밤', 'sp_byeolnara', 'bino'],
-  ['t10', '꿀잠 오소리', 'sp_byeolnara', 'honey'], ['t11', '잘자 따봉', 'sp_byeolnara', 'eomji'], ['t12', '별빛 공주', 'sp_byeolnara', 'sp_yeoni'],
+  ['t11', '잘자 따봉', 'sp_byeolnara', 'eomji'], ['t12', '별빛 공주', 'sp_byeolnara', 'sp_yeoni'],
   ['t13', '꿈속 용궁', 'sp_byeolnara', 'sp_yongwang'], ['t14', '별나라 파자마 파티', 't01', 't08'], ['t15', '별나라 여왕', 't14', 't12'],
 ].map(([id, name, a, b]) => ({ id, name, a, b }));
 // 합성 인형 그림 (claw/fusion/<id>.png, 배경 없는 PNG를 그대로 써요)
@@ -674,10 +667,12 @@ function loadScript(src) { return new Promise((res, rej) => { const s = document
 /* ══════════ 캐릭터 ══════════ */
 const CH = BUNG_CHARS.list.map(c => c.id);
 const fuseCard = {};
-const CHAR = id => (EXT[id] ? EXT[id] : HID[id] ? HID[id].card : FUSE[id] ? (fuseCard[id] = fuseCard[id] || { id, name: FUSE[id].name, color: '#C89BFF' }) : BUNG_CHARS.get(id));
+// 지운 인형(예: 현꿀오소리)이 예전 기록에 남아 있어도 오류 없이 비노로 보여요
+const knownChar = id => !!(EXT[id] || HID[id] || FUSE[id] || BUNG_CHARS.get(id));
+const CHAR = id => (EXT[id] ? EXT[id] : HID[id] ? HID[id].card : FUSE[id] ? (fuseCard[id] = fuseCard[id] || { id, name: FUSE[id].name, color: '#C89BFF' }) : BUNG_CHARS.get(id) || BUNG_CHARS.get('bino'));
 const imgSrc = id => (FUSE[id] ? (SPR_URL['doll:' + id] || itemSrc('doll', id)) : HID[id] ? HID[id].img : EXT[id] ? EXT[id].img : '../characters/img/' + id + '.png');
 const say = (id, k) => (FUSE[id] ? say(Math.random() < 0.5 ? FUSE[id].a : FUSE[id].b, k) : HID[id] ? pick(HID[id].card.lines[k] || HID[id].card.lines.good) : EXT[id] ? pick(EXT[id].lines[k] || EXT[id].lines.good) : BUNG_CHARS.line(id, k));
-const faceEl = (id, cls = '') => `<span class="face ${cls}" style="background-image:url(${imgSrc(id)})" title="${esc(CHAR(id).name)}"></span>`;
+const faceEl = (id0, cls = '', id = knownChar(id0) ? id0 : 'bino') => `<span class="face ${cls}" style="background-image:url(${imgSrc(id)})" title="${esc(CHAR(id).name)}"></span>`;
 const tierOf = id => TIER_OF[id] || 'common';
 const ALL_DOLLS = [...CH, ...EXTRA.map(e => e.id), ...HIDS.map(h => h.id), ...FUSE_LIST.map(f => f.id)];
 // 컬렉션 = 한 번이라도 가져 본 것 (팔거나 합성에 써도 남아요). 인형은 dex, 키캡·키링·클리커는 gdex[종류]에 기록해요.
@@ -917,7 +912,26 @@ async function enter(code, player, recharged) {
   await Promise.race([first, sleep(6000)]);
   if (!me || me.pid !== pid) return;
   // 운영자 요청으로 캐릭터를 한 번 바꿔 주는 목록 (닉네임 → 캐릭터). 바꾼 뒤엔 다시 손대지 않아요.
-  const CHAR_FIX = { '현이': 'honey' };
+  const CHAR_FIX = {};
+  // 2026-11-11 현꿀오소리 관련 인형 삭제: 가지고 있던 건 원래 판매가만큼 돈으로 돌려주고 컬렉션 기록도 지워요 (한 번만)
+  const REMOVED = { key: '20261111-honey', ids: ['honey', 'o01', 'o02', 'o03', 'o04', 'o05', 'o06', 'o07', 'o08', 'o09', 'o10', 's11', 'r06', 'c10', 'x11', 'j09', 'a11', 'u09', 'd11', 'z10', 't10'],
+    // 지우기 전 인형 판매가 (키캡·키링·클리커는 여기에 기계 배율을 곱해요)
+    price: { honey: 700, o01: 2900, o02: 2100, o03: 2900, o04: 2900, o05: 2100, o06: 2900, o07: 4800, o08: 4800, o09: 10100, o10: 12300, s11: 76100, r06: 76100, c10: 76100, x11: 243500, j09: 76100, a11: 76100, u09: 76100, d11: 76100, z10: 76100, t10: 76100 } };
+  txMe(c => {
+    c.purged = c.purged || {}; if (c.purged[REMOVED.key]) return undefined;
+    let back = 0;
+    for (const t of MTYPES) {
+      const inv = invOf(c, t), dx = dexOf(c, t), mul = t === 'doll' ? 1 : MACH[t].priceMul;
+      for (const id of REMOVED.ids) {
+        const n = inv[id] || 0, base = REMOVED.price[id] || 700;
+        if (n > 0) { back += n * Math.max(100, Math.round(base * mul / 100) * 100); addItem(c, t, id, -n); }
+        if (dx[id]) delete dx[id];
+      }
+    }
+    if (c.char === 'honey') c.char = 'bino';
+    if (back) { c.money = (c.money || 0) + back; setTimeout(() => toast(`현꿀오소리 관련 인형이 정리돼서 ${won(back)}을 돌려받았어요`, 4000), 800); }
+    c.purged[REMOVED.key] = Date.now(); return c;
+  });
   const fix = CHAR_FIX[String(me.nick || '').trim()];
   if (fix) txMe(c => (c.charFixed === fix ? undefined : (c.char = fix, c.charFixed = fix, c)));
   // 운영자 선물: 해당 닉네임이 다음 접속 때 한 번만 받아요 (key로 중복 지급 막음)
@@ -971,8 +985,8 @@ const banLeft = () => (me ? Math.max(0, (me.banUntil || 0) - db.now()) : 0);
 const fmtLeft = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 // 인형은 dolls/{id}, 키캡·키링·클리커는 goods/{종류}/{id}에 개수로 저장해요
 const invOf = (p, type) => (type === 'doll' ? (p && p.dolls) || {} : ((p && p.goods) || {})[type] || {});
-const typeCount = (p, type) => Object.values(invOf(p, type)).reduce((a, b) => a + (b || 0), 0);
-const typeValue = (p, type) => Object.entries(invOf(p, type)).reduce((a, [id, n]) => a + (n || 0) * priceOf(type, id), 0);
+const typeCount = (p, type) => Object.entries(invOf(p, type)).reduce((a, [id, n]) => a + (knownChar(id) ? n || 0 : 0), 0);
+const typeValue = (p, type) => Object.entries(invOf(p, type)).reduce((a, [id, n]) => a + (knownChar(id) ? (n || 0) * priceOf(type, id) : 0), 0);
 const dollCount = p => MTYPES.reduce((a, t) => a + typeCount(p, t), 0);
 const dollValue = p => MTYPES.reduce((a, t) => a + typeValue(p, t), 0);
 function addItem(c, type, id, n) {
@@ -1295,7 +1309,7 @@ function renderFuse() {
     <div class="li recipe ${can(r) ? 'can' : ''}${r.alt ? ' alt' : ''}">
       <div class="rc">${pic(r.a)}<small>${nm(r.a)}<br><b>×${has(r.a)}</b></small></div><span class="op">+</span>
       <div class="rc">${pic(r.b)}<small>${nm(r.b)}<br><b>×${has(r.b)}</b></small></div><span class="op">→</span>
-      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : r.id[0] === 'q' ? '<br><i class="alt-tag">히든 고란</i>' : r.id[0] === 'k' ? '<br><i class="alt-tag">히든 준탁</i>' : r.id[0] === 'o' ? '<br><i class="alt-tag">현꿀오소리</i>' : FUSE_TAG[r.id[0]] ? `<br><i class="alt-tag">${FUSE_TAG[r.id[0]]}</i>` : ''}</small></div>
+      <div class="rc">${pic(r.id)}<small>${nm(r.id)}${has(r.id) ? `<br><b>×${has(r.id)}</b>` : ''}${r.id[0] === 'v' ? '<br><i class="alt-tag">새 조합</i>' : r.id[0] === 'b' ? '<br><i class="alt-tag">히든비노</i>' : r.id[0] === 'q' ? '<br><i class="alt-tag">히든 고란</i>' : r.id[0] === 'k' ? '<br><i class="alt-tag">히든 준탁</i>' : FUSE_TAG[r.id[0]] ? `<br><i class="alt-tag">${FUSE_TAG[r.id[0]]}</i>` : ''}</small></div>
       <button class="btn mini pink" data-f="${r.id}" data-r="${r.ri}" ${can(r) ? '' : 'disabled'}>합성</button>
     </div>`).join('');
   el.innerHTML = `
@@ -2828,7 +2842,7 @@ const easeBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * (t - 1) ** 
 const ART_V = '20261031a';
 // 합성 인형 그림은 게임용 가벼운 사본(fusion/w/<id>.webp, 256px)을 먼저 쓰고, 없으면 원본 PNG를 써요
 const fuseImg = (id, png) => (png ? 'fusion/' + id + '.png' : 'fusion/w/' + id + '.webp');
-const APP_VERSION = '20261104-1500';
+const APP_VERSION = '20261111-1523';
 async function checkVersion() {
   try {
     const r = await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' });
