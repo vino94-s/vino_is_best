@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" id="vp" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#FFF6E0">
+<meta name="description" content="그림으로 하는 말 전달 게임! 최대 8명이 그리고, 맞히고, 다시 그려요. 처음 단어가 어떻게 변했는지 같이 보며 웃어요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="이게 뭘 그린거야 도대체!">
+<meta property="og:description" content="그림으로 하는 말 전달 게임! 최대 8명 온라인 대결 · 명예의 전당">
+<title>이게 뭘 그린거야 도대체!</title>
+<meta property="og:image" content="https://vino94-s.github.io/vino_is_best/doodle/thumb.jpg">
+<meta property="og:image:width" content="800">
+<meta property="og:image:height" content="800">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="thumb.jpg">
+<link rel="apple-touch-icon" href="thumb.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<script>
+// 카톡·라인 인앱 브라우저는 채팅방에 다녀오면 게임이 닫혀서, 휴대폰 기본 브라우저로 옮겨 열어요.
+(function () {
+  var ua = navigator.userAgent || '';
+  if (/KAKAOTALK/i.test(ua)) location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+  else if (/\bLine\//.test(ua) && !/openExternalBrowser=1/.test(location.search)) location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
+})();
+</script>
+<style>
+:root{
+  --paper:#FFF9EC;--bg:#FFF1D0;--ink:#2B2A33;--muted:#7A7469;--line:#E9DCC0;--line2:#D8C59C;
+  --red:#FF5E4D;--yellow:#FFD23F;--blue:#3D7BFF;--green:#20B98A;--pink:#FF7EB6;--purple:#8B5CF6;
+  --f:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;--d:"Gaegu","Apple SD Gothic Neo","Malgun Gothic",cursive;
+  color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;touch-action:manipulation;background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body{background-color:var(--bg);background-image:radial-gradient(rgba(120,90,40,.13) 1.2px,transparent 1.3px);background-size:18px 18px}
+button,input{font:inherit;color:inherit;touch-action:manipulation}
+input{font-size:16px!important}
+.wrap{max-width:560px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px max(28px,env(safe-area-inset-bottom))}
+.screen{display:none}.screen.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1,h2,h3,.d{font-family:var(--d);font-weight:700;letter-spacing:-.2px}
+h2{font-size:28px;margin:4px 0 10px}h3{font-size:22px;margin:18px 0 8px}
+.logo{text-align:center;margin:8px 0 14px}
+.logo .t{font:700 40px/1.05 var(--d);display:inline-block;transform:rotate(-2deg)}
+.logo .t span{display:inline-block}
+.logo .t .q{color:var(--red)}
+.logo .s{font:400 19px/1.2 var(--d);color:var(--muted);margin-top:4px}
+.card{background:var(--paper);border:2px solid var(--ink);border-radius:16px;padding:14px;box-shadow:3px 4px 0 var(--ink);margin:12px 0}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;border:2px solid var(--ink);border-radius:14px;background:#fff;font:700 21px/1 var(--d);cursor:pointer;box-shadow:2px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(2px,3px);box-shadow:0 0 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:2px 3px 0 var(--ink)}
+.btn.y{background:var(--yellow)}.btn.r{background:var(--red);color:#fff}.btn.b{background:var(--blue);color:#fff}.btn.g{background:var(--green);color:#fff}.btn.p{background:var(--pink)}
+.btn.sm{min-height:40px;font-size:18px;border-radius:12px;width:auto;padding:0 14px}
+.btn.ghost{background:transparent;box-shadow:none;border-style:dashed}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inp{width:100%;min-height:52px;border:2px solid var(--ink);border-radius:14px;padding:0 14px;background:#fff;outline:none}
+.inp:focus{box-shadow:0 0 0 3px rgba(61,123,255,.3)}
+.small{font-size:13px}.muted{color:var(--muted)}.center{text-align:center}
+.err{color:var(--red);font-size:14px;min-height:18px;margin-top:6px}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.top .grow{flex:1}
+.back{border:2px solid var(--ink);background:#fff;border-radius:12px;width:42px;height:42px;font-size:20px;cursor:pointer}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border:2px solid var(--ink);border-radius:999px;background:#fff;font-size:14px;font-weight:700;white-space:nowrap}
+.av{width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font:700 17px/1 var(--d);color:#fff;flex:none}
+.plist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{display:flex;align-items:center;gap:8px;border:2px solid var(--ink);border-radius:12px;padding:7px 9px;background:#fff;min-height:52px;font-weight:700;overflow:hidden}
+.pl.empty{border-style:dashed;border-color:var(--line2);color:var(--line2);justify-content:center;font-weight:400;background:transparent}
+.pl .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg{display:flex;gap:6px}.seg button{flex:1;min-height:40px;border:2px solid var(--ink);border-radius:10px;background:#fff;font-weight:700;cursor:pointer}
+.seg button.on{background:var(--ink);color:#fff}
+.seg button:disabled{opacity:.6;cursor:default}
+.code{font:700 42px/1 var(--d);letter-spacing:6px;text-align:center;margin:4px 0}
+.openroom{display:flex;align-items:center;gap:10px;border:2px solid var(--ink);border-radius:12px;padding:10px 12px;background:#fff;margin:8px 0;cursor:pointer;width:100%;text-align:left}
+.openroom b{font:700 22px/1 var(--d);letter-spacing:2px}
+.openroom .grow{flex:1;min-width:0}
+.toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;z-index:99;max-width:90vw;text-align:center;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+/* 게임 상단 */
+.hud{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 8px;margin:0 -2px}
+.hud .ph{display:flex;align-items:center;gap:8px}
+.hud .ph .t{font:700 24px/1 var(--d);flex:1}
+.hud .sec{font:700 28px/1 var(--d);min-width:54px;text-align:right}
+.hud .sec.low{color:var(--red);animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:scale(1.15)}}
+.bar{height:10px;border:2px solid var(--ink);border-radius:99px;background:#fff;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--yellow);width:100%;transition:width .25s linear}
+.subs{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.subs .chip{font-size:12px;padding:3px 8px}
+.subs .chip.ok{background:var(--green);color:#fff}
+.subs .chip.off{opacity:.45}
+/* 단어 카드 */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;perspective:900px}
+.wc{aspect-ratio:3/4;position:relative;cursor:pointer;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,1.4,.5,1);border:0;padding:0;background:none}
+.wc .f,.wc .b{position:absolute;inset:0;border:2px solid var(--ink);border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;box-shadow:2px 3px 0 var(--ink)}
+.wc .b{background:var(--blue);background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.18) 0 8px,transparent 8px 16px);color:#fff;font:700 40px/1 var(--d)}
+.wc .f{background:#fff;transform:rotateY(180deg);font:700 23px/1.15 var(--d);padding:6px;text-align:center;word-break:keep-all}
+.wc.open{transform:rotateY(180deg)}
+.wc.dim{opacity:.35}
+.wc:not(.open):hover{transform:translateY(-3px)}
+/* 그림판 */
+.task{font:700 22px/1.25 var(--d);text-align:center;margin:4px 0 8px}
+.task b{background:var(--yellow);padding:0 6px;border-radius:6px}
+.pad{position:relative;width:100%;aspect-ratio:4/3;border:2px solid var(--ink);border-radius:14px;background:#fff;overflow:hidden;box-shadow:3px 4px 0 var(--ink)}
+.pad canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.tools{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;align-items:center}
+.sw{width:32px;height:32px;border-radius:50%;border:2px solid var(--ink);cursor:pointer;padding:0}
+.sw.on{outline:3px solid var(--ink);outline-offset:2px}
+.tb{min-width:40px;height:36px;border:2px solid var(--ink);border-radius:10px;background:#fff;cursor:pointer;font-weight:700;display:grid;place-items:center;padding:0 8px}
+.tb.on{background:var(--ink);color:#fff}
+.dot{display:block;border-radius:50%;background:currentColor}
+.shot{width:100%;aspect-ratio:4/3;border:2px solid var(--ink);border-radius:14px;background:#fff;display:block;object-fit:contain;box-shadow:3px 4px 0 var(--ink)}
+.blank{width:100%;aspect-ratio:4/3;border:2px dashed var(--line2);border-radius:14px;display:grid;place-items:center;color:var(--muted);font:700 20px/1.3 var(--d);text-align:center;padding:20px;background:#fff}
+.waitbox{text-align:center;padding:26px 10px}
+.waitbox .big{font:700 30px/1.2 var(--d)}
+.wiggle{display:inline-block;animation:wig 1.2s ease-in-out infinite}
+@keyframes wig{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+/* 스케치북 */
+.book{background:#fff;border:2px solid var(--ink);border-radius:6px 16px 16px 6px;box-shadow:4px 5px 0 var(--ink);padding:16px 14px 16px 26px;position:relative;margin:12px 0}
+.book:before{content:"";position:absolute;left:6px;top:14px;bottom:14px;width:10px;background:repeating-linear-gradient(to bottom,transparent 0 10px,var(--ink) 10px 13px,transparent 13px 22px)}
+.pg{margin:0 0 16px;animation:pop .35s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop{from{opacity:0;transform:scale(.92) rotate(-1deg)}to{opacity:1;transform:none}}
+.pg .who{font-size:13px;color:var(--muted);margin:0 0 5px;display:flex;align-items:center;gap:6px}
+.pg .who .av{width:22px;height:22px;font-size:12px;border-width:1.5px}
+.pg .word{font:700 30px/1.2 var(--d);text-align:center;padding:12px;border:2px dashed var(--line2);border-radius:12px;background:var(--paper);word-break:keep-all}
+.pg .word.first{background:var(--yellow);border:2px solid var(--ink)}
+.pg .word.last{background:var(--pink);border:2px solid var(--ink)}
+.arrow{text-align:center;font-size:20px;color:var(--line2);margin:-8px 0 8px}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border:2px solid var(--ink);border-radius:999px;background:#fff;padding:7px 12px;font-weight:700;cursor:pointer;display:flex;gap:6px;align-items:center}
+.tabs button.on{background:var(--ink);color:#fff}
+.like{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--ink);border-radius:999px;background:#fff;padding:7px 14px;font:700 20px/1 var(--d);cursor:pointer;box-shadow:2px 3px 0 var(--ink)}
+.like.on{background:var(--red);color:#fff}
+.like:disabled{opacity:.5;cursor:default}
+.like svg{width:20px;height:20px}
+.sumline{font:700 22px/1.3 var(--d);text-align:center;margin:6px 0}
+.sumline .a{background:var(--yellow);padding:0 6px;border-radius:6px}
+.sumline .z{background:var(--pink);padding:0 6px;border-radius:6px}
+.sumline,.hc .w,.pg .word{overflow-wrap:anywhere}
+/* 명예의 전당 */
+.hofgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hc{border:2px solid var(--ink);border-radius:14px;background:#fff;overflow:hidden;cursor:pointer;box-shadow:2px 3px 0 var(--ink);text-align:left;padding:0;position:relative;display:flex;flex-direction:column}
+.hc .im{aspect-ratio:4/3;background:#f5efe2 center/cover no-repeat;border-bottom:2px solid var(--ink)}
+.hc .tx{padding:8px 9px;display:grid;gap:3px}
+.hc .w{font:700 18px/1.15 var(--d);word-break:keep-all}
+.hc .m{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.hc .m .h{color:var(--red);font-weight:700}
+.medal{position:absolute;top:6px;left:6px;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font:700 18px/1 var(--d);background:#fff}
+.medal.m1{background:#FFD23F}.medal.m2{background:#D9DEE6}.medal.m3{background:#F0B07A}
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;margin:8px 0 4px}
+.hero{background:var(--yellow);border:2px solid var(--ink);border-radius:16px;padding:12px;box-shadow:3px 4px 0 var(--ink);text-align:center;margin:10px 0}
+.hero .d{font-size:24px}
+.rules li{margin:4px 0}
+.ver{font-size:11px;color:var(--muted);text-align:center;margin-top:18px}
+.confirm{position:fixed;inset:0;background:rgba(43,42,51,.45);display:grid;place-items:center;z-index:50;padding:20px}
+.confirm .card{max-width:360px;width:100%}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="screen on" id="s-boot"><div style="padding:60px 0" class="center"><img src="thumb.jpg" alt="" width="180" height="180" style="border-radius:22px;border:2px solid var(--ink);box-shadow:3px 4px 0 var(--ink)"><div class="logo"><div class="t">이게 뭘 그린거야<br><span class="q">도대체!</span></div></div><p class="d" style="font-size:20px">연필 깎는 중… ✏️</p></div></section>
+  <section class="screen" id="s-nick"></section>
+  <section class="screen" id="s-lobby"></section>
+  <section class="screen" id="s-room"></section>
+  <section class="screen" id="s-play"></section>
+  <section class="screen" id="s-reveal"></section>
+  <section class="screen" id="s-hof"></section>
+  <section class="screen" id="s-book"></section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ══════════ 설정 ══════════ */
+const CFG = {
+  // 손모가지 조심!·사천성 가봤니?와 같은 Firebase. 규칙에서 열려 있는 rooms/ 아래에 'doodle-' 이름으로 저장해요.
+  firebase: {
+    apiKey: 'AIzaSyCMl9Ukya3XqIV0BHjKTx1mryvUru0kYXA',
+    authDomain: 'gostop-7c4a2.firebaseapp.com',
+    databaseURL: 'https://gostop-7c4a2-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'gostop-7c4a2',
+    appId: '1:686060440785:web:d5f6445e4bcd2a481b89f0',
+  },
+  prefix: 'rooms/doodle-',
+  maxPlayers: 8,
+  minPlayers: 2,
+  cards: 6,          // 단어 카드 수
+  pickSec: 20,       // 카드 고르는 시간
+  drawOpts: [40, 60, 90],
+  guessOpts: [20, 30, 45],
+  grace: 2500,       // 시간이 끝난 뒤 마지막 그림이 올라올 때까지 기다리는 시간
+};
+const APP_VERSION = '20261116-1';
+
+/* ══════════ 제시어 ══════════ */
+const WORDS = `고양이 강아지 기린 코끼리 펭귄 문어 거북이 토끼 사자 호랑이 원숭이 돌고래 상어 고래 낙타 하마 악어 부엉이 공작새 달팽이 거미 나비 꿀벌 개구리 오리 병아리 돼지 젖소 얼룩말 양 판다 캥거루 고슴도치 다람쥐 박쥐 해파리 불가사리 랍스터 앵무새 미어캣 나무늘보 공룡 유니콘 용
+김밥 떡볶이 라면 치킨 피자 햄버거 초밥 아이스크림 수박 바나나 파인애플 딸기 포도 계란후라이 핫도그 붕어빵 호떡 삼겹살 짜장면 탕후루 마카롱 도넛 팝콘 생일케이크 샌드위치 감자튀김 떡국 만두 솜사탕 와플 옥수수 당근 브로콜리 버섯 고구마 컵라면 군고구마 빙수 소떡소떡 치맥
+우산 안경 손목시계 휴대폰 노트북 냉장고 세탁기 가위 망치 열쇠 자물쇠 전구 양초 풍선 선물상자 왕관 칫솔 거울 의자 침대 소파 텔레비전 리모컨 헤드폰 카메라 마이크 기타 피아노 드럼 축구공 볼링 자전거 킥보드 연필 지우개 책가방 운동화 하이힐 넥타이 모자 장갑 목도리 양말 반지 지갑 돋보기 나침반 망원경 로켓 비행기 헬리콥터 잠수함 기차 소방차 구급차 트랙터 돛단배 신호등 변기 드라이기 선풍기 에어컨 청소기 휴지 고무장갑 택배상자 쇼핑카트 오토바이 열기구
+화산 무지개 눈사람 번개 태풍 사막 오아시스 무인도 등대 피라미드 에펠탑 롤러코스터 회전목마 대관람차 수영장 찜질방 편의점 노래방 엘리베이터 지하철 텐트 모닥불 폭포 해바라기 선인장 장미 보름달 별똥별 태양 지구 외계인 비행접시 블랙홀 놀이터 미끄럼틀 그네 시소 캠핑카
+산타클로스 해적 닌자 마법사 공주 로봇 좀비 유령 뱀파이어 인어 천사 요리사 의사 경찰 소방관 우주비행사 미용사 택배기사 아이돌 마술사 피에로 카우보이 슈퍼히어로 왕 신데렐라 미라 허수아비 눈의여왕
+줄넘기 낚시 요가 스키 서핑 번지점프 낮잠 코골이 재채기 하품 셀카 야근 지각 다이어트 회식 건배 생일파티 결혼식 졸업식 소개팅 짝사랑 첫눈 월요병 칼퇴 월급날 홈트 배달음식 이사 대청소 설거지 빨래 산책 등산 줄서기 고백 숨바꼭질 가위바위보 팔씨름 줄다리기 눈싸움 물총싸움 불꽃놀이 연날리기 술래잡기 방귀 딸꾹질 몸살 모기 알람 늦잠 출근길 퇴근길 엘리베이터방귀 혼밥 먹방 단톡방 읽씹 밤샘 벼락치기
+그림의떡 우물안개구리 누워서떡먹기 하늘의별따기 식은죽먹기 꿩먹고알먹고 티끌모아태산 소잃고외양간고친다 원숭이도나무에서떨어진다 등잔밑이어둡다 개천에서용난다 도토리키재기 김칫국마시기 그림자 눈물 사랑 질투 행복 시간 꿈`.split(/\s+/).filter(Boolean)
+  .map(w => w.replace(/^그림의떡$/, '그림의 떡').replace(/^우물안개구리$/, '우물 안 개구리').replace(/^누워서떡먹기$/, '누워서 떡 먹기').replace(/^하늘의별따기$/, '하늘의 별 따기')
+    .replace(/^식은죽먹기$/, '식은 죽 먹기').replace(/^꿩먹고알먹고$/, '꿩 먹고 알 먹고').replace(/^티끌모아태산$/, '티끌 모아 태산').replace(/^소잃고외양간고친다$/, '소 잃고 외양간 고친다')
+    .replace(/^원숭이도나무에서떨어진다$/, '원숭이도 나무에서 떨어진다').replace(/^등잔밑이어둡다$/, '등잔 밑이 어둡다').replace(/^개천에서용난다$/, '개천에서 용 난다')
+    .replace(/^도토리키재기$/, '도토리 키 재기').replace(/^김칫국마시기$/, '김칫국 마시기').replace(/^엘리베이터방귀$/, '엘리베이터 방귀').replace(/^눈의여왕$/, '눈의 여왕'));
+
+/* ══════════ 도구 ══════════ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+const rid = n => { const c = 'abcdefghijkmnopqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < n; i++) s += c[Math.floor(Math.random() * c.length)]; return s; };
+const genCode = n => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < n; i++) s += c[Math.floor(Math.random() * c.length)]; return s; };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  sget(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+  sset(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} },
+};
+let toastT = 0;
+function toast(msg, ms = 2200) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); }); }
+const AV_COLORS = ['#FF5E4D', '#3D7BFF', '#20B98A', '#8B5CF6', '#FF9F1C', '#FF7EB6', '#0FB5C9', '#6B7280'];
+function colorOf(id) { let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return AV_COLORS[h % AV_COLORS.length]; }
+const av = (id, nick, cls = '') => `<span class="av ${cls}" style="background:${colorOf(id)}">${esc([...String(nick || '?')][0])}</span>`;
+const HEART = '<svg viewBox="0 0 24 22" aria-hidden="true"><path d="M12 20.5C5.6 15.4 1.5 11.8 1.5 7.4 1.5 4.2 4 1.7 7.1 1.7c2 0 3.8 1 4.9 2.6 1.1-1.6 2.9-2.6 4.9-2.6 3.1 0 5.6 2.5 5.6 5.7 0 4.4-4.1 8-10.5 13.1z" fill="currentColor"/></svg>';
+function ago(ts) {
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  if (s < 60) return '방금'; if (s < 3600) return Math.floor(s / 60) + '분 전'; if (s < 86400) return Math.floor(s / 3600) + '시간 전';
+  if (s < 86400 * 7) return Math.floor(s / 86400) + '일 전';
+  const d = new Date(ts + 9 * 3600e3); return (d.getUTCMonth() + 1) + '월 ' + d.getUTCDate() + '일';
+}
+function confirmBox(text, yes = '네', no = '아니요') {
+  return new Promise(res => {
+    const w = document.createElement('div'); w.className = 'confirm';
+    w.innerHTML = `<div class="card"><p class="d" style="font-size:22px;margin:4px 0 14px;text-align:center">${esc(text)}</p><div class="grid2"><button class="btn" data-n>${esc(no)}</button><button class="btn r" data-y>${esc(yes)}</button></div></div>`;
+    document.body.appendChild(w);
+    w.querySelector('[data-y]').onclick = () => { w.remove(); res(true); };
+    w.querySelector('[data-n]').onclick = () => { w.remove(); res(false); };
+  });
+}
+const Sfx = {
+  ctx: null,
+  tone(f, d, type = 'square', v = .04, delay = 0) {
+    try {
+      if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const c = this.ctx, o = c.createOscillator(), g = c.createGain(), t = c.currentTime + delay;
+      o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+      o.connect(g).connect(c.destination); o.start(t); o.stop(t + d + .02);
+    } catch (e) {}
+  },
+  play(k) {
+    if (k === 'tick') this.tone(880, .05, 'square', .03);
+    if (k === 'flip') { this.tone(520, .08, 'triangle', .06); this.tone(780, .1, 'triangle', .06, .07); }
+    if (k === 'go') [523, 659, 784].forEach((f, i) => this.tone(f, .12, 'triangle', .06, i * .07));
+    if (k === 'done') this.tone(660, .12, 'triangle', .06);
+    if (k === 'page') this.tone(400 + Math.random() * 200, .08, 'triangle', .05);
+  },
+};
+
+/* ══════════ 저장소: Firebase / 이 브라우저(?local=1, 테스트용) ══════════ */
+const STAMP = '__now__';
+const splitPath = p => p.split('/').filter(Boolean);
+const overlap = (a, b) => a === b || a.startsWith(b + '/') || b.startsWith(a + '/');
+class LocalDB {
+  constructor() {
+    this.mode = 'local'; this.key = 'doodle-local-db'; this.subs = new Set(); this.discon = []; this.load();
+    addEventListener('storage', e => { if (e.key === this.key) { this.load(); for (const s of this.subs) s.cb(clone(this._get(s.p))); } });
+    addEventListener('pagehide', () => { for (const [p, v] of this.discon) this._write(p, v === STAMP ? Date.now() : v); });
+  }
+  async init() {}
+  load() { try { this.tree = JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) { this.tree = {}; } }
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.tree)); } catch (e) { console.warn('local full', e); } }
+  _get(p) { let n = this.tree; for (const k of splitPath(p)) { if (n == null || typeof n !== 'object') return null; n = n[k]; } return n === undefined ? null : n; }
+  _write(p, v) {
+    this.load();
+    const ks = splitPath(p); let n = this.tree;
+    for (let i = 0; i < ks.length - 1; i++) { if (n[ks[i]] == null || typeof n[ks[i]] !== 'object') n[ks[i]] = {}; n = n[ks[i]]; }
+    if (v === null || v === undefined) delete n[ks[ks.length - 1]]; else n[ks[ks.length - 1]] = clone(v);
+    this.save();
+    for (const s of this.subs) if (overlap(s.p, p)) s.cb(clone(this._get(s.p)));
+  }
+  async get(p) { this.load(); return clone(this._get(p)); }
+  async set(p, v) { this._write(p, v); }
+  async update(p, o) { for (const [k, v] of Object.entries(o)) this._write(p + '/' + k, v); }
+  async remove(p) { this._write(p, null); }
+  async tx(p, fn) { this.load(); const cur = clone(this._get(p)); const nv = fn(cur); if (nv === undefined) return { committed: false, value: cur }; this._write(p, nv); return { committed: true, value: clone(nv) }; }
+  on(p, cb) { const s = { p, cb }; this.subs.add(s); setTimeout(() => this.subs.has(s) && cb(clone(this._get(p))), 0); return () => this.subs.delete(s); }
+  now() { return Date.now(); }
+  onDisconnect(p, v) { this.discon = this.discon.filter(d => d[0] !== p); this.discon.push([p, v]); }
+  cancelDisconnect(p) { this.discon = this.discon.filter(d => d[0] !== p); }
+  onDisconnectStamp(p) { this.onDisconnect(p, STAMP); }
+  onConnected(cb) { setTimeout(() => cb(true), 0); return () => {}; }
+}
+class FireDB {
+  constructor() { this.mode = 'firebase'; this.offset = 0; }
+  async init() {
+    const V = '10.12.2';
+    if (!window.firebase || !firebase.initializeApp) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+    if (!firebase.database) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
+    this.app = (firebase.apps || []).find(a => a.name === 'doodle') || firebase.initializeApp(CFG.firebase, 'doodle');
+    this.db = this.app.database();
+    if (!this.offOn) { this.offOn = true; this.db.ref('.info/serverTimeOffset').on('value', s => { this.offset = s.val() || 0; }); }
+    // 서버와 실제로 연결될 때까지 기다려요
+    await new Promise((res, rej) => {
+      const r = this.db.ref('.info/connected');
+      const f = s => { if (s.val()) { clearTimeout(t); r.off('value', f); res(); } };
+      const t = setTimeout(() => { r.off('value', f); rej(new Error('timeout')); }, 12000);
+      r.on('value', f);
+    });
+  }
+  ref(p) { return this.db.ref(p); }
+  async get(p) { return (await this.ref(p).get()).val(); }
+  set(p, v) { return this.ref(p).set(v); }
+  update(p, o) { return this.ref(p).update(o); }
+  remove(p) { return this.ref(p).remove(); }
+  async tx(p, fn) { const r = await this.ref(p).transaction(cur => fn(cur), undefined, false); return { committed: r.committed, value: r.snapshot.val() }; }
+  on(p, cb) { const r = this.ref(p), f = s => cb(s.val()); r.on('value', f); return () => r.off('value', f); }
+  now() { return Date.now() + this.offset; }
+  onDisconnect(p, v) { const d = this.ref(p).onDisconnect(); return v == null ? d.remove() : d.set(v); }
+  cancelDisconnect(p) { return this.ref(p).onDisconnect().cancel(); }
+  onDisconnectStamp(p) { return this.ref(p).onDisconnect().set(firebase.database.ServerValue.TIMESTAMP); }
+  onConnected(cb) { const r = this.db.ref('.info/connected'), f = s => cb(!!s.val()); r.on('value', f); return () => r.off('value', f); }
+}
+let db = null;
+const P = CFG.prefix;
+const PATH = {
+  room: c => P + 'r-' + c,
+  open: P + 'open',
+  pg: gid => P + 'pg-' + gid,          // 스케치북 페이지: pg-<게임>/<주인 pid>/<단계> = { t:'d'|'g', v, by, pid }
+  hof: P + 'hof',                       // 명예의 전당 목록: hof/<스케치북 id> = { gid, opid, owner, word, last, n, players, ts, lk }
+  like: id => P + 'like/' + id,         // like/<스케치북 id>/<pid> = true
+  thumb: id => P + 'thumb/' + id,       // 작은 미리보기 그림
+};
+
+/* ══════════ 나 ══════════ */
+let me = { pid: store.get('doodle-pid'), nick: store.get('doodle-nick') || '' };
+if (!me.pid) { me.pid = 'p' + rid(11); store.set('doodle-pid', me.pid); }
+let LIKED = {}; try { LIKED = JSON.parse(store.get('doodle-liked') || '{}') || {}; } catch (e) {}
+const saveLiked = () => store.set('doodle-liked', JSON.stringify(LIKED));
+
+/* ══════════ 화면 전환 ══════════ */
+let cur = 'boot';
+const leaveHooks = {};
+function show(name) {
+  if (cur !== name && leaveHooks[cur]) { try { leaveHooks[cur](); } catch (e) {} }
+  cur = name;
+  $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + name));
+  if (SCREENS[name]) SCREENS[name]();
+  scrollTo(0, 0);
+}
+const SCREENS = {};
+
+/* ══════════ 닉네임 ══════════ */
+SCREENS.nick = () => {
+  const el = $('#s-nick');
+  el.innerHTML = `
+    <div class="logo"><div class="t">이게 뭘 그린거야<br><span class="q">도대체!</span></div><div class="s">그림으로 하는 말 전달 게임</div></div>
+    <form class="card" id="nickForm">
+      <h2 style="margin-top:0">닉네임을 적어 주세요</h2>
+      <p class="small muted" style="margin:0 0 10px">스케치북과 명예의 전당에 이 이름이 남아요. 이 기기에 기억돼요.</p>
+      <input class="inp" id="nickIn" maxlength="8" placeholder="닉네임 (2~8자)" autocomplete="nickname" value="${esc(me.nick)}">
+      <div class="err" id="nickErr"></div>
+      <button class="btn y" type="submit" style="margin-top:6px">시작하기 ✏️</button>
+    </form>
+    <div class="card small">
+      <b class="d" style="font-size:20px">이렇게 놀아요</b>
+      <ol class="rules" style="margin:6px 0 0;padding-left:20px">
+        <li>2~8명이 모이면 시작! 각자 뒤집힌 단어 카드 하나를 골라요.</li>
+        <li>내 단어를 <b>그림</b>으로 그리면 스케치북이 옆 사람에게 넘어가요.</li>
+        <li>받은 사람은 그림만 보고 <b>무슨 단어인지 맞혀서</b> 적어요.</li>
+        <li>그걸 또 다음 사람이 그리고… 그림 → 글 → 그림 → 글!</li>
+        <li>끝나면 처음 단어가 어떻게 변했는지 다 같이 봐요 🤣</li>
+      </ol>
+    </div>`;
+  const inp = $('#nickIn', el);
+  setTimeout(() => inp.focus(), 50);
+  $('#nickForm', el).onsubmit = e => {
+    e.preventDefault();
+    const n = inp.value.trim().replace(/\s+/g, ' ');
+    if ([...n].length < 2) { $('#nickErr', el).textContent = '2자 이상 적어 주세요'; return; }
+    if (/[.#$\[\]\/]/.test(n)) { $('#nickErr', el).textContent = '. # $ [ ] / 는 쓸 수 없어요'; return; }
+    me.nick = n; store.set('doodle-nick', n);
+    afterNick();
+  };
+};
+function afterNick() {
+  const want = pendingRoom || store.sget('doodle-room');
+  pendingRoom = null;
+  if (want) joinRoom(want, true); else if (pendingBook) { const b = pendingBook; pendingBook = null; openBook(b, 'lobby'); } else show('lobby');
+}
+
+/* ══════════ 로비 ══════════ */
+let openOff = null;
+SCREENS.lobby = () => {
+  const el = $('#s-lobby');
+  el.innerHTML = `
+    <div class="logo"><div class="t">이게 뭘 그린거야<br><span class="q">도대체!</span></div></div>
+    <div class="card row" style="gap:10px">
+      ${av(me.pid, me.nick)}
+      <div style="flex:1;min-width:0"><div class="small muted">내 닉네임</div><b class="d" style="font-size:22px">${esc(me.nick)}</b></div>
+      <button class="btn sm ghost" id="lbNick" style="flex:none">바꾸기</button>
+    </div>
+    <button class="btn y" id="lbCreate">🎨 방 만들기</button>
+    <form class="row" id="lbJoin" style="margin-top:10px">
+      <input class="inp" id="lbCode" maxlength="4" placeholder="방 코드 4자리" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:3px;flex:1.4">
+      <button class="btn b" type="submit">입장</button>
+    </form>
+    <div class="err" id="lbErr"></div>
+    <h3>🙋 지금 모이는 방</h3>
+    <div id="openList"><p class="small muted">찾는 중…</p></div>
+    <button class="btn p" id="lbHof" style="margin-top:16px">🏆 명예의 전당</button>
+    <p class="ver">${db.mode === 'local' ? '시험 모드 · 이 브라우저에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
+  $('#lbNick', el).onclick = () => show('nick');
+  $('#lbCreate', el).onclick = createRoom;
+  $('#lbJoin', el).onsubmit = e => { e.preventDefault(); const c = $('#lbCode', el).value.trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { $('#lbErr', el).textContent = '방 코드는 영어 4자리예요'; return; } joinRoom(c); };
+  $('#lbHof', el).onclick = () => show('hof');
+  if (openOff) openOff();
+  openOff = db.on(PATH.open, v => renderOpen(v || {}));
+};
+leaveHooks.lobby = () => { if (openOff) { openOff(); openOff = null; } };
+function renderOpen(v) {
+  const box = $('#openList'); if (!box) return;
+  const now = db.now();
+  const list = Object.entries(v).filter(([c, o]) => o && now - (o.ts || 0) < 70000 && (o.n || 0) < CFG.maxPlayers).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+  if (!list.length) { box.innerHTML = `<p class="small muted">지금 모이는 방이 없어요. 방을 만들고 친구에게 코드를 알려 주세요!</p>`; return; }
+  box.innerHTML = list.map(([c, o]) => `<button class="openroom" data-c="${esc(c)}"><b>${esc(c)}</b><span class="grow"><span class="small muted">방장</span> ${esc(o.host || '')}</span><span class="chip">👥 ${o.n || 1}/${CFG.maxPlayers}</span></button>`).join('');
+  $$('[data-c]', box).forEach(b => b.onclick = () => joinRoom(b.dataset.c));
+}
+
+/* ══════════ 방 ══════════ */
+let room = null, roomCode = null, roomOff = null, leaving = false, beatT = 0, sweepT = 0, connOff = null;
+let pendingRoom = null, pendingBook = null;
+// 연결이 끊긴 지 15초가 지나면 나간 사람으로 봐요 (새로고침·잠깐 끊김은 기다려 줘요)
+const GONE_MS = 15000;
+const gone = (v, pid) => { const p = v && v.players && v.players[pid]; return !p || (p.off && db.now() - p.off > GONE_MS); };
+const playerIds = v => Object.keys((v && v.players) || {}).filter(id => !gone(v, id)).sort((a, b) => (v.players[a].j || 0) - (v.players[b].j || 0));
+
+async function createRoom() {
+  const btn = $('#lbCreate'); if (btn) btn.disabled = true;
+  try {
+    for (let n = 0; n < 8; n++) {
+      const code = genCode(4), now = db.now();
+      const r = await db.tx(PATH.room(code), c => {
+        if (c && c.updatedAt && now - c.updatedAt < 86400e3) return undefined; // 쓰는 중인 코드
+        return { code, host: me.pid, status: 'wait', createdAt: now, updatedAt: now, set: { draw: 60, guess: 30 }, players: { [me.pid]: { nick: me.nick, j: now } } };
+      });
+      if (r.committed) return enterRoom(code);
+    }
+    toast('방을 못 만들었어요. 다시 해 주세요');
+  } catch (e) { console.warn(e); toast('연결이 불안정해요. 다시 해 주세요'); }
+  finally { if (btn) btn.disabled = false; }
+}
+async function joinRoom(code, quiet) {
+  code = String(code).toUpperCase();
+  let why = '';
+  try {
+    const now = db.now();
+    const r = await db.tx(PATH.room(code), c => {
+      if (c == null) return null;
+      const inGame = c.game && (c.game.order || []).includes(me.pid);
+      if (c.status !== 'wait' && !inGame) { why = 'play'; return undefined; }
+      c.players = c.players || {};
+      if (c.status === 'wait') for (const id of Object.keys(c.players)) if (id !== me.pid && gone(c, id)) delete c.players[id];
+      if (!c.players[me.pid] && playerIds(c).length >= CFG.maxPlayers) { why = 'full'; return undefined; }
+      c.players[me.pid] = { nick: me.nick, j: (c.players[me.pid] && c.players[me.pid].j) || now };
+      if (!c.host || gone(c, c.host)) c.host = me.pid;
+      c.updatedAt = now;
+      why = '';
+      return c;
+    });
+    if (r.committed && r.value && r.value.players && r.value.players[me.pid]) return enterRoom(code);
+    if (!r.value) why = 'none';
+  } catch (e) { console.warn(e); why = 'net'; }
+  store.sset('doodle-room', null);
+  const msg = { none: '그런 방이 없어요. 코드를 확인해 주세요', play: '이미 게임 중인 방이에요. 끝나면 다시 들어와 주세요', full: '방이 꽉 찼어요 (최대 8명)', net: '연결이 불안정해요. 다시 해 주세요' }[why] || '들어가지 못했어요';
+  if (quiet && why === 'none') { show('lobby'); return; }
+  toast(msg, 2800);
+  if (cur !== 'lobby') show('lobby');
+  const e = $('#lbErr'); if (e) e.textContent = msg;
+}
+function enterRoom(code) {
+  roomCode = code; leaving = false; store.sset('doodle-room', code);
+  const pp = PATH.room(code) + '/players/' + me.pid;
+  db.onDisconnectStamp(pp + '/off');
+  if (roomOff) roomOff();
+  room = null; phaseKey = '';
+  roomOff = db.on(PATH.room(code), onRoom);
+  if (connOff) connOff();
+  let first = true;
+  connOff = db.onConnected(ok => {
+    if (!ok || leaving || !roomCode) return;
+    if (first) { first = false; return; }
+    // 다시 연결되면 나를 다시 넣어요 (끊긴 동안 빠졌을 수 있어요)
+    db.onDisconnectStamp(pp + '/off');
+    db.tx(PATH.room(code), c => {
+      if (c == null) return null;
+      const inGame = c.game && (c.game.order || []).includes(me.pid);
+      if (c.status !== 'wait' && !inGame) return undefined;
+      c.players = c.players || {};
+      const mine = c.players[me.pid];
+      if (mine && !mine.off) return undefined;
+      if (!mine && playerIds(c).length >= CFG.maxPlayers) return undefined;
+      c.players[me.pid] = { nick: me.nick, j: (mine && mine.j) || db.now() };
+      return c;
+    }).catch(() => {});
+  });
+  clearInterval(beatT); clearInterval(sweepT);
+  beatT = setInterval(heartbeat, 20000);
+  sweepT = setInterval(sweep, 5000);
+}
+// 대기실에서 나간 지 오래된 사람을 정리하고, 방장이 나갔으면 이어받아요
+function sweep() {
+  const v = room; if (!v || !roomCode) return;
+  const ids = Object.keys(v.players || {});
+  const stale = v.status === 'wait' && ids.some(id => gone(v, id));
+  const hostGone = gone(v, v.host) && playerIds(v)[0] === me.pid;
+  if (stale || hostGone) db.tx(PATH.room(roomCode), c => {
+    if (c == null) return null;
+    let ch = false;
+    if (c.status === 'wait') for (const id of Object.keys(c.players || {})) if (gone(c, id)) { delete c.players[id]; ch = true; }
+    if (gone(c, c.host)) { const n = playerIds(c)[0]; if (n && n !== c.host) { c.host = n; ch = true; } }
+    return ch ? c : undefined;
+  }).catch(() => {});
+  else if (cur === 'room' && ids.some(id => v.players[id].off)) renderRoom();
+}
+async function leaveRoom() {
+  if (!roomCode) return;
+  const code = roomCode; leaving = true;
+  if (roomOff) { roomOff(); roomOff = null; }
+  if (connOff) { connOff(); connOff = null; }
+  clearInterval(beatT); clearInterval(sweepT); stopTick();
+  roomCode = null; room = null; phaseKey = ''; store.sset('doodle-room', null);
+  try {
+    db.cancelDisconnect(PATH.room(code) + '/players/' + me.pid + '/off');
+    let empty = false;
+    await db.tx(PATH.room(code), c => {
+      if (c == null) return null;
+      if (c.players) delete c.players[me.pid];
+      const ids = playerIds(c);
+      if (!ids.length && c.status === 'wait') { empty = true; return null; }
+      if (c.host === me.pid) c.host = ids[0] || null;
+      c.updatedAt = db.now();
+      return c;
+    });
+    if (empty) db.remove(PATH.open + '/' + code);
+  } catch (e) {}
+}
+// 방장이 '지금 모이는 방' 목록을 살아 있게 유지해요
+function heartbeat() {
+  if (!room || !roomCode) return;
+  if (room.host === me.pid && room.status === 'wait') db.set(PATH.open + '/' + roomCode, { host: me.nick, n: playerIds(room).length, ts: db.now() }).catch(() => {});
+}
+let lastOpenSig = '';
+function onRoom(v) {
+  if (leaving) return;
+  if (!v) { toast('방이 없어졌어요'); roomCode = null; room = null; store.sset('doodle-room', null); stopTick(); show('lobby'); return; }
+  room = v;
+  const ids = playerIds(v);
+  // 방장이 나갔으면 가장 먼저 들어온 사람이 이어받아요
+  if (gone(v, v.host) && ids[0] === me.pid) {
+    db.tx(PATH.room(roomCode), c => { if (c == null) return null; if (!gone(c, c.host)) return undefined; c.host = me.pid; return c; }).catch(() => {});
+  }
+  if (v.status === 'wait') {
+    if (v.host === me.pid) {
+      const sig = ids.length + '|' + me.nick;
+      if (sig !== lastOpenSig) { lastOpenSig = sig; heartbeat(); }
+      db.onDisconnect(PATH.open + '/' + roomCode, null);
+    }
+    stopTick();
+    if (cur !== 'room') show('room'); else renderRoom();
+    return;
+  }
+  lastOpenSig = '';
+  const g = v.game;
+  if (!g || !(g.order || []).includes(me.pid)) { if (cur !== 'room') show('room'); else renderRoom(); return; }
+  if (v.status === 'play') return onPlay(v);
+  if (v.status === 'reveal') {
+    stopTick();
+    if (cur !== 'reveal' || revealGid !== g.gid) startReveal(v);
+    else if (revealHost !== v.host && revealBooks.length) renderReveal(); // 방장이 바뀌면 '한 판 더' 버튼을 다시 그려요
+    return;
+  }
+}
+
+SCREENS.room = () => renderRoom();
+function renderRoom() {
+  const el = $('#s-room'); const v = room;
+  if (!v) { el.innerHTML = '<p class="center muted">불러오는 중…</p>'; return; }
+  const ids = playerIds(v), isHost = v.host === me.pid, playing = v.status !== 'wait';
+  const set = v.set || { draw: 60, guess: 30 };
+  const link = location.origin + location.pathname + '?room=' + v.code + (db.mode === 'local' ? '&local=1' : '');
+  const slots = [];
+  for (let i = 0; i < CFG.maxPlayers; i++) {
+    const id = ids[i];
+    if (id) { const p = v.players[id]; slots.push(`<div class="pl" style="${p.off ? 'opacity:.5' : ''}" title="${p.off ? '연결 끊김' : ''}">${av(id, p.nick)}<span class="nm">${esc(p.nick)}${id === me.pid ? ' <span class="small muted">(나)</span>' : ''}</span>${id === v.host ? '👑' : ''}</div>`); }
+    else slots.push(`<div class="pl empty">빈 자리</div>`);
+  }
+  const seg = (key, opts, val) => `<div class="seg">${opts.map(o => `<button data-set="${key}" data-v="${o}" class="${o === val ? 'on' : ''}" ${!isHost || playing ? 'disabled' : ''}>${o}초</button>`).join('')}</div>`;
+  el.innerHTML = `
+    <div class="top"><button class="back" id="rmBack" aria-label="나가기">←</button><div class="grow d" style="font-size:24px">대기실</div><span class="chip">👥 ${ids.length}/${CFG.maxPlayers}</span></div>
+    <div class="card center">
+      <div class="small muted">방 코드</div>
+      <div class="code">${esc(v.code)}</div>
+      <div class="grid2" style="margin-top:8px"><button class="btn sm" id="rmCopy" style="width:100%">🔗 링크 복사</button><button class="btn sm" id="rmCopyCode" style="width:100%">코드 복사</button></div>
+    </div>
+    <div class="plist">${slots.join('')}</div>
+    <div class="card">
+      <b class="d" style="font-size:20px">⏱ 그리기 시간</b>${seg('draw', CFG.drawOpts, set.draw)}
+      <b class="d" style="font-size:20px;display:block;margin-top:10px">💭 맞히기 시간</b>${seg('guess', CFG.guessOpts, set.guess)}
+      ${isHost ? '' : '<p class="small muted" style="margin:8px 0 0">시간은 방장이 정해요</p>'}
+    </div>
+    ${playing ? `<div class="card center d" style="font-size:20px">지금 게임 중이에요 🎨<br><span class="small muted" style="font-family:var(--f)">이번 판이 끝나면 같이 할 수 있어요</span></div>`
+      : isHost ? `<button class="btn r" id="rmStart" ${ids.length < CFG.minPlayers ? 'disabled' : ''}>${ids.length < CFG.minPlayers ? '2명 이상 모이면 시작할 수 있어요' : `🚀 ${ids.length}명이서 시작!`}</button>`
+      : `<div class="card center d" style="font-size:20px"><span class="wiggle">✏️</span> 방장이 시작하길 기다리는 중…</div>`}
+    <p class="small muted center">한 판은 ${ids.length >= 2 ? ids.length : 'N'}단계 (그리기 ${Math.ceil(Math.max(ids.length, 2) / 2)}번 · 맞히기 ${Math.floor(Math.max(ids.length, 2) / 2)}번)이에요</p>`;
+  $('#rmBack', el).onclick = async () => { await leaveRoom(); show('lobby'); };
+  const copy = (t, m) => { try { navigator.clipboard.writeText(t).then(() => toast(m), () => toast(t, 4000)); } catch (e) { toast(t, 4000); } };
+  $('#rmCopy', el).onclick = () => copy(link, '초대 링크를 복사했어요');
+  $('#rmCopyCode', el).onclick = () => copy(v.code, '방 코드를 복사했어요');
+  $$('[data-set]', el).forEach(b => b.onclick = () => db.tx(PATH.room(roomCode), c => {
+    if (c == null) return null; if (c.status !== 'wait' || c.host !== me.pid) return undefined;
+    c.set = c.set || {}; c.set[b.dataset.set] = Number(b.dataset.v); c.updatedAt = db.now(); return c;
+  }));
+  const st = $('#rmStart', el); if (st) st.onclick = startGame;
+}
+async function startGame() {
+  const btn = $('#rmStart'); if (btn) btn.disabled = true;
+  const code = roomCode;
+  const r = await db.tx(PATH.room(code), c => {
+    if (c == null) return null;
+    const ids = playerIds(c).slice(0, CFG.maxPlayers);
+    if (c.status !== 'wait' || c.host !== me.pid || ids.length < CFG.minPlayers) return undefined;
+    const now = db.now();
+    const order = shuffle(ids), deck = shuffle(WORDS), cards = {}, nicks = {};
+    order.forEach((id, i) => { cards[id] = deck.slice(i * CFG.cards, (i + 1) * CFG.cards); nicks[id] = c.players[id].nick; });
+    const set = { draw: (c.set && c.set.draw) || 60, guess: (c.set && c.set.guess) || 30 };
+    c.game = { gid: now.toString(36) + rid(5), order, nicks, cards, R: order.length, r: 0, ends: now + CFG.pickSec * 1000, set, started: now };
+    c.status = 'play'; c.updatedAt = now;
+    return c;
+  }).catch(() => ({ committed: false }));
+  if (r.committed) { db.remove(PATH.open + '/' + code).catch(() => {}); db.cancelDisconnect(PATH.open + '/' + code); }
+  else { toast('시작하지 못했어요. 다시 눌러 주세요'); if (btn) btn.disabled = false; }
+}
+
+/* ══════════ 게임 진행 ══════════
+   단계 0: 카드 고르기 · 홀수 단계: 그리기 · 짝수 단계: 맞히기
+   seat i는 단계 r(≥1)에 seat (i-(r-1)) 의 스케치북을 받아요 → 1단계는 내 단어를 내가 그려요 */
+let phaseKey = '', submittedKey = '', tickT = 0, advTry = 0, lastTickSec = -1;
+const G = { pad: null, guessDraft: '' };
+const seatOf = (g, pid) => (g.order || []).indexOf(pid);
+const bookFor = (g, pid, r) => { const N = g.order.length, i = seatOf(g, pid); return g.order[((i - (r - 1)) % N + N) % N]; };
+const workerFor = (g, owner, r) => { const N = g.order.length, s = seatOf(g, owner); return g.order[(s + r - 1) % N]; };
+const kindOf = r => r === 0 ? 'pick' : (r % 2 ? 'draw' : 'guess');
+const subOf = (g, pid) => { const s = g.sub && g.sub[pid]; return s == null ? -1 : s; };
+const present = (v, pid) => !!(v.players && v.players[pid] && !v.players[pid].off);
+function allIn(v) { const g = v.game; return g.order.every(p => subOf(g, p) >= g.r || gone(v, p)); }
+
+function onPlay(v) {
+  const g = v.game, key = g.gid + ':' + g.r;
+  if (cur !== 'play') show('play');
+  if (key !== phaseKey) { phaseKey = key; buildPhase(v); }
+  updateHud(v);
+  startTick();
+}
+function startTick() { if (!tickT) tickT = setInterval(tick, 250); }
+function stopTick() { clearInterval(tickT); tickT = 0; }
+function tick() {
+  const v = room; if (!v || v.status !== 'play' || !v.game) return;
+  const g = v.game, left = g.ends - db.now();
+  updateTimer(g, left);
+  // 내 시간이 끝나면 지금까지 한 걸 자동으로 내요
+  if (left <= 0 && subOf(g, me.pid) < g.r && submittedKey !== phaseKey) autoSubmit(g);
+  // 모두 냈거나 시간이 지나면 다음 단계로 (누가 먼저 넘겨도 한 번만 넘어가요)
+  if ((allIn(v) || left < -CFG.grace) && Date.now() - advTry > 1500) { advTry = Date.now(); advance(g.r); }
+}
+async function advance(r) {
+  const res = await db.tx(PATH.room(roomCode), c => {
+    if (c == null) return null;
+    const g = c.game; if (c.status !== 'play' || !g || g.r !== r) return undefined;
+    const now = db.now();
+    if (!(allIn(c) || now - g.ends > CFG.grace)) return undefined;
+    if (r === 0) { g.words = g.words || {}; for (const p of g.order) if (!g.words[p]) g.words[p] = shuffle(g.cards[p])[0]; }
+    g.r = r + 1;
+    if (g.r > g.R) { c.status = 'reveal'; g.ends = 0; g.ended = now; }
+    else g.ends = now + (kindOf(g.r) === 'draw' ? g.set.draw : g.set.guess) * 1000;
+    c.updatedAt = now;
+    return c;
+  }).catch(() => null);
+  if (res && res.committed && res.value && res.value.status === 'reveal') saveHof(res.value);
+}
+function phaseTitle(g) {
+  const k = kindOf(g.r);
+  return k === 'pick' ? '🃏 단어 카드 고르기' : k === 'draw' ? '🎨 그려요!' : '🤔 뭘 그린 걸까?';
+}
+function updateHud(v) {
+  const g = v.game, box = $('#subs'); if (!box) return;
+  box.innerHTML = g.order.map(p => `<span class="chip ${subOf(g, p) >= g.r ? 'ok' : ''} ${present(v, p) ? '' : 'off'}">${subOf(g, p) >= g.r ? '✓' : '…'} ${esc(g.nicks[p])}</span>`).join('');
+  const w = $('#waitList'); if (w) { const left = g.order.filter(p => subOf(g, p) < g.r && !gone(v, p)).map(p => g.nicks[p]); w.textContent = left.length ? `기다리는 중: ${left.join(', ')}` : '다 냈어요! 곧 넘어가요'; }
+}
+function updateTimer(g, left) {
+  const s = Math.max(0, Math.ceil(left / 1000)), el = $('#sec'), bar = $('#bar');
+  if (!el) return;
+  el.textContent = s; el.classList.toggle('low', s <= 5 && s > 0 && subOf(g, me.pid) < g.r);
+  const total = (g.r === 0 ? CFG.pickSec : kindOf(g.r) === 'draw' ? g.set.draw : g.set.guess) * 1000;
+  if (bar) bar.style.width = Math.max(0, Math.min(100, left / total * 100)) + '%';
+  if (s <= 5 && s > 0 && s !== lastTickSec && subOf(g, me.pid) < g.r) { lastTickSec = s; Sfx.play('tick'); }
+}
+async function buildPhase(v) {
+  const g = v.game, el = $('#s-play'), k = kindOf(g.r);
+  submittedKey = ''; lastTickSec = -1; G.pad = null;
+  el.innerHTML = `
+    <div class="hud">
+      <div class="ph"><span class="t">${phaseTitle(g)}</span><span class="chip">${g.r === 0 ? '준비' : `${g.r} / ${g.R}`}</span><span class="sec" id="sec"></span></div>
+      <div class="bar"><i id="bar"></i></div>
+      <div class="subs" id="subs"></div>
+    </div>
+    <div id="phaseBody"></div>
+    <button class="btn ghost sm" id="plLeave" style="margin:22px auto 0;display:flex">게임 나가기</button>`;
+  $('#plLeave', el).onclick = async () => { if (await confirmBox('게임에서 나갈까요? 내 차례는 빈칸으로 넘어가요', '나가기', '계속하기')) { await leaveRoom(); show('lobby'); } };
+  const body = $('#phaseBody', el);
+  if (subOf(g, me.pid) >= g.r) { showWait(body, g); updateHud(v); return; }
+  if (k === 'pick') buildPick(body, g);
+  else if (k === 'draw') await buildDraw(body, g);
+  else await buildGuess(body, g);
+  if (g.r > 0) Sfx.play('go');
+  updateHud(v);
+}
+function showWait(body, g) {
+  submittedKey = phaseKey;
+  const k = kindOf(g.r);
+  const mine = k === 'pick' && g.words && g.words[me.pid] ? `<p class="d" style="font-size:22px">내 단어: <b style="background:var(--yellow);padding:0 6px;border-radius:6px">${esc(g.words[me.pid])}</b></p>` : '';
+  const next = g.r >= g.R ? '다 끝나면 스케치북을 공개해요!' : k === 'pick' ? '다 고르면 내 단어를 그려요' : k === 'draw' ? '다음엔 다른 사람 그림을 맞혀요' : '다음엔 다른 사람 글을 그려요';
+  body.innerHTML = `<div class="card waitbox"><div class="big"><span class="wiggle">${k === 'draw' ? '🖍️' : k === 'guess' ? '💭' : '🃏'}</span> 냈어요!</div>${mine}<p class="small muted" id="waitList"></p><p class="small">${next}</p></div>`;
+}
+
+/* ── 0단계: 단어 카드 ── */
+function buildPick(body, g) {
+  const cards = g.cards[me.pid] || [];
+  body.innerHTML = `<p class="task">카드 한 장을 골라요!<br><span class="small muted" style="font-family:var(--f)">뒤집힌 단어가 내 스케치북의 제시어가 돼요</span></p>
+    <div class="cards">${cards.map((w, i) => `<button class="wc" data-i="${i}"><span class="b">?</span><span class="f">${esc(w)}</span></button>`).join('')}</div>`;
+  let picked = false;
+  $$('.wc', body).forEach(b => b.onclick = async () => {
+    if (picked) return; picked = true;
+    const w = cards[Number(b.dataset.i)];
+    b.classList.add('open'); Sfx.play('flip');
+    $$('.wc', body).forEach(o => { if (o !== b) o.classList.add('dim'); });
+    submittedKey = phaseKey;
+    await sleep(1100);
+    submitPick(w);
+  });
+}
+async function submitPick(w) {
+  const g = room && room.game; if (!g || g.r !== 0) return;
+  submittedKey = phaseKey;
+  try { await db.update(PATH.room(roomCode) + '/game', { ['words/' + me.pid]: w, ['sub/' + me.pid]: 0 }); } catch (e) { toast('연결이 불안정해요'); }
+  if (room && room.game && room.game.r === 0) { showWait($('#phaseBody'), room.game); updateHud(room); }
+}
+
+/* ── 앞 장 가져오기 (비어 있으면 그 앞 장) ── */
+async function prevContent(g, owner, r, want) {
+  // want: 'text'(그릴 때) | 'img'(맞힐 때)
+  for (let k = r - 1; k >= 0; k -= 2) {
+    if (k === 0) return { t: 'g', v: g.words && g.words[owner], word: true };
+    let pg = await db.get(PATH.pg(g.gid) + '/' + owner + '/' + k);
+    if (!pg) { await sleep(1200); pg = await db.get(PATH.pg(g.gid) + '/' + owner + '/' + k); }
+    if (pg && pg.v && (want === 'img' ? pg.t === 'd' : pg.t === 'g' && pg.v !== '???')) return { ...pg, skipped: k !== r - 1 };
+  }
+  return null;
+}
+
+/* ── 그리기 ── */
+async function buildDraw(body, g) {
+  const owner = bookFor(g, me.pid, g.r);
+  body.innerHTML = `<p class="task muted">스케치북 받는 중…</p>`;
+  const src = await prevContent(g, owner, g.r, 'text');
+  if (!room || room.game.gid !== g.gid || room.game.r !== g.r) return;
+  const word = (src && src.v) || '아무거나';
+  const from = g.r === 1 ? '내가 고른 단어예요' : `${esc(g.nicks[workerFor(g, owner, g.r - 1)] || '')}님이 적은 답이에요${src && src.skipped ? ' (앞 사람이 비워서 그 전 답을 가져왔어요)' : ''}`;
+  body.innerHTML = `
+    <p class="task">이걸 그려요 👉 <b>${esc(word)}</b><br><span class="small muted" style="font-family:var(--f)">${from} · 글자는 쓰면 안 돼요!</span></p>
+    <div class="pad"><canvas id="cv" width="640" height="480"></canvas></div>
+    <div class="tools" id="tools"></div>
+    <button class="btn g" id="drDone">✅ 다 그렸어요!</button>`;
+  G.pad = makePad($('#cv', body), $('#tools', body));
+  $('#drDone', body).onclick = () => submitDraw(false);
+}
+function makePad(cv, tools) {
+  const ctx = cv.getContext('2d');
+  const COLORS = ['#2B2A33', '#FF5E4D', '#FF9F1C', '#FFD23F', '#20B98A', '#3D7BFF', '#8B5CF6', '#FF7EB6', '#8B5A2B'];
+  const SIZES = [4, 10, 22];
+  const st = { strokes: [], color: COLORS[0], size: 1, eraser: false, cur: null, dirty: false };
+  function paint(s) {
+    ctx.strokeStyle = s.c; ctx.fillStyle = s.c; ctx.lineWidth = s.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const p = s.p;
+    if (p.length === 1) { ctx.beginPath(); ctx.arc(p[0][0], p[0][1], s.w / 2, 0, Math.PI * 2); ctx.fill(); return; }
+    ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
+    for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; ctx.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
+    ctx.lineTo(p[p.length - 1][0], p[p.length - 1][1]); ctx.stroke();
+  }
+  function redraw() { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); for (const s of st.strokes) paint(s); }
+  redraw();
+  const pos = e => { const r = cv.getBoundingClientRect(); return [Math.round((e.clientX - r.left) / r.width * cv.width), Math.round((e.clientY - r.top) / r.height * cv.height)]; };
+  let pid = null;
+  cv.addEventListener('pointerdown', e => {
+    if (pid !== null) return; e.preventDefault(); pid = e.pointerId; try { cv.setPointerCapture(pid); } catch (er) {}
+    st.cur = { c: st.eraser ? '#ffffff' : st.color, w: SIZES[st.size] * (st.eraser ? 2.2 : 1), p: [pos(e)] };
+    st.strokes.push(st.cur); st.dirty = true; paint(st.cur);
+  });
+  cv.addEventListener('pointermove', e => {
+    if (e.pointerId !== pid || !st.cur) return; e.preventDefault();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    for (const ev of evs) {
+      const q = pos(ev), last = st.cur.p[st.cur.p.length - 1];
+      if (Math.abs(q[0] - last[0]) + Math.abs(q[1] - last[1]) < 2) continue;
+      st.cur.p.push(q);
+      ctx.strokeStyle = st.cur.c; ctx.lineWidth = st.cur.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(last[0], last[1]); ctx.lineTo(q[0], q[1]); ctx.stroke();
+    }
+  });
+  const end = e => { if (e.pointerId !== pid) return; pid = null; if (st.cur) { st.cur = null; redraw(); } };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('lostpointercapture', end);
+  function renderTools() {
+    tools.innerHTML = COLORS.map(c => `<button class="sw ${!st.eraser && st.color === c ? 'on' : ''}" data-c="${c}" style="background:${c}" aria-label="색"></button>`).join('')
+      + `<span style="flex-basis:100%;height:0"></span>`
+      + SIZES.map((s, i) => `<button class="tb ${st.size === i ? 'on' : ''}" data-s="${i}" aria-label="굵기"><span class="dot" style="width:${Math.min(20, 4 + s * .7)}px;height:${Math.min(20, 4 + s * .7)}px"></span></button>`).join('')
+      + `<button class="tb ${st.eraser ? 'on' : ''}" data-e>🧽 지우개</button><button class="tb" data-u>↩️</button><button class="tb" data-x>🗑️</button>`;
+    $$('[data-c]', tools).forEach(b => b.onclick = () => { st.color = b.dataset.c; st.eraser = false; renderTools(); });
+    $$('[data-s]', tools).forEach(b => b.onclick = () => { st.size = Number(b.dataset.s); renderTools(); });
+    $('[data-e]', tools).onclick = () => { st.eraser = !st.eraser; renderTools(); };
+    $('[data-u]', tools).onclick = () => { st.strokes.pop(); redraw(); };
+    $('[data-x]', tools).onclick = async () => { if (!st.strokes.length) return; if (await confirmBox('다 지울까요?', '지우기', '아니요')) { st.strokes = []; redraw(); } };
+  }
+  renderTools();
+  return {
+    empty: () => !st.strokes.length,
+    // 작게 줄여서 올려요 (사파리는 webp를 못 만들어서 jpg로)
+    exportImg(w = 480, h = 360, q = .62) {
+      const t = document.createElement('canvas'); t.width = w; t.height = h;
+      const c2 = t.getContext('2d'); c2.fillStyle = '#fff'; c2.fillRect(0, 0, w, h); c2.drawImage(cv, 0, 0, w, h);
+      let u = t.toDataURL('image/webp', q); if (!u.startsWith('data:image/webp')) u = t.toDataURL('image/jpeg', q + .06);
+      return u;
+    },
+  };
+}
+async function submitDraw(auto) {
+  const g = room && room.game; if (!g || kindOf(g.r) !== 'draw' || submittedKey === phaseKey) return;
+  const pad = G.pad; submittedKey = phaseKey;
+  const owner = bookFor(g, me.pid, g.r), r = g.r;
+  const v = pad && !pad.empty() ? pad.exportImg() : null;
+  const btn = $('#drDone'); if (btn) { btn.disabled = true; btn.textContent = '올리는 중…'; }
+  try {
+    await db.set(PATH.pg(g.gid) + '/' + owner + '/' + r, { t: 'd', v, by: me.nick, pid: me.pid, ts: db.now() });
+    await db.set(PATH.room(roomCode) + '/game/sub/' + me.pid, r);
+  } catch (e) { console.warn(e); toast('그림을 못 올렸어요'); }
+  Sfx.play('done');
+  if (auto) toast(v ? '시간 끝! 그린 데까지 냈어요' : '시간 끝! 빈 그림으로 넘어가요');
+  if (room && room.game && room.game.r === r) { showWait($('#phaseBody'), room.game); updateHud(room); }
+}
+
+/* ── 맞히기 ── */
+async function buildGuess(body, g) {
+  const owner = bookFor(g, me.pid, g.r);
+  body.innerHTML = `<p class="task muted">스케치북 받는 중…</p>`;
+  const src = await prevContent(g, owner, g.r, 'img');
+  if (!room || room.game.gid !== g.gid || room.game.r !== g.r) return;
+  const by = src ? (src.by || '') : '';
+  body.innerHTML = `
+    <p class="task">이게 뭘 그린 걸까? 🤔<br><span class="small muted" style="font-family:var(--f)">${src ? `${esc(by)}님의 그림${src.skipped ? ' (앞 사람이 비워서 그 전 그림을 가져왔어요)' : ''}` : ''}</span></p>
+    ${src ? `<img class="shot" src="${src.v}" alt="그림">` : `<div class="blank">앞 사람이 아무것도 안 그렸어요 😅<br>떠오르는 아무 단어나 적어 주세요!</div>`}
+    <form id="gsForm" style="margin-top:12px">
+      <input class="inp" id="gsIn" maxlength="20" placeholder="정답을 적어요 (20자까지)" autocomplete="off" enterkeyhint="done">
+      <button class="btn b" type="submit" style="margin-top:10px">💡 이거다!</button>
+    </form>`;
+  const inp = $('#gsIn', body);
+  inp.addEventListener('input', () => { G.guessDraft = inp.value; });
+  G.guessDraft = '';
+  $('#gsForm', body).onsubmit = e => { e.preventDefault(); if (!inp.value.trim()) { toast('답을 적어 주세요'); return; } submitGuess(false); };
+}
+async function submitGuess(auto) {
+  const g = room && room.game; if (!g || kindOf(g.r) !== 'guess' || submittedKey === phaseKey) return;
+  submittedKey = phaseKey;
+  const owner = bookFor(g, me.pid, g.r), r = g.r;
+  const inp = $('#gsIn'); const text = ((inp && inp.value) || G.guessDraft || '').trim().slice(0, 20) || '???';
+  try {
+    await db.set(PATH.pg(g.gid) + '/' + owner + '/' + r, { t: 'g', v: text, by: me.nick, pid: me.pid, ts: db.now() });
+    await db.set(PATH.room(roomCode) + '/game/sub/' + me.pid, r);
+  } catch (e) { console.warn(e); toast('답을 못 올렸어요'); }
+  Sfx.play('done');
+  if (auto) toast(text === '???' ? '시간 끝! ??? 로 넘어가요' : '시간 끝! 적은 답으로 냈어요');
+  if (room && room.game && room.game.r === r) { showWait($('#phaseBody'), room.game); updateHud(room); }
+}
+function autoSubmit(g) {
+  const k = kindOf(g.r);
+  if (k === 'pick') { const cs = g.cards[me.pid] || []; submittedKey = phaseKey; submitPick(cs[Math.floor(Math.random() * cs.length)]); toast('시간 끝! 아무 카드나 골랐어요'); }
+  else if (k === 'draw') submitDraw(true);
+  else submitGuess(true);
+}
+
+/* ══════════ 스케치북 공개 ══════════ */
+let revealGid = null, revealBooks = [], revealSel = 0, revealShown = {}, revealHost = null;
+async function loadBooks(g) {
+  const all = (await db.get(PATH.pg(g.gid))) || {};
+  return g.order.map(owner => {
+    const raw = all[owner] || {}, pages = [{ t: 'w', v: (g.words && g.words[owner]) || '?', by: g.nicks[owner], pid: owner }];
+    for (let r = 1; r <= g.R; r++) {
+      const p = raw[r];
+      const w = workerFor(g, owner, r);
+      pages.push(p ? p : { t: kindOf(r) === 'draw' ? 'd' : 'g', v: kindOf(r) === 'draw' ? null : '???', by: g.nicks[w], pid: w, miss: true });
+    }
+    return { id: g.gid + '_' + owner, owner, nick: g.nicks[owner], word: pages[0].v, pages };
+  });
+}
+async function startReveal(v) {
+  const g = v.game; revealGid = g.gid; revealBooks = []; revealSel = Math.max(0, g.order.indexOf(me.pid)); revealShown = {};
+  show('reveal');
+  const el = $('#s-reveal');
+  el.innerHTML = `<div class="waitbox"><div class="big"><span class="wiggle">📖</span> 스케치북 모으는 중…</div></div>`;
+  await sleep(600);
+  revealBooks = await loadBooks(g);
+  if (!room || !room.game || room.game.gid !== g.gid) return;
+  renderReveal();
+  // 혹시 저장이 안 됐으면 (넘긴 사람이 바로 나간 경우) 대신 저장해요
+  setTimeout(() => { if (room && room.game && room.game.gid === g.gid && !room.game.saved) saveHof(room); }, 4000);
+}
+function lastGuess(pages) { for (let i = pages.length - 1; i > 0; i--) if (pages[i].t === 'g' && pages[i].v && pages[i].v !== '???') return pages[i].v; return null; }
+function pageHtml(p, i, n) {
+  const who = `<div class="who">${av(p.pid, p.by)}<span>${esc(p.by)}${p.t === 'w' ? '의 제시어' : p.t === 'd' ? '님이 그렸어요' : '님의 답'}</span></div>`;
+  if (p.t === 'w') return `<div class="pg">${who}<div class="word first">${esc(p.v)}</div></div>`;
+  if (p.t === 'd') return `<div class="pg">${who}${p.v ? `<img class="shot" src="${p.v}" alt="그림" loading="lazy">` : `<div class="blank">(아무것도 안 그렸어요)</div>`}</div>`;
+  return `<div class="pg">${who}<div class="word ${i === n - 1 ? 'last' : ''}">${esc(p.v || '???')}</div></div>`;
+}
+function renderReveal() {
+  const el = $('#s-reveal'); const v = room; if (!v || !v.game) return;
+  const g = v.game, isHost = v.host === me.pid, b = revealBooks[revealSel]; if (!b) return;
+  revealHost = v.host;
+  const shown = revealShown[b.id] == null ? 1 : revealShown[b.id];
+  const done = shown >= b.pages.length;
+  const last = lastGuess(b.pages);
+  el.innerHTML = `
+    <div class="top"><div class="grow d" style="font-size:28px">📖 스케치북 공개!</div></div>
+    <div class="tabs">${revealBooks.map((x, i) => `<button class="${i === revealSel ? 'on' : ''}" data-b="${i}">${av(x.owner, x.nick, '')}${esc(x.nick)}</button>`).join('')}</div>
+    <div class="book" id="bookBody">${b.pages.slice(0, shown).map((p, i) => (i ? '<div class="arrow">▼</div>' : '') + pageHtml(p, i, b.pages.length)).join('')}</div>
+    ${done ? `<div class="card center">
+        <div class="sumline"><span class="a">${esc(b.word)}</span> ➜ <span class="z">${esc(last || '???')}</span></div>
+        <p class="d" style="font-size:20px;margin:4px 0 10px">${last && last.replace(/\s/g, '') === String(b.word).replace(/\s/g, '') ? '🎉 끝까지 살아남았어요!' : '🤣 이게 뭘 그린거야 도대체!'}</p>
+        <div id="likeBox"></div>
+      </div>` : `<div class="grid2"><button class="btn y" id="rvNext">한 장 넘기기 ▶</button><button class="btn" id="rvAll">끝까지 보기 ⏩</button></div>`}
+    ${done && revealSel < revealBooks.length - 1 ? `<button class="btn b" id="rvNextBook" style="margin-top:10px">다음 스케치북 ▶ (${esc(revealBooks[revealSel + 1].nick)})</button>` : ''}
+    <div class="grid2" style="margin-top:18px">
+      ${isHost ? `<button class="btn r" id="rvAgain">🔄 한 판 더</button>` : `<div class="card center small" style="margin:0;display:grid;place-items:center">방장이 한 판 더를<br>누르면 대기실로 가요</div>`}
+      <button class="btn" id="rvLobby">🏠 로비로</button>
+    </div>
+    <button class="btn p sm" id="rvHof" style="margin:12px auto 0;display:flex">🏆 명예의 전당 보기</button>`;
+  $$('[data-b]', el).forEach(x => x.onclick = () => { revealSel = Number(x.dataset.b); renderReveal(); });
+  const nx = $('#rvNext', el); if (nx) nx.onclick = () => { revealShown[b.id] = shown + 1; Sfx.play('page'); renderReveal(); const bb = $('#bookBody'); if (bb && bb.lastElementChild) bb.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+  const al = $('#rvAll', el); if (al) al.onclick = () => { revealShown[b.id] = b.pages.length; renderReveal(); };
+  const nb = $('#rvNextBook', el); if (nb) nb.onclick = () => { revealSel++; renderReveal(); scrollTo({ top: 0, behavior: 'smooth' }); };
+  const ag = $('#rvAgain', el); if (ag) ag.onclick = async () => {
+    await db.tx(PATH.room(roomCode), c => { if (c == null) return null; if (c.host !== me.pid || c.status !== 'reveal') return undefined; c.status = 'wait'; c.game = null; c.updatedAt = db.now(); return c; });
+  };
+  $('#rvLobby', el).onclick = async () => { await leaveRoom(); show('lobby'); };
+  $('#rvHof', el).onclick = async () => { await leaveRoom(); show('hof'); };
+  if (done) renderLike($('#likeBox', el), b.id, b.owner);
+}
+
+/* ══════════ 명예의 전당에 남기기 ══════════ */
+async function makeThumb(dataUrl) {
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => { const c = document.createElement('canvas'); c.width = 200; c.height = 150; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, 200, 150); x.drawImage(im, 0, 0, 200, 150); res(c.toDataURL('image/jpeg', .6)); };
+    im.onerror = () => res(null); im.src = dataUrl;
+  });
+}
+async function saveHof(v) {
+  const g = v.game; if (!g || g.saved) return;
+  const code = v.code;
+  const r = await db.tx(PATH.room(code) + '/game/saved', c => (c ? undefined : true)).catch(() => null);
+  if (!r || !r.committed) return;
+  const books = await loadBooks(g);
+  const players = g.order.map(p => g.nicks[p]);
+  for (const b of books) {
+    const firstImg = b.pages.find(p => p.t === 'd' && p.v);
+    if (!firstImg) continue; // 그림이 하나도 없는 스케치북은 안 남겨요
+    const meta = { gid: g.gid, opid: b.owner, owner: b.nick, word: b.word, last: lastGuess(b.pages) || '???', n: b.pages.length, players, ts: g.ended || db.now(), lk: 0 };
+    try {
+      await db.set(PATH.hof + '/' + b.id, meta);
+      const th = await makeThumb(firstImg.v); if (th) await db.set(PATH.thumb(b.id), th);
+    } catch (e) { console.warn('hof', e); }
+  }
+}
+
+/* ══════════ 좋아요 ══════════ */
+const likeBusy = {};
+async function renderLike(box, id, opid) {
+  if (!box) return;
+  const draw = (n, on) => {
+    const mine = opid === me.pid;
+    box.innerHTML = `<button class="like ${on ? 'on' : ''}" ${mine ? 'disabled' : ''}>${HEART} <span>${n}</span></button>${mine ? '<p class="small muted" style="margin:6px 0 0">내 스케치북에는 좋아요를 못 눌러요</p>' : ''}`;
+    const btn = box.querySelector('.like'); if (!mine) btn.onclick = () => toggleLike(id, box, draw);
+  };
+  draw((await db.get(PATH.hof + '/' + id + '/lk').catch(() => 0)) || 0, !!LIKED[id]);
+  const real = await db.get(PATH.like(id) + '/' + me.pid).catch(() => null);
+  if (!!real !== !!LIKED[id]) { if (real) LIKED[id] = 1; else delete LIKED[id]; saveLiked(); }
+  draw((await db.get(PATH.hof + '/' + id + '/lk').catch(() => 0)) || 0, !!real);
+}
+async function toggleLike(id, box, draw) {
+  if (likeBusy[id]) return; likeBusy[id] = true;
+  try {
+    const exists = await db.get(PATH.hof + '/' + id + '/gid');
+    if (!exists) { toast('아직 명예의 전당에 올라가는 중이에요. 잠시 뒤 다시 눌러 주세요'); return; }
+    const on = !!(await db.get(PATH.like(id) + '/' + me.pid));
+    if (on) { await db.remove(PATH.like(id) + '/' + me.pid); delete LIKED[id]; }
+    else { await db.set(PATH.like(id) + '/' + me.pid, true); LIKED[id] = 1; Sfx.play('done'); }
+    saveLiked();
+    const r = await db.tx(PATH.hof + '/' + id + '/lk', c => Math.max(0, (c || 0) + (on ? -1 : 1)));
+    draw(r.value || 0, !on);
+    const h = hofCache && hofCache[id]; if (h) h.lk = r.value || 0;
+  } catch (e) { console.warn(e); toast('연결이 불안정해요'); }
+  finally { likeBusy[id] = false; }
+}
+
+/* ══════════ 명예의 전당 ══════════ */
+let hofCache = null, hofTab = 'rank', hofLimit = 40, thumbObs = null;
+SCREENS.hof = async () => {
+  const el = $('#s-hof');
+  el.innerHTML = `<div class="top"><button class="back" id="hfBack">←</button><div class="grow d" style="font-size:28px">🏆 명예의 전당</div><button class="btn sm ghost" id="hfRe" style="flex:none">새로고침</button></div>
+    <p class="small muted" style="margin:0 0 8px">지금까지 끝난 모든 게임의 스케치북이에요. 재밌는 스케치북에 ❤️ 를 눌러 주세요. 좋아요 순으로 랭킹이 매겨져요!</p>
+    <div class="seg" style="margin-bottom:10px"><button data-t="rank" class="${hofTab === 'rank' ? 'on' : ''}">👑 랭킹</button><button data-t="new" class="${hofTab === 'new' ? 'on' : ''}">🆕 최신</button><button data-t="mine" class="${hofTab === 'mine' ? 'on' : ''}">🙋 내 게임</button></div>
+    <div id="hofBody"><div class="waitbox"><div class="big"><span class="wiggle">🖼️</span> 불러오는 중…</div></div></div>`;
+  $('#hfBack', el).onclick = () => show('lobby');
+  $('#hfRe', el).onclick = () => { hofCache = null; SCREENS.hof(); };
+  $$('[data-t]', el).forEach(b => b.onclick = () => { hofTab = b.dataset.t; hofLimit = 40; $$('[data-t]', el).forEach(x => x.classList.toggle('on', x === b)); renderHof(); });
+  if (!hofCache) { try { hofCache = (await db.get(PATH.hof)) || {}; } catch (e) { hofCache = null; $('#hofBody').innerHTML = '<p class="center muted">불러오지 못했어요. 새로고침을 눌러 주세요</p>'; return; } }
+  if (cur === 'hof') renderHof();
+};
+function hofList() {
+  const arr = Object.entries(hofCache || {}).filter(([, m]) => m && m.gid).map(([id, m]) => ({ id, ...m, lk: m.lk || 0 }));
+  if (hofTab === 'rank') arr.sort((a, b) => b.lk - a.lk || b.ts - a.ts);
+  else if (hofTab === 'new') arr.sort((a, b) => b.ts - a.ts);
+  else { const mine = arr.filter(m => (m.players || []).includes(me.nick)); mine.sort((a, b) => b.ts - a.ts); return mine; }
+  return arr;
+}
+function renderHof() {
+  const box = $('#hofBody'); if (!box) return;
+  const arr = hofList();
+  if (!arr.length) { box.innerHTML = `<div class="card center d" style="font-size:20px">${hofTab === 'mine' ? '아직 내가 한 판이 없어요' : '아직 스케치북이 없어요.<br>첫 번째 주인공이 되어 보세요! 🎨'}</div>`; return; }
+  const top = hofTab === 'rank' && arr[0] && arr[0].lk > 0 ? `<div class="hero"><div class="d">👑 이번 명예의 전당 1등</div><div class="sumline" style="margin:4px 0 0">${esc(arr[0].word)} ➜ ${esc(arr[0].last)}</div><div class="small">${esc(arr[0].owner)}의 스케치북 · ❤️ ${arr[0].lk}</div></div>` : '';
+  box.innerHTML = top + `<div class="hofgrid">${arr.slice(0, hofLimit).map((m, i) => `
+      <button class="hc" data-id="${esc(m.id)}">
+        ${hofTab === 'rank' && m.lk > 0 && i < 3 ? `<span class="medal m${i + 1}">${i + 1}</span>` : hofTab === 'rank' && m.lk > 0 ? `<span class="medal">${i + 1}</span>` : ''}
+        <span class="im" data-th="${esc(m.id)}"></span>
+        <span class="tx"><span class="w">${esc(m.word)} ➜ ${esc(m.last)}</span>
+        <span class="m"><span>${esc(m.owner)} · ${(m.players || []).length}명</span><span class="h">❤️ ${m.lk}</span></span>
+        <span class="m"><span>${ago(m.ts)}</span><span>${LIKED[m.id] ? '내가 ❤️' : ''}</span></span></span>
+      </button>`).join('')}</div>
+    ${arr.length > hofLimit ? `<button class="btn" id="hfMore" style="margin-top:12px">더 보기 (${arr.length - hofLimit}개 더)</button>` : ''}`;
+  $$('[data-id]', box).forEach(b => b.onclick = () => openBook(b.dataset.id, 'hof'));
+  const mo = $('#hfMore', box); if (mo) mo.onclick = () => { hofLimit += 40; renderHof(); };
+  // 미리보기 그림은 화면에 보일 때만 불러요
+  if (thumbObs) thumbObs.disconnect();
+  const load = async t => { if (t.dataset.done) return; t.dataset.done = 1; const u = await db.get(PATH.thumb(t.dataset.th)).catch(() => null); if (u && /^data:image\//.test(u)) t.style.backgroundImage = `url("${u}")`; };
+  if ('IntersectionObserver' in window) { thumbObs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { thumbObs.unobserve(e.target); load(e.target); } }), { rootMargin: '200px' }); $$('[data-th]', box).forEach(t => thumbObs.observe(t)); }
+  else $$('[data-th]', box).forEach(load);
+}
+
+/* ── 명예의 전당 스케치북 보기 ── */
+let bookBack = 'hof', bookId = null;
+async function openBook(id, back) {
+  bookBack = back || 'hof'; bookId = id;
+  show('book');
+  const el = $('#s-book');
+  el.innerHTML = `<div class="waitbox"><div class="big"><span class="wiggle">📖</span> 펼치는 중…</div></div>`;
+  let m = hofCache && hofCache[id];
+  try { m = (await db.get(PATH.hof + '/' + id)) || m; } catch (e) {}
+  if (!m) { el.innerHTML = `<div class="top"><button class="back" id="bkBack">←</button></div><div class="card center">스케치북을 찾지 못했어요</div>`; $('#bkBack', el).onclick = () => show(bookBack); return; }
+  const raw = (await db.get(PATH.pg(m.gid) + '/' + m.opid).catch(() => null)) || {};
+  const pages = [{ t: 'w', v: m.word, by: m.owner, pid: m.opid }];
+  for (let r = 1; r < (m.n || 1); r++) { const p = raw[r]; pages.push(p || { t: r % 2 ? 'd' : 'g', v: r % 2 ? null : '???', by: '?', pid: '?' }); }
+  const sibs = Object.entries(hofCache || {}).filter(([k, x]) => x && x.gid === m.gid && k !== id);
+  if (cur !== 'book' || bookId !== id) return;
+  const d = new Date(m.ts + 9 * 3600e3);
+  el.innerHTML = `
+    <div class="top"><button class="back" id="bkBack">←</button><div class="grow d" style="font-size:24px">${esc(m.owner)}의 스케치북</div><button class="btn sm ghost" id="bkShare" style="flex:none">🔗 공유</button></div>
+    <div class="card center" style="margin-top:4px">
+      <div class="sumline"><span class="a">${esc(m.word)}</span> ➜ <span class="z">${esc(m.last)}</span></div>
+      <p class="small muted" style="margin:4px 0 10px">${d.getUTCFullYear()}.${d.getUTCMonth() + 1}.${d.getUTCDate()} · 함께한 사람: ${esc((m.players || []).join(', '))}</p>
+      <div id="likeBox"></div>
+    </div>
+    <div class="book">${pages.map((p, i) => (i ? '<div class="arrow">▼</div>' : '') + pageHtml(p, i, pages.length)).join('')}</div>
+    ${sibs.length ? `<h3>같은 판의 다른 스케치북</h3><div class="tabs" style="flex-wrap:wrap">${sibs.map(([k, x]) => `<button data-sib="${esc(k)}">${esc(x.owner)} · ${esc(x.word)} ➜ ${esc(x.last)}</button>`).join('')}</div>` : ''}`;
+  $('#bkBack', el).onclick = () => show(bookBack);
+  $('#bkShare', el).onclick = () => { const u = location.origin + location.pathname + '?book=' + encodeURIComponent(id) + (db.mode === 'local' ? '&local=1' : ''); try { navigator.clipboard.writeText(u).then(() => toast('스케치북 링크를 복사했어요'), () => toast(u, 4000)); } catch (e) { toast(u, 4000); } };
+  $$('[data-sib]', el).forEach(b => b.onclick = () => openBook(b.dataset.sib, bookBack));
+  renderLike($('#likeBox', el), id, m.opid);
+}
+
+/* ══════════ 새 버전 확인 ══════════ */
+async function checkVersion() {
+  try {
+    const v = (await (await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' })).text()).trim();
+    if (v && v !== APP_VERSION && !roomCode && ['lobby', 'hof', 'nick'].includes(cur)) location.reload();
+  } catch (e) {}
+}
+
+/* ══════════ 확대 막기 ══════════ */
+(function lockZoom() {
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+  let lastEnd = 0;
+  document.addEventListener('touchend', e => {
+    const now = e.timeStamp || Date.now(), quick = now - lastEnd < 320; lastEnd = now;
+    if (!quick) return;
+    const t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'CANVAS') return;
+    e.preventDefault();
+    const b = t && t.closest && t.closest('button,a');
+    if (b && !b.disabled) b.click();
+  }, { passive: false });
+  addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
+})();
+
+/* ══════════ 시작 ══════════ */
+(async function boot() {
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('room')) pendingRoom = qs.get('room').toUpperCase().slice(0, 4);
+  if (qs.get('book')) pendingBook = qs.get('book');
+  if (qs.get('local') === '1') db = new LocalDB();
+  else {
+    db = new FireDB();
+    for (let n = 1; ; n++) {
+      try { await db.init(); break; }
+      catch (e) { console.warn('Firebase 연결 재시도', n, e); $('#s-boot p').textContent = n > 1 ? `서버에 연결하는 중… (${n}번째)` : '서버에 연결하는 중…'; await sleep(Math.min(6000, 1000 * n)); }
+    }
+    setInterval(checkVersion, 120000);
+  }
+  if (qs.get('room') || qs.get('book')) { try { history.replaceState(null, '', location.pathname + (db.mode === 'local' ? '?local=1' : '')); } catch (e) {} }
+  if (!me.nick) show('nick'); else afterNick();
+})();
+</script>
+</body>
+</html>
