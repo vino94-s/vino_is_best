@@ -403,7 +403,7 @@ const CFG = {
   visitBonus: 10, visitMax: 10, // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261116-5';
+const APP_VERSION = '20261116-6';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -1707,7 +1707,7 @@ function step(dt) {
       const x = cands.find(x => needOf(x.id) > 0);
       if (x) { arr.push({ id: x.id, t: 0, T: kind === 'side' ? fryTime(x) : barTime(x), auto: true }); ch = true; staffPing(kind === 'side' ? 'side' : 'bar'); }
     }
-    if (ch) { renderStation(kind); renderTray(); renderXtra(); markReady(); } else renderStationBars(kind);
+    if (ch) { renderStation(kind); renderTray(); renderIngs(); renderXtra(); markReady(); renderRail(); } else renderStationBars(kind);
   }
   // 서빙 직원: 맞는 손님에게 자동 서빙
   if (sk('serve') >= 1) {
@@ -1733,7 +1733,14 @@ function act(a) {
     case 'psauce': if (!isRawPizza()) return; t.item.sauce = true; break;
     case 'pcheese': if (!isRawPizza()) return; t.item.cheese = true; break;
     case 'bake': if (!isRawPizza() || G.ovens.length >= ovenSlots() || !t.item.sauce || !t.item.cheese) return; G.ovens.push({ item: t.item, t: 0, done: false }); t.item = null; renderOven(); break;
-    case 'trash': if (!t.item && !t.side && !t.drink) return; t.item = null; t.side = null; t.drink = null; chefSay($('#gScene'), pick(CHEF_LINES.trash)); break;
+    case 'trash': {
+      const pend = [...G.fry, ...G.bar].filter(f => !f.auto);
+      if (!t.item && !t.side && !t.drink && !pend.length) return;
+      // 버거·피자는 버리고, 멀쩡한 사이드·음료는 재고로 돌려놔요. 만들던 사이드·음료도 다 되면 쟁반 말고 재고로 가요
+      ['side', 'drink'].forEach(k => { if (t[k]) G.stock[t[k]] = (G.stock[t[k]] || 0) + 1; });
+      pend.forEach(f => { f.auto = true; });
+      t.item = null; t.side = null; t.drink = null; chefSay($('#gScene'), pick(CHEF_LINES.trash)); renderXtra(); break;
+    }
     default:
       if (BURGER_ING.some(([k, lv]) => k === a && G.st.lv >= lv)) { if (!isOpenBurger()) return; t.item.fill.push(a); break; }
       if (PIZZA_TOP.some(([k, lv]) => k === a && G.st.lv >= lv)) { if (!isRawPizza() || t.item.tops.includes(a)) return; t.item.tops.push(a); break; }
@@ -1754,7 +1761,7 @@ function takeXtra(id) {
     arr.push({ id, t: 0, T: kind === 'side' ? fryTime(x) : barTime(x), auto: false }); Sound.play('sizzle');
     renderStation(kind);
   }
-  renderTray(); renderXtra(); markReady(); renderRail();
+  renderTray(); renderIngs(); renderXtra(); markReady(); renderRail();
 }
 function takeOven(i) { if (!G) return; const o = G.ovens[i]; if (!o || !o.done || G.tray.item) return; G.tray.item = o.item; G.ovens.splice(i, 1); renderOven(); renderTray(); renderIngs(); markReady(); renderRail(); }
 function addPatty() { if (!G || !G.running || G.grill.length >= grillSlots()) return; G.grill.push({ t: 0 }); Sound.play('sizzle'); renderGrill(true); }
@@ -1884,7 +1891,7 @@ function renderIngs() {
     PIZZA_TOP.filter(ingOK).forEach(([k]) => { h += ib(k, NAMES[k], '', '', t.item.tops.includes(k)); });
     h += ib('bake', '오븐에', G.ovens.length >= ovenSlots() ? '꽉 참' : '5초', 'act', G.ovens.length >= ovenSlots() || !t.item.sauce || !t.item.cheese);
   } else h += `<div class="done-msg">✔ 완성! 사이드·음료를 담고 손님을 눌러요</div>`;
-  h += ib('trash', '버리기', '', 'trash', !t.item && !t.side && !t.drink);
+  h += ib('trash', '버리기', '쟁반 비우기', 'trash', !t.item && !t.side && !t.drink && ![...G.fry, ...G.bar].some(f => !f.auto));
   $('#ings').innerHTML = h;
 }
 function renderXtra() {
