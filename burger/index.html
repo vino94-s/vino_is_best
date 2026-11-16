@@ -76,6 +76,7 @@ p{margin:0}
 .list{display:grid;gap:8px}
 .li{display:flex;align-items:center;gap:10px;background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:8px 10px}
 .li.me{background:#FFF0C2}
+.li>span{flex:none}
 .li .rk{width:28px;text-align:center;font:400 18px/1 var(--d)}
 .li .nm{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .li .sub{font-size:12px;color:var(--muted)}
@@ -178,11 +179,11 @@ p{margin:0}
 .stn{display:grid;gap:3px;min-width:0}
 .cap{font:700 10.5px/1.15 var(--f);color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cap b{font:400 14px/1 var(--d);color:var(--red-d)}
-#game .scene{height:232px}
+#game .scene{height:210px}
 .panel{background:var(--paper);border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:9px;display:grid;gap:7px;align-content:start;min-width:0}
 .panel h3{font-size:16px;display:flex;justify-content:space-between;align-items:baseline;gap:6px}
 .panel h3 small{font:700 11.5px/1.2 var(--f);color:var(--muted);text-align:right}
-.tray{height:104px;border:2.5px solid var(--ink);border-radius:12px;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:8px 8px 14px;
+.tray{height:96px;border:2.5px solid var(--ink);border-radius:12px;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:8px 8px 14px;
   background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(211,58,49,.18) 13px 15px),repeating-linear-gradient(90deg,#FFF8E6 0 13px,rgba(211,58,49,.18) 13px 15px)}
 .tray::before{content:"";position:absolute;left:10%;right:10%;bottom:6px;height:14px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.22),transparent 70%)}
 .tray>svg{position:relative;filter:drop-shadow(0 3px 0 rgba(0,0,0,.18))}
@@ -257,6 +258,68 @@ p{margin:0}
 .bars button.on i{background:var(--red)}
 .bars span{font-size:9.5px;color:var(--muted);font-weight:700}
 .bars em{font-style:normal;font-size:9px;font-weight:800;white-space:nowrap}
+
+/* ── 주문서 레일 · 직원 · 사이드 ── */
+.rail{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:5px}
+.rc{background:#fff;border:2.5px solid var(--ink);border-radius:10px;padding:0 0 4px;min-height:62px;overflow:hidden;display:grid;align-content:start;gap:2px}
+.rc.empty{background:rgba(43,34,32,.06);border-style:dashed;border-color:#C9B9A6!important}
+.rc.ready{box-shadow:0 0 0 3px #9BE3A8}
+.rc .rn{color:#fff;font:400 12px/1.2 var(--d);padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rc .rr{font-size:8.5px;color:var(--muted);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:2px;padding:0 3px;align-items:center}
+.ch{display:inline-flex;align-items:center;gap:1px;background:#F3EDE3;border-radius:6px;padding:1px 2px;border:1.5px solid transparent}
+.ch svg{width:20px;height:14px}
+.ch.x svg{width:14px;height:17px}
+.ch em{font:700 9px/1 var(--f);font-style:normal;color:var(--ink)}
+.ch.t{padding:2px 3px}
+.ch.t em{font-size:9.5px;line-height:1.1}
+.ch.ok{background:#D8F5DD;border-color:#3B9B4F}
+.ch.over{background:#FFE1DC;border-color:var(--red)}
+.mrow .chips .ch svg{width:24px;height:16px}
+.mrow .ch em{font-size:10.5px}
+.staffbar{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}
+.staffbar::-webkit-scrollbar{display:none}
+.sc{display:inline-flex;align-items:center;gap:4px;background:var(--paper);border:2px solid var(--ink);border-radius:99px;padding:2px 8px 2px 2px;white-space:nowrap;font-size:11.5px;flex:none}
+.sc .face{width:22px;height:22px;border-width:1.5px}
+.sc i{font-style:normal;font:400 11px var(--d);color:var(--teal-d)}
+.sc.none{padding:4px 10px;color:var(--muted);font-weight:700}
+.sc.ping{animation:ping .6s ease}
+@keyframes ping{40%{background:#FFE27A;transform:scale(1.08)}}
+.ings{grid-template-columns:repeat(5,minmax(0,1fr))}
+.ib{min-height:52px}
+.ib svg{width:30px;height:19px}
+.done-msg{grid-column:span 4;display:grid;place-items:center;font:400 14px/1.2 var(--d);color:var(--good);text-align:center;padding:6px;border:2px dashed #9BE3A8;border-radius:10px}
+.xtra{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:2px 1px 4px}
+.xtra::-webkit-scrollbar{display:none}
+.xb{min-width:0;border:2px solid var(--ink);border-radius:10px;background:#FFF6E2;box-shadow:0 2px 0 var(--ink);padding:3px 6px;display:grid;justify-items:center;gap:0;cursor:pointer;font:400 11px/1.15 var(--d)}
+.xb small{font:700 9px/1.1 var(--f);color:var(--muted)}
+.xb.on{background:#D8F5DD}
+.xb[disabled]{opacity:.4;box-shadow:none}
+.stations{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr)!important}
+.ovs{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:3px}
+.ovs .oven .lbl{font-size:10.5px}
+.fryer.drink{background:linear-gradient(#FDE2EA,#E7A9BD)}
+.fryer.drink .oil{background:linear-gradient(#FFFFFF,#F7B6CC)}
+.staff{display:grid;gap:8px}
+.xpbar{position:relative;height:14px;background:rgba(43,34,32,.12);border-radius:7px;overflow:hidden;margin-top:4px}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),#5BD16E)}
+.xpbar span{position:absolute;inset:0;text-align:center;font:700 10px/14px var(--f)}
+.skills{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:12.5px;color:var(--muted)}
+.skills li.on{color:var(--ink)}
+.roles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.rolebtn{border:2px solid var(--ink);border-radius:10px;background:#fff;padding:5px 2px;display:grid;justify-items:center;cursor:pointer;font:400 13px/1.2 var(--d)}
+.rolebtn span{font-size:20px}
+.rolebtn small{font:700 9.5px/1.2 var(--f);color:var(--muted)}
+.rolebtn.on{background:#FFE7E2;border-color:var(--red)}
+.rolebtn[disabled]{opacity:.45}
+.jobbox{display:grid;gap:6px;background:#FFF6E2;border:2px dashed var(--mustard-d);border-radius:12px;padding:8px}
+.mrow{display:flex;gap:10px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:12px;padding:7px 9px}
+.mrow>svg{flex:none}
+.mrow .nm{font:400 16px/1.2 var(--d)}
+.mrow .sub{font-size:11.5px;color:var(--muted);font-weight:700}
+.mrow.lock{opacity:.55;background:#F3EDE3}
+.usmap{width:100%;height:auto;display:block}
+.usmap .pin:hover circle{filter:brightness(1.1)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 </head>
@@ -282,6 +345,10 @@ p{margin:0}
 <section class="screen hidden" id="s-friends"></section>
 <section class="screen hidden" id="s-visit"></section>
 <section class="screen hidden" id="s-rank"></section>
+<section class="screen hidden" id="s-staff"></section>
+<section class="screen hidden" id="s-menu"></section>
+<section class="screen hidden" id="s-chain"></section>
+<section class="screen hidden" id="s-branch"></section>
 <section class="screen hidden" id="s-admin"></section>
 <section class="hidden" id="game">
   <div class="hud">
@@ -292,18 +359,22 @@ p{margin:0}
     <button class="x" id="gQuit" aria-label="영업 그만하기">✕</button>
   </div>
   <div class="scene" id="gScene"></div>
-  <div class="log" id="gLog" aria-live="polite">주문서를 보고 쟁반에 만든 뒤, 손님을 눌러서 내줘요!</div>
+  <div class="rail" id="rail"></div>
+  <div class="staffbar" id="staffBar"></div>
+  <div class="log" id="gLog" aria-live="polite"></div>
   <div class="kitchen">
     <div class="panel">
       <h3>쟁반 <small id="trayName">비어 있음</small></h3>
       <div class="tray" id="tray"></div>
       <div class="ings" id="ings"></div>
+      <div class="xtra" id="xtra"></div>
     </div>
     <div class="panel stations">
       <div class="stn"><div class="grill" id="grill"></div><span class="cap" id="grillInfo"></span></div>
       <div class="stn"><button class="ib" id="addPatty" type="button" style="min-height:66px">패티 굽기</button><span class="cap">구운 패티 <b id="warm">0</b>개</span></div>
       <div class="stn"><div id="ovenBox"></div><span class="cap">피자 오븐</span></div>
       <div class="stn"><div id="fryBox"></div><span class="cap">튀김기</span></div>
+      <div class="stn"><div id="barBox"></div><span class="cap">음료 바</span></div>
     </div>
   </div>
 </section>
@@ -330,7 +401,7 @@ const CFG = {
   visitBonus: 10, visitMax: 10, // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261116-3';
+const APP_VERSION = '20261116-4';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -339,21 +410,95 @@ const STAGES = [
   { lv: 4, id: 'house', icon: '🇺🇸', name: '어메리카 버거하우스', title: '준탁의 어메리카 버거하우스', cost: 4000, seats: 4, mul: 1.5, spawn: 5.5 },
   { lv: 5, id: 'flag', icon: '🌟', name: '버거하우스 본점', title: '준탁 버거하우스 본점', cost: 12000, seats: 4, mul: 1.8, spawn: 4.9 },
 ];
-// 설비 (lv: 그 단계부터 살 수 있어요)
+// 설비 (lv: 그 단계부터 살 수 있어요 · hide: 예전 설비, 상점엔 안 보여요)
 const UPG = [
   { id: 'grill2', icon: '🔥', n: '그릴 한 칸 더', d: '패티를 2장 같이 구워요', c: 60, lv: 1 },
-  { id: 'cola', icon: '🥤', n: '콜라 머신', d: '손님이 콜라도 시켜요 (+$2)', c: 80, lv: 1 },
+  { id: 'cola', icon: '🥤', n: '콜라 머신', d: '콜라 주문이 들어와요', c: 80, lv: 1 },
   { id: 'fast', icon: '⚡', n: '강화 버너', d: '패티 굽는 시간 4초 → 2.5초', c: 120, lv: 1 },
-  { id: 'fryer', icon: '🍟', n: '튀김기', d: '감자튀김 주문 (+$3)', c: 150, lv: 2 },
+  { id: 'fryer', icon: '🍟', n: '튀김기', d: '감자튀김 등 사이드 메뉴 주문', c: 150, lv: 1 },
   { id: 'grill3', icon: '🔥', n: '그릴 세 칸', d: '패티를 3장 같이 구워요', c: 220, lv: 2, need: 'grill2' },
-  { id: 'tap', icon: '🍺', n: '생맥주 탭', d: '수제버거엔 맥주! 생맥주 주문 (+$4)', c: 260, lv: 2 },
+  { id: 'tap', icon: '🍺', n: '생맥주 탭', d: '수제버거엔 맥주! 생맥주 주문', c: 260, lv: 2 },
+  { id: 'shake', icon: '🥛', n: '쉐이크 머신', d: '밀크쉐이크 주문 (쉐이크쉑 스타일)', c: 300, lv: 3 },
   { id: 'juke', icon: '🎵', n: '주크박스', d: '컨트리 음악에 손님 인내심 +35%', c: 300, lv: 3 },
+  { id: 'fryer2', icon: '🍟', n: '대형 튀김기', d: '사이드를 2개 같이 튀겨요', c: 350, lv: 3, need: 'fryer' },
   { id: 'oven', icon: '🍕', n: '피자 오븐', d: '피자 메뉴 해금 (객단가 UP)', c: 400, lv: 3 },
-  { id: 'helper', icon: '🧑‍🍳', n: '알바생', d: '그릴에 패티를 알아서 올려줘요', c: 900, lv: 3 },
+  { id: 'oven2', icon: '🍕', n: '오븐 한 칸 더', d: '피자를 2판 같이 구워요', c: 900, lv: 4, need: 'oven' },
   { id: 'neon', icon: '💡', n: '네온 간판', d: '가격 +20%, 손님이 더 자주 와요', c: 1500, lv: 4 },
+  { id: 'helper', icon: '🧑‍🍳', n: '알바생(예전)', d: '그릴에 패티를 알아서 올려요', c: 900, lv: 3, hide: true },
 ];
-const NAMES = { bun: '아래빵', top: '위빵', patty: '패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', bacon: '베이컨',
-  dough: '도우', sauce: '소스', pcheese: '모차렐라', pepperoni: '페퍼로니', mushroom: '버섯', olive: '올리브', cola: '콜라', beer: '생맥주', fries: '감자튀김' };
+const NAMES = { bun: '아래빵', top: '위빵', patty: '패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', onion: '양파', pickle: '피클', bacon: '베이컨', sauce: '특제소스', jalapeno: '체리페퍼',
+  dough: '도우', psauce: '토마토소스', pcheese: '모차렐라', pepperoni: '페퍼로니', sausage: '소시지', ham: '햄', mushroom: '버섯', olive: '올리브', pepper: '피망', ponion: '적양파', pineapple: '파인애플' };
+// 버거 재료 (lv: 그 단계부터 써요) · 피자 토핑
+const BURGER_ING = [['patty', 1], ['cheese', 1], ['lettuce', 1], ['tomato', 1], ['onion', 1], ['pickle', 1], ['bacon', 2], ['sauce', 3], ['jalapeno', 5]];
+const PIZZA_TOP = [['pepperoni', 3], ['mushroom', 4], ['olive', 4], ['pepper', 4], ['ponion', 4], ['sausage', 4], ['ham', 4], ['pineapple', 4]];
+// 메뉴 — 실제 미국 프랜차이즈 대표 메뉴의 재료 구성을 참고했어요 (게임에 맞게 단순화)
+const MENU = [
+  { id: 'hamburger', kind: 'burger', name: '클래식 햄버거', ref: '맥도날드 햄버거 스타일', fill: ['patty', 'pickle', 'onion'], price: 5, lv: 1 },
+  { id: 'cheeseburger', kind: 'burger', name: '치즈버거', ref: '맥도날드 치즈버거 스타일', fill: ['patty', 'cheese', 'pickle', 'onion'], price: 6, lv: 1 },
+  { id: 'daves', kind: 'burger', name: '데이브스 싱글', ref: '웬디스 스타일', fill: ['patty', 'cheese', 'lettuce', 'tomato', 'pickle', 'onion'], price: 8, lv: 1 },
+  { id: 'fiveguys', kind: 'burger', name: '베이컨 치즈버거', ref: '파이브가이즈 스타일 (패티 2장)', fill: ['patty', 'patty', 'cheese', 'bacon'], price: 10, lv: 2 },
+  { id: 'whopper', kind: 'burger', name: '와퍼', ref: '버거킹 스타일 (마요·케첩=특제소스)', fill: ['patty', 'lettuce', 'tomato', 'pickle', 'onion'], price: 8, lv: 2 },
+  { id: 'shack', kind: 'burger', name: '쉑버거', ref: '쉐이크쉑 스타일 (쉑소스)', fill: ['patty', 'cheese', 'lettuce', 'tomato', 'sauce'], price: 9, lv: 3 },
+  { id: 'doubledouble', kind: 'burger', name: '더블더블', ref: '인앤아웃 스타일 (패티·치즈 2장 + 스프레드)', fill: ['patty', 'patty', 'cheese', 'cheese', 'lettuce', 'tomato', 'onion', 'sauce'], price: 12, lv: 3 },
+  { id: 'bigmac', kind: 'burger', name: '빅맥', ref: '맥도날드 스타일 (패티 2장·스페셜 소스)', fill: ['patty', 'patty', 'sauce', 'lettuce', 'cheese', 'pickle', 'onion'], price: 11, lv: 4 },
+  { id: 'baconator', kind: 'burger', name: '베이커네이터', ref: '웬디스 스타일 (패티·치즈·베이컨 듬뿍)', fill: ['patty', 'patty', 'cheese', 'cheese', 'bacon', 'bacon', 'sauce'], price: 13, lv: 4 },
+  { id: 'smokeshack', kind: 'burger', name: '스모크쉑', ref: '쉐이크쉑 스타일 (베이컨·체리페퍼)', fill: ['patty', 'cheese', 'bacon', 'jalapeno', 'sauce'], price: 12, lv: 5 },
+  { id: 'animal', kind: 'burger', name: '애니멀 스타일 더블더블', ref: '인앤아웃 비밀메뉴 스타일', fill: ['patty', 'patty', 'cheese', 'cheese', 'lettuce', 'tomato', 'pickle', 'onion', 'sauce'], price: 15, lv: 5 },
+  { id: 'cheesepizza', kind: 'pizza', name: '치즈 피자', ref: '리틀시저스 스타일', tops: [], price: 9, lv: 3, need: 'oven' },
+  { id: 'pepperoni', kind: 'pizza', name: '페퍼로니 피자', ref: '도미노 스타일', tops: ['pepperoni'], price: 11, lv: 3, need: 'oven' },
+  { id: 'hawaiian', kind: 'pizza', name: '하와이안 피자', ref: '피자헛 스타일', tops: ['ham', 'pineapple'], price: 13, lv: 4, need: 'oven' },
+  { id: 'veggie', kind: 'pizza', name: '베지 러버스', ref: '피자헛 스타일', tops: ['mushroom', 'pepper', 'ponion', 'olive'], price: 14, lv: 4, need: 'oven' },
+  { id: 'supreme', kind: 'pizza', name: '슈프림 피자', ref: '피자헛 스타일', tops: ['pepperoni', 'sausage', 'pepper', 'ponion', 'mushroom', 'olive'], price: 17, lv: 4, need: 'oven' },
+  { id: 'meatlover', kind: 'pizza', name: '미트 러버스', ref: '피자헛 스타일', tops: ['pepperoni', 'sausage', 'ham'], price: 16, lv: 5, need: 'oven' },
+];
+// 사이드 (튀김기) · 음료 (음료 바) — t: 만드는 시간(초)
+const SIDES = [
+  { id: 'fries', name: '감자튀김', ref: '맥도날드·파이브가이즈', price: 3, t: 3, lv: 1, need: 'fryer' },
+  { id: 'rings', name: '어니언링', ref: '버거킹 스타일', price: 4, t: 3.5, lv: 2, need: 'fryer' },
+  { id: 'nuggets', name: '치킨너겟', ref: '맥도날드 스타일', price: 4, t: 4, lv: 3, need: 'fryer' },
+  { id: 'cheesefries', name: '치즈프라이', ref: '쉐이크쉑 스타일', price: 5, t: 4, lv: 3, need: 'fryer' },
+  { id: 'mozz', name: '모짜렐라 스틱', ref: '피자헛 스타일', price: 5, t: 4.5, lv: 4, need: 'fryer' },
+  { id: 'wings', name: '버팔로윙', ref: '피자헛·도미노 스타일', price: 7, t: 5, lv: 4, need: 'fryer' },
+  { id: 'animalfries', name: '애니멀 프라이', ref: '인앤아웃 비밀메뉴 스타일', price: 7, t: 5, lv: 5, need: 'fryer' },
+];
+const DRINKS = [
+  { id: 'cola', name: '콜라', price: 2, t: 0.6, lv: 1, need: 'cola' },
+  { id: 'beer', name: '생맥주', price: 4, t: 2, lv: 2, need: 'tap' },
+  { id: 'shake', name: '밀크쉐이크', ref: '쉐이크쉑 스타일', price: 5, t: 3, lv: 3, need: 'shake' },
+];
+const XTRA = Object.fromEntries([...SIDES, ...DRINKS].map(x => [x.id, x]));
+SIDES.forEach(x => x.kind = 'side'); DRINKS.forEach(x => x.kind = 'drink');
+// 직원 직무 (lv: 그 가게 단계부터 뽑아요 · 직무마다 1명) — skills[i]는 직원 레벨 i+1에서 열려요
+const ROLES = {
+  kitchen: { icon: '🍳', name: '주방', lv: 1, wage: 8, skills: ['패티 자동 굽기', '굽는 시간 −20%', '다 구운 피자 자동으로 꺼내기', '굽는 시간 −40%', '패티를 한 번에 2장씩'] },
+  side: { icon: '🍟', name: '사이드', lv: 2, wage: 8, skills: ['주문 들어온 감자튀김 자동 튀김', '튀김 시간 −25%', '주문 들어온 모든 사이드 자동 튀김', '튀김 시간 −50%', '사이드 가격 +20%'] },
+  counter: { icon: '🧾', name: '카운터', lv: 2, wage: 10, skills: ['손님 인내심 +15%', '객단가 +5%', '손님 인내심 +30%', '객단가 +10%', '팁 +25%'] },
+  bar: { icon: '🥤', name: '음료', lv: 3, wage: 10, skills: ['주문 들어온 음료 자동 준비', '음료 준비 시간 −30%', '음료 가격 +15%', '음료 준비 시간 −60%', '음료 가격 +30%'] },
+  serve: { icon: '🍽️', name: '서빙', lv: 3, wage: 12, skills: ['완성된 쟁반을 맞는 손님에게 자동 서빙', '자동 서빙이 더 빨라요', '팁 +10%', '자동 서빙 즉시', '팁 +25%'] },
+  clean: { icon: '🧹', name: '청소', lv: 4, wage: 9, skills: ['평점 깎임 −30%', '평점 깎임 −50%', '평점 오름 +30%', '손님이 10% 더 자주', '평점 오름 +60% · 손님 20% 더 자주'] },
+  manager: { icon: '👔', name: '매니저', lv: 5, wage: 25, skills: ['영업 시간 +10초', '직원 급여 −10%', '영업 시간 +20초', '직원 급여 −20%', '모든 메뉴 가격 +10%'] },
+};
+const ROLE_KEYS = Object.keys(ROLES);
+const STAFF_MAX = [1, 3, 5, 6, 7];   // 가게 단계별 직원 수
+const TRAITS = ['성실함', '손이 빠름', '웃는 얼굴', '요리 학교 출신', '전직 바리스타', '체력왕', '꼼꼼함', '분위기 메이커', '야간 근무 OK', '손님 이름 다 외움'];
+// 체인점 (본점 단계부터) — 미국 지도 위 도시
+const CITIES = [
+  { id: 'ny', name: '뉴욕', lx: -10, ly: 14, la: 'end', lon: -74.0, lat: 40.7, cost: 20000, inc: 140, theme: 'ny' },
+  { id: 'la', name: '로스앤젤레스', lx: 0, ly: 22, lon: -118.2, lat: 34.05, cost: 18000, inc: 125, theme: 'la' },
+  { id: 'chi', name: '시카고', lon: -87.6, lat: 41.9, cost: 15000, inc: 105, theme: 'chi' },
+  { id: 'lv', name: '라스베이거스', lx: 8, ly: -8, la: 'start', lon: -115.1, lat: 36.2, cost: 16000, inc: 115, theme: 'vegas' },
+  { id: 'mia', name: '마이애미', lx: -10, ly: 4, la: 'end', lon: -80.2, lat: 25.8, cost: 14000, inc: 100, theme: 'beach' },
+  { id: 'sf', name: '샌프란시스코', lx: 9, ly: 4, la: 'start', lon: -122.4, lat: 37.8, cost: 15000, inc: 105, theme: 'sf' },
+  { id: 'sea', name: '시애틀', lx: 9, ly: 4, la: 'start', lon: -122.3, lat: 47.6, cost: 12000, inc: 85, theme: 'sea' },
+  { id: 'bos', name: '보스턴', lx: 4, ly: -10, la: 'end', lon: -71.1, lat: 42.4, cost: 11000, inc: 80, theme: 'bos' },
+  { id: 'hou', name: '휴스턴', lx: 0, ly: 20, lon: -95.4, lat: 29.8, cost: 10000, inc: 75, theme: 'tex' },
+  { id: 'nash', name: '내슈빌', lon: -86.8, lat: 36.2, cost: 9000, inc: 68, theme: 'nash' },
+  { id: 'nola', name: '뉴올리언스', lx: 8, ly: 16, la: 'start', lon: -90.1, lat: 29.95, cost: 9000, inc: 68, theme: 'jazz' },
+  { id: 'den', name: '덴버', lon: -105.0, lat: 39.7, cost: 8000, inc: 60, theme: 'mtn' },
+];
+const CHAIN_LV = [{ mul: 1, up: 0 }, { mul: 1.8, up: .6 }, { mul: 2.8, up: 1 }]; // 지점 레벨: 수익 배율, 확장비(개설비 대비)
+const chainVal = ch => Object.entries(ch || {}).reduce((a, [id, b]) => { const c = CITIES.find(x => x.id === id); if (!c) return a; let v = c.cost; for (let i = 1; i < (b.lv || 1); i++) v += Math.round(c.cost * CHAIN_LV[i].up); return a + v; }, 0);
+const chainIncome = ch => Object.entries(ch || {}).reduce((a, [id, b]) => { const c = CITIES.find(x => x.id === id); return a + (c ? Math.round(c.inc * CHAIN_LV[(b.lv || 1) - 1].mul) : 0); }, 0);
 const CHEF_LINES = {
   start: ['자, 오늘도 맛있게 가 보자고!', '그릴 달궈졌다! Alright!', '놀러오세요~ 버거하우스!', '퇴근 후가 진짜 영업이지!'],
   good: ['Alright!', '이게 바로 손맛이지!', '맛있게 드쇼!', '또 오쇼~', 'Yeehaw! 🤠'],
@@ -395,8 +540,8 @@ const todayKST = () => dayKey();
 const stageOf = p => STAGES[Math.min(STAGES.length, Math.max(1, (p && p.stage) || 1)) - 1];
 const stageVal = lv => STAGES.slice(0, lv).reduce((a, s) => a + s.cost, 0);
 const ownVal = own => UPG.reduce((a, u) => a + (own && own[u.id] ? u.c : 0), 0);
-// 보유재산 = 현금 + 가게(확장비) + 설비 값
-const worth = p => (p.money || 0) + stageVal((p && p.stage) || 1) + ownVal(p && p.own);
+// 보유재산 = 현금 + 가게(확장비) + 설비 값 + 체인점 값
+const worth = p => (p.money || 0) + stageVal((p && p.stage) || 1) + ownVal(p && p.own) + chainVal(p && p.chains);
 const salesOn = (p, d) => (((p && p.sales) || {})[d] || {});
 const todaySales = p => salesOn(p, todayKST()).rev || 0;
 const shopName = p => `${stageOf(p).title} · ${p.nick}점`;
@@ -528,19 +673,19 @@ function pizzaSVG(p, w) {
   (p.tops || []).forEach(t => { for (let k = 0; k < 3; k++) { const [x, y] = TOPPOS[(i++) % TOPPOS.length]; s += topping(t, x, y); } });
   return `<svg viewBox="0 0 100 100" width="${w}" height="${w}" aria-hidden="true">${s}</svg>`;
 }
-const colaSVG = w => `<svg viewBox="0 0 40 64" width="${w}" height="${(w * 1.6).toFixed(1)}" aria-hidden="true"><path d="M24 2l-3 14" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/><path d="M24 2l6-1" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="20" cy="16" rx="17" ry="4" fill="#fff" stroke="#2B2220" stroke-width="1.8"/><path d="M4 17L8 60Q8 62 11 62H29Q32 62 32 60L36 17Z" fill="url(#gCola)" stroke="#2B2220" stroke-width="1.8"/><path d="M6 34Q14 28 20 34T35 33L34 42Q27 37 20 42T7 43Z" fill="#fff"/></svg>`;
-const beerSVG = w => `<svg viewBox="0 0 56 64" width="${w}" height="${(w * 64 / 56).toFixed(1)}" aria-hidden="true"><path d="M40 22h6q8 0 8 9v8q0 9-8 9h-6" fill="none" stroke="#2B2220" stroke-width="5"/><path d="M40 22h6q8 0 8 9v8q0 9-8 9h-6" fill="none" stroke="#E9F4FA" stroke-width="2.2"/><rect x="4" y="14" width="38" height="48" rx="5" fill="url(#gBeer)" stroke="#2B2220" stroke-width="2"/><path d="M10 22v32M18 22v32M26 22v32M34 22v32" stroke="#FFE08A" stroke-width="1.6" opacity=".55"/><path d="M2 18q0-10 9-9q3-7 12-5q7-5 14 1q9-1 8 8q2 7-6 7H8q-7 0-6-2z" fill="#FFFDF5" stroke="#2B2220" stroke-width="2"/><circle cx="13" cy="44" r="1.5" fill="#FFF3C4"/><circle cx="28" cy="34" r="1.3" fill="#FFF3C4"/><circle cx="22" cy="52" r="1.2" fill="#FFF3C4"/></svg>`;
-const friesSVG = w => `<svg viewBox="0 0 52 60" width="${w}" height="${(w * 60 / 52).toFixed(1)}" aria-hidden="true">${[[10, 6, -10], [16, 2, -4], [22, 5, 2], [28, 1, 6], [34, 4, 10], [40, 7, 14], [19, 10, -2], [31, 9, 8]].map(([x, y, r]) => `<rect x="${x}" y="${y}" width="6" height="30" rx="2" fill="#FFD447" stroke="#C98A10" stroke-width="1.3" transform="rotate(${r} ${x + 3} ${y + 30})"/>`).join('')}<path d="M6 24L11 58H41L46 24Q26 32 6 24Z" fill="#D33A31" stroke="#2B2220" stroke-width="2"/><path d="M26 38l2 4.5 5 .4-3.8 3.2 1.2 4.9-4.4-2.7-4.4 2.7 1.2-4.9-3.8-3.2 5-.4z" fill="#fff"/></svg>`;
-function orderSVG(o, w) {
+let colaSVG = w => `<svg viewBox="0 0 40 64" width="${w}" height="${(w * 1.6).toFixed(1)}" aria-hidden="true"><path d="M24 2l-3 14" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/><path d="M24 2l6-1" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="20" cy="16" rx="17" ry="4" fill="#fff" stroke="#2B2220" stroke-width="1.8"/><path d="M4 17L8 60Q8 62 11 62H29Q32 62 32 60L36 17Z" fill="url(#gCola)" stroke="#2B2220" stroke-width="1.8"/><path d="M6 34Q14 28 20 34T35 33L34 42Q27 37 20 42T7 43Z" fill="#fff"/></svg>`;
+let beerSVG = w => `<svg viewBox="0 0 56 64" width="${w}" height="${(w * 64 / 56).toFixed(1)}" aria-hidden="true"><path d="M40 22h6q8 0 8 9v8q0 9-8 9h-6" fill="none" stroke="#2B2220" stroke-width="5"/><path d="M40 22h6q8 0 8 9v8q0 9-8 9h-6" fill="none" stroke="#E9F4FA" stroke-width="2.2"/><rect x="4" y="14" width="38" height="48" rx="5" fill="url(#gBeer)" stroke="#2B2220" stroke-width="2"/><path d="M10 22v32M18 22v32M26 22v32M34 22v32" stroke="#FFE08A" stroke-width="1.6" opacity=".55"/><path d="M2 18q0-10 9-9q3-7 12-5q7-5 14 1q9-1 8 8q2 7-6 7H8q-7 0-6-2z" fill="#FFFDF5" stroke="#2B2220" stroke-width="2"/><circle cx="13" cy="44" r="1.5" fill="#FFF3C4"/><circle cx="28" cy="34" r="1.3" fill="#FFF3C4"/><circle cx="22" cy="52" r="1.2" fill="#FFF3C4"/></svg>`;
+let friesSVG = w => `<svg viewBox="0 0 52 60" width="${w}" height="${(w * 60 / 52).toFixed(1)}" aria-hidden="true">${[[10, 6, -10], [16, 2, -4], [22, 5, 2], [28, 1, 6], [34, 4, 10], [40, 7, 14], [19, 10, -2], [31, 9, 8]].map(([x, y, r]) => `<rect x="${x}" y="${y}" width="6" height="30" rx="2" fill="#FFD447" stroke="#C98A10" stroke-width="1.3" transform="rotate(${r} ${x + 3} ${y + 30})"/>`).join('')}<path d="M6 24L11 58H41L46 24Q26 32 6 24Z" fill="#D33A31" stroke="#2B2220" stroke-width="2"/><path d="M26 38l2 4.5 5 .4-3.8 3.2 1.2 4.9-4.4-2.7-4.4 2.7 1.2-4.9-3.8-3.2 5-.4z" fill="#fff"/></svg>`;
+var orderSVG = function (o, w) {
   let s = o.kind === 'burger' ? burgerSVG(o.fill, true, w) : pizzaSVG({ sauce: true, cheese: true, tops: o.tops, baked: true }, w * .82);
   if (o.fries) s += friesSVG(w * .42); if (o.cola) s += colaSVG(w * .3); if (o.beer) s += beerSVG(w * .4);
   return s;
 }
 // 재료 버튼 작은 그림
-function iconSVG(k) {
+var iconSVG = function (k) {
   if (LAYER[k]) { const t = LAYER[k].t, y = Math.max(0, (30 - t) / 2); return `<svg viewBox="0 -2 100 34">${LAYER[k].d(k === 'top' ? -2 : y)}</svg>`; }
   if (k === 'dough') return `<svg viewBox="0 0 100 34"><ellipse cx="50" cy="17" rx="46" ry="14" fill="#F3D7A2" stroke="#8A5420" stroke-width="2.4"/></svg>`;
-  if (k === 'sauce') return `<svg viewBox="0 0 100 34"><ellipse cx="50" cy="17" rx="40" ry="12" fill="#D2402F" stroke="#7A1C12" stroke-width="2.4"/></svg>`;
+  if (k === 'sauce_p') return `<svg viewBox="0 0 100 34"><ellipse cx="50" cy="17" rx="40" ry="12" fill="#D2402F" stroke="#7A1C12" stroke-width="2.4"/></svg>`;
   if (k === 'pcheese') return `<svg viewBox="0 0 100 34"><path d="M20 26L50 4L82 26Z" fill="#FFE07A" stroke="#C9930F" stroke-width="2.4" stroke-linejoin="round"/><circle cx="48" cy="18" r="3" fill="#F5C842"/><circle cx="62" cy="22" r="2.4" fill="#F5C842"/></svg>`;
   if (['pepperoni', 'mushroom', 'olive'].includes(k)) return `<svg viewBox="28 3 44 28">${topping(k, 42, 17)}${topping(k, 58, 17)}</svg>`;
   if (k === 'cola') return colaSVG(14).replace('<svg ', '<svg style="width:22px;height:30px" ');
@@ -551,6 +696,56 @@ function iconSVG(k) {
   return '';
 }
 
+// 새 버거 재료 층
+Object.assign(LAYER, {
+  onion: { t: 6, d: y => [14, 34, 54, 74].map(x => `<ellipse cx="${x + 6}" cy="${y + 3}" rx="10" ry="3.2" fill="#F6E7F2" stroke="#9C5C8E" stroke-width="1.6"/>`).join('') },
+  pickle: { t: 6, d: y => [10, 30, 50, 70].map(x => `<ellipse cx="${x + 10}" cy="${y + 3}" rx="9" ry="3.4" fill="#8DBA45" stroke="#3E6A1C" stroke-width="1.5"/><circle cx="${x + 7}" cy="${y + 3}" r=".9" fill="#E6F2C2"/><circle cx="${x + 13}" cy="${y + 3}" r=".9" fill="#E6F2C2"/>`).join('') },
+  sauce: { t: 5, d: y => `<path d="M4 ${y + 1}H96Q98 ${y + 3} 92 ${y + 4}Q86 ${y + 9} 82 ${y + 4}H64Q60 ${y + 10} 56 ${y + 4}H34Q30 ${y + 8} 26 ${y + 4}H8Q2 ${y + 3} 4 ${y + 1}Z" fill="#F4996B" stroke="#C25B33" stroke-width="1.4"/>` },
+  jalapeno: { t: 6, d: y => [8, 24, 40, 56, 72, 86].map((x, i) => `<rect x="${x}" y="${y + (i % 2)}" width="9" height="5" rx="2" fill="${i % 2 ? '#D9372B' : '#F05A3C'}" stroke="#7A1C12" stroke-width="1.2"/>`).join('') },
+});
+// 새 피자 토핑
+const _topping0 = topping;
+topping = function (t, x, y) {
+  if (t === 'sausage') return `<circle cx="${x - 2}" cy="${y}" r="3.6" fill="#7A4A2A" stroke="#4A2A14" stroke-width="1"/><circle cx="${x + 3}" cy="${y + 2}" r="3" fill="#8C5634" stroke="#4A2A14" stroke-width="1"/>`;
+  if (t === 'ham') return `<rect x="${x - 5}" y="${y - 5}" width="10" height="9" rx="1.5" fill="#F4A7A0" stroke="#B5615A" stroke-width="1.1" transform="rotate(12 ${x} ${y})"/>`;
+  if (t === 'pepper') return `<path d="M${x - 7} ${y + 2}Q${x} ${y - 7} ${x + 7} ${y + 2}" fill="none" stroke="#2F8F2F" stroke-width="3.2" stroke-linecap="round"/>`;
+  if (t === 'ponion') return `<path d="M${x - 6} ${y + 3}Q${x} ${y - 6} ${x + 6} ${y + 3}" fill="none" stroke="#9C3D8E" stroke-width="2.4" stroke-linecap="round"/>`;
+  if (t === 'pineapple') return `<path d="M${x} ${y - 6}L${x + 6} ${y + 4}H${x - 6}Z" fill="#FFD447" stroke="#C99A10" stroke-width="1.2" stroke-linejoin="round"/>`;
+  return _topping0(t, x, y);
+};
+// 사이드·음료 그림
+const box = (inner, body) => `${inner}<path d="M6 24L11 58H41L46 24Q26 32 6 24Z" fill="${body || '#D33A31'}" stroke="#2B2220" stroke-width="2"/><path d="M26 38l2 4.5 5 .4-3.8 3.2 1.2 4.9-4.4-2.7-4.4 2.7 1.2-4.9-3.8-3.2 5-.4z" fill="#fff"/>`;
+const sticks = (c = '#FFD447', s = '#C98A10') => [[10, 6, -10], [16, 2, -4], [22, 5, 2], [28, 1, 6], [34, 4, 10], [40, 7, 14], [19, 10, -2], [31, 9, 8]].map(([x, y, r]) => `<rect x="${x}" y="${y}" width="6" height="30" rx="2" fill="${c}" stroke="${s}" stroke-width="1.3" transform="rotate(${r} ${x + 3} ${y + 30})"/>`).join('');
+const XSVG = {
+  fries: () => box(sticks()),
+  cheesefries: () => box(sticks() + '<path d="M8 16Q14 8 20 16T32 14T44 16Q42 24 26 24T8 16Z" fill="#FFC52E" stroke="#C98A10" stroke-width="1.3"/>', '#24324D'),
+  animalfries: () => box(sticks() + '<path d="M8 16Q14 8 20 16T32 14T44 16Q42 24 26 24T8 16Z" fill="#FFC52E" stroke="#C98A10" stroke-width="1.3"/><path d="M12 14q6-4 10 0t10 0t10 0" stroke="#F4996B" stroke-width="3" fill="none"/><circle cx="18" cy="12" r="2" fill="#8C5634"/><circle cx="34" cy="12" r="2" fill="#8C5634"/>', '#E64980'),
+  rings: () => `<ellipse cx="26" cy="46" rx="22" ry="11" fill="#fff" stroke="#2B2220" stroke-width="2"/>${[[16, 30], [36, 30], [26, 20], [26, 40]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="11" ry="8" fill="none" stroke="#B9772A" stroke-width="7"/><ellipse cx="${x}" cy="${y}" rx="11" ry="8" fill="none" stroke="#E9A84C" stroke-width="4"/>`).join('')}`,
+  nuggets: () => box([[14, 16], [26, 12], [38, 17], [20, 22], [33, 23]].map(([x, y]) => `<path d="M${x - 7} ${y}Q${x - 6} ${y - 7} ${x} ${y - 6}Q${x + 8} ${y - 6} ${x + 7} ${y + 1}Q${x + 6} ${y + 6} ${x} ${y + 5}Q${x - 8} ${y + 6} ${x - 7} ${y}Z" fill="#E3A14A" stroke="#9A5E1C" stroke-width="1.4"/>`).join(''), '#F6B731'),
+  mozz: () => `<ellipse cx="26" cy="48" rx="23" ry="10" fill="#fff" stroke="#2B2220" stroke-width="2"/>${[[8, 26, -14], [16, 22, -4], [24, 24, 6], [32, 22, 14]].map(([x, y, r]) => `<rect x="${x}" y="${y}" width="9" height="24" rx="4" fill="#E9A84C" stroke="#9A5E1C" stroke-width="1.4" transform="rotate(${r} ${x + 4} ${y + 24})"/>`).join('')}<path d="M36 26q6 4 4 10" stroke="#FFF6C2" stroke-width="3" fill="none"/>`,
+  wings: () => `<ellipse cx="26" cy="48" rx="23" ry="10" fill="#fff" stroke="#2B2220" stroke-width="2"/>${[[14, 36, -20], [28, 32, 10], [38, 40, 30], [22, 44, 0]].map(([x, y, r]) => `<g transform="rotate(${r} ${x} ${y})"><ellipse cx="${x}" cy="${y}" rx="10" ry="6.5" fill="#D9531E" stroke="#7A2A0C" stroke-width="1.4"/><circle cx="${x + 9}" cy="${y}" r="2.5" fill="#F4E6CF" stroke="#7A2A0C" stroke-width="1"/></g>`).join('')}`,
+  cola: () => `<g transform="translate(6 0) scale(1)"><path d="M24 2l-3 14" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="20" cy="16" rx="17" ry="4" fill="#fff" stroke="#2B2220" stroke-width="1.8"/><path d="M4 17L8 58Q8 60 11 60H29Q32 60 32 58L36 17Z" fill="url(#gCola)" stroke="#2B2220" stroke-width="1.8"/><path d="M6 34Q14 28 20 34T35 33L34 42Q27 37 20 42T7 43Z" fill="#fff"/></g>`,
+  beer: () => `<path d="M38 22h5q7 0 7 8v8q0 8-7 8h-5" fill="none" stroke="#2B2220" stroke-width="4.5"/><rect x="4" y="14" width="36" height="46" rx="5" fill="url(#gBeer)" stroke="#2B2220" stroke-width="2"/><path d="M2 18q0-10 9-9q3-7 12-5q7-5 14 1q8-1 7 8q2 7-6 7H8q-7 0-6-2z" fill="#FFFDF5" stroke="#2B2220" stroke-width="2"/>`,
+  shake: () => `<path d="M30 0l-4 14" stroke="#E64980" stroke-width="3" stroke-linecap="round"/><path d="M10 12q-2-10 8-9q4-6 10-1q10-2 8 9z" fill="#FFF6F0" stroke="#2B2220" stroke-width="1.8"/><circle cx="28" cy="3" r="3.5" fill="#D33A31" stroke="#2B2220" stroke-width="1.2"/><path d="M9 14L13 58Q13 60 16 60H32Q35 60 35 58L39 14Z" fill="#F7B6CC" stroke="#2B2220" stroke-width="1.8"/><path d="M11 30H37" stroke="#fff" stroke-width="3"/>`,
+};
+const xtraSVG = (id, w) => `<svg viewBox="0 0 52 62" width="${w}" height="${(w * 62 / 52).toFixed(1)}" aria-hidden="true">${(XSVG[id] || XSVG.fries)()}</svg>`;
+friesSVG = w => xtraSVG('fries', w);
+colaSVG = w => xtraSVG('cola', w);
+beerSVG = w => xtraSVG('beer', w);
+// 주문(메뉴 + 사이드 + 음료) 그림 · 재료 아이콘 확장
+orderSVG = function (o, w) {
+  const m = MENU_BY[o.menu]; if (!m) return '';
+  let h = m.kind === 'burger' ? burgerSVG(m.fill, true, w) : pizzaSVG({ sauce: true, cheese: true, tops: m.tops, baked: true }, w * .82);
+  if (o.side) h += xtraSVG(o.side, w * .42); if (o.drink) h += xtraSVG(o.drink, w * .36);
+  return h;
+};
+const _icon0 = iconSVG;
+iconSVG = function (k) {
+  if (k === 'psauce') return _icon0('sauce_p');
+  if (['sausage', 'ham', 'pepper', 'ponion', 'pineapple'].includes(k)) return `<svg viewBox="28 3 44 28">${topping(k, 42, 17)}${topping(k, 58, 17)}</svg>`;
+  if (XTRA[k]) return xtraSVG(k, 22).replace('<svg ', '<svg style="width:26px;height:30px" ');
+  return _icon0(k);
+};
 /* ══════════ 그림: 준탁 셰프 (썸네일의 수염 사장님) ══════════ */
 const CHEF_SVG = '<img class="chefimg" src="img/chef.webp" alt="준탁 셰프" draggable="false">';
 const chefImg = w => `<img src="img/chef.webp" alt="준탁 셰프" style="width:${w}px;flex:none;height:auto">`;
@@ -672,6 +867,8 @@ function setMe(v) {
   me = v; me.own = me.own || {};
   if (cur === 'lobby') renderLobby();
   if (cur === 'shop') renderShop();
+  if (cur === 'staff') renderStaff();
+  if (cur === 'chain') renderChain();
   if (G && G.running) renderHud();
 }
 async function enter(code, player) {
@@ -728,7 +925,7 @@ function show(name) {
   if (liveOff) { liveOff(); liveOff = null; }
   for (const s of document.querySelectorAll('body > section')) s.classList.add('hidden');
   ($('#' + (name === 'game' ? 'game' : 's-' + name))).classList.remove('hidden');
-  ({ login: renderLogin, lobby: renderLobby, shop: renderShop, friends: renderFriends, rank: renderRank, admin: renderAdmin }[name] || (() => {}))();
+  ({ login: renderLogin, lobby: renderLobby, shop: renderShop, friends: renderFriends, rank: renderRank, admin: renderAdmin, staff: renderStaff, menu: renderMenu, chain: renderChain }[name] || (() => {}))();
   window.scrollTo(0, 0);
 }
 
@@ -810,19 +1007,26 @@ function renderLobby() {
         <div class="small muted">내 코드 <b>${esc(myCode || '')}</b> · 영업 ${me.rounds || 0}번 · 손님 ${me.served || 0}명 · ★${(me.rating || 3).toFixed(1)}</div></div></div>
       <div class="stat3"><div>현금<b class="num">${usd(me.money)}</b></div><div>보유재산<b class="num">${usd(worth(me))}</b></div><div>오늘 매출<b class="num">${usd(todaySales(me))}</b></div></div>
       <div class="stagebar">${STAGES.map(s => `<i class="${s.lv <= st.lv ? 'on' : ''}" title="${esc(s.name)}"></i>`).join('')}</div>
+      <div class="small muted">👥 직원 ${staffList(me).length}명 · 급여 ${usd(payroll(me))}/영업${Object.keys(me.chains || {}).length ? ` · 🗺️ 체인점 ${Object.keys(me.chains).length}곳 +${usd(chainIncome(me.chains))}/영업` : ''}</div>
     </div>
-    <button class="btn red big" id="lbPlay">🍔 영업 시작!<small>${CFG.dayLen}초 동안 주문대로 만들어 팔아요 · 번 돈은 바로 내 돈</small></button>
-    <div class="grid2"><button class="btn teal" id="lbShop">🛠️ 가게 키우기<small>확장 · 설비 사기</small></button><button class="btn navy rel" id="lbFriends">👫 친구 가게<small>놀러가기 · 친구 추가</small></button></div>
-    <div class="grid2"><button class="btn rel" id="lbBook">📒 내 방명록${visitors ? `<span class="dot">${visitors}</span>` : ''}<small>오늘 놀러온 친구 ${visitors}명</small></button><button class="btn ghost" id="lbRank">🏆 랭킹<small>보유재산 · 오늘 매출</small></button></div>
+    <button class="btn red big" id="lbPlay">🍔 영업 시작!<small>${CFG.dayLen}초 동안 주문서대로 만들어 팔아요 · 번 돈은 바로 내 돈</small></button>
+    <div class="grid2"><button class="btn teal" id="lbShop">🛠️ 가게 키우기<small>확장 · 설비 사기</small></button><button class="btn navy rel" id="lbStaff">👥 직원 ${staffList(me).length}/${staffMax(me)}${me.job ? '<span class="dot">!</span>' : ''}<small>채용 공고 · 교육 · 급여 ${usd(payroll(me))}/영업</small></button></div>
+    <div class="grid2"><button class="btn" id="lbMenu">📋 메뉴판<small>판매 중 ${MENU.filter(m => st.lv >= m.lv && (!m.need || (me.own || {})[m.need])).length}종 · 레시피 보기</small></button><button class="btn ${st.lv >= 5 ? 'red' : 'ghost'}" id="lbChain">🗺️ 체인점<small>${st.lv >= 5 ? `${Object.keys(me.chains || {}).length}곳 · +${usd(chainIncome(me.chains))}/영업` : '🔒 본점(Lv.5)부터'}</small></button></div>
+    <div class="grid2"><button class="btn navy" id="lbFriends">👫 친구 가게<small>놀러가기 · 친구 추가</small></button><button class="btn rel" id="lbBook">📒 내 방명록${visitors ? `<span class="dot">${visitors}</span>` : ''}<small>오늘 놀러온 친구 ${visitors}명</small></button></div>
+    <button class="btn ghost" id="lbRank">🏆 오픈 랭킹 · 보유재산 / 오늘 매출</button>
     <div class="card small" style="display:grid;gap:4px"><b style="font:400 16px/1.2 var(--d)">이렇게 해요</b>
-      <span>① 아래빵 → 재료 → 위빵 순서로 쟁반에 버거를 만들어요 (재료 순서는 상관없어요)</span>
-      <span>② 패티는 그릴에서 먼저 구워야 써요. 미리 구워 두면 빨라요</span>
-      <span>③ 다 만들면 그 손님을 눌러서 내줘요. 빨리 낼수록 팁이 커요 · 친구 손님 팁 2배, ✨초희귀 고란·준탁은 팁 3배!</span>
-      <span>④ 번 돈으로 트럭 → 스탠드 → 다이너 → 버거하우스 → 본점까지 키워요</span></div>
+      <span>① 장면 아래 <b>주문서</b>에 레시피가 나와요. 아래빵 → 재료 → 위빵 순서로 쟁반에 만들어요 (재료 순서는 상관없고, 맞게 담긴 재료는 초록색)</span>
+      <span>② 사이드·음료는 아래 버튼으로 튀기거나 따라요. 다 되면 쟁반에 올라가요</span>
+      <span>③ 다 만들면 손님을 눌러서 내줘요. 빨리 낼수록 팁이 커요 · 친구 손님 팁 2배, ✨초희귀 고란·준탁은 팁 3배!</span>
+      <span>④ 직원을 뽑으면 패티 굽기·튀김·음료·서빙을 대신 해 줘요. 급여는 영업마다 나가요</span>
+      <span>⑤ 트럭 → 스탠드 → 다이너 → 버거하우스 → 본점, 그다음은 미국 전역 체인점!</span></div>
     <div class="grid3"><button class="btn ghost" id="lbSound">${Sound.on ? '🔊 소리' : '🔇 소리'}</button><button class="btn ghost" id="lbAdmin">🔐 어드민</button><button class="btn ghost" id="lbOut">로그아웃</button></div>
     <p class="mode-note">${db.mode === 'local' ? '오프라인 모드 · 이 기기에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
   $('#lbPlay').onclick = startRound;
   $('#lbShop').onclick = () => show('shop');
+  $('#lbStaff').onclick = () => show('staff');
+  $('#lbMenu').onclick = () => show('menu');
+  $('#lbChain').onclick = () => show('chain');
   $('#lbFriends').onclick = () => show('friends');
   $('#lbBook').onclick = () => openVisit(me.pid);
   $('#lbRank').onclick = () => show('rank');
@@ -841,12 +1045,12 @@ function renderShop() {
       <b style="font:400 18px/1.2 var(--d)">🏗️ 가게 확장 · 지금 Lv.${st.lv} ${st.icon} ${esc(st.name)}</b>
       <div class="stagebar">${STAGES.map(s => `<i class="${s.lv <= st.lv ? 'on' : ''}"></i>`).join('')}</div>
       ${nx ? `<div class="scene mini" style="height:170px">${sceneHTML(nx.lv, `${nx.title} · ${me.nick}점`, { mini: true })}</div>
-        <div class="up"><div><div class="n">${nx.icon} Lv.${nx.lv} ${esc(nx.name)}</div><div class="d">손님 자리 ${nx.seats}개 · 메뉴 값 ×${nx.mul} · 손님이 더 자주 와요${nx.lv === 2 ? ' · 베이컨 메뉴' : nx.lv === 3 ? ' · 더블 패티 · 피자 오븐/알바생 설비' : nx.lv === 4 ? ' · 네온 간판 설비' : ''}</div></div>
+        <div class="up"><div><div class="n">${nx.icon} Lv.${nx.lv} ${esc(nx.name)}</div><div class="d">손님 자리 ${nx.seats}개 · 메뉴 값 ×${nx.mul} · 직원 ${STAFF_MAX[nx.lv - 1]}명 · 새 직무 ${ROLE_KEYS.filter(r => ROLES[r].lv === nx.lv).map(r => ROLES[r].icon + ROLES[r].name).join(' ') || '없음'}<br>새 메뉴: ${[...MENU, ...SIDES, ...DRINKS].filter(m => m.lv === nx.lv).map(m => m.name).join(', ')}${nx.lv === 5 ? '<br>🗺️ 미국 전역 체인점 오픈!' : ''}</div></div>
         <button class="btn sm red" id="spStage" ${me.money < nx.cost ? 'disabled' : ''}>${usd(nx.cost)}</button></div>`
         : '<p class="small">🌟 최고 단계 본점이에요! 이제 매출 랭킹 1위를 노려 봐요.</p>'}
     </div>
     <b style="font:400 18px/1.2 var(--d);margin-top:4px">🔧 설비</b>
-    <div class="list">${UPG.map(u => {
+    <div class="list">${UPG.filter(u => !u.hide).map(u => {
       const own = !!me.own[u.id], lock = st.lv < u.lv || (u.need && !me.own[u.need]);
       return `<div class="up ${own ? 'own' : lock ? 'lock' : ''}"><div><div class="n">${u.icon} ${esc(u.n)}</div><div class="d">${esc(u.d)}${lock && !own ? ` · ${st.lv < u.lv ? `Lv.${u.lv} ${STAGES[u.lv - 1].name}부터` : '그릴 한 칸 더 먼저'}` : ''}</div></div>
         <button class="btn sm ${own ? 'ghost' : 'teal'}" data-buy="${u.id}" ${own || lock || me.money < u.c ? 'disabled' : ''}>${own ? '보유' : usd(u.c)}</button></div>`;
@@ -997,7 +1201,7 @@ function renderRank() {
   const draw = () => {
     const today = todayKST();
     const val = rankTab === 'worth' ? worth : p => todaySales(p);
-    $('#rkNote').textContent = rankTab === 'worth' ? '보유재산 = 현금 + 가게 확장비 + 설비 값' : `오늘(${today.slice(5).replace('-', '/')}, 아침 ${CFG.dailyHour}시 기준) 번 매출 합계 · 실시간`;
+    $('#rkNote').textContent = rankTab === 'worth' ? '보유재산 = 현금 + 가게 확장비 + 설비 값 + 체인점 값' : `오늘(${today.slice(5).replace('-', '/')}, 아침 ${CFG.dailyHour}시 기준) 번 매출 합계 · 실시간`;
     const list = ps.filter(p => rankTab === 'worth' || val(p) > 0).sort((a, b) => val(b) - val(a) || (a.createdAt || 0) - (b.createdAt || 0));
     $('#rkList').innerHTML = list.length ? list.slice(0, 80).map((p, i) => `<div class="li ${me && p.pid === me.pid ? 'me' : ''}" data-pid="${p.pid}" style="cursor:pointer"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(p.char, 's')}<div class="grow"><div class="nm">${esc(p.nick)}<span class="lvb">${stageOf(p).icon} Lv.${stageOf(p).lv}</span></div></div><b class="money num">${usd(val(p))}</b></div>`).join('')
       : '<p class="muted small" style="text-align:center">아직 아무도 없어요</p>';
@@ -1132,92 +1336,316 @@ function drawSales(ps) {
   $('#slBars').onclick = e => { const b = e.target.closest('[data-d]'); if (b) { salesPeriod = b.dataset.d === today ? 'today' : b.dataset.d === yday ? 'yday' : b.dataset.d; drawSales(ps); } };
 }
 
-/* ══════════ 게임 (영업 90초) ══════════ */
+/* ══════════ 직원 (채용 공고 · 급여 · 교육) ══════════ */
+const staffMax = p => STAFF_MAX[stageOf(p).lv - 1];
+const rolesOpen = p => ROLE_KEYS.filter(r => ROLES[r].lv <= stageOf(p).lv);
+const trainCost = s => 60 * (s.lv || 1) * (s.lv || 1) * 2;
+const xpNeed = s => (s.lv || 1) * 3;
+const postFee = p => 20 * stageOf(p).lv;
+const shortName = id => nameOf(id).replace(/^(히든|초희귀)\s?/, '');
+function genCands(role, p) {
+  const top = Math.min(3, stageOf(p).lv);
+  return Array.from({ length: 3 }, () => {
+    const r = Math.random(), lv = Math.min(top, r < .6 ? 1 : r < .9 ? 2 : 3);
+    const char = pick(CH.filter(id => !HID[id].rare));
+    return { id: genCode(6, 'abcdefghjkmnpqrstuvwxyz23456789'), role, char, name: shortName(char), lv, trait: pick(TRAITS),
+      wage: Math.max(3, Math.round(ROLES[role].wage * (1 + .45 * (lv - 1)) * (.85 + Math.random() * .3))) };
+  });
+}
+let staffPickRole = null;
+function renderStaff() {
+  if (!me) return show('login');
+  const st = stageOf(me), list = staffList(me), max = staffMax(me), open = rolesOpen(me), filled = new Set(list.map(s => s.role));
+  const job = me.job && ROLES[me.job.role] ? me.job : null;
+  if (!staffPickRole || filled.has(staffPickRole) || !open.includes(staffPickRole)) staffPickRole = open.find(r => !filled.has(r)) || null;
+  const el = $('#s-staff');
+  el.innerHTML = `<div class="toprow"><button class="back" id="sfBack">← 가게</button><h2>👥 직원</h2><span class="money num" style="min-width:64px;text-align:right">${usd(me.money)}</span></div>
+    <div class="card" style="display:grid;gap:6px"><div class="row" style="justify-content:space-between"><b style="font:400 18px/1.2 var(--d)">직원 ${list.length} / ${max}명</b><span class="small">영업 1회 급여 합계 <b style="color:var(--red-d)">${usd(payroll(me))}</b></span></div>
+      <p class="small muted">급여는 영업이 끝날 때마다 나가요. 직원은 영업할 때마다 경험치가 쌓이고, 교육하면 레벨이 올라 할 수 있는 일이 늘어나요 (최고 Lv.5). 가게를 키우면 자리와 직무가 늘어나요: ${STAGES.map((s, i) => `${s.icon}${STAFF_MAX[i]}명`).join(' · ')}</p></div>
+    <div class="list">${list.length ? list.map(s => { const R = ROLES[s.role], need = xpNeed(s), cost = trainCost(s), lv = s.lv || 1; return `<div class="card staff" data-sid="${s.id}">
+      <div class="row">${faceEl(s.char, 'l')}<div class="grow"><div style="font:400 19px/1.2 var(--d)">${esc(s.name)} <span class="lvb">${R.icon} ${R.name}</span></div>
+        <div class="small muted">${'★'.repeat(lv)}${'☆'.repeat(5 - lv)} Lv.${lv} · ${esc(s.trait || '')} · 급여 <b>${usd(s.wage)}</b>/영업</div>
+        <div class="xpbar" title="경험치"><i style="width:${Math.min(100, (s.xp || 0) / need * 100)}%"></i><span>${lv >= 5 ? '최고 레벨' : `경험 ${s.xp || 0}/${need}`}</span></div></div></div>
+      <ul class="skills">${R.skills.map((t, i) => `<li class="${i < lv ? 'on' : ''}">${i < lv ? '✅' : '🔒'} <b>Lv.${i + 1}</b> ${esc(t)}</li>`).join('')}</ul>
+      <div class="grid2"><button class="btn sm teal" data-train="${s.id}" ${lv >= 5 || (s.xp || 0) < need || me.money < cost ? 'disabled' : ''}>📚 교육 ${lv >= 5 ? '완료' : usd(cost)}${lv < 5 && (s.xp || 0) < need ? ` (영업 ${need - (s.xp || 0)}번 더)` : ''}</button><button class="btn sm ghost" data-fire="${s.id}">해고</button></div></div>`; }).join('')
+      : '<p class="muted small" style="text-align:center">아직 직원이 없어요. 아래에서 채용 공고를 올려 보세요!</p>'}</div>
+    <div class="card" style="display:grid;gap:10px"><b style="font:400 19px/1.2 var(--d)">📢 채용 공고</b>
+      <div class="roles">${ROLE_KEYS.map(r => { const R = ROLES[r], ok = open.includes(r), f = filled.has(r); return `<button class="rolebtn ${staffPickRole === r ? 'on' : ''}" data-role="${r}" ${!ok || f ? 'disabled' : ''}><span>${R.icon}</span>${R.name}<small>${f ? '채용됨' : ok ? `기본 ${usd(R.wage)}` : `Lv.${R.lv}부터`}</small></button>`; }).join('')}</div>
+      ${staffPickRole ? `<div class="small"><b>${ROLES[staffPickRole].icon} ${ROLES[staffPickRole].name}</b>이 하는 일: ${ROLES[staffPickRole].skills.map((t, i) => `Lv.${i + 1} ${t}`).join(' · ')}</div>
+        <button class="btn red" id="sfPost" ${list.length >= max || me.money < postFee(me) ? 'disabled' : ''}>📢 ${ROLES[staffPickRole].name} 공고 올리기 (${usd(postFee(me))})${list.length >= max ? ' · 자리가 꽉 찼어요' : ''}</button>` : '<p class="small muted">지금 단계에서 뽑을 수 있는 직무는 모두 채웠어요. 가게를 키우면 새 직무가 열려요.</p>'}
+      ${job ? `<div class="jobbox"><b>${ROLES[job.role].icon} ${ROLES[job.role].name} 지원자 ${job.cands.length}명</b>
+        ${job.cands.map(c => `<div class="li"><span>${faceEl(c.char)}</span><div class="grow"><div class="nm">${esc(c.name)} <span class="lvb">Lv.${c.lv}</span></div><div class="sub">${esc(c.trait)} · 희망 급여 ${usd(c.wage)}/영업</div></div><button class="btn sm teal" data-hire="${c.id}" style="flex:none" ${filled.has(job.role) || list.length >= max ? 'disabled' : ''}>채용</button></div>`).join('')}
+        <button class="btn sm ghost" id="sfDrop">공고 내리기</button></div>` : ''}
+    </div>`;
+  $('#sfBack').onclick = () => show('lobby');
+  el.querySelectorAll('[data-role]').forEach(b => b.onclick = () => { staffPickRole = b.dataset.role; renderStaff(); });
+  if ($('#sfPost')) $('#sfPost').onclick = async () => {
+    const role = staffPickRole, fee = postFee(me), cands = genCands(role, me);
+    const r = await txMe(c => { if ((c.money || 0) < fee) return undefined; c.money -= fee; c.job = { role, at: Date.now(), cands }; return c; }).catch(() => null);
+    if (r && r.committed) { Sound.play('ding'); toast(`📢 공고를 올렸어요! 지원자 ${cands.length}명이 왔어요`); } else toast('돈이 모자라거나 연결이 불안정해요');
+  };
+  if ($('#sfDrop')) $('#sfDrop').onclick = () => txMe(c => { if (!c.job) return undefined; delete c.job; return c; });
+  el.querySelectorAll('[data-hire]').forEach(b => b.onclick = async () => {
+    const r = await txMe(c => {
+      const jb = c.job; if (!jb) return undefined; const cd = (jb.cands || []).find(x => x.id === b.dataset.hire); if (!cd) return undefined;
+      const cur = Object.values(c.staff || {}).filter(Boolean);
+      if (cur.length >= staffMax(c) || cur.some(s => s.role === cd.role)) return undefined;
+      c.staff = c.staff || {}; c.staff[cd.id] = { ...cd, xp: 0, at: Date.now() }; delete c.job; return c;
+    }).catch(() => null);
+    if (r && r.committed) { Sound.play('buy'); toast('🤝 채용했어요! 다음 영업부터 같이 일해요'); } else toast('채용하지 못했어요');
+  });
+  el.querySelectorAll('[data-train]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.train; let nl = 0;
+    const r = await txMe(c => { const s = (c.staff || {})[id]; if (!s) return undefined; const cost = trainCost(s); if ((s.lv || 1) >= 5 || (s.xp || 0) < xpNeed(s) || (c.money || 0) < cost) return undefined;
+      c.money -= cost; s.lv = (s.lv || 1) + 1; s.xp = 0; s.wage = Math.round(s.wage * 1.3); nl = s.lv; return c; }).catch(() => null);
+    if (r && r.committed) { Sound.play('buy'); toast(`📚 교육 완료! Lv.${nl} · 새 일: ${ROLES[me.staff[id].role].skills[nl - 1]}`, 2800); } else toast('경험이 모자라거나 돈이 모자라요');
+  });
+  el.querySelectorAll('[data-fire]').forEach(b => b.onclick = () => { const s = me.staff[b.dataset.fire];
+    modal(`<h2>${esc(s.name)}님을 해고할까요?</h2><p class="small muted">레벨과 경험치가 사라져요.</p><div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="yf">해고</button></div>`, (sh, close) => { $('#yf', sh).onclick = async () => { close(); await txMe(c => { if (!c.staff || !c.staff[s.id]) return undefined; delete c.staff[s.id]; return c; }); toast('해고했어요'); }; }); });
+}
+
+/* ══════════ 메뉴판 ══════════ */
+function renderMenu() {
+  if (!me) return show('login');
+  const st = stageOf(me), own = me.own || {};
+  const lock = x => st.lv < x.lv ? `🔒 Lv.${x.lv} ${STAGES[x.lv - 1].name}부터` : x.need && !own[x.need] ? `🔒 ${(UPG.find(u => u.id === x.need) || {}).n} 필요` : '';
+  const chipsOf = m => m.kind === 'burger' ? Object.entries(m.fill.reduce((o, k) => (o[k] = (o[k] || 0) + 1, o), {})).map(([k, n]) => `<span class="ch">${iconSVG(k)}<em>${NAMES[k]}${n > 1 ? '×' + n : ''}</em></span>`).join('')
+    : ['psauce', 'pcheese', ...m.tops].map(k => `<span class="ch">${iconSVG(k)}<em>${NAMES[k]}</em></span>`).join('');
+  const row = (svg, x, chips) => { const l = lock(x); return `<div class="mrow ${l ? 'lock' : ''}">${svg}<div class="grow"><div class="nm">${esc(x.name)} <b class="money" style="font-size:15px">${usd(x.price)}</b></div><div class="sub">${esc(x.ref || '')}${l ? ` · ${l}` : ' · 판매 중'}</div>${chips ? `<div class="chips">${chips}</div>` : ''}</div></div>`; };
+  $('#s-menu').innerHTML = `<div class="toprow"><button class="back" id="mnBack">← 가게</button><h2>📋 메뉴판</h2><span style="width:60px"></span></div>
+    <p class="small muted">미국 대표 프랜차이즈 메뉴의 재료 구성을 참고했어요 (게임에 맞게 단순화). 가격은 기본값이고 가게 단계·네온 간판·직원 능력만큼 올라가요. 재료 순서는 상관없어요.</p>
+    <div class="card list"><b style="font:400 19px var(--d)">🍔 버거</b>${MENU.filter(m => m.kind === 'burger').map(m => row(burgerSVG(m.fill, true, 52), m, chipsOf(m))).join('')}</div>
+    <div class="card list"><b style="font:400 19px var(--d)">🍕 피자</b>${MENU.filter(m => m.kind === 'pizza').map(m => row(pizzaSVG({ sauce: true, cheese: true, tops: m.tops, baked: true }, 52), m, chipsOf(m))).join('')}</div>
+    <div class="card list"><b style="font:400 19px var(--d)">🍟 사이드</b>${SIDES.map(x => row(xtraSVG(x.id, 44), x, `<span class="small muted">튀김기 ${x.t}초</span>`)).join('')}</div>
+    <div class="card list"><b style="font:400 19px var(--d)">🥤 음료</b>${DRINKS.map(x => row(xtraSVG(x.id, 40), x, '')).join('')}</div>`;
+  $('#mnBack').onclick = () => show('lobby');
+}
+
+/* ══════════ 체인점 (미국 지도) ══════════ */
+const US_OUTLINE = [[-124.7, 48.4], [-123, 49], [-95.2, 49], [-95.2, 49.4], [-94.6, 48.7], [-89.6, 48], [-84.4, 46.5], [-82.4, 45.2], [-82.5, 43], [-79, 42.6], [-79, 43.3], [-76.4, 44], [-74.7, 45], [-71.5, 45], [-70, 46.7], [-67.8, 47.1], [-67, 44.8], [-70.2, 43.6], [-70.8, 42.6], [-70, 41.8], [-71.5, 41.3], [-74, 40.6], [-74.1, 39.6], [-75.1, 38.8], [-76, 37], [-75.7, 35.6], [-77.9, 33.9], [-79.2, 33.2], [-80.9, 32], [-81.4, 30.7], [-80.6, 28.4], [-80, 26.7], [-80.4, 25.2], [-81.1, 25.1], [-81.8, 26.1], [-82.7, 27.7], [-82.8, 29.2], [-84, 30], [-85.4, 29.7], [-86.5, 30.4], [-88, 30.4], [-89.6, 30.2], [-89.2, 29.2], [-90.5, 29.1], [-92.3, 29.6], [-93.8, 29.7], [-95, 29.3], [-97.2, 27.6], [-97.4, 26], [-99.1, 26.5], [-100.3, 28.2], [-101.4, 29.8], [-103, 29], [-104.4, 29.5], [-106.5, 31.8], [-108.2, 31.8], [-111.1, 31.3], [-114.8, 32.5], [-117.1, 32.5], [-118.4, 33.8], [-120.6, 34.6], [-121.9, 36.6], [-122.5, 37.8], [-123.8, 39.8], [-124.3, 40.4], [-124.2, 42], [-124.5, 43], [-124, 46.3]];
+const proj = (lon, lat) => [((lon + 125.5) * 6.55 + 6).toFixed(1), ((50 - lat) * 8.4 + 6).toFixed(1)];
+let cityPick = null;
+function usMapSVG(chains, pickId) {
+  const pts = US_OUTLINE.map(([a, b]) => proj(a, b).join(',')).join(' ');
+  const lake = (lon, lat, rx, ry, r) => { const [x, y] = proj(lon, lat); return `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#8FD0F0" transform="rotate(${r} ${x} ${y})"/>`; };
+  return `<svg viewBox="0 0 400 232" class="usmap" aria-label="미국 지도">
+    <rect width="400" height="232" rx="14" fill="#BFE6FA"/>
+    <polygon points="${pts}" fill="#F6E7C1" stroke="#2B2220" stroke-width="2.4" stroke-linejoin="round"/>
+    ${lake(-87.0, 43.8, 4, 15, 0)}${lake(-88.0, 47.6, 22, 6, -8)}${lake(-82.4, 44.6, 7, 11, 10)}${lake(-81.3, 42.2, 14, 4, -18)}${lake(-77.8, 43.6, 10, 3.5, -6)}
+    <text x="14" y="226" font-family="Jua,sans-serif" font-size="11" fill="#5E7A8A">UNITED STATES · 도시를 눌러요</text>
+    ${CITIES.map(c => { const [x, y] = proj(c.lon, c.lat), own = chains && chains[c.id], on = pickId === c.id; return `<g class="pin" data-city="${c.id}" style="cursor:pointer">
+      <circle cx="${x}" cy="${y}" r="13" fill="transparent"/>
+      ${own ? `<circle cx="${x}" cy="${y}" r="${on ? 10 : 8.5}" fill="#D33A31" stroke="#2B2220" stroke-width="2"/><text x="${x}" y="${+y + 4}" text-anchor="middle" font-size="10">🍔</text>` : `<circle cx="${x}" cy="${y}" r="${on ? 7 : 5}" fill="${on ? '#F6B731' : '#fff'}" stroke="#2B2220" stroke-width="2"/>`}
+      <text x="${+x + (c.lx || 0)}" y="${+y + (c.ly != null ? c.ly : -12)}" text-anchor="${c.la || 'middle'}" font-family="Jua,sans-serif" font-size="10.5" fill="#2B2220" stroke="#FFFBF2" stroke-width="3" paint-order="stroke">${c.name}${own ? ` Lv.${own.lv || 1}` : ''}</text></g>`; }).join('')}
+  </svg>`;
+}
+function renderChain() {
+  if (!me) return show('login');
+  const st = stageOf(me), ch = me.chains || {}, open = st.lv >= 5, mine = CITIES.filter(c => ch[c.id]);
+  const c = CITIES.find(x => x.id === cityPick), b = c && ch[c.id];
+  const lv = b ? b.lv || 1 : 0, upCost = c && lv && lv < 3 ? Math.round(c.cost * CHAIN_LV[lv].up) : 0;
+  const el = $('#s-chain');
+  el.innerHTML = `<div class="toprow"><button class="back" id="chBack">← 가게</button><h2>🗺️ 체인점</h2><span class="money num" style="min-width:64px;text-align:right">${usd(me.money)}</span></div>
+    ${open ? '' : `<div class="card small">🔒 <b>본점(Lv.5)</b>이 되면 미국 전역에 체인점을 낼 수 있어요. 지금은 Lv.${st.lv} ${st.icon} ${esc(st.name)}이에요. 지도를 둘러보며 어디에 낼지 골라 봐요!</div>`}
+    <div class="card" style="padding:8px">${usMapSVG(ch, cityPick)}</div>
+    ${c ? `<div class="card" style="display:grid;gap:8px"><div class="row" style="justify-content:space-between"><b style="font:400 21px var(--d)">${CITY_THEME[c.theme].emoji} ${c.name}${b ? ` 지점 · Lv.${lv}` : ''}</b><span class="small muted">${CITY_THEME[c.theme].desc}</span></div>
+      <div class="stat3"><div>${b ? '지점 가치' : '개설 비용'}<b class="num">${usd(b ? chainVal({ [c.id]: b }) : c.cost)}</b></div><div>영업 1회당 수익<b class="num">${usd(Math.round(c.inc * CHAIN_LV[Math.max(0, lv - 1)].mul))}</b></div><div>${b ? '누적 수익' : '지점 메뉴'}<b class="num">${b ? usd(b.earned || 0) : '전 메뉴'}</b></div></div>
+      ${b ? `<div class="grid2"><button class="btn red" id="chVisit">👀 지점 시찰</button><button class="btn teal" id="chUp" ${lv >= 3 || me.money < upCost ? 'disabled' : ''}>${lv >= 3 ? '최고 레벨 지점' : `🏗️ 지점 확장 ${usd(upCost)}`}</button></div>`
+        : `<button class="btn red big" id="chOpen" ${!open || me.money < c.cost ? 'disabled' : ''}>🏁 ${c.name}에 체인점 내기 ${usd(c.cost)}</button>`}</div>` : '<p class="small muted" style="text-align:center">지도에서 도시를 눌러 봐요</p>'}
+    <div class="card list"><b style="font:400 18px var(--d)">🍔 내 체인점 ${mine.length}곳 · 영업 1회당 +${usd(chainIncome(ch))}</b>
+      ${mine.length ? mine.map(x => `<div class="li"><span style="font-size:24px">${CITY_THEME[x.theme].emoji}</span><div class="grow"><div class="nm">${x.name}점 <span class="lvb">Lv.${ch[x.id].lv || 1}</span></div><div class="sub">영업 1회당 ${usd(Math.round(x.inc * CHAIN_LV[(ch[x.id].lv || 1) - 1].mul))} · 누적 ${usd(ch[x.id].earned || 0)}</div></div><button class="btn sm red" data-go="${x.id}" style="flex:none">지점 시찰</button></div>`).join('')
+        : '<p class="small muted">아직 체인점이 없어요. 체인점 수익은 내가 영업할 때마다 들어와요.</p>'}</div>`;
+  $('#chBack').onclick = () => show('lobby');
+  el.querySelectorAll('[data-city]').forEach(g => g.onclick = () => { cityPick = g.dataset.city; renderChain(); });
+  el.querySelectorAll('[data-go]').forEach(b2 => b2.onclick = () => openBranch(b2.dataset.go));
+  if ($('#chVisit')) $('#chVisit').onclick = () => openBranch(c.id);
+  if ($('#chOpen')) $('#chOpen').onclick = async () => {
+    const r = await txMe(p => { if (stageOf(p).lv < 5 || (p.money || 0) < c.cost || (p.chains || {})[c.id]) return undefined; p.money -= c.cost; p.chains = p.chains || {}; p.chains[c.id] = { lv: 1, at: Date.now(), earned: 0 }; return p; }).catch(() => null);
+    if (r && r.committed) { Sound.play('buy'); toast(`🏁 ${c.name}점 오픈! 지점 시찰로 구경해 봐요`, 2600); } else toast('돈이 모자라거나 연결이 불안정해요');
+  };
+  if ($('#chUp')) $('#chUp').onclick = async () => {
+    const r = await txMe(p => { const x = (p.chains || {})[c.id]; if (!x || (x.lv || 1) >= 3) return undefined; const cost = Math.round(c.cost * CHAIN_LV[x.lv || 1].up); if ((p.money || 0) < cost) return undefined; p.money -= cost; x.lv = (x.lv || 1) + 1; return p; }).catch(() => null);
+    if (r && r.committed) { Sound.play('buy'); toast(`🏗️ ${c.name}점 Lv.${me.chains[c.id].lv}!`); } else toast('돈이 모자라요');
+  };
+}
+// 도시별 배경 (지점 시찰)
+const rnd = s => () => (s = (s * 9301 + 49297) % 233280) / 233280;
+function skyline(seed, col, n, y0, hMin, hMax, win) { const r = rnd(seed); let x = 0, s = ''; for (let i = 0; i < n; i++) { const w = 22 + r() * 26, h = hMin + r() * (hMax - hMin); s += `<rect x="${x.toFixed(0)}" y="${(y0 - h).toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" fill="${col}"/>`; if (win) for (let k = 0; k < 4; k++) s += `<rect x="${(x + 4 + r() * (w - 10)).toFixed(0)}" y="${(y0 - h + 6 + r() * (h - 14)).toFixed(0)}" width="4" height="5" fill="${win}" class="${k % 2 ? 'tw' : ''}"/>`; x += w + 2; if (x > 400) break; } return s; }
+const palm = (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0Q4 -30 2 -62" stroke="#7A5530" stroke-width="5" fill="none"/>${[-60, -25, 10, 40, 75].map(r => `<path d="M2 -62q22 -8 36 6q-20 -2 -36 -2z" fill="#3E9B4F" transform="rotate(${r} 2 -62)"/>`).join('')}</g>`;
+const CITY_THEME = {
+  ny: { emoji: '🗽', desc: '잠들지 않는 도시', sky: ['#22305E', '#F7A35C'], ground: '#4A4F66', draw: () => skyline(3, '#2B3355', 14, 190, 60, 150, '#FFE27A') + `<path d="M330 190V120l4-8 4 8v70z" fill="#5FA08F"/><circle cx="334" cy="108" r="6" fill="#5FA08F"/><path d="M334 102l-3-10 3 4 3-4z" fill="#FFE27A"/><path d="M80 190V40l6-16 6 16v150z" fill="#3A4466"/>` },
+  la: { emoji: '🌴', desc: '햇살 가득 웨스트코스트', sky: ['#FF8A5B', '#FFE0A3'], ground: '#E9C98C', draw: () => `<path d="M0 170Q80 110 160 150T320 130T400 150V190H0Z" fill="#C98A5A"/>` + palm(60, 196, 1) + palm(120, 196, .8) + palm(300, 196, 1.1) + palm(360, 196, .85) },
+  chi: { emoji: '🌬️', desc: '바람의 도시 · 딥디시의 고향', sky: ['#5AA9E6', '#D6EEFF'], ground: '#6E8CA0', draw: () => `<rect y="160" width="400" height="30" fill="#3E7CB1"/>` + skyline(7, '#2B2F3A', 12, 165, 70, 155, '#9FD3FF') + `<path d="M250 165V20h14v145z" fill="#1A1C22"/><path d="M254 20v-14M260 20v-14" stroke="#1A1C22" stroke-width="2"/>` },
+  vegas: { emoji: '🎰', desc: '네온이 꺼지지 않는 사막', sky: ['#120B2E', '#4A1C6E'], ground: '#2A1A3A', draw: () => skyline(11, '#2A1F4A', 12, 190, 50, 130, '#FF4FA3') + `<g class="flick"><rect x="40" y="70" width="90" height="34" rx="8" fill="#1C1430" stroke="#4FE3FF" stroke-width="3"/><text x="85" y="94" text-anchor="middle" font-family="Jua" font-size="18" fill="#4FE3FF">JACKPOT</text></g><g class="flick" style="animation-delay:1s"><rect x="270" y="50" width="100" height="34" rx="8" fill="#1C1430" stroke="#FFE27A" stroke-width="3"/><text x="320" y="74" text-anchor="middle" font-family="Jua" font-size="16" fill="#FFE27A">★ 777 ★</text></g>` },
+  beach: { emoji: '🏖️', desc: '아르데코와 해변', sky: ['#4FC3F7', '#E1F7FF'], ground: '#F2DDA6', draw: () => `<rect y="140" width="400" height="40" fill="#2FA4D9"/><path d="M0 150q20-6 40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0t40 0" stroke="#fff" stroke-width="3" fill="none"/>` + `<rect x="150" y="80" width="60" height="60" fill="#FFB3C7" stroke="#2B2220" stroke-width="2"/><rect x="215" y="96" width="50" height="44" fill="#9BE3D0" stroke="#2B2220" stroke-width="2"/>` + palm(60, 196, 1) + palm(340, 196, 1) },
+  sf: { emoji: '🌉', desc: '안개와 언덕의 도시', sky: ['#B9C7D6', '#F2F2F2'], ground: '#7A8C9A', draw: () => `<rect y="150" width="400" height="40" fill="#5B8CB0"/><path d="M80 150V50h10v100zM300 150V50h10v100z" fill="#C8412B"/><path d="M0 100Q85 40 85 50Q195 140 305 50Q305 40 400 100" stroke="#C8412B" stroke-width="3" fill="none"/><path d="M0 120H400" stroke="#C8412B" stroke-width="6"/><ellipse cx="200" cy="60" rx="140" ry="14" fill="#fff" opacity=".6"/>` },
+  sea: { emoji: '☕', desc: '커피와 비의 도시', sky: ['#8EA6B8', '#DCE6EC'], ground: '#5E7A6E', draw: () => `<path d="M220 160L300 60L380 160Z" fill="#9AB0BE"/><path d="M285 80L300 60L315 80Q300 86 285 80Z" fill="#fff"/>` + skyline(5, '#46586A', 9, 170, 40, 100, '#FFE9A8') + `<path d="M120 170V60" stroke="#E9EEF2" stroke-width="5"/><ellipse cx="120" cy="58" rx="22" ry="6" fill="#E9EEF2" stroke="#2B2220" stroke-width="1.5"/><path d="M120 52V30" stroke="#E9EEF2" stroke-width="2"/>` },
+  bos: { emoji: '🍂', desc: '붉은 벽돌과 단풍', sky: ['#7FB7E0', '#E8F4FF'], ground: '#8A5A3A', draw: () => [0, 70, 140, 210, 280, 350].map((x, i) => `<rect x="${x}" y="${90 + (i % 2) * 20}" width="64" height="${100 - (i % 2) * 20}" fill="${i % 2 ? '#A54B32' : '#B85A3C'}" stroke="#5A2A18" stroke-width="2"/>${[0, 1].map(k => `<rect x="${x + 12 + k * 26}" y="${110 + (i % 2) * 20}" width="12" height="16" fill="#FFF3C4"/>`).join('')}`).join('') + [40, 180, 320].map(x => `<circle cx="${x}" cy="170" r="22" fill="#E8742C"/><circle cx="${x + 18}" cy="160" r="16" fill="#F2B233"/>`).join('') },
+  tex: { emoji: '🤠', desc: '카우보이와 바비큐', sky: ['#FFB25B', '#FFE7B0'], ground: '#D9A066', draw: () => `<circle cx="320" cy="70" r="28" fill="#FFE27A"/><path d="M0 160Q100 130 200 150T400 140V190H0Z" fill="#C98A4A"/>` + [60, 150, 260].map(x => `<g transform="translate(${x} 190)"><rect x="-6" y="-70" width="12" height="70" rx="6" fill="#4E8A3A"/><rect x="-24" y="-50" width="10" height="26" rx="5" fill="#4E8A3A"/><rect x="14" y="-58" width="10" height="30" rx="5" fill="#4E8A3A"/><path d="M-19 -26h14M14 -30h-8" stroke="#4E8A3A" stroke-width="8"/></g>`).join('') },
+  nash: { emoji: '🎸', desc: '컨트리 음악의 수도', sky: ['#3A2350', '#E0705A'], ground: '#5A3A30', draw: () => skyline(9, '#3A2A3A', 11, 190, 40, 110, '#FFB347') + `<g class="flick" transform="translate(180 50) rotate(-20)"><ellipse cx="0" cy="30" rx="22" ry="26" fill="#E9A84C" stroke="#FFE27A" stroke-width="3"/><rect x="-4" y="-40" width="8" height="50" fill="#7A4A2A" stroke="#FFE27A" stroke-width="2"/><circle cx="0" cy="30" r="7" fill="#3A2350"/></g>` },
+  jazz: { emoji: '🎷', desc: '재즈와 가든 파티', sky: ['#2A1A4A', '#8A4A9A'], ground: '#3A2A4A', draw: () => [20, 150, 280].map(x => `<rect x="${x}" y="70" width="110" height="120" fill="#5A9A8A" stroke="#2B2220" stroke-width="2"/><path d="M${x} 110h110" stroke="#1C1C1C" stroke-width="4"/>${[0, 1, 2, 3, 4, 5, 6].map(k => `<path d="M${x + 6 + k * 15} 110v-14" stroke="#1C1C1C" stroke-width="2"/>`).join('')}<path d="M${x} 96h110" stroke="#1C1C1C" stroke-width="2"/><rect x="${x + 20}" y="125" width="18" height="30" fill="#FFE9A8"/><rect x="${x + 70}" y="125" width="18" height="30" fill="#FFE9A8"/>`).join('') + `<text x="200" y="50" text-anchor="middle" font-size="22" class="tw">♪ ♫ ♪</text>` },
+  mtn: { emoji: '🏔️', desc: '해발 1마일 로키산맥', sky: ['#6FB6F0', '#E6F4FF'], ground: '#7A9A6A', draw: () => `<path d="M0 170L80 70L150 150L230 50L320 150L400 90V190H0Z" fill="#8A9AB0"/><path d="M80 70L65 90L95 90ZM230 50L210 76L250 76Z" fill="#fff"/>` + [30, 70, 300, 350].map(x => `<path d="M${x} 190l14-40l14 40z" fill="#2F6B3A"/>`).join('') },
+};
+function cityBG(theme) {
+  const t = CITY_THEME[theme] || CITY_THEME.ny;
+  return `<svg class="bg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="cs-${theme}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.sky[0]}"/><stop offset="1" stop-color="${t.sky[1]}"/></linearGradient></defs>
+    <rect width="400" height="250" fill="url(#cs-${theme})"/>${t.draw()}<rect y="190" width="400" height="60" fill="${t.ground}"/>
+    <path d="M0 14H400" stroke="#F7D774" stroke-width="5"/>${Array.from({ length: 21 }, (_, i) => `<circle cx="${8 + i * 19}" cy="8" r="4" fill="#FFE27A" class="${i % 2 ? 'tw' : 'tw2'}"/>`).join('')}</svg>`;
+}
+let branchT = null;
+async function openBranch(id) {
+  const c = CITIES.find(x => x.id === id); if (!c || !me) return;
+  const b = (me.chains || {})[id]; if (!b) return;
+  show('branch');
+  const lv = b.lv || 1, inc = Math.round(c.inc * CHAIN_LV[lv - 1].mul), seats = 2 + lv, mgr = pick(CH.filter(x => !HID[x].rare));
+  const el = $('#s-branch');
+  el.innerHTML = `<div class="toprow"><button class="back" id="brBack">← 지도</button><h2>👀 ${c.name}점 시찰</h2><span style="width:60px"></span></div>
+    <div class="scene" id="brScene" style="height:260px">${cityBG(c.theme)}<div class="sign neon">준탁 버거하우스 ${esc(c.name)}점 · ${esc(me.nick)}</div>
+      <div class="chefbox"><div class="bubble" hidden></div>${CHEF_SVG}</div>
+      <div class="seats" style="--n:${seats}"></div><div class="counter lv5"></div></div>
+    <div class="card" style="display:grid;gap:8px"><div class="row" style="justify-content:space-between"><b style="font:400 20px var(--d)">${CITY_THEME[c.theme].emoji} ${c.name}점 · Lv.${lv}</b><span class="small muted">${CITY_THEME[c.theme].desc}</span></div>
+      <div class="row">${faceEl(mgr, 'l')}<div class="small"><b>점장 ${esc(shortName(mgr))}</b> · "사장님, ${esc(c.name)}점은 오늘도 손님이 가득이에요!"</div></div>
+      <div class="stat3"><div>영업 1회당 수익<b class="num">${usd(inc)}</b></div><div>누적 수익<b class="num">${usd(b.earned || 0)}</b></div><div>지금 손님<b class="num" id="brCnt">0명</b></div></div>
+      <p class="small muted">체인점은 점장이 알아서 운영해요. 내가 본점에서 영업할 때마다 수익이 들어와요. 지점을 확장하면 수익이 늘어요 (Lv.2 ×1.8, Lv.3 ×2.8).</p>
+      <button class="btn teal" id="brMap">🗺️ 지도로 돌아가기</button></div>`;
+  $('#brBack').onclick = $('#brMap').onclick = () => { cityPick = id; show('chain'); };
+  const sc = $('#brScene'), seatEl = sc.querySelector('.seats');
+  for (let i = 0; i < seats; i++) { const d = document.createElement('div'); d.className = 'seat'; d.innerHTML = '<div class="empty">빈자리</div>'; seatEl.appendChild(d); }
+  chefSay(sc, pick([`${c.name}점도 Alright!`, '사장님 오셨다! 다들 웃어!', '여기도 장사 잘 돼요!']), 2600);
+  const menus = MENU.filter(m => m.lv <= 5);
+  let served = 0;
+  const loop = () => {
+    if (cur !== 'branch') return;
+    const kids = [...seatEl.children], free = kids.filter(k => !k._busy);
+    if (free.length && Math.random() < .75) {
+      const s = pick(free), ch = pickGuest(), o = { menu: pick(menus).id, side: Math.random() < .4 ? pick(SIDES).id : null, drink: Math.random() < .4 ? pick(DRINKS).id : null };
+      s._busy = true;
+      s.innerHTML = `<div class="cust${HID[ch].rare ? ' sr' : ''}"><div class="ticket"><div class="food">${orderSVG(o, 26)}</div><div class="tname">${esc(MENU_BY[o.menu].name)}</div></div><div class="who"><img src="${imgOf(ch)}" alt=""></div></div>`;
+      $('#brCnt').textContent = kids.filter(k => k._busy).length + '명';
+      setTimeout(() => {
+        if (cur !== 'branch') return;
+        const cu = s.querySelector('.cust'); if (cu) cu.classList.add('happy');
+        floatTxt(s, '+' + usd(Math.round(MENU_BY[o.menu].price * 1.8))); served++;
+        if (served % 4 === 0) chefSay(sc, pick(CHEF_LINES.good));
+        setTimeout(() => { if (cu) cu.classList.add('out'); }, 400);
+        setTimeout(() => { s._busy = false; s.innerHTML = '<div class="empty">빈자리</div>'; if ($('#brCnt')) $('#brCnt').textContent = [...seatEl.children].filter(k => k._busy).length + '명'; }, 900);
+      }, 2200 + Math.random() * 2600);
+    }
+  };
+  loop(); branchT = setInterval(loop, 1300);
+  liveOff = () => { clearInterval(branchT); branchT = null; };
+}
+
+/* ══════════ 게임 (영업 120초) ══════════ */
 let G = null;
+const MENU_BY = Object.fromEntries(MENU.map(m => [m.id, m]));
 const has = id => !!(G && G.own[id]);
+// 직원 능력: 직무별 직원 레벨 (없으면 0)
+const sk = role => (G && G.staffLv[role]) || 0;
 const grillSlots = () => has('grill3') ? 3 : has('grill2') ? 2 : 1;
-const cookTime = () => has('fast') ? 2.5 : 4;
-const priceMul = () => G.st.mul * (has('neon') ? 1.2 : 1);
+const cookTime = () => (has('fast') ? 2.5 : 4) * (sk('kitchen') >= 4 ? .6 : sk('kitchen') >= 2 ? .8 : 1);
+const fryTime = x => x.t * (sk('side') >= 4 ? .5 : sk('side') >= 2 ? .75 : 1);
+const barTime = x => x.t * (sk('bar') >= 4 ? .4 : sk('bar') >= 2 ? .7 : 1);
+const fryerSlots = () => has('fryer2') ? 2 : 1;
+const ovenSlots = () => has('oven2') ? 2 : 1;
+const priceMul = () => G.st.mul * (has('neon') ? 1.2 : 1) * (sk('counter') >= 4 ? 1.1 : sk('counter') >= 2 ? 1.05 : 1) * (sk('manager') >= 5 ? 1.1 : 1);
+const tipMul = () => (sk('counter') >= 5 ? 1.25 : 1) * (sk('serve') >= 5 ? 1.25 : sk('serve') >= 3 ? 1.1 : 1);
+const menuOK = m => G.st.lv >= m.lv && (!m.need || has(m.need));
+const xtraOK = x => G.st.lv >= x.lv && has(x.need);
+const ingOK = ([k, lv]) => G.st.lv >= lv;
 function newOrder() {
-  const lv = G.st.lv;
-  const kind = has('oven') && Math.random() < 0.35 ? 'pizza' : 'burger';
-  const o = { kind };
-  const r = Math.random();
-  if (has('tap') && has('cola')) { if (r < .3) o.beer = true; else if (r < .55) o.cola = true; }
-  else if (has('tap')) { if (r < .4) o.beer = true; } else if (has('cola')) { if (r < .42) o.cola = true; }
-  if (has('fryer') && Math.random() < .35) o.fries = true;
-  if (kind === 'burger') {
-    const extras = ['cheese', 'lettuce', 'tomato']; if (lv >= 2) extras.push('bacon');
-    const fill = ['patty']; if (lv >= 3 && Math.random() < .28) fill.push('patty');
-    const mx = lv >= 4 ? 3.4 : lv >= 2 ? 2.8 : 2.2;
-    const nEx = Math.min(extras.length, Math.floor(Math.random() * mx));
-    const pool = extras.slice(); for (let i = 0; i < nEx; i++) fill.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-    const ord = ['patty', 'bacon', 'cheese', 'tomato', 'lettuce'];
-    fill.sort((a, b) => ord.indexOf(a) - ord.indexOf(b));
-    o.fill = fill;
-  } else {
-    const pool = ['pepperoni', 'mushroom', 'olive']; const n = 1 + Math.floor(Math.random() * (lv >= 4 ? 2.2 : 1.5));
-    o.tops = []; for (let i = 0; i < n; i++) o.tops.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-  }
+  const menus = MENU.filter(menuOK);
+  // 새로 열린 메뉴일수록 조금 더 자주 나와요
+  const w = menus.map(m => 1 + m.lv * .4), sum = w.reduce((a, b) => a + b, 0);
+  let r = Math.random() * sum, m = menus[0];
+  for (let i = 0; i < menus.length; i++) { r -= w[i]; if (r <= 0) { m = menus[i]; break; } }
+  const o = { menu: m.id, side: null, drink: null };
+  const sides = SIDES.filter(xtraOK), drinks = DRINKS.filter(xtraOK);
+  if (sides.length && Math.random() < .42) o.side = pick(sides).id;
+  if (drinks.length && Math.random() < .45) o.drink = pick(drinks).id;
   return o;
 }
-function orderName(o) {
-  let n = o.kind === 'burger' ? (o.fill.map(f => NAMES[f]).join('·') + ' 버거') : (o.tops.map(t => NAMES[t]).join('·') + ' 피자');
-  if (o.fries) n += ' + 감튀'; if (o.cola) n += ' + 콜라'; if (o.beer) n += ' + 생맥';
-  return n;
-}
+const orderName = o => MENU_BY[o.menu].name + (o.side ? ' + ' + XTRA[o.side].name : '') + (o.drink ? ' + ' + XTRA[o.drink].name : '');
 function orderPrice(o) {
-  let p = o.kind === 'burger' ? 4 + o.fill.length : 8 + o.tops.length * 1.5;
-  if (o.cola) p += 2; if (o.beer) p += 4; if (o.fries) p += 3;
+  let p = MENU_BY[o.menu].price;
+  if (o.side) p += XTRA[o.side].price * (sk('side') >= 5 ? 1.2 : 1);
+  if (o.drink) p += XTRA[o.drink].price * (sk('bar') >= 5 ? 1.3 : sk('bar') >= 3 ? 1.15 : 1);
   return Math.round(p * priceMul());
 }
 const sortStr = a => a.slice().sort().join(',');
 function matches(o, t) {
-  if (!t.item) return false;
-  if (!!o.cola !== !!t.cola || !!o.beer !== !!t.beer || !!o.fries !== !!t.fries) return false;
-  if (o.kind === 'burger') return t.item.kind === 'burger' && t.item.closed && sortStr(o.fill) === sortStr(t.item.fill);
-  return t.item.kind === 'pizza' && t.item.baked && t.item.sauce && t.item.cheese && sortStr(o.tops) === sortStr(t.item.tops);
+  if (!t.item || (o.side || null) !== (t.side || null) || (o.drink || null) !== (t.drink || null)) return false;
+  const m = MENU_BY[o.menu];
+  if (m.kind === 'burger') return t.item.kind === 'burger' && t.item.closed && sortStr(m.fill) === sortStr(t.item.fill);
+  return t.item.kind === 'pizza' && t.item.baked && t.item.sauce && t.item.cheese && sortStr(m.tops) === sortStr(t.item.tops);
 }
+const staffList = p => Object.values((p && p.staff) || {}).filter(s => s && ROLES[s.role]);
 async function startRound() {
   if (!me) return;
   Sound.init();
-  const st = stageOf(me);
+  const st = stageOf(me), staff = staffList(me);
+  const staffLv = {}; staff.forEach(s => { staffLv[s.role] = Math.max(staffLv[s.role] || 0, s.lv || 1); });
+  if ((me.own || {}).helper) staffLv.kitchen = Math.max(staffLv.kitchen || 0, 1); // 예전 알바생 설비
+  const extra = (staffLv.manager >= 3 ? 20 : staffLv.manager >= 1 ? 10 : 0);
   G = { key: me.pid.slice(0, 6) + Date.now().toString(36), st, own: Object.assign({}, me.own || {}), rating: me.rating || 3, base: me.money || 0, todayBase: todaySales(me),
-    t: 0, spawnIn: 1.2, custs: Array(st.seats).fill(null), grill: [], warm: 0, oven: null, fry: null, pour: null, tray: { item: null, cola: false, beer: false, fries: false },
+    dayLen: CFG.dayLen + extra, staff, staffLv,
+    t: 0, spawnIn: 1.2, custs: Array(st.seats).fill(null), grill: [], warm: 0, ovens: [], fry: [], bar: [], stock: {}, serveT: 0,
+    tray: { item: null, side: null, drink: null },
     served: 0, missed: 0, wrong: 0, earned: 0, tips: 0, running: true, ending: false, friends: [] };
   show('game');
   $('#gScene').innerHTML = sceneHTML(st.lv, shopName(me), { seats: st.seats });
   const seats = $('#gScene .seats');
   for (let i = 0; i < st.seats; i++) { const b = document.createElement('button'); b.className = 'seat'; b.type = 'button'; b.onclick = () => serve(i); seats.appendChild(b); }
+  $('#rail').style.setProperty('--n', st.seats);
+  $('#rail').innerHTML = Array.from({ length: st.seats }, (_, i) => `<div class="rc" data-i="${i}"></div>`).join('');
+  $('#staffBar').innerHTML = staff.length ? staff.map(s => `<span class="sc" data-role="${s.role}">${faceEl(s.char, 's')}<b>${ROLES[s.role].icon}${esc(s.name)}</b><i>Lv.${s.lv || 1}</i></span>`).join('')
+    : `<span class="sc none">👥 직원이 없어요 · 로비 [직원]에서 채용해요</span>`;
   chefSay($('#gScene'), pick(CHEF_LINES.start));
   renderAll();
-  // 친구 손님 명단 (친구가 내 가게에 손님으로 와요)
   loadPlayers(Object.keys(me.friends || {}).slice(0, 30)).then(fs => { if (G) G.friends = fs.map(p => ({ nick: p.nick, char: p.char })); }).catch(() => {});
 }
+function staffPing(role, txt) {
+  const c = document.querySelector(`#staffBar [data-role="${role}"]`); if (!c) return;
+  c.classList.remove('ping'); void c.offsetWidth; c.classList.add('ping');
+  if (txt) { c.dataset.t = txt; }
+}
 function spawnInterval() {
-  const base = G.st.spawn - (has('neon') ? 1 : 0);
-  return Math.max(2.8, (base - (G.rating - 3) * .8) * (.75 + Math.random() * .5));
+  const cl = sk('clean'), base = G.st.spawn - (has('neon') ? 1 : 0);
+  const f = cl >= 5 ? .8 : cl >= 4 ? .9 : 1;
+  return Math.max(2.6, (base - (G.rating - 3) * .8) * f * (.75 + Math.random() * .5));
 }
 function patienceFor(o) {
-  let p = 25 + (o.kind === 'pizza' ? 10 : 0) + (o.cola ? 2 : 0) + (o.beer ? 3 : 0) + (o.fries ? 4 : 0) + (o.fill && o.fill.length > 3 ? 4 : 0);
-  if (has('juke')) p *= 1.35; return p;
+  const m = MENU_BY[o.menu];
+  let p = 24 + (m.kind === 'pizza' ? 12 : 0) + (m.fill ? m.fill.length * 1.5 : m.tops.length * 1.5) + (o.side ? XTRA[o.side].t + 2 : 0) + (o.drink ? 2 : 0);
+  if (has('juke')) p *= 1.35;
+  const c = sk('counter'); if (c >= 3) p *= 1.3; else if (c >= 1) p *= 1.15;
+  return p;
 }
+const rateDown = v => v * (sk('clean') >= 2 ? .5 : sk('clean') >= 1 ? .7 : 1);
+const rateUp = v => v * (sk('clean') >= 5 ? 1.6 : sk('clean') >= 3 ? 1.3 : 1);
 let last = performance.now();
 function tick(now) {
   const dt = Math.min(.1, (now - last) / 1000); last = now;
   if (G && G.running && !document.hidden) step(dt);
   requestAnimationFrame(tick);
 }
+// 지금 기다리는 주문에 필요한 사이드·음료 개수 − (재고 + 만드는 중 + 쟁반)
+function needOf(id) {
+  let n = G.custs.filter(c => c && (c.o.side === id || c.o.drink === id)).length;
+  n -= (G.stock[id] || 0) + G.fry.filter(f => f.id === id).length + G.bar.filter(f => f.id === id).length + (G.tray.side === id || G.tray.drink === id ? 1 : 0);
+  return n;
+}
 function step(dt) {
   G.t += dt;
-  if (G.t < CFG.dayLen) {
+  const L = G.dayLen;
+  if (G.t < L) {
     G.spawnIn -= dt;
     if (G.spawnIn <= 0) {
       const free = G.custs.map((c, i) => c ? -1 : i).filter(i => i >= 0);
       if (free.length) {
         const i = pick(free), o = newOrder(), p = patienceFor(o);
         const fr = G.friends.length && Math.random() < .2 ? pick(G.friends) : null;
-        G.custs[i] = { o, p, max: p, char: fr ? fr.char : pickGuest(), shirt: pick(SHIRTS), friend: fr ? fr.nick : null };
+        G.custs[i] = { o, p, max: p, char: fr ? fr.char : pickGuest(), friend: fr ? fr.nick : null };
         renderSeat(i); if (fr) chefSay($('#gScene'), pick(CHEF_LINES.friend));
       }
       G.spawnIn = spawnInterval();
@@ -1227,23 +1655,47 @@ function step(dt) {
     if (!c) return;
     c.p -= dt;
     if (c.p <= 0) {
-      G.custs[i] = null; G.missed++; G.rating = Math.max(1, G.rating - .25);
-      leaveSeat(i, false); chefSay($('#gScene'), pick(CHEF_LINES.leave)); logMsg('손님이 기다리다 떠났어요. 평점이 내려가요 😢'); renderHud();
+      G.custs[i] = null; G.missed++; G.rating = Math.max(1, G.rating - rateDown(.25));
+      leaveSeat(i, false); chefSay($('#gScene'), pick(CHEF_LINES.leave)); logMsg('손님이 기다리다 떠났어요. 평점이 내려가요 😢'); renderHud(); renderRail(i);
     } else renderPatience(i);
   });
-  // 그릴
+  // 그릴 (주방 직원: 자동 굽기)
   G.grill.forEach(g => { g.t += dt; });
   const done = G.grill.filter(g => g.t >= cookTime());
-  if (done.length) { G.warm += done.length; G.grill = G.grill.filter(g => g.t < cookTime()); Sound.play('ding'); renderGrill(true); if (isOpenBurger()) renderIngs(); }
-  if (has('helper') && G.grill.length < grillSlots() && G.warm + G.grill.length < 4) { G.grill.push({ t: 0 }); renderGrill(true); }
+  if (done.length) { G.warm += done.length * (sk('kitchen') >= 5 ? 2 : 1); G.grill = G.grill.filter(g => g.t < cookTime()); Sound.play('ding'); renderGrill(true); if (isOpenBurger()) renderIngs(); }
+  if (sk('kitchen') >= 1 && G.grill.length < grillSlots() && G.warm + G.grill.length < 5) { G.grill.push({ t: 0 }); renderGrill(true); staffPing('kitchen'); }
   renderGrill(false);
   // 오븐
-  if (G.oven && !G.oven.done) { G.oven.t += dt; if (G.oven.t >= 5) { G.oven.done = true; G.oven.item.baked = true; Sound.play('ding'); renderOven(); logMsg('피자가 다 구워졌어요! 오븐을 눌러 꺼내요 🍕'); } else renderBar('#ovenBox', G.oven.t / 5); }
-  // 튀김기 · 생맥주
-  if (G.fry != null) { G.fry += dt; if (G.fry >= 3) { G.fry = null; G.tray.fries = true; Sound.play('ding'); renderFry(); renderTray(); renderIngs(); markReady(); } else renderBar('#fryBox', G.fry / 3); }
-  if (G.pour != null) { G.pour += dt; if (G.pour >= 2) { G.pour = null; G.tray.beer = true; renderTray(); renderIngs(); markReady(); } }
-  const left = Math.max(0, CFG.dayLen - G.t);
-  $('#hTime').style.width = (left / CFG.dayLen * 100) + '%';
+  let ovChanged = false;
+  G.ovens.forEach(o => { if (!o.done) { o.t += dt; if (o.t >= 5) { o.done = true; o.item.baked = true; ovChanged = true; Sound.play('ding'); logMsg('피자가 다 구워졌어요! 오븐을 눌러 꺼내요 🍕'); } } });
+  if (sk('kitchen') >= 3 && !G.tray.item) { const o = G.ovens.find(x => x.done); if (o) { G.tray.item = o.item; G.ovens.splice(G.ovens.indexOf(o), 1); ovChanged = true; staffPing('kitchen'); renderTray(); renderIngs(); markReady(); } }
+  if (ovChanged) renderOven(); else renderOvenBars();
+  // 튀김기 · 음료 바 (직원이 주문 들어온 걸 미리 만들어요)
+  for (const [arr, kind] of [[G.fry, 'side'], [G.bar, 'drink']]) {
+    let ch = false;
+    for (const f of arr.slice()) {
+      f.t += dt;
+      if (f.t >= f.T) {
+        arr.splice(arr.indexOf(f), 1); ch = true; Sound.play('ding');
+        if (!f.auto && !G.tray[kind]) G.tray[kind] = f.id; else G.stock[f.id] = (G.stock[f.id] || 0) + 1;
+      }
+    }
+    const lvl = kind === 'side' ? sk('side') : sk('bar'), slots = kind === 'side' ? fryerSlots() : 1;
+    if (lvl >= 1 && arr.length < slots) {
+      const cands = (kind === 'side' ? SIDES : DRINKS).filter(x => xtraOK(x) && (kind === 'drink' || lvl >= 3 || x.id === 'fries'));
+      const x = cands.find(x => needOf(x.id) > 0);
+      if (x) { arr.push({ id: x.id, t: 0, T: kind === 'side' ? fryTime(x) : barTime(x), auto: true }); ch = true; staffPing(kind === 'side' ? 'side' : 'bar'); }
+    }
+    if (ch) { renderStation(kind); renderTray(); renderXtra(); markReady(); } else renderStationBars(kind);
+  }
+  // 서빙 직원: 맞는 손님에게 자동 서빙
+  if (sk('serve') >= 1) {
+    const i = G.custs.findIndex(c => c && matches(c.o, G.tray));
+    if (i >= 0) { G.serveT += dt; const wait = sk('serve') >= 4 ? 0 : sk('serve') >= 2 ? .6 : 1.2; if (G.serveT >= wait) { G.serveT = 0; staffPing('serve'); serve(i, true); } }
+    else G.serveT = 0;
+  }
+  const left = Math.max(0, L - G.t);
+  $('#hTime').style.width = (left / L * 100) + '%';
   $('#hClock').textContent = left > 0 ? `영업 ${Math.ceil(left)}초` : '마감! 남은 손님만';
   if (left <= 0 && !G.custs.some(Boolean) && !G.ending) { G.ending = true; endRound(false); }
 }
@@ -1251,50 +1703,64 @@ const isOpenBurger = () => G.tray.item && G.tray.item.kind === 'burger' && !G.tr
 const isRawPizza = () => G.tray.item && G.tray.item.kind === 'pizza' && !G.tray.item.baked;
 function act(a) {
   if (!G || !G.running) return; const t = G.tray;
+  if (XTRA[a]) return takeXtra(a);
   switch (a) {
     case 'bun': if (t.item) return; t.item = { kind: 'burger', fill: [], closed: false }; break;
     case 'dough': if (t.item || !has('oven')) return; t.item = { kind: 'pizza', sauce: false, cheese: false, tops: [], baked: false }; break;
     case 'patty': if (!isOpenBurger() || G.warm < 1) return; G.warm--; t.item.fill.push('patty'); renderGrill(true); break;
-    case 'cheese': case 'lettuce': case 'tomato': case 'bacon': if (!isOpenBurger()) return; if (a === 'bacon' && G.st.lv < 2) return; t.item.fill.push(a); break;
     case 'top': if (!isOpenBurger() || !t.item.fill.length) return; t.item.closed = true; break;
-    case 'sauce': if (!isRawPizza()) return; t.item.sauce = true; break;
+    case 'psauce': if (!isRawPizza()) return; t.item.sauce = true; break;
     case 'pcheese': if (!isRawPizza()) return; t.item.cheese = true; break;
-    case 'pepperoni': case 'mushroom': case 'olive': if (!isRawPizza() || t.item.tops.includes(a)) return; t.item.tops.push(a); break;
-    case 'bake': if (!isRawPizza() || G.oven || !t.item.sauce || !t.item.cheese) return; G.oven = { item: t.item, t: 0, done: false }; t.item = null; renderOven(); break;
-    case 'cola': if (!has('cola') || t.cola) return; t.cola = true; break;
-    case 'beer': if (!has('tap') || t.beer || G.pour != null) return; G.pour = 0; break;
-    case 'fries': if (!has('fryer') || t.fries || G.fry != null) return; G.fry = 0; renderFry(); break;
-    case 'trash': if (!t.item && !t.cola && !t.beer && !t.fries) return; t.item = null; t.cola = false; t.beer = false; t.fries = false; chefSay($('#gScene'), pick(CHEF_LINES.trash)); break;
+    case 'bake': if (!isRawPizza() || G.ovens.length >= ovenSlots() || !t.item.sauce || !t.item.cheese) return; G.ovens.push({ item: t.item, t: 0, done: false }); t.item = null; renderOven(); break;
+    case 'trash': if (!t.item && !t.side && !t.drink) return; t.item = null; t.side = null; t.drink = null; chefSay($('#gScene'), pick(CHEF_LINES.trash)); break;
+    default:
+      if (BURGER_ING.some(([k, lv]) => k === a && G.st.lv >= lv)) { if (!isOpenBurger()) return; t.item.fill.push(a); break; }
+      if (PIZZA_TOP.some(([k, lv]) => k === a && G.st.lv >= lv)) { if (!isRawPizza() || t.item.tops.includes(a)) return; t.item.tops.push(a); break; }
+      return;
   }
   Sound.play('tap');
-  renderTray(); renderIngs(); markReady();
+  renderTray(); renderIngs(); markReady(); renderRail();
 }
-function takeOven() { if (!G || !G.oven || !G.oven.done || G.tray.item) return; G.tray.item = G.oven.item; G.oven = null; renderOven(); renderTray(); renderIngs(); markReady(); }
+// 사이드·음료: 재고가 있으면 바로 쟁반에, 없으면 만들기 시작 (다 되면 쟁반에 올라가요)
+function takeXtra(id) {
+  const x = XTRA[id], kind = x.kind, t = G.tray;
+  if (!xtraOK(x) || t[kind]) return;
+  if (G.stock[id] > 0) { G.stock[id]--; t[kind] = id; Sound.play('tap'); }
+  else {
+    const arr = kind === 'side' ? G.fry : G.bar, slots = kind === 'side' ? fryerSlots() : 1;
+    if (arr.some(f => f.id === id && !f.auto)) return;
+    if (arr.length >= slots) { logMsg(kind === 'side' ? '튀김기가 꽉 찼어요. 다 튀겨질 때까지 기다려요' : '음료 바가 바빠요. 조금만 기다려요'); return; }
+    arr.push({ id, t: 0, T: kind === 'side' ? fryTime(x) : barTime(x), auto: false }); Sound.play('sizzle');
+    renderStation(kind);
+  }
+  renderTray(); renderXtra(); markReady(); renderRail();
+}
+function takeOven(i) { if (!G) return; const o = G.ovens[i]; if (!o || !o.done || G.tray.item) return; G.tray.item = o.item; G.ovens.splice(i, 1); renderOven(); renderTray(); renderIngs(); markReady(); renderRail(); }
 function addPatty() { if (!G || !G.running || G.grill.length >= grillSlots()) return; G.grill.push({ t: 0 }); Sound.play('sizzle'); renderGrill(true); }
-function serve(i) {
+function serve(i, auto) {
   const c = G && G.running && G.custs[i]; if (!c) return; const t = G.tray;
-  if (!t.item && !t.cola && !t.beer && !t.fries) { logMsg('쟁반이 비어 있어요. 주문서대로 먼저 만들어요!'); return; }
+  if (!t.item && !t.side && !t.drink) { logMsg('쟁반이 비어 있어요. 위 주문서를 보고 먼저 만들어요!'); return; }
   const seat = $('#gScene .seats').children[i];
   if (matches(c.o, t)) {
     const price = orderPrice(c.o), frac = c.p / c.max;
-    const tip = Math.round(price * .5 * frac * (c.friend ? 2 : 1) * (HID[c.char] && HID[c.char].rare ? 3 : 1)), gain = price + tip;
+    const tip = Math.round(price * .5 * frac * (c.friend ? 2 : 1) * (HID[c.char] && HID[c.char].rare ? 3 : 1) * tipMul()), gain = price + tip;
     G.earned += gain; G.tips += tip; G.served++;
-    G.rating = Math.min(5, G.rating + (frac > .5 ? .12 : .05));
-    G.custs[i] = null; t.item = null; t.cola = false; t.beer = false; t.fries = false;
+    G.rating = Math.min(5, G.rating + rateUp(frac > .5 ? .12 : .05));
+    G.custs[i] = null; t.item = null; t.side = null; t.drink = null;
     Sound.play('cash'); vib(15);
     const ln = lineOf(c.char, 'good');
     chefSay($('#gScene'), pick(CHEF_LINES.good));
-    logMsg(`${c.friend ? `👫 ${c.friend}님 ` : HID[c.char].rare ? `✨${nameOf(c.char)} 팁 3배! ` : ''}${orderName(c.o)} 완성! ${usd(price)} + 팁 ${usd(tip)}${ln ? ` · “${ln}”` : ''}`);
+    logMsg(`${auto ? '🍽️자동 서빙 · ' : ''}${c.friend ? `👫 ${c.friend}님 ` : HID[c.char].rare ? `✨${nameOf(c.char)} 팁 3배! ` : ''}${MENU_BY[c.o.menu].name} 완성! ${usd(price)} + 팁 ${usd(tip)}${ln ? ` · “${ln}”` : ''}`);
     floatTxt(seat, '+' + usd(gain)); leaveSeat(i, true);
   } else {
-    G.wrong++; G.rating = Math.max(1, G.rating - .15); c.p = Math.max(0, c.p - 6);
+    G.wrong++; G.rating = Math.max(1, G.rating - rateDown(.15)); c.p = Math.max(0, c.p - 6);
     Sound.play('bad'); vib([20, 40, 20]);
     chefSay($('#gScene'), pick(CHEF_LINES.bad));
-    logMsg('주문과 달라요! 주문서를 다시 보고, 틀렸으면 버리기로 쟁반을 비워요.');
+    logMsg('주문과 달라요! 위 주문서를 다시 보고, 틀렸으면 버리기로 쟁반을 비워요.');
     floatTxt(seat, '✗', true);
     const cu = seat.querySelector('.cust'); if (cu) { cu.classList.remove('mad'); void cu.offsetWidth; cu.classList.add('mad'); }
   }
-  renderTray(); renderIngs(); renderHud(); markReady();
+  renderTray(); renderIngs(); renderXtra(); renderHud(); markReady(); renderRail();
 }
 
 /* ── 게임 화면 그리기 ── */
@@ -1306,16 +1772,43 @@ function renderHud() {
   $('#hToday').textContent = usd(G.todayBase + G.earned);
   $('#hRate').textContent = '★' + G.rating.toFixed(1);
 }
+const SEAT_COL = ['#D33A31', '#1E8A84', '#8C6BD6', '#F08C00'];
 function renderSeat(i) {
   const seat = $('#gScene .seats').children[i]; const c = G.custs[i];
   seat.classList.remove('ready');
-  if (!c) { seat.innerHTML = '<div class="empty">빈자리</div>'; seat.setAttribute('aria-label', '빈자리'); return; }
-  seat.innerHTML = `<div class="cust${HID[c.char] && HID[c.char].rare ? ' sr' : ''}">
-      <div class="ticket"><div class="food">${orderSVG(c.o, 30)}</div><div class="tname">${esc(orderName(c.o))}</div><div class="price">${usd(orderPrice(c.o))}</div></div>
-      <div class="who">${c.friend ? `<span class="ftag">👫${esc(c.friend)}</span>` : ''}${HID[c.char] && HID[c.char].rare ? '<span class="srtag">✨초희귀</span>' : ''}<img src="${imgOf(c.char)}" alt="${esc(nameOf(c.char))}"><div class="body" style="--c:${c.shirt}"></div></div>
+  if (!c) { seat.innerHTML = '<div class="empty">빈자리</div>'; seat.setAttribute('aria-label', '빈자리'); renderRail(i); return; }
+  const m = MENU_BY[c.o.menu], rare = HID[c.char] && HID[c.char].rare;
+  seat.innerHTML = `<div class="cust${rare ? ' sr' : ''}">
+      <div class="ticket" style="border-top:5px solid ${SEAT_COL[i]}"><div class="food">${orderSVG(c.o, 28)}</div><div class="tname">${esc(m.name)}</div><div class="price">${usd(orderPrice(c.o))}</div></div>
+      <div class="who">${c.friend ? `<span class="ftag">👫${esc(c.friend)}</span>` : ''}${rare ? '<span class="srtag">✨초희귀</span>' : ''}<img src="${imgOf(c.char)}" alt="${esc(nameOf(c.char))}"></div>
     </div><div class="pat"><i></i></div>`;
   seat.setAttribute('aria-label', `${nameOf(c.char)} 손님 주문: ${orderName(c.o)}. 눌러서 내주기`);
-  renderPatience(i);
+  renderPatience(i); renderRail(i);
+}
+// 주문서 레일: 레시피(재료)를 크게 보여줘요. 쟁반에 맞게 담긴 재료는 초록색
+function recipeChips(m, t) {
+  const cnt = a => a.reduce((o, k) => (o[k] = (o[k] || 0) + 1, o), {});
+  if (m.kind === 'burger') {
+    const need = cnt(m.fill), have = t.item && t.item.kind === 'burger' ? cnt(t.item.fill) : {};
+    return Object.entries(need).map(([k, n]) => `<span class="ch t ${have[k] === n ? 'ok' : (have[k] || 0) > n ? 'over' : ''}"><em>${NAMES[k]}${n > 1 ? '×' + n : ''}</em></span>`).join('');
+  }
+  const have = t.item && t.item.kind === 'pizza' ? t.item.tops : [];
+  return `<span class="ch t ${t.item && t.item.kind === 'pizza' && t.item.sauce && t.item.cheese ? 'ok' : ''}"><em>소스+치즈</em></span>` + m.tops.map(k => `<span class="ch t ${have.includes(k) ? 'ok' : ''}"><em>${NAMES[k]}</em></span>`).join('');
+}
+function renderRail(only) {
+  if (!G) return;
+  const cards = $('#rail').children;
+  for (let i = 0; i < G.custs.length; i++) {
+    if (only != null && only !== i) continue;
+    const c = G.custs[i], el = cards[i]; if (!el) continue;
+    if (!c) { el.className = 'rc empty'; el.innerHTML = ''; continue; }
+    const m = MENU_BY[c.o.menu], t = G.tray;
+    el.className = 'rc' + (matches(c.o, t) ? ' ready' : '');
+    el.style.borderColor = SEAT_COL[i];
+    el.innerHTML = `<div class="rn" style="background:${SEAT_COL[i]}">${esc(m.name)}</div><div class="rr">${esc(m.ref)}</div>
+      <div class="chips">${recipeChips(m, t)}${m.kind === 'burger' ? `<span class="ch t ${t.item && t.item.closed ? 'ok' : ''}"><em>위빵</em></span>` : `<span class="ch t ${t.item && t.item.baked ? 'ok' : ''}"><em>🔥오븐</em></span>`}</div>
+      ${c.o.side || c.o.drink ? `<div class="chips">${[c.o.side, c.o.drink].filter(Boolean).map(id => `<span class="ch t x ${t.side === id || t.drink === id ? 'ok' : ''}"><em>${XTRA[id].kind === 'side' ? '🍟' : '🥤'}${esc(XTRA[id].name)}</em></span>`).join('')}</div>` : ''}`;
+  }
 }
 function leaveSeat(i, happy) {
   const seat = $('#gScene .seats').children[i]; const cu = seat.querySelector('.cust');
@@ -1323,6 +1816,7 @@ function leaveSeat(i, happy) {
   const pat = seat.querySelector('.pat'); if (pat) pat.remove();
   if (cu) { cu.classList.add(happy ? 'happy' : 'mad'); setTimeout(() => cu.classList.add('out'), happy ? 380 : 300); }
   setTimeout(() => { if (G && !G.custs[i]) { const fl = seat.querySelector('.float'); seat.innerHTML = '<div class="empty">빈자리</div>'; if (fl) seat.appendChild(fl); } }, happy ? 800 : 700);
+  renderRail(i);
 }
 function renderPatience(i) {
   const seat = $('#gScene .seats').children[i], c = G.custs[i]; if (!seat || !c) return;
@@ -1333,14 +1827,14 @@ function renderPatience(i) {
 function markReady() { if (!G) return; [...$('#gScene .seats').children].forEach((b, i) => { const c = G.custs[i]; b.classList.toggle('ready', !!c && matches(c.o, G.tray)); }); }
 function renderTray() {
   const tr = $('#tray'), t = G.tray;
-  if (!t.item && !t.cola && !t.beer && !t.fries) { tr.innerHTML = `<div class="hint">${has('oven') ? '아래빵이나 도우를 눌러 시작해요' : '아래빵을 눌러 버거를 시작해요 🍔'}</div>`; $('#trayName').textContent = '비어 있음'; return; }
+  if (!t.item && !t.side && !t.drink) { tr.innerHTML = `<div class="hint">${has('oven') ? '아래빵이나 도우를 눌러 시작해요' : '아래빵을 눌러 버거를 시작해요 🍔'}</div>`; $('#trayName').textContent = '비어 있음'; return; }
   let h = '';
-  if (t.item) h += t.item.kind === 'burger' ? burgerSVG(t.item.fill, t.item.closed, 92) : pizzaSVG(t.item, 92);
-  if (t.fries) h += friesSVG(40); if (t.cola) h += colaSVG(30); if (t.beer) h += beerSVG(42);
+  if (t.item) h += t.item.kind === 'burger' ? burgerSVG(t.item.fill, t.item.closed, 86) : pizzaSVG(t.item, 88);
+  if (t.side) h += xtraSVG(t.side, 42); if (t.drink) h += xtraSVG(t.drink, 38);
   tr.innerHTML = h;
   let n = '';
   if (t.item) n = t.item.kind === 'burger' ? (t.item.closed ? '완성된 버거 ✔' : '버거 만드는 중') : (t.item.baked ? '구운 피자 ✔' : '피자 만드는 중 → 오븐에!');
-  ['fries', 'cola', 'beer'].forEach(k => { if (t[k]) n += (n ? ' + ' : '') + NAMES[k]; });
+  [t.side, t.drink].filter(Boolean).forEach(k => { n += (n ? ' + ' : '') + XTRA[k].name; });
   $('#trayName').textContent = n;
 }
 function ib(a, label, sub, cls, dis) { return `<button class="ib ${cls || ''}" type="button" data-a="${a}" ${dis ? 'disabled' : ''}>${iconSVG(a)}${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>`; }
@@ -1350,21 +1844,24 @@ function renderIngs() {
     h += ib('bun', '아래빵', '버거 시작', 'start');
     h += ib('dough', '도우', has('oven') ? '피자 시작' : '오븐 필요', 'start', !has('oven'));
   } else if (t.item.kind === 'burger' && !t.item.closed) {
-    h += ib('patty', '패티', `준비 ${G.warm}개`, '', G.warm < 1);
-    ['cheese', 'lettuce', 'tomato'].forEach(k => h += ib(k, NAMES[k]));
-    h += ib('bacon', '베이컨', G.st.lv >= 2 ? '' : 'Lv.2부터', '', G.st.lv < 2);
-    h += ib('top', '위빵', '버거 완성', 'act', t.item.fill.length < 1);
+    BURGER_ING.filter(ingOK).forEach(([k]) => { h += k === 'patty' ? ib('patty', '패티', `준비 ${G.warm}`, '', G.warm < 1) : ib(k, NAMES[k]); });
+    h += ib('top', '위빵', '완성', 'act', t.item.fill.length < 1);
   } else if (t.item.kind === 'pizza' && !t.item.baked) {
-    h += ib('sauce', '소스', '', '', t.item.sauce);
+    h += ib('psauce', '소스', '', '', t.item.sauce);
     h += ib('pcheese', '모차렐라', '', '', t.item.cheese);
-    ['pepperoni', 'mushroom', 'olive'].forEach(k => h += ib(k, NAMES[k], '', '', t.item.tops.includes(k)));
-    h += ib('bake', '오븐에', G.oven ? '오븐 사용 중' : '5초', 'act', !!G.oven || !t.item.sauce || !t.item.cheese);
-  }
-  if (has('fryer')) h += ib('fries', '감튀', t.fries ? '담았어요' : G.fry != null ? '튀기는 중…' : '3초 · +$3', '', t.fries || G.fry != null);
-  if (has('cola')) h += ib('cola', '콜라', t.cola ? '담았어요' : '+$2', '', t.cola);
-  if (has('tap')) h += ib('beer', '생맥주', t.beer ? '담았어요' : G.pour != null ? '따르는 중…' : '2초 · +$4', '', t.beer || G.pour != null);
-  h += ib('trash', '버리기', '쟁반 비우기', 'trash', !t.item && !t.cola && !t.beer && !t.fries);
+    PIZZA_TOP.filter(ingOK).forEach(([k]) => { h += ib(k, NAMES[k], '', '', t.item.tops.includes(k)); });
+    h += ib('bake', '오븐에', G.ovens.length >= ovenSlots() ? '꽉 참' : '5초', 'act', G.ovens.length >= ovenSlots() || !t.item.sauce || !t.item.cheese);
+  } else h += `<div class="done-msg">✔ 완성! 사이드·음료를 담고 손님을 눌러요</div>`;
+  h += ib('trash', '버리기', '', 'trash', !t.item && !t.side && !t.drink);
   $('#ings').innerHTML = h;
+}
+function renderXtra() {
+  const box = $('#xtra'), t = G.tray, list = [...SIDES, ...DRINKS].filter(xtraOK);
+  if (!list.length) { box.innerHTML = '<span class="cap" style="padding:6px">🍟🥤 사이드·음료는 상점에서 튀김기·콜라 머신을 사면 열려요</span>'; return; }
+  box.innerHTML = list.map(x => {
+    const n = G.stock[x.id] || 0, busy = (x.kind === 'side' ? G.fry : G.bar).some(f => f.id === x.id), on = t[x.kind] === x.id;
+    return `<button class="xb ${on ? 'on' : ''}" type="button" data-a="${x.id}" ${t[x.kind] ? 'disabled' : ''}>${xtraSVG(x.id, 22)}<span>${esc(x.name)}</span><small>${on ? '담음 ✔' : n ? `재고 ${n}` : busy ? '만드는 중…' : x.t >= 1 ? `${(x.kind === 'side' ? fryTime(x) : barTime(x)).toFixed(1)}초` : '바로'}</small></button>`;
+  }).join('');
 }
 const PATTY_ICON = cooked => `<svg viewBox="0 0 100 34"><ellipse cx="50" cy="19" rx="46" ry="12" fill="${cooked >= 1 ? 'url(#gPatty)' : cooked > .5 ? '#A85D3A' : 'url(#gRaw)'}" stroke="#2E160A" stroke-width="2.4"/>${cooked > .5 ? '<path d="M24 16h14M46 21h14M68 16h12" stroke="#2B130A" stroke-width="3" stroke-linecap="round" opacity=".55"/>' : ''}</svg>`;
 function renderGrill(full) {
@@ -1380,64 +1877,84 @@ function renderGrill(full) {
     bar.style.width = (Math.max(0, f) * 100) + '%';
   });
   $('#warm').textContent = G.warm;
-  $('#grillInfo').textContent = `그릴 ${G.grill.length}/${n} · ${cookTime()}초${has('helper') ? ' · 🧑‍🍳알바' : ''}`;
+  $('#grillInfo').textContent = `그릴 ${G.grill.length}/${n} · ${cookTime().toFixed(1)}초${sk('kitchen') ? ' · 🍳자동' : ''}`;
   $('#addPatty').disabled = G.grill.length >= n;
 }
 function renderOven() {
   const box = $('#ovenBox');
   if (!has('oven')) { box.innerHTML = `<div class="locked">🔒<br>Lv.3부터</div>`; return; }
-  const o = G.oven;
-  box.innerHTML = `<button class="oven ${o && !o.done ? 'on' : ''}" type="button" id="ovenBtn"><span class="mouth"></span><span class="lbl">${!o ? '비어 있음' : o.done ? (G.tray.item ? '쟁반 비워요' : '눌러 꺼내기!') : '굽는 중…'}</span><span class="bar"><i style="width:${o ? Math.min(100, o.t / 5 * 100) : 0}%"></i></span></button>`;
-  $('#ovenBtn').onclick = takeOven;
+  const n = ovenSlots();
+  box.innerHTML = `<div class="ovs" style="--n:${n}">${Array.from({ length: n }, (_, i) => { const o = G.ovens[i]; return `<button class="oven ${o && !o.done ? 'on' : ''}" type="button" data-ov="${i}"><span class="mouth"></span><span class="lbl">${!o ? '비어 있음' : o.done ? (G.tray.item ? '쟁반 비워요' : '꺼내기!') : '굽는 중'}</span><span class="bar"><i style="width:${o ? Math.min(100, o.t / 5 * 100) : 0}%"></i></span></button>`; }).join('')}</div>`;
+  box.querySelectorAll('[data-ov]').forEach(b => b.onclick = () => takeOven(+b.dataset.ov));
 }
-function renderFry() {
-  const box = $('#fryBox');
-  if (!has('fryer')) { box.innerHTML = `<div class="locked">🔒<br>설비에서 설치</div>`; return; }
-  box.innerHTML = `<div class="fryer ${G.fry != null ? 'on' : ''}"><span class="oil"></span><span class="lbl">${G.fry != null ? '지글지글' : '대기'}</span><span class="bar"><i style="width:0%"></i></span></div>`;
+function renderOvenBars() { document.querySelectorAll('#ovenBox [data-ov]').forEach((b, i) => { const o = G.ovens[i], el = b.querySelector('.bar i'); if (el) el.style.width = (o ? Math.min(100, o.t / 5 * 100) : 0) + '%'; }); }
+function renderStation(kind) {
+  const box = $(kind === 'side' ? '#fryBox' : '#barBox'), arr = kind === 'side' ? G.fry : G.bar;
+  const ok = kind === 'side' ? has('fryer') : DRINKS.some(xtraOK);
+  if (!ok) { box.innerHTML = `<div class="locked">🔒<br>설비에서</div>`; return; }
+  box.innerHTML = `<div class="fryer ${arr.length ? 'on' : ''} ${kind}"><span class="oil"></span><span class="lbl">${arr.length ? arr.map(f => XTRA[f.id].name).join('·') : '대기'}</span><span class="bar"><i style="width:0%"></i></span></div>`;
 }
-function renderBar(sel, f) { const i = document.querySelector(sel + ' .bar i'); if (i) i.style.width = Math.min(100, f * 100) + '%'; }
-function renderAll() { renderHud(); for (let i = 0; i < G.custs.length; i++) renderSeat(i); renderTray(); renderIngs(); renderGrill(true); renderOven(); renderFry(); logMsg('주문서를 보고 쟁반에 만든 뒤, 손님을 눌러서 내줘요!'); }
+function renderStationBars(kind) { const arr = kind === 'side' ? G.fry : G.bar; const i = document.querySelector((kind === 'side' ? '#fryBox' : '#barBox') + ' .bar i'); if (i) i.style.width = (arr.length ? Math.min(100, arr[0].t / arr[0].T * 100) : 0) + '%'; }
+function renderAll() { renderHud(); for (let i = 0; i < G.custs.length; i++) renderSeat(i); renderTray(); renderIngs(); renderXtra(); renderGrill(true); renderOven(); renderStation('side'); renderStation('drink'); renderRail(); logMsg('위 주문서(레시피)대로 쟁반에 만든 뒤, 손님을 눌러서 내줘요!'); }
 
-/* ── 영업 끝: 번 돈 저장 (key로 한 번만) ── */
+/* ── 영업 끝: 번 돈 + 체인점 수익 − 직원 급여 (key로 한 번만) ── */
+const wageOf = (s, mgr) => Math.round((s.wage || 0) * (mgr >= 4 ? .8 : mgr >= 2 ? .9 : 1));
+function payroll(p) { const st = staffList(p), mgr = Math.max(0, ...st.filter(s => s.role === 'manager').map(s => s.lv || 1)); return st.reduce((a, s) => a + wageOf(s, mgr), 0); }
 async function settleRound(g) {
   const d = todayKST();
+  let res = null;
   const r = await txMe(c => {
     c.tx = c.tx || {}; if (c.tx[g.key]) return undefined;
-    c.money = (c.money || 0) + g.earned; c.total = (c.total || 0) + g.earned;
+    const chain = chainIncome(c.chains), wages = payroll(c), gross = g.earned + chain;
+    const pay = Math.min(wages, (c.money || 0) + gross);
+    c.money = (c.money || 0) + gross - pay; c.total = (c.total || 0) + gross;
     c.rounds = (c.rounds || 0) + 1; c.served = (c.served || 0) + g.served;
     c.best = Math.max(c.best || 0, g.earned); c.rating = Math.round(g.rating * 100) / 100;
     c.sales = c.sales || {}; const x = c.sales[d] = c.sales[d] || { rev: 0, n: 0, r: 0 };
-    x.rev += g.earned; x.n += g.served; x.r += 1; pruneDates(c.sales, 120);
+    x.rev += gross; x.n += g.served; x.r += 1; x.wage = (x.wage || 0) + pay; x.chain = (x.chain || 0) + chain; pruneDates(c.sales, 120);
+    for (const s of Object.values(c.staff || {})) if (s) s.xp = (s.xp || 0) + 1;
+    Object.entries(c.chains || {}).forEach(([id, b]) => { const ci = CITIES.find(x => x.id === id); if (ci && b) b.earned = (b.earned || 0) + Math.round(ci.inc * CHAIN_LV[(b.lv || 1) - 1].mul); });
     c.tx[g.key] = Date.now(); const ks = Object.keys(c.tx); if (ks.length > 40) ks.sort((a, b) => c.tx[a] - c.tx[b]).slice(0, ks.length - 40).forEach(k => delete c.tx[k]);
+    res = { chain, wages: pay };
     return c;
   });
-  return r && (r.committed || !!(r.value && r.value.tx && r.value.tx[g.key]));
+  const ok = r && (r.committed || !!(r.value && r.value.tx && r.value.tx[g.key]));
+  return ok ? (res || { chain: 0, wages: 0 }) : null;
 }
 async function endRound(quit) {
   const g = G; if (!g) return;
   g.running = false;
   Sound.play('end');
-  let ok = false;
-  for (let n = 0; n < 4 && !ok; n++) { try { ok = await settleRound(g); } catch (e) { await sleep(800 * (n + 1)); } }
-  if (quit) { G = null; show('lobby'); toast(ok ? `영업을 접었어요. ${usd(g.earned)} 챙겼어요` : '저장하지 못했어요. 연결을 확인해 주세요', 2600); return; }
+  let res = null;
+  for (let n = 0; n < 4 && !res; n++) { try { res = await settleRound(g); } catch (e) { await sleep(800 * (n + 1)); } }
+  const ok = !!res; res = res || { chain: 0, wages: 0 };
+  if (quit) { G = null; show('lobby'); toast(ok ? `영업을 접었어요. ${usd(g.earned)} 챙기고 급여 ${usd(res.wages)} 줬어요` : '저장하지 못했어요. 연결을 확인해 주세요', 2800); return; }
   const best = me && g.earned >= (me.best || 0) && g.earned > 0;
+  const net = g.earned + res.chain - res.wages;
   $('#ovRoot').innerHTML = `<div class="ov"><div class="sheet">
     <h2>${best ? '🎉 최고 매출 신기록!' : '오늘 영업 끝, 수고했다고!'}</h2>
     <div class="row">${chefImg(110)}<p>${esc(pick(g.served >= 8 ? ['이게 바로 어메리카 스타일이지!', '대박! 오늘 장사 끝내줬다!'] : g.served >= 3 ? ['Alright! 이 정도면 괜찮지!', '내일은 더 팔아 보자고!'] : ['괜찮아, 다음 영업은 더 잘할 거야!', '그릴 미리 달궈 두자고!']))}</p></div>
-    <div class="sum"><div>이번 매출<b class="num" style="color:var(--red-d)">${usd(g.earned)}</b></div><div>손님<b>${g.served}명</b></div><div>놓친 손님<b>${g.missed}명</b></div></div>
-    <p class="small muted">팁 ${usd(g.tips)} · 잘못 낸 음식 ${g.wrong}번 · 평점 ★${g.rating.toFixed(1)} · 오늘 매출 합계 <b>${usd(g.todayBase + g.earned)}</b>${ok ? '' : ' · ⚠️ 저장 실패 (연결 확인)'}</p>
+    <div class="sum"><div>가게 매출<b class="num" style="color:var(--red-d)">${usd(g.earned)}</b></div><div>손님<b>${g.served}명</b></div><div>놓친 손님<b>${g.missed}명</b></div></div>
+    <div class="card small" style="display:grid;gap:4px;padding:10px">
+      <div class="row" style="justify-content:space-between"><span>🍔 가게 매출 (팁 ${usd(g.tips)} 포함)</span><b>${usd(g.earned)}</b></div>
+      ${res.chain ? `<div class="row" style="justify-content:space-between"><span>🗺️ 체인점 수익</span><b>+${usd(res.chain)}</b></div>` : ''}
+      ${res.wages ? `<div class="row" style="justify-content:space-between"><span>👥 직원 급여</span><b style="color:var(--red-d)">−${usd(res.wages)}</b></div>` : ''}
+      <div class="row" style="justify-content:space-between;border-top:2px dashed #C9B9A6;padding-top:4px"><span>💵 순이익</span><b style="font:400 18px var(--d)">${usd(net)}</b></div></div>
+    <p class="small muted">잘못 낸 음식 ${g.wrong}번 · 평점 ★${g.rating.toFixed(1)} · 오늘 매출 합계 <b>${usd(g.todayBase + g.earned + res.chain)}</b>${ok ? '' : ' · ⚠️ 저장 실패 (연결 확인)'}</p>
     <div class="grid2"><button class="btn ghost" id="erHome">🏠 가게로</button><button class="btn red" id="erAgain">🍔 한 번 더 영업</button></div>
-    <button class="btn teal" id="erShop">🛠️ 가게 키우기 (현금 ${usd(me ? me.money : 0)})</button></div></div>`;
+    <div class="grid2"><button class="btn teal" id="erShop">🛠️ 가게 키우기</button><button class="btn navy" id="erStaff">👥 직원</button></div></div></div>`;
   const close = () => { $('#ovRoot').innerHTML = ''; };
   $('#erHome').onclick = () => { close(); G = null; show('lobby'); };
   $('#erAgain').onclick = () => { close(); startRound(); };
   $('#erShop').onclick = () => { close(); G = null; show('shop'); };
+  $('#erStaff').onclick = () => { close(); G = null; show('staff'); };
 }
 $('#gQuit').onclick = () => {
   if (!G || !G.running) return;
-  modal(`<h2>영업을 접을까요?</h2><p>지금까지 번 <b>${usd(G.earned)}</b>는 챙겨서 나가요.</p><div class="grid2"><button class="btn ghost" data-close>계속 영업</button><button class="btn red" id="qGo">접기</button></div>`, (s, close) => { $('#qGo', s).onclick = () => { close(); endRound(true); }; });
+  modal(`<h2>영업을 접을까요?</h2><p>지금까지 번 <b>${usd(G.earned)}</b>는 챙기고, 직원 급여는 똑같이 나가요.</p><div class="grid2"><button class="btn ghost" data-close>계속 영업</button><button class="btn red" id="qGo">접기</button></div>`, (s, close) => { $('#qGo', s).onclick = () => { close(); endRound(true); }; });
 };
 $('#ings').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a); });
+$('#xtra').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a); });
 $('#addPatty').innerHTML = `${PATTY_ICON(0).replace('<svg ', '<svg style="width:34px;height:20px" ')}패티 굽기<small>그릴에 올리기</small>`;
 $('#addPatty').onclick = addPatty;
 document.addEventListener('visibilitychange', () => { last = performance.now(); });
