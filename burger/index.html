@@ -264,6 +264,8 @@ p{margin:0}
 .rc{background:#fff;border:2.5px solid var(--ink);border-radius:10px;padding:0 0 4px;min-height:62px;overflow:hidden;display:grid;align-content:start;gap:2px}
 .rc.empty{background:rgba(43,34,32,.06);border-style:dashed;border-color:#C9B9A6!important}
 .rc.ready{box-shadow:0 0 0 3px #9BE3A8}
+.rc[data-i]:not(.empty){cursor:pointer}
+.xtra.nudge{animation:shake .4s ease 2}
 .rc .rn{color:#fff;font:400 12px/1.2 var(--d);padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc .rr{font-size:8.5px;color:var(--muted);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:2px;padding:0 3px;align-items:center}
@@ -401,7 +403,7 @@ const CFG = {
   visitBonus: 10, visitMax: 10, // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261116-4';
+const APP_VERSION = '20261116-5';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -1573,12 +1575,31 @@ function orderPrice(o) {
   return Math.round(p * priceMul());
 }
 const sortStr = a => a.slice().sort().join(',');
-function matches(o, t) {
-  if (!t.item || (o.side || null) !== (t.side || null) || (o.drink || null) !== (t.drink || null)) return false;
-  const m = MENU_BY[o.menu];
-  if (m.kind === 'burger') return t.item.kind === 'burger' && t.item.closed && sortStr(m.fill) === sortStr(t.item.fill);
-  return t.item.kind === 'pizza' && t.item.baked && t.item.sauce && t.item.cheese && sortStr(m.tops) === sortStr(t.item.tops);
+// 메인 메뉴가 맞는지 + 틀리면 무엇이 다른지 알려줘요
+function mainDiff(o, t) {
+  const m = MENU_BY[o.menu], it = t.item;
+  if (!it) return [`${m.kind === 'burger' ? '버거' : '피자'}가 쟁반에 없어요`];
+  if (m.kind !== it.kind) return [`주문은 ${m.kind === 'burger' ? '버거' : '피자'}예요`];
+  const cnt = a => a.reduce((x, k) => (x[k] = (x[k] || 0) + 1, x), {});
+  const out = [];
+  if (m.kind === 'burger') {
+    const need = cnt(m.fill), have = cnt(it.fill);
+    for (const k of new Set([...Object.keys(need), ...Object.keys(have)])) {
+      const d = (need[k] || 0) - (have[k] || 0);
+      if (d > 0) out.push(`${NAMES[k]} ${d}개 더`); else if (d < 0) out.push(`${NAMES[k]} ${-d}개 빼기`);
+    }
+    if (!out.length && !it.closed) out.push('위빵을 덮어야 해요');
+  } else {
+    if (!it.sauce) out.push('소스'); if (!it.cheese) out.push('모차렐라');
+    m.tops.filter(k => !it.tops.includes(k)).forEach(k => out.push(`${NAMES[k]} 더`));
+    it.tops.filter(k => !m.tops.includes(k)).forEach(k => out.push(`${NAMES[k]} 빼기`));
+    if (!out.length && !it.baked) out.push('오븐에 구워야 해요');
+  }
+  return out;
 }
+// 주문한 사이드·음료 중 쟁반에 없는 것 (주문 안 한 사이드·음료가 쟁반에 있어도 괜찮아요 — 재고로 돌아가요)
+const missingXtra = (o, t) => [o.side, o.drink].filter(id => id && t.side !== id && t.drink !== id);
+function matches(o, t) { return !mainDiff(o, t).length && !missingXtra(o, t).length; }
 const staffList = p => Object.values((p && p.staff) || {}).filter(s => s && ROLES[s.role]);
 async function startRound() {
   if (!me) return;
@@ -1741,7 +1762,18 @@ function serve(i, auto) {
   const c = G && G.running && G.custs[i]; if (!c) return; const t = G.tray;
   if (!t.item && !t.side && !t.drink) { logMsg('쟁반이 비어 있어요. 위 주문서를 보고 먼저 만들어요!'); return; }
   const seat = $('#gScene .seats').children[i];
-  if (matches(c.o, t)) {
+  const diff = mainDiff(c.o, t), miss = missingXtra(c.o, t);
+  if (!diff.length && miss.length) {
+    // 메인은 맞는데 사이드·음료가 빠졌으면 벌점 없이 알려만 줘요
+    Sound.play('tap');
+    logMsg(`🍔 ${MENU_BY[c.o.menu].name} 완벽해요! ${miss.map(id => XTRA[id].name).join('·')}만 아래 버튼으로 담아 주세요`);
+    floatTxt(seat, `+${miss.map(id => XTRA[id].kind === 'side' ? '🍟' : '🥤').join('')}?`, true);
+    const k = $('#xtra'); if (k) { k.classList.remove('nudge'); void k.offsetWidth; k.classList.add('nudge'); }
+    return;
+  }
+  if (!diff.length) {
+    // 주문 안 한 사이드·음료는 재고로 돌려놔요
+    ['side', 'drink'].forEach(kd => { if (t[kd] && c.o[kd] !== t[kd]) G.stock[t[kd]] = (G.stock[t[kd]] || 0) + 1; });
     const price = orderPrice(c.o), frac = c.p / c.max;
     const tip = Math.round(price * .5 * frac * (c.friend ? 2 : 1) * (HID[c.char] && HID[c.char].rare ? 3 : 1) * tipMul()), gain = price + tip;
     G.earned += gain; G.tips += tip; G.served++;
@@ -1756,7 +1788,7 @@ function serve(i, auto) {
     G.wrong++; G.rating = Math.max(1, G.rating - rateDown(.15)); c.p = Math.max(0, c.p - 6);
     Sound.play('bad'); vib([20, 40, 20]);
     chefSay($('#gScene'), pick(CHEF_LINES.bad));
-    logMsg('주문과 달라요! 위 주문서를 다시 보고, 틀렸으면 버리기로 쟁반을 비워요.');
+    logMsg(`주문과 달라요! ${MENU_BY[c.o.menu].name}: ${diff.slice(0, 4).join(', ')}${diff.length > 4 ? ' …' : ''}`);
     floatTxt(seat, '✗', true);
     const cu = seat.querySelector('.cust'); if (cu) { cu.classList.remove('mad'); void cu.offsetWidth; cu.classList.add('mad'); }
   }
@@ -1895,7 +1927,7 @@ function renderStation(kind) {
   box.innerHTML = `<div class="fryer ${arr.length ? 'on' : ''} ${kind}"><span class="oil"></span><span class="lbl">${arr.length ? arr.map(f => XTRA[f.id].name).join('·') : '대기'}</span><span class="bar"><i style="width:0%"></i></span></div>`;
 }
 function renderStationBars(kind) { const arr = kind === 'side' ? G.fry : G.bar; const i = document.querySelector((kind === 'side' ? '#fryBox' : '#barBox') + ' .bar i'); if (i) i.style.width = (arr.length ? Math.min(100, arr[0].t / arr[0].T * 100) : 0) + '%'; }
-function renderAll() { renderHud(); for (let i = 0; i < G.custs.length; i++) renderSeat(i); renderTray(); renderIngs(); renderXtra(); renderGrill(true); renderOven(); renderStation('side'); renderStation('drink'); renderRail(); logMsg('위 주문서(레시피)대로 쟁반에 만든 뒤, 손님을 눌러서 내줘요!'); }
+function renderAll() { renderHud(); for (let i = 0; i < G.custs.length; i++) renderSeat(i); renderTray(); renderIngs(); renderXtra(); renderGrill(true); renderOven(); renderStation('side'); renderStation('drink'); renderRail(); logMsg('위 주문서(레시피)대로 쟁반에 만든 뒤, 손님이나 주문서를 눌러서 내줘요!'); }
 
 /* ── 영업 끝: 번 돈 + 체인점 수익 − 직원 급여 (key로 한 번만) ── */
 const wageOf = (s, mgr) => Math.round((s.wage || 0) * (mgr >= 4 ? .8 : mgr >= 2 ? .9 : 1));
@@ -1954,6 +1986,7 @@ $('#gQuit').onclick = () => {
   modal(`<h2>영업을 접을까요?</h2><p>지금까지 번 <b>${usd(G.earned)}</b>는 챙기고, 직원 급여는 똑같이 나가요.</p><div class="grid2"><button class="btn ghost" data-close>계속 영업</button><button class="btn red" id="qGo">접기</button></div>`, (s, close) => { $('#qGo', s).onclick = () => { close(); endRound(true); }; });
 };
 $('#ings').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a); });
+$('#rail').addEventListener('click', e => { const r = e.target.closest('.rc[data-i]'); if (r && G && G.custs[+r.dataset.i]) serve(+r.dataset.i); });
 $('#xtra').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a); });
 $('#addPatty').innerHTML = `${PATTY_ICON(0).replace('<svg ', '<svg style="width:34px;height:20px" ')}패티 굽기<small>그릴에 올리기</small>`;
 $('#addPatty').onclick = addPatty;
@@ -1979,7 +2012,7 @@ async function checkVersion() {
     const t = e.target, tag = t && t.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     e.preventDefault();
-    const b = t && t.closest && t.closest('button,a,label');
+    const b = t && t.closest && t.closest('button,a,label,.rc[data-i]');
     if (b && !b.disabled) b.click();
   }, { passive: false });
   addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
