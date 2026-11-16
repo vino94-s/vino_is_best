@@ -288,7 +288,7 @@ p{margin:0}
     <div class="chip"><span>보유</span><b id="hMoney" class="num">$0</b></div>
     <div class="chip"><span>오늘 매출</span><b id="hToday" class="num">$0</b></div>
     <div class="chip"><span>평점</span><b id="hRate">★3.0</b></div>
-    <div class="chip time"><span id="hClock">영업 90초</span><div class="timebar"><i id="hTime"></i></div></div>
+    <div class="chip time"><span id="hClock">영업 120초</span><div class="timebar"><i id="hTime"></i></div></div>
     <button class="x" id="gQuit" aria-label="영업 그만하기">✕</button>
   </div>
   <div class="scene" id="gScene"></div>
@@ -326,11 +326,11 @@ const CFG = {
   prefix: 'rooms/burger-',
   startMoney: 100,          // 가입 선물 $100
   daily: 50, dailyHour: 6,  // 매일 한국 시간 아침 6시 이후 첫 접속 때 $50 (영업일도 아침 6시에 바뀌어요)
-  dayLen: 90,               // 영업 한 번 90초
+  dayLen: 120,               // 영업 한 번 120초
   visitBonus: 10, visitMax: 10, // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261116-2';
+const APP_VERSION = '20261116-3';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
