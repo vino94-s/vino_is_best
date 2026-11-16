@@ -1,0 +1,1518 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" id="vp" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#C8312B">
+<meta name="description" content="준탁 셰프와 푸드트럭에서 시작해 어메리카 버거하우스까지! 주문대로 버거를 만들고, 가게를 키우고, 친구 가게에 놀러가요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="놀러오세요, 준탁의 어메리카 버거하우스">
+<meta property="og:description" content="푸드트럭에서 버거하우스 본점까지! 주문대로 버거 만들고 가게 키우고 친구 가게에 놀러가요.">
+<meta property="og:image" content="https://vino94-s.github.io/vino_is_best/burger/thumb.jpg">
+<meta property="og:image:width" content="800">
+<meta property="og:image:height" content="800">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="thumb.jpg">
+<link rel="apple-touch-icon" href="thumb.jpg">
+<title>놀러오세요, 준탁의 어메리카 버거하우스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<script>
+// 카톡·라인 인앱 브라우저는 채팅방에 다녀오면 게임이 닫혀서, 휴대폰 기본 브라우저로 옮겨 열어요.
+(function () {
+  var ua = navigator.userAgent || '';
+  if (/KAKAOTALK/i.test(ua)) location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+  else if (/\bLine\//.test(ua) && !/openExternalBrowser=1/.test(location.search)) location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
+})();
+</script>
+<style>
+/* 레이아웃: 위 간판·계기판 → 가게 장면(셰프 준탁 + 손님 카운터) → 쟁반·재료 → 그릴·오븐·튀김기. 한 화면 세로 게임 */
+:root{
+  --cream:#FFF3DA;--paper:#FFFBF2;--red:#D33A31;--red-d:#9C2621;--teal:#1E8A84;--teal-d:#12605B;--navy:#24324D;
+  --ink:#2B2220;--muted:#7A6A5E;--mustard:#F6B731;--mustard-d:#B9800E;--chrome:#D5DCE2;--good:#3B9B4F;--bad:#D33A31;
+  --f:"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;--d:"Jua","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+body{background:var(--cream);color:var(--ink);font-family:var(--f);
+  background-image:linear-gradient(45deg,rgba(43,34,32,.035) 25%,transparent 25%,transparent 75%,rgba(43,34,32,.035) 75%),linear-gradient(45deg,rgba(43,34,32,.035) 25%,transparent 25%,transparent 75%,rgba(43,34,32,.035) 75%);
+  background-size:36px 36px;background-position:0 0,18px 18px}
+button,input,select{font:inherit;color:inherit;touch-action:manipulation}
+input,select,textarea{font-size:16px!important}
+.hidden{display:none!important}
+#defs{position:absolute;width:0;height:0;overflow:hidden}
+.screen{min-height:100dvh;max-width:560px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 14px max(32px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+h1,h2,h3{font-family:var(--d);font-weight:400;margin:0}
+h2{font-size:24px}
+p{margin:0}
+.muted{color:var(--muted)}.small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:14px}
+.btn{appearance:none;border:3px solid var(--ink);border-radius:14px;padding:12px 12px 11px;font:400 18px/1.15 var(--d);background:var(--mustard);box-shadow:0 4px 0 var(--ink);cursor:pointer;text-align:center;transition:transform .07s ease,box-shadow .07s ease}
+.btn small{display:block;font:600 11.5px/1.3 var(--f);opacity:.8;margin-top:3px}
+.btn:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.red{background:var(--red);color:#fff}.btn.teal{background:var(--teal);color:#fff}.btn.navy{background:var(--navy);color:#fff}
+.btn.ghost{background:var(--paper);font:700 14px/1.2 var(--f)}
+.btn.big{font-size:22px;padding:15px 12px 13px}
+.btn.sm{font-size:14px;padding:8px 8px 7px;border-width:2px;box-shadow:0 3px 0 var(--ink);border-radius:10px}
+.inp{width:100%;border:3px solid var(--ink);border-radius:12px;padding:11px 12px;background:#fff;outline:none}
+.inp:focus{border-color:var(--teal)}
+.inp.sm{padding:7px 9px;border-width:2px;border-radius:9px}
+.code-inp{text-align:center;font:400 30px/1 var(--d)!important;letter-spacing:.2em;text-transform:uppercase}
+.bigcode{font:400 46px/1 var(--d);letter-spacing:.14em;text-align:center;color:var(--red);background:#fff;border:3px dashed var(--red);border-radius:14px;padding:14px 6px}
+.tabs{display:flex;gap:6px;background:rgba(43,34,32,.08);border-radius:12px;padding:4px}
+.tabs button{flex:1;border:0;border-radius:9px;padding:9px 4px;background:transparent;font-weight:800;font-size:14px;cursor:pointer}
+.tabs button.on{background:var(--ink);color:#fff}
+.toprow{display:flex;align-items:center;gap:8px}
+.toprow h2{flex:1;text-align:center}
+.back{border:2px solid var(--ink);background:var(--paper);border-radius:10px;padding:7px 10px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 0 var(--ink)}
+.face{width:40px;height:40px;border-radius:50%;background:#fff center/92% no-repeat;flex:none;border:2px solid var(--ink)}
+.face.s{width:32px;height:32px}.face.l{width:58px;height:58px}
+.list{display:grid;gap:8px}
+.li{display:flex;align-items:center;gap:10px;background:var(--paper);border:2px solid var(--ink);border-radius:12px;padding:8px 10px}
+.li.me{background:#FFF0C2}
+.li .rk{width:28px;text-align:center;font:400 18px/1 var(--d)}
+.li .nm{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li .sub{font-size:12px;color:var(--muted)}
+.grow{flex:1;min-width:0}
+.lvb{display:inline-block;font:400 11.5px/1 var(--d);background:var(--navy);color:#fff;border-radius:6px;padding:3px 6px;margin-left:4px;vertical-align:1px}
+.money{font:400 18px/1 var(--d);color:var(--teal-d)}
+.mode-note{text-align:center;font-size:12px;color:var(--muted)}
+#toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:90;background:var(--ink);color:#fff;font-weight:800;padding:12px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s,transform .25s;max-width:92vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;z-index:70;background:rgba(43,34,32,.6);display:grid;place-items:center;padding:16px}
+.sheet{background:var(--paper);border:3px solid var(--ink);border-radius:18px;box-shadow:0 6px 0 var(--ink);width:min(100%,460px);max-height:92dvh;overflow:auto;padding:18px;display:grid;gap:12px}
+.charpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.charpick button{border:2px solid transparent;background:#fff;border-radius:12px;padding:6px 2px;display:grid;justify-items:center;gap:3px;font-size:12px;font-weight:700;cursor:pointer}
+.charpick button.on{border-color:var(--red);background:#FFE7E2}
+.charpick .face{width:44px;height:44px}
+.hero{border:3px solid var(--ink);border-radius:20px;overflow:hidden;box-shadow:0 5px 0 var(--ink);aspect-ratio:1/1;width:min(100%,46dvh);align-self:center}
+.hero img{width:100%;height:100%;object-fit:cover;display:block}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat3 div{background:#fff;border:2px solid var(--ink);border-radius:10px;padding:7px 4px;text-align:center;font-size:12px;color:var(--muted)}
+.stat3 b{display:block;font:400 19px/1.1 var(--d);color:var(--ink);margin-top:2px}
+.dot{position:absolute;top:-7px;right:-5px;background:var(--red);color:#fff;font:400 13px/1 var(--d);border-radius:99px;padding:4px 7px;border:2px solid var(--ink)}
+.rel{position:relative}
+
+/* ── 가게 장면 ── */
+.scene{position:relative;height:250px;border:3px solid var(--ink);border-radius:18px;overflow:hidden;box-shadow:0 4px 0 var(--ink);background:#9fd7ff}
+.scene.mini{height:200px}
+.scene .bg{position:absolute;inset:0;width:100%;height:100%}
+.scene .sign{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;font:400 15px/1 var(--d);color:#fff;background:var(--red);border:2.5px solid var(--ink);border-radius:10px;padding:6px 11px 5px;white-space:nowrap;box-shadow:0 3px 0 var(--ink);max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.scene .sign.neon{background:#1C1430;color:#FFE27A;text-shadow:0 0 6px #FFB703,0 0 14px #FF7A00;border-color:#FFB703;box-shadow:0 0 12px rgba(255,183,3,.7)}
+.counter{position:absolute;left:0;right:0;bottom:0;height:40px;z-index:4;border-top:3px solid var(--ink)}
+.counter.lv1{background:linear-gradient(#E9EEF2,#AEB9C2);border-top-color:#59636B}
+.counter.lv2{background:repeating-linear-gradient(90deg,#B9773D 0 34px,#A9692F 34px 36px)}
+.counter.lv3{background:linear-gradient(#E6ECF0 0 7px,var(--teal) 7px)}
+.counter.lv4{background:linear-gradient(#EEF2F4 0 7px,var(--red) 7px);}
+.counter.lv4::after,.counter.lv5::after{content:"★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★";position:absolute;inset:12px 0 0;text-align:center;color:#FFF3DA;font-size:12px;letter-spacing:6px;white-space:nowrap;overflow:hidden}
+.counter.lv5{background:linear-gradient(#F7D774 0 7px,#1C1430 7px)}
+.counter.lv5::after{color:#F7D774}
+.chefbox{position:absolute;left:4px;bottom:24px;width:86px;z-index:3;display:grid;justify-items:center}
+.chefbox svg{width:86px;height:auto;display:block;animation:bob 2.4s ease-in-out infinite;transform-origin:50% 100%}
+.chefbox.happy svg{animation:hop .5s ease}
+.bubble{position:absolute;bottom:100%;left:10px;margin-bottom:-6px;background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:4px 8px;font:400 13px/1.2 var(--d);white-space:nowrap;z-index:6;max-width:200px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;left:22px;top:100%;border:6px solid transparent;border-top-color:var(--ink)}
+.bubble[hidden]{display:none}
+.owner{position:absolute;left:84px;bottom:44px;z-index:3;display:grid;justify-items:center;gap:2px}
+.owner .face{width:48px;height:48px}
+.tag{font:400 11px/1 var(--d);background:var(--navy);color:#fff;border-radius:6px;padding:3px 6px;white-space:nowrap}
+.seats{position:absolute;left:92px;right:6px;bottom:22px;top:38px;z-index:5;display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:5px;align-items:end}
+.seat{all:unset;box-sizing:border-box;position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer;min-width:0}
+.seat:focus-visible{outline:3px solid var(--mustard);border-radius:10px}
+.seat .empty{margin-bottom:22px;font:400 12px/1 var(--d);color:rgba(255,255,255,.95);text-shadow:0 1px 2px rgba(0,0,0,.6);opacity:.8}
+.cust{display:flex;flex-direction:column;align-items:center;width:100%;animation:walkin .45s cubic-bezier(.2,.8,.3,1.2)}
+.cust.out{animation:walkout .4s ease forwards}
+.ticket{background:#fff;border:2.5px solid var(--ink);border-radius:10px;padding:3px 3px 4px;width:100%;max-width:96px;display:grid;justify-items:center;gap:1px;position:relative;margin-bottom:5px;box-shadow:0 2px 0 var(--ink)}
+.ticket::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
+.ticket .food{display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:30px}
+.ticket .tname{font-size:9.5px;line-height:1.15;max-height:2.3em;text-align:center;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.ticket .price{font:400 12px/1 var(--d);color:var(--red-d)}
+.seat.ready .ticket{border-color:var(--good);box-shadow:0 0 0 3px #9BE3A8,0 2px 0 var(--ink)}
+.who{position:relative;display:grid;justify-items:center}
+.who img{width:54px;height:54px;object-fit:contain;position:relative;z-index:2;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.who .body{width:44px;height:22px;margin-top:-8px;border-radius:18px 18px 4px 4px;background:var(--c,#4C8FF5);border:2.5px solid var(--ink);border-bottom:0}
+.cust.happy .who img{animation:hop .5s ease}
+.cust.mad .who img{animation:shake .4s ease}
+.pat{position:absolute;left:50%;bottom:-17px;transform:translateX(-50%);width:44px;height:7px;background:rgba(0,0,0,.35);border:1.5px solid var(--ink);border-radius:5px;overflow:hidden;z-index:6}
+.pat i{display:block;height:100%;background:#5BD16E}
+.pat.mid i{background:var(--mustard)}.pat.low i{background:#FF5A4E}
+.ftag{position:absolute;top:-4px;right:-2px;z-index:3;font:400 10px/1 var(--d);background:#E64980;color:#fff;border:1.5px solid var(--ink);border-radius:6px;padding:2px 4px;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.float{position:absolute;left:50%;top:20%;transform:translateX(-50%);font:400 20px/1 var(--d);color:#FFE27A;-webkit-text-stroke:1px var(--ink);text-shadow:0 2px 0 var(--ink);pointer-events:none;animation:up 1.1s ease-out forwards;z-index:9;white-space:nowrap}
+.float.x{color:#FF6B5E}
+@keyframes up{to{transform:translate(-50%,-44px);opacity:0}}
+@keyframes bob{50%{transform:translateY(-2px) rotate(-1deg)}}
+@keyframes hop{30%{transform:translateY(-10px) scale(1.06)}60%{transform:translateY(0) scale(.97)}}
+@keyframes shake{25%{transform:translateX(-4px) rotate(-6deg)}75%{transform:translateX(4px) rotate(6deg)}}
+@keyframes walkin{from{transform:translateX(40px);opacity:0}}
+@keyframes walkout{to{transform:translateX(40px);opacity:0}}
+@keyframes flick{0%,100%{opacity:1}92%{opacity:1}94%{opacity:.35}96%{opacity:1}97%{opacity:.5}}
+@keyframes twinkle{50%{opacity:.35}}
+@keyframes flame{50%{transform:scaleY(1.25) translateY(-1px)}}
+@keyframes steam{0%{transform:translateY(0) scale(.6);opacity:0}30%{opacity:.7}100%{transform:translateY(-26px) scale(1.4);opacity:0}}
+@keyframes bubble{0%{transform:translateY(0);opacity:.9}100%{transform:translateY(-10px);opacity:0}}
+.flick{animation:flick 3.5s infinite}
+.tw{animation:twinkle 1.6s ease-in-out infinite}
+.tw2{animation:twinkle 1.6s ease-in-out .8s infinite}
+
+/* ── 게임 화면 ── */
+#game{max-width:560px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 10px max(20px,env(safe-area-inset-bottom));display:grid;gap:8px}
+.hud{display:flex;gap:6px;align-items:center}
+.hud .chip{background:var(--paper);border:2.5px solid var(--ink);border-radius:10px;padding:5px 8px 4px;display:grid;line-height:1.05;min-width:0}
+.hud .chip span{font-size:10.5px;color:var(--muted);font-weight:700}
+.hud .chip b{font:400 17px/1.1 var(--d);white-space:nowrap}
+.hud .chip.time{flex:1}
+.hud .x{border:2.5px solid var(--ink);background:var(--paper);border-radius:10px;width:40px;height:40px;font:400 20px/1 var(--d);cursor:pointer;flex:none}
+.timebar{height:8px;background:rgba(43,34,32,.12);border-radius:6px;overflow:hidden;margin-top:3px}
+.timebar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--mustard));width:100%}
+.log{font-size:13px;min-height:1.3em;text-align:center;font-weight:700;color:var(--ink)}
+.kitchen{display:grid;gap:8px}
+.stations{display:grid;grid-template-columns:minmax(0,1.8fr) repeat(3,minmax(0,1fr));gap:6px;align-items:start}
+.stn{display:grid;gap:3px;min-width:0}
+.cap{font:700 10.5px/1.15 var(--f);color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap b{font:400 14px/1 var(--d);color:var(--red-d)}
+#game .scene{height:232px}
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:9px;display:grid;gap:7px;align-content:start;min-width:0}
+.panel h3{font-size:16px;display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.panel h3 small{font:700 11.5px/1.2 var(--f);color:var(--muted);text-align:right}
+.tray{height:104px;border:2.5px solid var(--ink);border-radius:12px;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:8px 8px 14px;
+  background:repeating-linear-gradient(0deg,transparent 0 13px,rgba(211,58,49,.18) 13px 15px),repeating-linear-gradient(90deg,#FFF8E6 0 13px,rgba(211,58,49,.18) 13px 15px)}
+.tray::before{content:"";position:absolute;left:10%;right:10%;bottom:6px;height:14px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.22),transparent 70%)}
+.tray>svg{position:relative;filter:drop-shadow(0 3px 0 rgba(0,0,0,.18))}
+.tray .hint{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font:400 15px/1.3 var(--d);text-align:center;padding:8px}
+.ings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.ib{border:2.5px solid var(--ink);border-radius:11px;background:#fff;box-shadow:0 3px 0 var(--ink);padding:4px 2px 5px;cursor:pointer;display:grid;justify-items:center;align-content:center;gap:1px;min-height:58px;font:400 13px/1.1 var(--d)}
+.ib svg{width:34px;height:22px;display:block}
+.ib small{font:700 9.5px/1.15 var(--f);color:var(--muted)}
+.ib:active:not([disabled]){transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.ib[disabled]{opacity:.35;cursor:not-allowed;box-shadow:none}
+.ib.start{background:#FFE8B0}.ib.act{background:var(--red);color:#fff}.ib.act small{color:#FFE1DC}.ib.trash{background:#EFE6DA}
+.st{display:grid;gap:5px}
+.st-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px}
+.grill{position:relative;height:66px;border:2.5px solid var(--ink);border-radius:10px;background:linear-gradient(#3D3836,#2A2523);display:flex;gap:4px;align-items:center;justify-content:center;padding:0 4px;overflow:hidden}
+.grill::before{content:"";position:absolute;inset:6px 4px;background:repeating-linear-gradient(90deg,transparent 0 9px,#6E6763 9px 11px);opacity:.75}
+.flames{position:absolute;left:0;right:0;bottom:-2px;height:14px;display:flex;justify-content:space-around}
+.flames i{width:10px;height:14px;border-radius:50% 50% 30% 30%;background:radial-gradient(circle at 50% 80%,#FFE27A,#FF7A00 55%,transparent 70%);animation:flame .35s ease-in-out infinite;transform-origin:50% 100%}
+.flames i:nth-child(2n){animation-delay:.17s}
+.gs{position:relative;width:40px;height:46px;display:grid;place-items:center;z-index:1;border-radius:8px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.18)}
+.gs svg{width:38px;height:26px}
+.gs .bar{position:absolute;left:3px;right:3px;bottom:0;height:5px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden}
+.gs .bar i{display:block;height:100%;background:var(--mustard)}
+.gs .stm{position:absolute;top:-2px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:rgba(255,255,255,.7);animation:steam 1.2s ease-out infinite}
+.gs .stm.b{margin-left:4px;animation-delay:.6s}
+.warm{font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.warm b{font:400 17px/1 var(--d);color:var(--red-d)}
+.oven{all:unset;box-sizing:border-box;width:100%;position:relative;height:66px;border:2.5px solid var(--ink);border-radius:30px 30px 10px 10px;background:repeating-linear-gradient(0deg,#B4553E 0 9px,#8E3E2C 9px 11px);display:grid;place-items:center;cursor:pointer;overflow:hidden}
+.oven .mouth{position:absolute;left:18%;right:18%;top:24%;bottom:12%;border-radius:20px 20px 4px 4px;background:#2A1A14;border:2px solid var(--ink)}
+.oven.on .mouth{background:radial-gradient(circle at 50% 85%,#FFE27A 0,#FF7A00 35%,#B3261E 60%,#2A1A14 85%)}
+.oven .lbl{position:relative;z-index:1;font:400 12px/1.1 var(--d);color:#fff;text-shadow:0 1px 2px #000;text-align:center;padding:0 6px}
+.oven .bar,.fryer .bar{position:absolute;left:8px;right:8px;bottom:4px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden;z-index:2}
+.oven .bar i,.fryer .bar i{display:block;height:100%;background:var(--mustard)}
+.locked{font-size:12px;color:var(--muted);border:2px dashed #C9B9A6;border-radius:10px;padding:8px;text-align:center;display:grid;place-items:center;min-height:66px}
+.fryer{position:relative;height:66px;border:2.5px solid var(--ink);border-radius:10px;background:linear-gradient(#CBD3D9,#98A3AC);display:grid;place-items:center;overflow:hidden}
+.fryer .oil{position:absolute;left:10%;right:10%;top:30%;bottom:20%;border-radius:6px;background:linear-gradient(#F6C449,#D9921C);border:2px solid var(--ink)}
+.fryer.on .oil::before,.fryer.on .oil::after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:#FFF2C2;left:25%;bottom:2px;animation:bubble .6s linear infinite}
+.fryer.on .oil::after{left:62%;animation-delay:.3s}
+.fryer .lbl{position:relative;z-index:1;font:400 12px/1 var(--d);color:var(--ink);background:rgba(255,255,255,.75);border-radius:6px;padding:2px 5px}
+.ov{position:fixed;inset:0;z-index:60;background:rgba(43,34,32,.62);display:grid;place-items:center;padding:16px}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sum div{border:2px solid var(--ink);border-radius:10px;padding:6px 3px;text-align:center;font-size:12px;background:#fff}
+.sum b{display:block;font:400 20px/1.15 var(--d)}
+
+/* ── 상점 ── */
+.up{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:12px;padding:9px 10px}
+.up .n{font:400 16px/1.2 var(--d)}.up .d{font-size:12.5px;color:var(--muted)}
+.up.own{opacity:.55}.up.lock{opacity:.6;background:#F3EDE3}
+.stagebar{display:flex;gap:4px}
+.stagebar i{flex:1;height:10px;border-radius:5px;background:rgba(43,34,32,.15);border:1.5px solid var(--ink)}
+.stagebar i.on{background:var(--red)}
+
+/* ── 방명록 ── */
+.gb{display:grid;gap:6px;max-height:300px;overflow:auto}
+.gb .m{display:flex;gap:8px;align-items:flex-start;background:#fff;border:2px solid var(--ink);border-radius:12px;padding:7px 9px}
+.gb .m .t{font-size:13.5px;word-break:break-all}
+.gb .m .w{font-size:11.5px;color:var(--muted);font-weight:700}
+.row{display:flex;gap:8px;align-items:center}
+
+/* ── 어드민 ── */
+.adm{display:grid;gap:7px;align-items:stretch}
+.adm .top{display:flex;align-items:center;gap:9px}
+.adrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.adrow .inp{flex:1;min-width:90px}
+.presets{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.presets .lb{font-size:12px;color:var(--muted);font-weight:700}
+.presets button{border:2px solid var(--ink);border-radius:8px;background:#fff;padding:5px 9px;font-weight:800;font-size:13px;cursor:pointer}
+.presets button.on{background:var(--mustard)}
+.badge-x{font-size:11px;background:var(--red);color:#fff;border-radius:6px;padding:2px 5px;margin-left:5px}
+.bars{display:flex;gap:3px;align-items:flex-end;height:110px;padding-top:16px}
+.bars button{all:unset;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;cursor:pointer;gap:3px;min-width:0}
+.bars i{width:100%;background:var(--teal);border-radius:4px 4px 0 0;min-height:2px;position:relative}
+.bars button.on i{background:var(--red)}
+.bars span{font-size:9.5px;color:var(--muted);font-weight:700}
+.bars em{font-style:normal;font-size:9px;font-weight:800;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<svg id="defs" aria-hidden="true"><defs>
+  <linearGradient id="gBunB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F3BC6E"/><stop offset="1" stop-color="#C47A30"/></linearGradient>
+  <linearGradient id="gBunT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9C778"/><stop offset=".6" stop-color="#E49A45"/><stop offset="1" stop-color="#C97C2F"/></linearGradient>
+  <linearGradient id="gPatty" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8C4F2E"/><stop offset="1" stop-color="#4E2614"/></linearGradient>
+  <linearGradient id="gRaw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F29B92"/><stop offset="1" stop-color="#C8655C"/></linearGradient>
+  <linearGradient id="gBeer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC94A"/><stop offset="1" stop-color="#E08A12"/></linearGradient>
+  <linearGradient id="gCola" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E5443A"/><stop offset=".45" stop-color="#F26A5F"/><stop offset="1" stop-color="#B7271F"/></linearGradient>
+  <linearGradient id="gSky1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7CCBFF"/><stop offset="1" stop-color="#DDF3FF"/></linearGradient>
+  <linearGradient id="gSky2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF9D6C"/><stop offset=".6" stop-color="#FFC98B"/><stop offset="1" stop-color="#FFE3A8"/></linearGradient>
+  <linearGradient id="gNight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1230"/><stop offset="1" stop-color="#3A2A6B"/></linearGradient>
+  <radialGradient id="gGlow"><stop offset="0" stop-color="#FFE9A8" stop-opacity=".9"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient>
+  <pattern id="pCheck" width="20" height="20" patternUnits="userSpaceOnUse"><rect width="20" height="20" fill="#FFFBF2"/><rect width="10" height="10" fill="#2B2220"/><rect x="10" y="10" width="10" height="10" fill="#2B2220"/></pattern>
+</defs></svg>
+
+<section class="screen" id="s-boot"><div style="margin:auto;text-align:center;font:400 20px/1.4 var(--d)">가게 문 여는 중… 🍔</div></section>
+<section class="screen hidden" id="s-login"></section>
+<section class="screen hidden" id="s-lobby"></section>
+<section class="screen hidden" id="s-shop"></section>
+<section class="screen hidden" id="s-friends"></section>
+<section class="screen hidden" id="s-visit"></section>
+<section class="screen hidden" id="s-rank"></section>
+<section class="screen hidden" id="s-admin"></section>
+<section class="hidden" id="game">
+  <div class="hud">
+    <div class="chip"><span>보유</span><b id="hMoney" class="num">$0</b></div>
+    <div class="chip"><span>오늘 매출</span><b id="hToday" class="num">$0</b></div>
+    <div class="chip"><span>평점</span><b id="hRate">★3.0</b></div>
+    <div class="chip time"><span id="hClock">영업 90초</span><div class="timebar"><i id="hTime"></i></div></div>
+    <button class="x" id="gQuit" aria-label="영업 그만하기">✕</button>
+  </div>
+  <div class="scene" id="gScene"></div>
+  <div class="log" id="gLog" aria-live="polite">주문서를 보고 쟁반에 만든 뒤, 손님을 눌러서 내줘요!</div>
+  <div class="kitchen">
+    <div class="panel">
+      <h3>쟁반 <small id="trayName">비어 있음</small></h3>
+      <div class="tray" id="tray"></div>
+      <div class="ings" id="ings"></div>
+    </div>
+    <div class="panel stations">
+      <div class="stn"><div class="grill" id="grill"></div><span class="cap" id="grillInfo"></span></div>
+      <div class="stn"><button class="ib" id="addPatty" type="button" style="min-height:66px">패티 굽기</button><span class="cap">구운 패티 <b id="warm">0</b>개</span></div>
+      <div class="stn"><div id="ovenBox"></div><span class="cap">피자 오븐</span></div>
+      <div class="stn"><div id="fryBox"></div><span class="cap">튀김기</span></div>
+    </div>
+  </div>
+</section>
+<div id="ovRoot"></div>
+<div id="modalRoot"></div>
+<div id="toast" role="status"></div>
+
+<script src="../characters/bung-chars.js"></script>
+<script>
+'use strict';
+/* ══════════ 설정 ══════════ */
+const CFG = {
+  // 손모가지 조심!·사천성 가봤니?와 같은 Firebase 프로젝트. 규칙상 열려 있는 rooms/ 아래에 'burger-' 이름으로 저장해요.
+  firebase: {
+    apiKey: 'AIzaSyCMl9Ukya3XqIV0BHjKTx1mryvUru0kYXA',
+    authDomain: 'gostop-7c4a2.firebaseapp.com',
+    databaseURL: 'https://gostop-7c4a2-default-rtdb.asia-southeast1.firebasedatabase.app',
+    projectId: 'gostop-7c4a2',
+    appId: '1:686060440785:web:d5f6445e4bcd2a481b89f0',
+  },
+  prefix: 'rooms/burger-',
+  startMoney: 100,          // 가입 선물 $100
+  daily: 50, dailyHour: 6,  // 매일 한국 시간 아침 6시 이후 첫 접속 때 $50 (영업일도 아침 6시에 바뀌어요)
+  dayLen: 90,               // 영업 한 번 90초
+  visitBonus: 10, visitMax: 10, // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
+  adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
+};
+const APP_VERSION = '20261116-1';
+// 가게 확장 단계
+const STAGES = [
+  { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
+  { lv: 2, id: 'stand', icon: '🏕️', name: '버거 스탠드', title: '준탁 버거 스탠드', cost: 300, seats: 3, mul: 1.15, spawn: 6.6 },
+  { lv: 3, id: 'diner', icon: '🍽️', name: '아메리칸 다이너', title: '준탁 다이너', cost: 1200, seats: 3, mul: 1.3, spawn: 6.0 },
+  { lv: 4, id: 'house', icon: '🇺🇸', name: '어메리카 버거하우스', title: '준탁의 어메리카 버거하우스', cost: 4000, seats: 4, mul: 1.5, spawn: 5.5 },
+  { lv: 5, id: 'flag', icon: '🌟', name: '버거하우스 본점', title: '준탁 버거하우스 본점', cost: 12000, seats: 4, mul: 1.8, spawn: 4.9 },
+];
+// 설비 (lv: 그 단계부터 살 수 있어요)
+const UPG = [
+  { id: 'grill2', icon: '🔥', n: '그릴 한 칸 더', d: '패티를 2장 같이 구워요', c: 60, lv: 1 },
+  { id: 'cola', icon: '🥤', n: '콜라 머신', d: '손님이 콜라도 시켜요 (+$2)', c: 80, lv: 1 },
+  { id: 'fast', icon: '⚡', n: '강화 버너', d: '패티 굽는 시간 4초 → 2.5초', c: 120, lv: 1 },
+  { id: 'fryer', icon: '🍟', n: '튀김기', d: '감자튀김 주문 (+$3)', c: 150, lv: 2 },
+  { id: 'grill3', icon: '🔥', n: '그릴 세 칸', d: '패티를 3장 같이 구워요', c: 220, lv: 2, need: 'grill2' },
+  { id: 'tap', icon: '🍺', n: '생맥주 탭', d: '수제버거엔 맥주! 생맥주 주문 (+$4)', c: 260, lv: 2 },
+  { id: 'juke', icon: '🎵', n: '주크박스', d: '컨트리 음악에 손님 인내심 +35%', c: 300, lv: 3 },
+  { id: 'oven', icon: '🍕', n: '피자 오븐', d: '피자 메뉴 해금 (객단가 UP)', c: 400, lv: 3 },
+  { id: 'helper', icon: '🧑‍🍳', n: '알바생', d: '그릴에 패티를 알아서 올려줘요', c: 900, lv: 3 },
+  { id: 'neon', icon: '💡', n: '네온 간판', d: '가격 +20%, 손님이 더 자주 와요', c: 1500, lv: 4 },
+];
+const NAMES = { bun: '아래빵', top: '위빵', patty: '패티', cheese: '치즈', lettuce: '양상추', tomato: '토마토', bacon: '베이컨',
+  dough: '도우', sauce: '소스', pcheese: '모차렐라', pepperoni: '페퍼로니', mushroom: '버섯', olive: '올리브', cola: '콜라', beer: '생맥주', fries: '감자튀김' };
+const CHEF_LINES = {
+  start: ['자, 오늘도 맛있게 가 보자고!', '그릴 달궈졌다! Alright!', '놀러오세요~ 버거하우스!', '퇴근 후가 진짜 영업이지!'],
+  good: ['Alright!', '이게 바로 손맛이지!', '맛있게 드쇼!', '또 오쇼~', 'Yeehaw! 🤠'],
+  bad: ['어이쿠, 다시!', '이건 주문이 아닌데…', '앗, 바꿔 드릴게요!'],
+  leave: ['아이고, 손님 가셨네…', '다음엔 더 빨리!'],
+  trash: ['괜찮아, 다시 하자고.'],
+  friend: ['오! 친구 왔네! 서비스 팍팍!', '단골 오셨다! 🍺'],
+};
+const SHIRTS = ['#4C8FF5', '#F6B731', '#E64980', '#1E8A84', '#8C6BD6', '#3B9B4F', '#D33A31', '#24324D', '#FF8A3D'];
+
+/* ══════════ 캐릭터 (벙참 공용 캐릭터 13명) ══════════ */
+const CH = (window.BUNG_CHARS && BUNG_CHARS.list) ? BUNG_CHARS.list.map(c => c.id) : ['eomji', 'yeoni', 'yeongjun', 'yongwang', 'juntak', 'haetsal', 'goran', 'kkaegul', 'mandu', 'myongradak', 'bongchum', 'bino', 'gana'];
+const nameOf = id => { try { return BUNG_CHARS.get(id).name; } catch (e) { return id; } };
+const imgOf = id => 'img/' + (CH.includes(id) ? id : 'bino') + '.webp';
+const lineOf = (id, k) => { try { return BUNG_CHARS.line(id, k) || ''; } catch (e) { return ''; } };
+
+/* ══════════ 도구 ══════════ */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const usd = n => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n) || 0).toLocaleString('en-US');
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const genCode = (n = 6, cs = CODE_CHARS) => Array.from(crypto.getRandomValues(new Uint32Array(n)), v => cs[v % cs.length]).join('');
+const nickKey = n => n.trim().toLowerCase().replace(/[.#$\[\]\/\s]/g, '_');
+async function sha256(s) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); }); }
+const vib = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+const faceEl = (id, cls = '') => `<span class="face ${cls}" style="background-image:url(${imgOf(id)})" title="${esc(nameOf(id))}"></span>`;
+// 영업일: 한국 시간 아침 6시에 바뀌어요 (새벽 영업은 전날 매출)
+const dayKey = (t = Date.now()) => new Date(t + (9 - CFG.dailyHour) * 3600e3).toISOString().slice(0, 10);
+const todayKST = () => dayKey();
+const stageOf = p => STAGES[Math.min(STAGES.length, Math.max(1, (p && p.stage) || 1)) - 1];
+const stageVal = lv => STAGES.slice(0, lv).reduce((a, s) => a + s.cost, 0);
+const ownVal = own => UPG.reduce((a, u) => a + (own && own[u.id] ? u.c : 0), 0);
+// 보유재산 = 현금 + 가게(확장비) + 설비 값
+const worth = p => (p.money || 0) + stageVal((p && p.stage) || 1) + ownVal(p && p.own);
+const salesOn = (p, d) => (((p && p.sales) || {})[d] || {});
+const todaySales = p => salesOn(p, todayKST()).rev || 0;
+const shopName = p => `${stageOf(p).title} · ${p.nick}점`;
+let toastT = 0;
+function toast(msg, ms = 2200) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+function modal(html, bind) {
+  const root = $('#modalRoot');
+  root.innerHTML = `<div class="modal"><div class="sheet">${html}</div></div>`;
+  const m = root.firstChild;
+  const close = () => { if (root.firstChild === m) root.innerHTML = ''; };
+  m.addEventListener('click', e => { if (e.target === m && !m.dataset.lock) close(); });
+  m.querySelectorAll('[data-close]').forEach(b => b.onclick = close);
+  bind && bind(m.firstChild, close, m);
+  return close;
+}
+
+/* ══════════ 소리 ══════════ */
+const Sound = {
+  ctx: null, on: localStorage.getItem('burger-sound') !== '0',
+  init() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  tone(f, d, type = 'square', vol = .05, slide = 0, delay = 0) {
+    if (!this.on || !this.ctx) return;
+    const t = this.ctx.currentTime + delay, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.linearRampToValueAtTime(f + slide, t + d);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(this.ctx.destination); o.start(t); o.stop(t + d + .02);
+  },
+  play(k) {
+    this.init();
+    switch (k) {
+      case 'tap': this.tone(760, .04, 'triangle', .04); break;
+      case 'sizzle': this.tone(1800, .12, 'sawtooth', .012, -900); break;
+      case 'cash': this.tone(1320, .07, 'square', .05); this.tone(1760, .16, 'square', .05, 0, .07); break;
+      case 'bad': this.tone(190, .16, 'sawtooth', .05); break;
+      case 'ding': this.tone(1046, .25, 'triangle', .06); break;
+      case 'buy': [523, 659, 784, 1047].forEach((f, i) => this.tone(f, .1, 'triangle', .06, 0, i * .06)); break;
+      case 'end': [784, 659, 523, 784, 1047].forEach((f, i) => this.tone(f, .16, 'square', .045, 0, i * .11)); break;
+    }
+  },
+};
+
+/* ══════════ 저장소: Firebase / 이 브라우저(테스트용 ?local=1) ══════════ */
+const splitPath = p => p.split('/').filter(Boolean);
+const overlap = (a, b) => a === b || a.startsWith(b + '/') || b.startsWith(a + '/');
+class LocalDB {
+  constructor() {
+    this.mode = 'local'; this.key = 'burger-local-db'; this.subs = new Set(); this.load();
+    addEventListener('storage', e => { if (e.key === this.key) { this.load(); for (const s of this.subs) s.cb(clone(this._get(s.p))); } });
+  }
+  async init() {}
+  load() { try { this.tree = JSON.parse(localStorage.getItem(this.key)) || {}; } catch (e) { this.tree = {}; } }
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.tree)); } catch (e) {} }
+  _get(p) { let n = this.tree; for (const k of splitPath(p)) { if (n == null || typeof n !== 'object') return null; n = n[k]; } return n === undefined ? null : n; }
+  _write(p, v) {
+    this.load();
+    const ks = splitPath(p); let n = this.tree;
+    for (let i = 0; i < ks.length - 1; i++) { if (n[ks[i]] == null || typeof n[ks[i]] !== 'object') n[ks[i]] = {}; n = n[ks[i]]; }
+    if (v === null || v === undefined) delete n[ks[ks.length - 1]]; else n[ks[ks.length - 1]] = clone(v);
+    this.save();
+    for (const s of this.subs) if (overlap(s.p, p)) s.cb(clone(this._get(s.p)));
+  }
+  async get(p) { this.load(); return clone(this._get(p)); }
+  async set(p, v) { this._write(p, v); }
+  async remove(p) { this._write(p, null); }
+  async tx(p, fn) { this.load(); const cur = clone(this._get(p)); const nv = fn(cur); if (nv === undefined) return { committed: false, value: cur }; this._write(p, nv); return { committed: true, value: clone(nv) }; }
+  async push(p, v) { const k = Date.now().toString(36) + genCode(4).toLowerCase(); this._write(p + '/' + k, v); return k; }
+  on(p, cb) { const s = { p, cb }; this.subs.add(s); setTimeout(() => this.subs.has(s) && cb(clone(this._get(p))), 0); return () => this.subs.delete(s); }
+}
+class FireDB {
+  constructor() { this.mode = 'firebase'; }
+  async init() {
+    const V = '10.12.2';
+    if (!window.firebase || !firebase.initializeApp) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);
+    if (!firebase.database) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
+    this.app = (firebase.apps || []).find(a => a.name === 'burger') || firebase.initializeApp(CFG.firebase, 'burger');
+    this.db = this.app.database();
+    await new Promise((res, rej) => {
+      const r = this.db.ref('.info/connected');
+      const f = s => { if (s.val()) { clearTimeout(t); r.off('value', f); res(); } };
+      const t = setTimeout(() => { r.off('value', f); rej(new Error('timeout')); }, 12000);
+      r.on('value', f);
+    });
+  }
+  ref(p) { return this.db.ref(p); }
+  async get(p) { return (await this.ref(p).get()).val(); }
+  set(p, v) { return this.ref(p).set(v); }
+  remove(p) { return this.ref(p).remove(); }
+  async tx(p, fn) { const r = await this.ref(p).transaction(cur => fn(cur), undefined, false); return { committed: r.committed, value: r.snapshot.val() }; }
+  async push(p, v) { return (await this.ref(p).push(v)).key; }
+  on(p, cb) { const r = this.ref(p), f = s => cb(s.val()); r.on('value', f); return () => r.off('value', f); }
+}
+let db = null;
+const PFX = CFG.prefix;
+const PATH = {
+  nicks: PFX + 'nicks', acc: c => PFX + 'acc-' + c, players: PFX + 'players', player: pid => PFX + 'players/' + pid,
+  gb: pid => PFX + 'gb-' + pid, log: PFX + 'log',
+};
+
+/* ══════════ 그림: 음식 (SVG) ══════════ */
+const SEEDS = [[24, 13, -20], [38, 8, 10], [52, 11, -8], [66, 7, 18], [78, 14, -14], [31, 21, 6], [60, 19, -22], [45, 24, 14], [72, 24, 8]];
+const LAYER = {
+  bun: { t: 14, d: y => `<path d="M7 ${y + 1}H93Q97 ${y + 1} 96 ${y + 6}Q93 ${y + 14} 80 ${y + 14}H20Q7 ${y + 14} 4 ${y + 6}Q3 ${y + 1} 7 ${y + 1}Z" fill="url(#gBunB)" stroke="#6B3A12" stroke-width="1.8"/><path d="M12 ${y + 3}H88" stroke="#FFE3B0" stroke-width="2" opacity=".6"/>` },
+  patty: { t: 15, d: y => `<rect x="3" y="${y}" width="94" height="15" rx="7.5" fill="url(#gPatty)" stroke="#2E160A" stroke-width="1.8"/><path d="M14 ${y + 5}h11M40 ${y + 10}h15M66 ${y + 5}h13" stroke="#2B130A" stroke-width="2.4" stroke-linecap="round" opacity=".55"/><circle cx="30" cy="${y + 9}" r="1.3" fill="#B5764E"/><circle cx="58" cy="${y + 5}" r="1.3" fill="#B5764E"/><circle cx="82" cy="${y + 10}" r="1.3" fill="#B5764E"/>` },
+  cheese: { t: 7, d: y => `<path d="M1 ${y}H99V${y + 5}H93L88 ${y + 13}L83 ${y + 5}H60L55 ${y + 15}L50 ${y + 5}H27L22 ${y + 11}L17 ${y + 5}H1Z" fill="#FFCB2E" stroke="#D3920A" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 ${y + 2}H40" stroke="#FFF0A8" stroke-width="1.6" opacity=".8"/>` },
+  lettuce: { t: 8, d: y => `<path d="M0 ${y + 4}Q6 ${y - 2} 12 ${y + 3}T24 ${y + 3}T36 ${y + 3}T48 ${y + 3}T60 ${y + 3}T72 ${y + 3}T84 ${y + 3}T96 ${y + 3}L100 ${y + 5}Q96 ${y + 11} 88 ${y + 8}T72 ${y + 8}T56 ${y + 8}T40 ${y + 8}T24 ${y + 8}T8 ${y + 8}T0 ${y + 4}Z" fill="#7CCB4C" stroke="#3B8420" stroke-width="1.5"/>` },
+  tomato: { t: 7, d: y => `<rect x="5" y="${y}" width="44" height="7.5" rx="3.7" fill="#EA4335" stroke="#9E1E15" stroke-width="1.5"/><rect x="51" y="${y}" width="44" height="7.5" rx="3.7" fill="#EA4335" stroke="#9E1E15" stroke-width="1.5"/><circle cx="20" cy="${y + 3.7}" r="1.4" fill="#FFD6A8"/><circle cx="34" cy="${y + 3.7}" r="1.4" fill="#FFD6A8"/><circle cx="66" cy="${y + 3.7}" r="1.4" fill="#FFD6A8"/><circle cx="80" cy="${y + 3.7}" r="1.4" fill="#FFD6A8"/>` },
+  bacon: { t: 7, d: y => `<path d="M3 ${y + 2}Q15 ${y - 2} 27 ${y + 2}T51 ${y + 2}T75 ${y + 2}T99 ${y + 2}V${y + 7}Q87 ${y + 11} 75 ${y + 7}T51 ${y + 7}T27 ${y + 7}T3 ${y + 7}Z" fill="#C2452D" stroke="#7A2214" stroke-width="1.5"/><path d="M3 ${y + 4.5}Q15 ${y + .5} 27 ${y + 4.5}T51 ${y + 4.5}T75 ${y + 4.5}T99 ${y + 4.5}" stroke="#F6B8A4" stroke-width="1.8" fill="none"/>` },
+  top: { t: 35, d: y => `<path d="M3 ${y + 30}Q2 ${y + 2} 50 ${y + 1}Q98 ${y + 2} 97 ${y + 30}Q97 ${y + 35} 90 ${y + 35}H10Q3 ${y + 35} 3 ${y + 30}Z" fill="url(#gBunT)" stroke="#6B3A12" stroke-width="1.8"/><ellipse cx="33" cy="${y + 10}" rx="17" ry="4.5" fill="#fff" opacity=".35"/>` + SEEDS.map(([x, dy, r]) => `<ellipse cx="${x}" cy="${y + dy}" rx="2.6" ry="1.3" fill="#FFF6DC" stroke="#C99A55" stroke-width=".6" transform="rotate(${r} ${x} ${y + dy})"/>`).join('') },
+};
+function burgerSVG(fill, closed, w) {
+  const parts = ['bun', ...fill]; if (closed) parts.push('top');
+  const ov = 3, sum = parts.reduce((a, p) => a + LAYER[p].t, 0), H = sum - ov * (parts.length - 1) + 6;
+  let y = H - 2; const out = [];
+  for (const p of parts) { y -= LAYER[p].t; out.push(LAYER[p].d(y)); y += ov; }
+  return `<svg viewBox="0 0 100 ${H}" width="${w}" height="${(w * H / 100).toFixed(1)}" aria-hidden="true">${out.join('')}</svg>`;
+}
+const TOPPOS = [[30, 30], [62, 28], [44, 50], [70, 58], [28, 62], [50, 74], [76, 40], [38, 36]];
+function topping(t, x, y) {
+  if (t === 'pepperoni') return `<circle cx="${x}" cy="${y}" r="7" fill="#B3261E" stroke="#6E140F" stroke-width="1.2"/><circle cx="${x - 2}" cy="${y - 2}" r="1.2" fill="#E8665A"/><circle cx="${x + 2.5}" cy="${y + 1.5}" r="1" fill="#E8665A"/>`;
+  if (t === 'mushroom') return `<path d="M${x - 6} ${y}Q${x} ${y - 9} ${x + 6} ${y}Z" fill="#E9DCC5" stroke="#8C7A5C" stroke-width="1.2"/><rect x="${x - 2}" y="${y}" width="4" height="5" rx="1.5" fill="#F4EBDA" stroke="#8C7A5C" stroke-width="1.2"/>`;
+  return `<circle cx="${x}" cy="${y}" r="4.6" fill="none" stroke="#2B2220" stroke-width="3.2"/>`;
+}
+function pizzaSVG(p, w) {
+  const b = p.baked;
+  let s = `<circle cx="50" cy="50" r="47" fill="${b ? '#D9954A' : '#F3D7A2'}" stroke="#8A5420" stroke-width="2.2"/>`;
+  if (p.sauce) s += `<circle cx="50" cy="50" r="39" fill="#D2402F"/>`;
+  if (p.cheese) s += `<path d="M50 15Q68 14 78 26Q90 38 84 56Q86 72 70 80Q56 90 40 84Q22 82 17 64Q10 46 20 32Q32 15 50 15Z" fill="${b ? '#F6C443' : '#FFF1B0'}"/>` + (b ? '<circle cx="36" cy="44" r="3" fill="#D98B2B" opacity=".6"/><circle cx="64" cy="66" r="3.5" fill="#D98B2B" opacity=".6"/><circle cx="58" cy="36" r="2.5" fill="#D98B2B" opacity=".6"/>' : '');
+  let i = 0;
+  (p.tops || []).forEach(t => { for (let k = 0; k < 3; k++) { const [x, y] = TOPPOS[(i++) % TOPPOS.length]; s += topping(t, x, y); } });
+  return `<svg viewBox="0 0 100 100" width="${w}" height="${w}" aria-hidden="true">${s}</svg>`;
+}
+const colaSVG = w => `<svg viewBox="0 0 40 64" width="${w}" height="${(w * 1.6).toFixed(1)}" aria-hidden="true"><path d="M24 2l-3 14" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/><path d="M24 2l6-1" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="20" cy="16" rx="17" ry="4" fill="#fff" stroke="#2B2220" stroke-width="1.8"/><path d="M4 17L8 60Q8 62 11 62H29Q32 62 32 60L36 17Z" fill="url(#gCola)" stroke="#2B2220" stroke-width="1.8"/><path d="M6 34Q14 28 20 34T35 33L34 42Q27 37 20 42T7 43Z" fill="#fff"/></svg>`;
+const beerSVG = w => `<svg viewBox="0 0 56 64" width="${w}" height="${(w * 64 / 56).toFixed(1)}" aria-hidden="true"><path d="M40 22h6q8 0 8 9v8q0 9-8 9h-6" fill="none" stroke="#2B2220" stroke-width="5"/><path d="M40 22h6q8 0 8 9v8q0 9-8 9h-6" fill="none" stroke="#E9F4FA" stroke-width="2.2"/><rect x="4" y="14" width="38" height="48" rx="5" fill="url(#gBeer)" stroke="#2B2220" stroke-width="2"/><path d="M10 22v32M18 22v32M26 22v32M34 22v32" stroke="#FFE08A" stroke-width="1.6" opacity=".55"/><path d="M2 18q0-10 9-9q3-7 12-5q7-5 14 1q9-1 8 8q2 7-6 7H8q-7 0-6-2z" fill="#FFFDF5" stroke="#2B2220" stroke-width="2"/><circle cx="13" cy="44" r="1.5" fill="#FFF3C4"/><circle cx="28" cy="34" r="1.3" fill="#FFF3C4"/><circle cx="22" cy="52" r="1.2" fill="#FFF3C4"/></svg>`;
+const friesSVG = w => `<svg viewBox="0 0 52 60" width="${w}" height="${(w * 60 / 52).toFixed(1)}" aria-hidden="true">${[[10, 6, -10], [16, 2, -4], [22, 5, 2], [28, 1, 6], [34, 4, 10], [40, 7, 14], [19, 10, -2], [31, 9, 8]].map(([x, y, r]) => `<rect x="${x}" y="${y}" width="6" height="30" rx="2" fill="#FFD447" stroke="#C98A10" stroke-width="1.3" transform="rotate(${r} ${x + 3} ${y + 30})"/>`).join('')}<path d="M6 24L11 58H41L46 24Q26 32 6 24Z" fill="#D33A31" stroke="#2B2220" stroke-width="2"/><path d="M26 38l2 4.5 5 .4-3.8 3.2 1.2 4.9-4.4-2.7-4.4 2.7 1.2-4.9-3.8-3.2 5-.4z" fill="#fff"/></svg>`;
+function orderSVG(o, w) {
+  let s = o.kind === 'burger' ? burgerSVG(o.fill, true, w) : pizzaSVG({ sauce: true, cheese: true, tops: o.tops, baked: true }, w * .82);
+  if (o.fries) s += friesSVG(w * .42); if (o.cola) s += colaSVG(w * .3); if (o.beer) s += beerSVG(w * .4);
+  return s;
+}
+// 재료 버튼 작은 그림
+function iconSVG(k) {
+  if (LAYER[k]) { const t = LAYER[k].t, y = Math.max(0, (30 - t) / 2); return `<svg viewBox="0 -2 100 34">${LAYER[k].d(k === 'top' ? -2 : y)}</svg>`; }
+  if (k === 'dough') return `<svg viewBox="0 0 100 34"><ellipse cx="50" cy="17" rx="46" ry="14" fill="#F3D7A2" stroke="#8A5420" stroke-width="2.4"/></svg>`;
+  if (k === 'sauce') return `<svg viewBox="0 0 100 34"><ellipse cx="50" cy="17" rx="40" ry="12" fill="#D2402F" stroke="#7A1C12" stroke-width="2.4"/></svg>`;
+  if (k === 'pcheese') return `<svg viewBox="0 0 100 34"><path d="M20 26L50 4L82 26Z" fill="#FFE07A" stroke="#C9930F" stroke-width="2.4" stroke-linejoin="round"/><circle cx="48" cy="18" r="3" fill="#F5C842"/><circle cx="62" cy="22" r="2.4" fill="#F5C842"/></svg>`;
+  if (['pepperoni', 'mushroom', 'olive'].includes(k)) return `<svg viewBox="28 3 44 28">${topping(k, 42, 17)}${topping(k, 58, 17)}</svg>`;
+  if (k === 'cola') return colaSVG(14).replace('<svg ', '<svg style="width:22px;height:30px" ');
+  if (k === 'beer') return beerSVG(22).replace('<svg ', '<svg style="width:26px;height:30px" ');
+  if (k === 'fries') return friesSVG(22).replace('<svg ', '<svg style="width:26px;height:30px" ');
+  if (k === 'bake') return '<svg viewBox="0 0 100 34"><path d="M20 30V18Q20 4 50 4T80 18V30Z" fill="#B4553E" stroke="#2B2220" stroke-width="2.4"/><path d="M34 30V20Q34 13 50 13T66 20V30Z" fill="#FF8A3D"/></svg>';
+  if (k === 'trash') return '<svg viewBox="0 0 100 34"><rect x="34" y="8" width="32" height="24" rx="3" fill="#9AA5AE" stroke="#2B2220" stroke-width="2.4"/><rect x="28" y="3" width="44" height="6" rx="2" fill="#7D8890" stroke="#2B2220" stroke-width="2.4"/></svg>';
+  return '';
+}
+
+/* ══════════ 그림: 준탁 셰프 (썸네일의 수염 사장님) ══════════ */
+const CHEF_SVG = `<svg viewBox="0 0 100 124" aria-label="준탁 셰프">
+  <path d="M14 124Q12 92 30 84L50 80L70 84Q88 92 86 124Z" fill="#FFFFFF" stroke="#2B2220" stroke-width="3"/>
+  <path d="M30 124V96Q30 90 36 90H64Q70 90 70 96V124Z" fill="#2E2A28" stroke="#2B2220" stroke-width="2.5"/>
+  <path d="M36 90L33 82M64 90L67 82" stroke="#2E2A28" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="35" cy="95" r="2.2" fill="#E9B45A"/><circle cx="65" cy="95" r="2.2" fill="#E9B45A"/>
+  <g transform="translate(40 101) scale(.2)"><path d="M3 30Q2 6 50 5Q98 6 97 30Z" fill="#E49A45" stroke="#2B2220" stroke-width="6"/><rect x="2" y="32" width="96" height="14" rx="6" fill="#6B3A22" stroke="#2B2220" stroke-width="6"/><path d="M0 34H100" stroke="#7CCB4C" stroke-width="7"/><path d="M5 50H95Q95 64 80 64H20Q5 64 5 50Z" fill="#E49A45" stroke="#2B2220" stroke-width="6"/></g>
+  <circle cx="16" cy="110" r="8" fill="#F2C29C" stroke="#2B2220" stroke-width="2.5"/><circle cx="84" cy="110" r="8" fill="#F2C29C" stroke="#2B2220" stroke-width="2.5"/>
+  <ellipse cx="24" cy="48" rx="5" ry="7" fill="#EDB78F" stroke="#2B2220" stroke-width="2.5"/><ellipse cx="76" cy="48" rx="5" ry="7" fill="#EDB78F" stroke="#2B2220" stroke-width="2.5"/>
+  <path d="M25 40Q24 14 50 13Q76 14 75 40Q76 70 50 78Q24 70 25 40Z" fill="#F2C29C" stroke="#2B2220" stroke-width="3"/>
+  <path d="M25 34Q22 10 46 8Q52 2 60 8Q78 10 76 34Q72 22 66 20Q58 15 50 18Q38 14 30 22Q26 26 25 34Z" fill="#26201E" stroke="#2B2220" stroke-width="2.5"/>
+  <path d="M26 38Q26 28 30 24V40Z" fill="#7D7470"/><path d="M74 38Q74 28 70 24V40Z" fill="#7D7470"/>
+  <path d="M34 50Q34 70 50 70Q66 70 66 50Q72 52 73 46Q74 70 50 79Q26 70 27 46Q28 52 34 50Z" fill="#4A3426" stroke="#2B2220" stroke-width="2"/>
+  <path d="M33 33Q39 28 46 32M54 32Q61 28 67 33" stroke="#1E1816" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <path d="M35 40Q40 37 45 40Q40 43 35 40Z" fill="#fff" stroke="#2B2220" stroke-width="1.6"/><circle cx="42" cy="40" r="2.1" fill="#1E1816"/>
+  <path d="M55 40Q60 37 65 40Q60 43 55 40Z" fill="#fff" stroke="#2B2220" stroke-width="1.6"/><circle cx="62" cy="40" r="2.1" fill="#1E1816"/>
+  <path d="M49 42Q47 50 50 52" stroke="#C98E67" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M38 57Q50 51 62 57Q57 55 50 56Q43 55 38 57Z" fill="#3A281D" stroke="#2B2220" stroke-width="2.4" stroke-linejoin="round"/>
+  <path d="M40 59Q50 58 60 59Q58 70 50 70Q42 70 40 59Z" fill="#9E2B25" stroke="#2B2220" stroke-width="2"/><path d="M43 60H57Q56 62 50 62Q44 62 43 60Z" fill="#fff"/><ellipse cx="50" cy="66.5" rx="5" ry="2.5" fill="#F07C74"/>
+  <ellipse cx="33" cy="49" rx="4" ry="2.4" fill="#F59C8C" opacity=".45"/><ellipse cx="67" cy="49" rx="4" ry="2.4" fill="#F59C8C" opacity=".45"/>
+</svg>`;
+
+/* ══════════ 그림: 가게 단계별 배경 (400×250) ══════════ */
+function sceneBG(lv) {
+  const W = '<svg class="bg" viewBox="0 0 400 250" preserveAspectRatio="xMidYMax slice" aria-hidden="true">';
+  if (lv === 1) return W + `<rect width="400" height="250" fill="url(#gSky1)"/><circle cx="350" cy="44" r="20" fill="#FFE27A"/><circle cx="350" cy="44" r="34" fill="url(#gGlow)"/>
+    <g fill="#fff" opacity=".9"><ellipse cx="190" cy="42" rx="26" ry="10"/><ellipse cx="208" cy="36" rx="18" ry="11"/><ellipse cx="270" cy="70" rx="20" ry="7"/></g>
+    <g fill="#BFD8E8"><rect x="210" y="96" width="40" height="110"/><rect x="254" y="74" width="34" height="132"/><rect x="292" y="104" width="52" height="102"/><rect x="348" y="86" width="40" height="120"/></g>
+    <g fill="#E8F4FB" opacity=".8">${[220, 232, 262, 274, 302, 316, 330, 356, 370].map((x, i) => `<rect x="${x}" y="${110 + (i % 3) * 22}" width="7" height="9"/>`).join('')}</g>
+    <rect y="196" width="400" height="54" fill="#E7D3AE"/><path d="M0 206H400" stroke="#CDB68C" stroke-width="2"/>${[40, 120, 200, 280, 360].map(x => `<path d="M${x} 206V250" stroke="#CDB68C" stroke-width="2"/>`).join('')}
+    <path d="M-10 40H150Q170 40 172 60V206H-10Z" fill="#D33A31" stroke="#2B2220" stroke-width="3"/>
+    <rect x="-10" y="40" width="182" height="20" fill="#FFF3DA" stroke="#2B2220" stroke-width="3"/>
+    <path d="M-10 60H172" stroke="#2B2220" stroke-width="3"/>${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<path d="M${-10 + i * 23} 60h23v14q-11.5 8-23 0z" fill="${i % 2 ? '#fff' : '#D33A31'}" stroke="#2B2220" stroke-width="2"/>`).join('')}
+    <rect x="2" y="80" width="156" height="104" rx="6" fill="#3B302B" stroke="#2B2220" stroke-width="3"/><rect x="8" y="86" width="144" height="40" rx="4" fill="#4E423C"/>
+    <circle cx="36" cy="214" r="18" fill="#2B2220"/><circle cx="36" cy="214" r="8" fill="#B8C2CA"/><circle cx="132" cy="214" r="18" fill="#2B2220"/><circle cx="132" cy="214" r="8" fill="#B8C2CA"/></svg>`;
+  if (lv === 2) return W + `<rect width="400" height="250" fill="url(#gSky2)"/><circle cx="300" cy="150" r="40" fill="#FFE08A" opacity=".8"/>
+    <g fill="#5E9E4A"><circle cx="210" cy="150" r="34"/><circle cx="250" cy="138" r="40"/><circle cx="330" cy="148" r="38"/><circle cx="380" cy="136" r="34"/></g>
+    <g fill="#4A8A3A"><circle cx="230" cy="166" r="28"/><circle cx="360" cy="170" r="26"/></g>
+    <rect y="186" width="400" height="64" fill="#8CC56B"/>
+    <path d="M0 30Q100 70 200 34T400 40" stroke="#2B2220" stroke-width="2" fill="none"/>
+    ${[[30, 42], [70, 54], [110, 58], [150, 50], [190, 38], [230, 36], [270, 42], [310, 44], [350, 40], [385, 38]].map(([x, y], i) => `<circle cx="${x}" cy="${y + 7}" r="5" fill="${['#FFE27A', '#FF8A7A', '#9BE3FF'][i % 3]}" stroke="#2B2220" stroke-width="1.2" class="${i % 2 ? 'tw' : 'tw2'}"/>`).join('')}
+    <rect x="0" y="70" width="170" height="140" fill="#C98A4F" stroke="#2B2220" stroke-width="3"/>${[0, 1, 2, 3, 4, 5, 6].map(i => `<path d="M0 ${84 + i * 18}H170" stroke="#A86E38" stroke-width="2"/>`).join('')}
+    <path d="M-10 72L20 50H160L186 72Z" fill="#fff" stroke="#2B2220" stroke-width="3"/>${[0, 1, 2, 3, 4, 5].map(i => `<path d="M${20 + i * 28} 50L${6 + i * 30} 72H${21 + i * 30}L${34 + i * 28} 50Z" fill="#D33A31"/>`).join('')}
+    </svg>`;
+  if (lv === 3) return W + `<rect width="400" height="250" fill="#FFF1D6"/><rect y="150" width="400" height="100" fill="#1E8A84"/><path d="M0 150H400" stroke="#E6ECF0" stroke-width="6"/>
+    <rect x="200" y="44" width="150" height="90" rx="10" fill="#9FDCFF" stroke="#2B2220" stroke-width="4"/><path d="M275 44V134M200 89H350" stroke="#2B2220" stroke-width="3"/><circle cx="320" cy="66" r="10" fill="#FFF6C2"/>
+    <g class="flick"><rect x="104" y="58" width="74" height="30" rx="15" fill="#2B1630" stroke="#FF4FA3" stroke-width="3"/><text x="141" y="79" text-anchor="middle" font-family="Jua,sans-serif" font-size="17" fill="#FF7AC0" style="filter:drop-shadow(0 0 3px #FF4FA3)">OPEN</text></g>
+    <circle cx="374" cy="64" r="16" fill="#fff" stroke="#2B2220" stroke-width="3"/><path d="M374 64V54M374 64L381 68" stroke="#2B2220" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="96" y="100" width="88" height="40" rx="4" fill="#2B2220"/><text x="140" y="116" text-anchor="middle" font-size="9" font-family="Jua,sans-serif" fill="#FFF3DA">BURGER $5 · PIZZA $9</text><text x="140" y="130" text-anchor="middle" font-size="9" font-family="Jua,sans-serif" fill="#F6B731">COLA · FRIES · BEER</text>
+    <g>${[120, 200, 280, 360].map(x => `<rect x="${x - 3}" y="186" width="6" height="40" fill="#C9D3DA"/><ellipse cx="${x}" cy="186" rx="16" ry="6" fill="#D33A31" stroke="#2B2220" stroke-width="2.5"/>`).join('')}</g>
+    <path d="M0 0H400V12H0Z" fill="#D33A31"/></svg>`;
+  if (lv === 4) return W + `<rect width="400" height="250" fill="#8F2A25"/><rect width="400" height="250" fill="url(#pCheck)" opacity=".08"/>
+    <rect y="160" width="400" height="90" fill="#6E1F1B"/>
+    ${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => `<path d="M${i * 44 - 4} 0h44v26q-22 12-44 0z" fill="${i % 2 ? '#FFF3DA' : '#D33A31'}" stroke="#2B2220" stroke-width="2"/>`).join('')}
+    <g transform="translate(330 38)"><rect width="56" height="36" fill="#fff" stroke="#2B2220" stroke-width="2"/>${[0, 1, 2, 3, 4, 5, 6].map(i => `<rect y="${i * 5.2}" width="56" height="2.6" fill="#D33A31"/>`).join('')}<rect width="24" height="19" fill="#24324D"/>${[4, 10, 16].map(x => [4, 9, 14].map(y => `<circle cx="${x + 2}" cy="${y}" r="1" fill="#fff"/>`).join('')).join('')}<path d="M0 0V60" stroke="#C9D3DA" stroke-width="3"/></g>
+    <g class="flick" style="filter:drop-shadow(0 0 6px #FFB703)"><path d="M160 66Q160 42 200 42T240 66Z" fill="none" stroke="#FFC94A" stroke-width="5"/><path d="M158 74H242" stroke="#7CCB4C" stroke-width="5"/><path d="M160 84H240" stroke="#FF6B4A" stroke-width="6"/><path d="M162 96Q162 106 200 106T238 96Z" fill="none" stroke="#FFC94A" stroke-width="5"/></g>
+    <g transform="translate(18 70)"><path d="M0 70V24Q0 0 34 0T68 24V70Z" fill="#E64980" stroke="#2B2220" stroke-width="3"/><path d="M10 66V28Q10 10 34 10T58 28V66Z" fill="#FFD447" stroke="#2B2220" stroke-width="2.5"/><rect x="16" y="32" width="36" height="22" rx="4" fill="#4FE3FF" stroke="#2B2220" stroke-width="2" class="tw"/></g>
+    ${[[120, 140], [290, 120], [250, 30], [100, 40], [370, 110]].map(([x, y], i) => `<path d="M${x} ${y - 7}l2 5 5 .5-4 3.5 1.3 5-4.3-2.7-4.3 2.7 1.3-5-4-3.5 5-.5z" fill="#FFE27A" class="${i % 2 ? 'tw' : 'tw2'}"/>`).join('')}
+    ${[130, 270].map(x => `<path d="M${x} 26V44" stroke="#2B2220" stroke-width="2"/><path d="M${x - 14} 56Q${x - 14} 44 ${x} 44T${x + 14} 56Z" fill="#D33A31" stroke="#2B2220" stroke-width="2.5"/><ellipse cx="${x}" cy="62" rx="16" ry="8" fill="url(#gGlow)"/>`).join('')}</svg>`;
+  return W + `<rect width="400" height="250" fill="url(#gNight)"/>
+    <rect x="120" y="36" width="270" height="118" rx="8" fill="#141A3E" stroke="#F7D774" stroke-width="4"/>
+    <circle cx="350" cy="64" r="14" fill="#FFF6C2"/><circle cx="356" cy="60" r="12" fill="#141A3E"/>
+    <g fill="#2A2F63">${[[130, 96, 30, 58], [164, 80, 26, 74], [194, 104, 34, 50], [232, 70, 30, 84], [266, 92, 40, 62], [310, 84, 26, 70], [340, 108, 46, 46]].map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}"/>`).join('')}</g>
+    <g fill="#FFE27A">${Array.from({ length: 26 }, (_, i) => `<rect x="${136 + (i * 37) % 240}" y="${88 + (i * 23) % 56}" width="4" height="5" class="${i % 3 ? 'tw' : ''}"/>`).join('')}</g>
+    <rect y="166" width="400" height="84" fill="#231A3B"/>
+    ${Array.from({ length: 21 }, (_, i) => `<circle cx="${8 + i * 19}" cy="8" r="4.5" fill="#FFE27A" class="${i % 2 ? 'tw' : 'tw2'}"/><circle cx="${8 + i * 19}" cy="158" r="4" fill="#FFE27A" class="${i % 2 ? 'tw2' : 'tw'}"/>`).join('')}
+    <g class="flick"><text x="62" y="76" text-anchor="middle" font-family="Jua,sans-serif" font-size="22" fill="#FFE27A" style="filter:drop-shadow(0 0 4px #FF7A00)">JUNTAK'S</text><text x="62" y="102" text-anchor="middle" font-family="Jua,sans-serif" font-size="15" fill="#FF7AC0" style="filter:drop-shadow(0 0 4px #FF4FA3)">BURGER HOUSE</text><text x="62" y="124" text-anchor="middle" font-family="Jua,sans-serif" font-size="11" fill="#4FE3FF">★ FLAGSHIP ★</text></g>
+    <path d="M200 20V30" stroke="#F7D774" stroke-width="2"/><path d="M180 40L200 30L220 40" fill="none" stroke="#F7D774" stroke-width="2"/><circle cx="200" cy="44" r="5" fill="#FFF6C2"/><ellipse cx="200" cy="48" rx="24" ry="12" fill="url(#gGlow)"/></svg>`;
+}
+// 장면 하나 (배경 + 카운터 + 셰프 + 손님 자리)
+function sceneHTML(lv, sign, { mini = false, owner = null, seats = 0 } = {}) {
+  return `${sceneBG(lv)}<div class="sign ${lv >= 4 ? 'neon' : ''}">${esc(sign)}</div>
+    <div class="chefbox" id="${mini ? '' : 'chef'}"><div class="bubble" hidden></div>${CHEF_SVG}</div>
+    ${owner ? `<div class="owner">${faceEl(owner.char)}<span class="tag">사장님 ${esc(owner.nick)}</span></div>` : ''}
+    ${seats ? `<div class="seats" style="--n:${seats}"></div>` : ''}
+    <div class="counter lv${lv}"></div>`;
+}
+function chefSay(root, s, ms = 1800) {
+  const b = root && root.querySelector('.chefbox .bubble'); if (!b) return;
+  b.textContent = s; b.hidden = false; clearTimeout(b._t); b._t = setTimeout(() => { b.hidden = true; }, ms);
+}
+
+/* ══════════ 계정 (닉네임별 개인 코드) ══════════ */
+let me = null, myCode = null, meOff = null, myCodeV = 1;
+const emptyPlayer = (pid, nick, char) => ({ pid, nick, char, money: CFG.startMoney, stage: 1, own: {}, rating: 3, codeV: 1,
+  rounds: 0, served: 0, best: 0, total: 0, likes: 0, createdAt: Date.now(), lastDaily: todayKST() });
+async function newCode(pid, v = 1) {
+  for (let i = 0; i < 20; i++) {
+    const code = genCode();
+    const r = await db.tx(PATH.acc(code), cur => (cur ? undefined : { pid, v, createdAt: Date.now() }));
+    if (r.committed && r.value && r.value.pid === pid) return code;
+  }
+  throw new Error('코드를 만들지 못했어요. 다시 해 주세요');
+}
+async function register(nick, char) {
+  if (!CH.includes(char)) char = CH[0];
+  nick = String(nick || '').trim();
+  if (nick.length < 2 || nick.length > 10) throw new Error('닉네임은 2~10글자로 해 주세요');
+  const k = nickKey(nick);
+  if (await db.get(PATH.nicks + '/' + k)) throw new Error('이미 있는 닉네임이에요');
+  const pid = genCode(12, 'abcdefghijkmnopqrstuvwxyz0123456789');
+  const r = await db.tx(PATH.nicks + '/' + k, cur => (cur ? undefined : pid));
+  if (!r.committed || r.value !== pid) throw new Error('이미 있는 닉네임이에요');
+  await db.set(PATH.player(pid), emptyPlayer(pid, nick, char));
+  return newCode(pid, 1);
+}
+const withTimeout = (pr, ms = 10000) => Promise.race([pr, sleep(ms).then(() => { throw new Error('network'); })]);
+async function login(code) {
+  code = String(code || '').trim().toUpperCase();
+  if (!/^[A-Z2-9]{6}$/.test(code)) return { err: '코드는 6자리예요' };
+  const acc = await withTimeout(db.get(PATH.acc(code)));
+  if (!acc || !acc.pid) return { err: '없는 코드예요' };
+  const p = await withTimeout(db.get(PATH.player(acc.pid)));
+  if (!p) return { err: '없는 코드예요' };
+  if ((acc.v || 1) !== (p.codeV || 1)) return { err: '새 코드가 발급돼서 이 코드는 더 못 써요', replaced: true };
+  if (p.blocked) return { err: '운영자가 정지한 코드예요. 운영자에게 물어봐 주세요' };
+  return { player: p, code };
+}
+const CODE_KEY = 'burger-code';
+function savedCode() {
+  let c = null;
+  try { c = localStorage.getItem(CODE_KEY); } catch (e) {}
+  if (!c) { const m = document.cookie.match(/(?:^|;\s*)burger_code=([A-Z2-9]{6})/); if (m) c = m[1]; }
+  return c && /^[A-Z2-9]{6}$/.test(c) ? c : null;
+}
+function saveCode(code) {
+  try { localStorage.setItem(CODE_KEY, code); } catch (e) {}
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {}); } catch (e) {}
+  try { document.cookie = `burger_code=${code}; max-age=31536000; path=/; SameSite=Lax; Secure`; } catch (e) {}
+}
+function clearCode() {
+  try { localStorage.removeItem(CODE_KEY); } catch (e) {}
+  try { document.cookie = 'burger_code=; max-age=0; path=/; SameSite=Lax; Secure'; } catch (e) {}
+}
+function setMe(v) {
+  if (!v) return;
+  me = v; me.own = me.own || {};
+  if (cur === 'lobby') renderLobby();
+  if (cur === 'shop') renderShop();
+  if (G && G.running) renderHud();
+}
+async function enter(code, player) {
+  myCode = code; saveCode(code);
+  me = player; me.own = me.own || {};
+  myCodeV = me.codeV || 1;
+  meOff && meOff();
+  const pid = me.pid;
+  meOff = db.on(PATH.player(pid), v => {
+    if (!v) { confirmGone(pid); return; }
+    if (v.blocked || (v.codeV || 1) !== myCodeV) { toast(v.blocked ? '운영자가 코드를 정지했어요' : '새 코드가 발급됐어요. 새 코드로 들어와 주세요', 3500); logout(); return; }
+    setMe(v);
+  });
+  show('lobby');
+  dailyCheck();
+}
+let goneT = 0;
+function confirmGone(pid) {
+  clearTimeout(goneT);
+  goneT = setTimeout(async () => {
+    if (!me || me.pid !== pid) return;
+    let v; try { v = await withTimeout(db.get(PATH.player(pid))); } catch (e) { return; }
+    if (v !== null || !me || me.pid !== pid) return;
+    await sleep(3000);
+    try { v = await withTimeout(db.get(PATH.player(pid))); } catch (e) { return; }
+    if (v === null && me && me.pid === pid) { toast('계정이 삭제됐어요'); logout(); }
+  }, 1500);
+}
+function logout() {
+  meOff && meOff(); meOff = null; me = null; myCode = null;
+  clearCode();
+  if (G) { G.running = false; G = null; }
+  show('login');
+}
+async function txMe(fn) {
+  if (!me) return null;
+  const r = await db.tx(PATH.player(me.pid), c => (c ? fn(c) : c));
+  if (r.committed && r.value) setMe(r.value);
+  return r;
+}
+async function dailyCheck() {
+  if (!me) return;
+  const today = todayKST();
+  if (me.lastDaily === today) return;
+  const r = await txMe(c => { if (c.lastDaily === today) return undefined; c.money = (c.money || 0) + CFG.daily; c.lastDaily = today; return c; }).catch(() => null);
+  if (r && r.committed) { Sound.play('buy'); toast(`☀️ 오늘의 출근 보너스 ${usd(CFG.daily)}!`); }
+}
+const pruneDates = (o, keep) => { const ks = Object.keys(o || {}); if (ks.length > keep) ks.sort().slice(0, ks.length - keep).forEach(k => delete o[k]); };
+
+/* ══════════ 화면 전환 ══════════ */
+let cur = 'boot', liveOff = null;
+function show(name) {
+  cur = name;
+  if (liveOff) { liveOff(); liveOff = null; }
+  for (const s of document.querySelectorAll('body > section')) s.classList.add('hidden');
+  ($('#' + (name === 'game' ? 'game' : 's-' + name))).classList.remove('hidden');
+  ({ login: renderLogin, lobby: renderLobby, shop: renderShop, friends: renderFriends, rank: renderRank, admin: renderAdmin }[name] || (() => {}))();
+  window.scrollTo(0, 0);
+}
+
+/* ══════════ 로그인 ══════════ */
+function renderLogin() {
+  const saved = savedCode();
+  let pickChar = pick(CH);
+  const el = $('#s-login');
+  el.innerHTML = `
+    <div class="hero"><img src="thumb.jpg" alt="놀러오세요, 준탁의 어메리카 버거하우스"></div>
+    <div class="tabs" role="tablist"><button class="on" data-t="new">처음 왔어요</button><button data-t="code">코드로 입장</button></div>
+    <div class="card" id="lgNew" style="display:grid;gap:12px">
+      <input class="inp" id="lgNick" maxlength="10" placeholder="닉네임 (2~10글자) · 가게 이름이 돼요" autocomplete="off">
+      <p class="small muted">내 캐릭터 (친구 가게에 손님으로 놀러가요)</p>
+      <div class="charpick" id="lgChars">${CH.map(id => `<button type="button" data-c="${id}" class="${id === pickChar ? 'on' : ''}">${faceEl(id)}${esc(nameOf(id))}</button>`).join('')}</div>
+      <button class="btn red big" id="lgGo">🍔 내 가게 열고 코드 받기</button>
+      <p class="small muted">가입하면 푸드트럭 1대와 ${usd(CFG.startMoney)}을 드려요. 매일 아침 ${CFG.dailyHour}시에 출근 보너스 ${usd(CFG.daily)}!</p>
+    </div>
+    <div class="card hidden" id="lgCode" style="display:grid;gap:12px">
+      ${saved ? `<button class="btn teal" id="lgSaved">${esc(saved)}로 계속하기</button>` : ''}
+      <input class="inp code-inp" id="lgCodeIn" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters">
+      <button class="btn big" id="lgEnter">입장하기</button>
+      <p class="small muted">코드를 잃어버렸으면 운영자에게 새 코드를 받으세요.</p>
+    </div>
+    <div class="grid2"><button class="btn ghost" id="lgRank">🏆 랭킹 보기</button><button class="btn ghost" id="lgAdmin">🔐 어드민</button></div>
+    <p class="mode-note">${db && db.mode === 'local' ? '오프라인 모드 · 이 기기에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
+  const tabs = el.querySelectorAll('.tabs button');
+  const setTab = t => { tabs.forEach(b => b.classList.toggle('on', b.dataset.t === t)); $('#lgNew').classList.toggle('hidden', t !== 'new'); $('#lgCode').classList.toggle('hidden', t !== 'code'); };
+  tabs.forEach(b => b.onclick = () => setTab(b.dataset.t));
+  if (saved) setTab('code');
+  $('#lgChars').onclick = e => { const b = e.target.closest('button'); if (!b) return; pickChar = b.dataset.c; $('#lgChars').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); };
+  $('#lgGo').onclick = async () => {
+    const btn = $('#lgGo'); btn.disabled = true;
+    try {
+      const code = await register($('#lgNick').value, pickChar);
+      saveCode(code);
+      const r = await login(code);
+      modal(`<h2>내 입장 코드</h2><div class="bigcode">${code}</div>
+        <div class="card small">🚚 <b>${esc(r.player.nick)}점</b> 푸드트럭이 생겼어요! 가입 선물 <b>${usd(CFG.startMoney)}</b>도 넣어 드렸어요.</div>
+        <p class="muted small">다음부터 이 코드로 들어와요. 캡처하거나 복사해 두세요. 잃어버리면 운영자에게 새 코드를 받아요.</p>
+        <div class="grid2"><button class="btn ghost" id="cpy">코드 복사</button><button class="btn red" id="goIn">가게로 가기</button></div>`,
+        (s, close, m) => { m.dataset.lock = '1'; $('#cpy', s).onclick = () => { navigator.clipboard?.writeText(code); toast('복사했어요'); }; $('#goIn', s).onclick = () => { close(); enter(code, r.player); }; });
+    } catch (e) { toast(e.message || '가입하지 못했어요'); }
+    btn.disabled = false;
+  };
+  const doLogin = async code => {
+    const r = await login(code).catch(() => ({ err: '연결이 불안정해요. 잠시 뒤 다시 해 주세요' }));
+    if (r.err) { if (r.replaced && code === savedCode()) { clearCode(); renderLogin(); } toast(r.err); return; }
+    enter(r.code, r.player);
+  };
+  $('#lgEnter').onclick = () => doLogin($('#lgCodeIn').value);
+  $('#lgCodeIn').onkeydown = e => { if (e.key === 'Enter') doLogin(e.target.value); };
+  if (saved) $('#lgSaved').onclick = () => doLogin(saved);
+  $('#lgAdmin').onclick = adminLogin;
+  $('#lgRank').onclick = () => show('rank');
+}
+function adminLogin() {
+  modal(`<h2>어드민 접속</h2><input class="inp" id="adPw" type="password" placeholder="비밀번호" autocomplete="current-password">
+    <div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="adGo">접속</button></div>`, (s, close) => {
+    const go = async () => {
+      if (await sha256($('#adPw', s).value) !== CFG.adminSha256) { toast('비밀번호가 틀렸어요'); return; }
+      sessionStorage.setItem('burger-admin', '1'); close(); show('admin');
+    };
+    $('#adGo', s).onclick = go; $('#adPw', s).onkeydown = e => { if (e.key === 'Enter') go(); };
+    setTimeout(() => $('#adPw', s).focus(), 50);
+  });
+}
+
+/* ══════════ 로비 (내 가게) ══════════ */
+function renderLobby() {
+  if (!me) return show('login');
+  const st = stageOf(me), today = todayKST();
+  const visitors = Object.keys(((me.visitors || {})[today]) || {}).length;
+  const el = $('#s-lobby');
+  el.innerHTML = `
+    <div class="scene mini">${sceneHTML(st.lv, shopName(me), { mini: true, owner: me })}</div>
+    <div class="card" style="display:grid;gap:10px">
+      <div class="row">${faceEl(me.char, 'l')}<div class="grow"><div style="font:400 20px/1.2 var(--d)">${esc(me.nick)} 사장님 <span class="lvb">Lv.${st.lv} ${st.icon} ${esc(st.name)}</span></div>
+        <div class="small muted">내 코드 <b>${esc(myCode || '')}</b> · 영업 ${me.rounds || 0}번 · 손님 ${me.served || 0}명 · ★${(me.rating || 3).toFixed(1)}</div></div></div>
+      <div class="stat3"><div>현금<b class="num">${usd(me.money)}</b></div><div>보유재산<b class="num">${usd(worth(me))}</b></div><div>오늘 매출<b class="num">${usd(todaySales(me))}</b></div></div>
+      <div class="stagebar">${STAGES.map(s => `<i class="${s.lv <= st.lv ? 'on' : ''}" title="${esc(s.name)}"></i>`).join('')}</div>
+    </div>
+    <button class="btn red big" id="lbPlay">🍔 영업 시작!<small>${CFG.dayLen}초 동안 주문대로 만들어 팔아요 · 번 돈은 바로 내 돈</small></button>
+    <div class="grid2"><button class="btn teal" id="lbShop">🛠️ 가게 키우기<small>확장 · 설비 사기</small></button><button class="btn navy rel" id="lbFriends">👫 친구 가게<small>놀러가기 · 친구 추가</small></button></div>
+    <div class="grid2"><button class="btn rel" id="lbBook">📒 내 방명록${visitors ? `<span class="dot">${visitors}</span>` : ''}<small>오늘 놀러온 친구 ${visitors}명</small></button><button class="btn ghost" id="lbRank">🏆 랭킹<small>보유재산 · 오늘 매출</small></button></div>
+    <div class="card small" style="display:grid;gap:4px"><b style="font:400 16px/1.2 var(--d)">이렇게 해요</b>
+      <span>① 아래빵 → 재료 → 위빵 순서로 쟁반에 버거를 만들어요 (재료 순서는 상관없어요)</span>
+      <span>② 패티는 그릴에서 먼저 구워야 써요. 미리 구워 두면 빨라요</span>
+      <span>③ 다 만들면 그 손님을 눌러서 내줘요. 빨리 낼수록 팁이 커요 · 친구 손님은 팁 2배!</span>
+      <span>④ 번 돈으로 트럭 → 스탠드 → 다이너 → 버거하우스 → 본점까지 키워요</span></div>
+    <div class="grid3"><button class="btn ghost" id="lbSound">${Sound.on ? '🔊 소리' : '🔇 소리'}</button><button class="btn ghost" id="lbAdmin">🔐 어드민</button><button class="btn ghost" id="lbOut">로그아웃</button></div>
+    <p class="mode-note">${db.mode === 'local' ? '오프라인 모드 · 이 기기에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
+  $('#lbPlay').onclick = startRound;
+  $('#lbShop').onclick = () => show('shop');
+  $('#lbFriends').onclick = () => show('friends');
+  $('#lbBook').onclick = () => openVisit(me.pid);
+  $('#lbRank').onclick = () => show('rank');
+  $('#lbSound').onclick = () => { Sound.on = !Sound.on; localStorage.setItem('burger-sound', Sound.on ? '1' : '0'); renderLobby(); };
+  $('#lbOut').onclick = () => modal(`<h2>로그아웃할까요?</h2><p class="small muted">다시 들어오려면 내 코드 <b>${esc(myCode)}</b>가 필요해요.</p><div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="yo">로그아웃</button></div>`, (s, close) => { $('#yo', s).onclick = () => { close(); logout(); }; });
+  $('#lbAdmin').onclick = () => (sessionStorage.getItem('burger-admin') === '1' ? show('admin') : adminLogin());
+}
+
+/* ══════════ 가게 키우기 (확장 · 설비) ══════════ */
+function renderShop() {
+  if (!me) return show('login');
+  const st = stageOf(me), nx = STAGES[st.lv];
+  const el = $('#s-shop');
+  el.innerHTML = `<div class="toprow"><button class="back" id="spBack">← 가게</button><h2>가게 키우기</h2><span class="money num" style="min-width:64px;text-align:right">${usd(me.money)}</span></div>
+    <div class="card" style="display:grid;gap:10px">
+      <b style="font:400 18px/1.2 var(--d)">🏗️ 가게 확장 · 지금 Lv.${st.lv} ${st.icon} ${esc(st.name)}</b>
+      <div class="stagebar">${STAGES.map(s => `<i class="${s.lv <= st.lv ? 'on' : ''}"></i>`).join('')}</div>
+      ${nx ? `<div class="scene mini" style="height:170px">${sceneHTML(nx.lv, `${nx.title} · ${me.nick}점`, { mini: true })}</div>
+        <div class="up"><div><div class="n">${nx.icon} Lv.${nx.lv} ${esc(nx.name)}</div><div class="d">손님 자리 ${nx.seats}개 · 메뉴 값 ×${nx.mul} · 손님이 더 자주 와요${nx.lv === 2 ? ' · 베이컨 메뉴' : nx.lv === 3 ? ' · 더블 패티 · 피자 오븐/알바생 설비' : nx.lv === 4 ? ' · 네온 간판 설비' : ''}</div></div>
+        <button class="btn sm red" id="spStage" ${me.money < nx.cost ? 'disabled' : ''}>${usd(nx.cost)}</button></div>`
+        : '<p class="small">🌟 최고 단계 본점이에요! 이제 매출 랭킹 1위를 노려 봐요.</p>'}
+    </div>
+    <b style="font:400 18px/1.2 var(--d);margin-top:4px">🔧 설비</b>
+    <div class="list">${UPG.map(u => {
+      const own = !!me.own[u.id], lock = st.lv < u.lv || (u.need && !me.own[u.need]);
+      return `<div class="up ${own ? 'own' : lock ? 'lock' : ''}"><div><div class="n">${u.icon} ${esc(u.n)}</div><div class="d">${esc(u.d)}${lock && !own ? ` · ${st.lv < u.lv ? `Lv.${u.lv} ${STAGES[u.lv - 1].name}부터` : '그릴 한 칸 더 먼저'}` : ''}</div></div>
+        <button class="btn sm ${own ? 'ghost' : 'teal'}" data-buy="${u.id}" ${own || lock || me.money < u.c ? 'disabled' : ''}>${own ? '보유' : usd(u.c)}</button></div>`;
+    }).join('')}</div>`;
+  $('#spBack').onclick = () => show('lobby');
+  if (nx) $('#spStage').onclick = async () => {
+    const r = await txMe(c => { if ((c.stage || 1) !== st.lv || (c.money || 0) < nx.cost) return undefined; c.money -= nx.cost; c.stage = nx.lv; return c; }).catch(() => null);
+    if (r && r.committed) { Sound.play('buy'); toast(`${nx.icon} ${nx.name}(으)로 확장했어요!`, 2600); } else toast('돈이 모자라거나 연결이 불안정해요');
+  };
+  el.querySelectorAll('[data-buy]').forEach(b => b.onclick = async () => {
+    const u = UPG.find(x => x.id === b.dataset.buy);
+    const r = await txMe(c => { c.own = c.own || {}; if (c.own[u.id] || (c.money || 0) < u.c) return undefined; c.money -= u.c; c.own[u.id] = true; return c; }).catch(() => null);
+    if (r && r.committed) { Sound.play('buy'); toast(`${u.icon} ${u.n} 설치 완료!`); } else toast('돈이 모자라거나 연결이 불안정해요');
+  });
+}
+
+/* ══════════ 친구 ══════════ */
+async function loadPlayers(pids) { const out = await Promise.all(pids.map(id => db.get(PATH.player(id)).catch(() => null))); return out.filter(p => p && p.pid); }
+async function renderFriends() {
+  if (!me) return show('login');
+  const el = $('#s-friends'), today = todayKST();
+  const visited = ((me.vis || {})[today]) || {};
+  el.innerHTML = `<div class="toprow"><button class="back" id="frBack">← 가게</button><h2>친구 가게</h2><span style="width:60px"></span></div>
+    <div class="card" style="display:grid;gap:8px"><b>친구 추가</b>
+      <div class="row"><input class="inp" id="frNick" maxlength="10" placeholder="친구 닉네임" autocomplete="off"><button class="btn sm red" id="frAdd" style="flex:none">추가</button></div>
+      <p class="small muted">추가하면 서로 친구가 돼요. 친구 가게에 놀러가면 하루에 한 번 둘 다 ${usd(CFG.visitBonus)}! 친구가 내 가게에 손님으로 오면 팁 2배.</p></div>
+    <div class="list" id="frList"><p class="muted small" style="text-align:center">불러오는 중…</p></div>`;
+  $('#frBack').onclick = () => show('lobby');
+  const add = async () => {
+    const nick = $('#frNick').value.trim(); if (!nick) return;
+    const pid = await db.get(PATH.nicks + '/' + nickKey(nick)).catch(() => null);
+    if (!pid) return toast('그런 닉네임이 없어요');
+    if (pid === me.pid) return toast('나는 이미 내 친구예요 😎');
+    await addFriend(pid); $('#frNick').value = ''; renderFriends();
+  };
+  $('#frAdd').onclick = add; $('#frNick').onkeydown = e => { if (e.key === 'Enter') add(); };
+  const ids = Object.keys(me.friends || {});
+  const fs = await loadPlayers(ids);
+  if (cur !== 'friends') return;
+  fs.sort((a, b) => worth(b) - worth(a));
+  $('#frList').innerHTML = fs.length ? fs.map(p => {
+    const s = stageOf(p);
+    return `<div class="li"><span>${faceEl(p.char)}</span><div class="grow"><div class="nm">${esc(p.nick)}<span class="lvb">${s.icon} Lv.${s.lv}</span></div><div class="sub">재산 ${usd(worth(p))} · 오늘 매출 ${usd(todaySales(p))}</div></div>
+      <button class="btn sm ${visited[p.pid] ? 'ghost' : 'red'}" data-visit="${p.pid}" style="flex:none">${visited[p.pid] ? '또 가기' : '놀러가기'}</button></div>`;
+  }).join('') : '<p class="muted small" style="text-align:center">아직 친구가 없어요. 닉네임으로 추가하거나 랭킹에서 가게를 눌러 친구를 맺어요.</p>';
+  $('#frList').onclick = e => { const b = e.target.closest('[data-visit]'); if (b) openVisit(b.dataset.visit); };
+}
+async function addFriend(pid) {
+  const t = Date.now();
+  await txMe(c => { c.friends = c.friends || {}; if (c.friends[pid]) return undefined; c.friends[pid] = t; return c; });
+  await db.tx(PATH.player(pid), c => { if (!c) return c; c.friends = c.friends || {}; if (c.friends[me.pid]) return undefined; c.friends[me.pid] = t; return c; });
+  toast('친구가 됐어요! 🤝');
+}
+async function removeFriend(pid) {
+  await txMe(c => { if (!c.friends || !c.friends[pid]) return undefined; delete c.friends[pid]; return c; });
+  await db.tx(PATH.player(pid), c => { if (!c || !c.friends || !c.friends[me.pid]) return undefined; delete c.friends[me.pid]; return c; });
+}
+
+/* ══════════ 가게 구경 (친구 가게 놀러가기 · 내 방명록) ══════════ */
+let visitPid = null;
+async function openVisit(pid) {
+  visitPid = pid;
+  show('visit');
+  const el = $('#s-visit');
+  el.innerHTML = '<p class="muted" style="text-align:center;margin-top:40px">가게로 가는 중… 🚶</p>';
+  const p = await db.get(PATH.player(pid)).catch(() => null);
+  if (cur !== 'visit' || visitPid !== pid) return;
+  if (!p) { toast('가게를 찾지 못했어요'); return show(me ? 'friends' : 'rank'); }
+  const mine = me && pid === me.pid, st = stageOf(p), today = todayKST();
+  const isFriend = me && !mine && !!(me.friends || {})[pid];
+  const visitedToday = me && !!(((me.vis || {})[today]) || {})[pid];
+  const todayVis = Object.keys(((p.visitors || {})[today]) || {}).length;
+  el.innerHTML = `<div class="toprow"><button class="back" id="vsBack">← 뒤로</button><h2>${mine ? '내 가게 방명록' : '놀러왔어요!'}</h2><span style="width:60px"></span></div>
+    <div class="scene" id="vsScene">${sceneHTML(st.lv, shopName(p), { mini: true, owner: p, seats: !mine && me ? 1 : 0 })}</div>
+    <div class="card" style="display:grid;gap:10px">
+      <div class="row">${faceEl(p.char, 'l')}<div class="grow"><div style="font:400 20px/1.2 var(--d)">${esc(p.nick)} 사장님 <span class="lvb">${st.icon} ${esc(st.name)}</span></div>
+        <div class="small muted">영업 ${p.rounds || 0}번 · 손님 ${p.served || 0}명 · ★${(p.rating || 3).toFixed(1)} · ❤️ 방문 ${p.likes || 0}번 · 오늘 ${todayVis}명</div></div></div>
+      <div class="stat3"><div>보유재산<b class="num">${usd(worth(p))}</b></div><div>오늘 매출<b class="num">${usd(todaySales(p))}</b></div><div>최고 1회<b class="num">${usd(p.best || 0)}</b></div></div>
+      ${!mine && me ? `<div class="grid2"><button class="btn red" id="vsHi" ${visitedToday ? 'disabled' : ''}>${visitedToday ? '오늘 인사 완료 ✔' : `🍔 버거 한 입! (둘 다 +${usd(CFG.visitBonus)})`}</button>
+        ${isFriend ? '<button class="btn ghost" id="vsUnf">친구 끊기</button>' : '<button class="btn teal" id="vsAdd">🤝 친구 추가</button>'}</div>` : ''}
+    </div>
+    <div class="card" style="display:grid;gap:8px"><b style="font:400 18px/1.2 var(--d)">📒 방명록</b>
+      ${me ? `<div class="row"><input class="inp" id="gbIn" maxlength="60" placeholder="${mine ? '내 가게에 한마디' : '사장님께 한마디 (60자)'}" autocomplete="off"><button class="btn sm red" id="gbGo" style="flex:none">남기기</button></div>` : ''}
+      <div class="gb" id="gbList"><p class="muted small">불러오는 중…</p></div></div>`;
+  $('#vsBack').onclick = () => show(mine ? 'lobby' : me ? 'friends' : 'rank');
+  const sc = $('#vsScene');
+  if (!mine && me) {
+    const seat = sc.querySelector('.seats');
+    seat.style.left = 'auto'; seat.style.width = '96px'; seat.style.right = '28px';
+    seat.innerHTML = `<div class="seat"><div class="cust"><div class="ticket" style="padding:5px 6px"><div class="tname" style="font-size:11px">${visitedToday ? '또 왔어요~' : '놀러왔어요!'}</div></div><div class="who"><img src="${imgOf(me.char)}" alt=""><div class="body" style="--c:#E64980"></div></div></div></div>`;
+    chefSay(sc, pick([`어서오세요 ${me.nick}님!`, '놀러오셨네! 버거 한 입?', '네 손님! Alright!']), 2600);
+  } else chefSay(sc, mine ? '오늘도 영업 가 보자고!' : '어서오세요!', 2200);
+  if ($('#vsHi')) $('#vsHi').onclick = () => visitHello(p);
+  if ($('#vsAdd')) $('#vsAdd').onclick = async () => { await addFriend(pid); openVisit(pid); };
+  if ($('#vsUnf')) $('#vsUnf').onclick = () => modal(`<h2>${esc(p.nick)}님과 친구를 끊을까요?</h2><div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="yu">끊기</button></div>`, (s, close) => { $('#yu', s).onclick = async () => { close(); await removeFriend(pid); toast('친구를 끊었어요'); openVisit(pid); }; });
+  if ($('#gbGo')) {
+    const send = async () => {
+      const msg = $('#gbIn').value.trim().slice(0, 60); if (!msg) return;
+      $('#gbGo').disabled = true;
+      try {
+        await db.push(PATH.gb(pid), { pid: me.pid, nick: me.nick, char: me.char, msg, at: Date.now() });
+        $('#gbIn').value = ''; Sound.play('ding');
+        const all = (await db.get(PATH.gb(pid))) || {}, ks = Object.keys(all);
+        if (ks.length > 40) ks.sort((a, b) => (all[a].at || 0) - (all[b].at || 0)).slice(0, ks.length - 40).forEach(k => db.remove(PATH.gb(pid) + '/' + k));
+      } catch (e) { toast('못 남겼어요. 다시 해 주세요'); }
+      $('#gbGo').disabled = false;
+    };
+    $('#gbGo').onclick = send; $('#gbIn').onkeydown = e => { if (e.key === 'Enter') send(); };
+  }
+  liveOff = db.on(PATH.gb(pid), v => {
+    const box = $('#gbList'); if (!box) return;
+    const ms = Object.entries(v || {}).map(([k, m]) => ({ k, ...m })).sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, 30);
+    box.innerHTML = ms.length ? ms.map(m => `<div class="m">${faceEl(m.char, 's')}<div class="grow"><div class="w">${esc(m.nick)} · ${new Date(m.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}${me && (m.pid === me.pid || mine) ? ` · <a href="#" data-del="${esc(m.k)}" style="color:var(--red)">지우기</a>` : ''}</div><div class="t">${esc(m.msg)}</div></div></div>`).join('')
+      : '<p class="muted small">아직 방명록이 비어 있어요. 첫 글을 남겨 봐요!</p>';
+    box.querySelectorAll('[data-del]').forEach(a => a.onclick = e => { e.preventDefault(); db.remove(PATH.gb(pid) + '/' + a.dataset.del); });
+  });
+}
+async function visitHello(p) {
+  const today = todayKST(), B = CFG.visitBonus;
+  let full = false;
+  const r = await txMe(c => {
+    c.vis = c.vis || {}; const d = c.vis[today] = c.vis[today] || {};
+    if (d[p.pid]) return undefined;
+    if (Object.keys(d).length >= CFG.visitMax) { full = true; return undefined; }
+    d[p.pid] = 1; c.money = (c.money || 0) + B; pruneDates(c.vis, 3); return c;
+  }).catch(() => null);
+  if (!r || !r.committed) { toast(full ? `오늘은 ${CFG.visitMax}곳까지 인사했어요. 내일 또!` : '이미 인사했거나 연결이 불안정해요'); return; }
+  await db.tx(PATH.player(p.pid), c => {
+    if (!c) return c;
+    c.visitors = c.visitors || {}; const d = c.visitors[today] = c.visitors[today] || {};
+    if (d[me.pid]) return undefined;
+    d[me.pid] = 1; c.money = (c.money || 0) + B; c.likes = (c.likes || 0) + 1; pruneDates(c.visitors, 3); return c;
+  }).catch(() => {});
+  Sound.play('cash'); toast(`🍔 냠! 나도 ${p.nick}님도 +${usd(B)}`, 2400);
+  openVisit(p.pid);
+}
+
+/* ══════════ 랭킹 (보유재산 · 오늘 매출) ══════════ */
+let rankTab = 'worth';
+function renderRank() {
+  const el = $('#s-rank');
+  el.innerHTML = `<div class="toprow"><button class="back" id="rkBack">← 뒤로</button><h2>🏆 오픈 랭킹</h2><span style="width:60px"></span></div>
+    <div class="tabs" id="rkTabs"><button data-t="worth" class="${rankTab === 'worth' ? 'on' : ''}">💰 보유재산</button><button data-t="today" class="${rankTab === 'today' ? 'on' : ''}">📈 오늘 매출</button></div>
+    <p class="small muted" id="rkNote"></p>
+    <div class="list" id="rkList"><p class="muted small" style="text-align:center">불러오는 중…</p></div>`;
+  $('#rkBack').onclick = () => show(me ? 'lobby' : 'login');
+  let ps = [];
+  const draw = () => {
+    const today = todayKST();
+    const val = rankTab === 'worth' ? worth : p => todaySales(p);
+    $('#rkNote').textContent = rankTab === 'worth' ? '보유재산 = 현금 + 가게 확장비 + 설비 값' : `오늘(${today.slice(5).replace('-', '/')}, 아침 ${CFG.dailyHour}시 기준) 번 매출 합계 · 실시간`;
+    const list = ps.filter(p => rankTab === 'worth' || val(p) > 0).sort((a, b) => val(b) - val(a) || (a.createdAt || 0) - (b.createdAt || 0));
+    $('#rkList').innerHTML = list.length ? list.slice(0, 80).map((p, i) => `<div class="li ${me && p.pid === me.pid ? 'me' : ''}" data-pid="${p.pid}" style="cursor:pointer"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(p.char, 's')}<div class="grow"><div class="nm">${esc(p.nick)}<span class="lvb">${stageOf(p).icon} Lv.${stageOf(p).lv}</span></div></div><b class="money num">${usd(val(p))}</b></div>`).join('')
+      : '<p class="muted small" style="text-align:center">아직 아무도 없어요</p>';
+  };
+  $('#rkTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; rankTab = b.dataset.t; $('#rkTabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); draw(); };
+  $('#rkList').onclick = e => { const r = e.target.closest('[data-pid]'); if (r) openVisit(r.dataset.pid); };
+  liveOff = db.on(PATH.players, v => { if (cur !== 'rank') return; ps = Object.values(v || {}).filter(p => p && p.pid && !p.blocked); draw(); });
+}
+
+/* ══════════ 어드민 ══════════ */
+let adminQ = '', adminView = 'players', salesPeriod = 'today';
+const ADMIN_PRESETS = [100, 500, 1000];
+function pickPreset(btn, input) {
+  const wrap = btn.closest('.presets'), on = btn.classList.contains('on');
+  wrap.querySelectorAll('[data-pre]').forEach(x => x.classList.remove('on'));
+  if (on) { input.value = ''; return; }
+  btn.classList.add('on'); input.value = btn.dataset.pre;
+}
+async function adminLog(act) { try { await db.push(PATH.log, { at: Date.now(), ...act }); } catch (e) {} }
+const presetsHTML = attr => `<div class="presets" ${attr || ''}><span class="lb">빠른 금액</span>${ADMIN_PRESETS.map(n => `<button type="button" data-pre="${n}">${usd(n)}</button>`).join('')}</div>`;
+function renderAdmin() {
+  if (liveOff) { liveOff(); liveOff = null; }
+  if (sessionStorage.getItem('burger-admin') !== '1') return show(me ? 'lobby' : 'login');
+  const el = $('#s-admin');
+  el.innerHTML = `<div class="toprow"><button class="back" id="adBack">← 나가기</button><h2>어드민</h2><span style="width:60px"></span></div>
+    <div class="tabs" id="adView"><button data-v="players" class="${adminView === 'players' ? 'on' : ''}">👥 플레이어 · 돈 주기</button><button data-v="sales" class="${adminView === 'sales' ? 'on' : ''}">📈 매출 종합</button></div>
+    <div id="adBody"><p class="muted small" style="text-align:center">불러오는 중…</p></div>`;
+  $('#adBack').onclick = () => { sessionStorage.removeItem('burger-admin'); show(me ? 'lobby' : 'login'); };
+  $('#adView').onclick = e => { const b = e.target.closest('[data-v]'); if (!b || b.dataset.v === adminView) return; adminView = b.dataset.v; renderAdmin(); };
+  let ps = [], first = true;
+  liveOff = db.on(PATH.players, v => {
+    if (cur !== 'admin') return;
+    ps = Object.values(v || {}).filter(p => p && p.pid);
+    if (adminView === 'sales') drawSales(ps);
+    else if (first) { first = false; drawPlayers(ps); }
+    else refreshPlayers(ps);
+  });
+}
+// ── 플레이어 관리: 보유재산 낮은 순 · 돈 넣기/빼기 ──
+let adPs = [];
+const byWorth = (a, b) => worth(a) - worth(b) || (b.createdAt || 0) - (a.createdAt || 0);
+const adRow = p => { const s = stageOf(p); return `<div class="li adm" data-pid="${p.pid}">
+    <div class="top">${faceEl(p.char, 's')}<div class="grow"><div class="nm">${esc(p.nick)}<span class="lvb">${s.icon} Lv.${s.lv}</span>${p.blocked ? '<span class="badge-x">코드 정지</span>' : ''}</div>
+      <div class="sub">현금 ${usd(p.money)} · 오늘 매출 ${usd(todaySales(p))} · 영업 ${p.rounds || 0}번</div></div><div style="text-align:right"><div class="sub">보유재산</div><b class="money num">${usd(worth(p))}</b></div></div>
+    ${presetsHTML()}
+    <div class="adrow"><input class="inp sm" data-amt inputmode="numeric" placeholder="금액 ($)"><button class="btn sm teal" data-act="m+">+ 돈 주기</button><button class="btn sm" data-act="m-">− 빼기</button></div>
+    <div class="adrow"><button class="btn sm ghost" data-act="code">🔑 새 코드 발급</button><button class="btn sm ghost" data-act="block">${p.blocked ? '✅ 코드 다시 켜기' : '⛔ 코드 정지'}</button></div>
+  </div>`; };
+function drawPlayers(ps) {
+  adPs = ps;
+  $('#adBody').innerHTML = `<div style="display:grid;gap:10px">
+    <div class="card" style="display:grid;gap:8px"><b>모든 플레이어 일괄 돈 넣기 · 빼기</b>${presetsHTML('data-presets="bk"')}
+      <div class="adrow"><input class="inp sm" id="bkMoney" inputmode="numeric" placeholder="금액 ($)"><button class="btn sm teal" id="bkAdd">➕ 넣기</button><button class="btn sm" id="bkSub">➖ 빼기</button></div>
+      <p class="small muted">빼기는 $0 아래로 내려가지 않아요.</p></div>
+    <input class="inp" id="adQ" type="search" placeholder="🔍 닉네임 검색" autocomplete="off" value="${esc(adminQ)}">
+    <p class="small muted" id="adInfo"></p><div class="list" id="adList"></div></div>`;
+  const list = () => { const q = adminQ.trim().toLowerCase(); return adPs.slice().sort(byWorth).filter(p => !q || String(p.nick || '').toLowerCase().includes(q)); };
+  const info = () => { $('#adInfo').textContent = `보유재산 낮은 순 · 플레이어 ${adPs.length}명 · 현금 합계 ${usd(adPs.reduce((a, p) => a + (p.money || 0), 0))}`; };
+  const draw = () => { info(); const l = list(); $('#adList').innerHTML = l.map(adRow).join('') || '<p class="muted" style="text-align:center">없어요</p>'; };
+  draw();
+  refreshPlayers = ps2 => { adPs = ps2; info(); for (const p of ps2) { const box = $(`#adList [data-pid="${p.pid}"]`); if (!box) continue; const top = box.querySelector('.top'); const tmp = document.createElement('div'); tmp.innerHTML = adRow(p); top.replaceWith(tmp.firstElementChild.querySelector('.top')); } };
+  $('#adQ').oninput = e => { adminQ = e.target.value; draw(); };
+  const bulk = async sign => {
+    const amt = Math.floor(Number(String($('#bkMoney').value).replace(/[^\d]/g, '')));
+    if (!amt) return toast('금액을 넣어 주세요');
+    if (!confirm(`${adPs.length}명 모두에게 ${usd(amt)} ${sign > 0 ? '넣을까요' : '뺄까요'}?`)) return;
+    for (const p of adPs) await db.tx(PATH.player(p.pid), c => (c ? (c.money = Math.max(0, (c.money || 0) + sign * amt), c) : c));
+    adminLog({ act: sign > 0 ? 'bulk+' : 'bulk-', amt, n: adPs.length });
+    toast('완료했어요');
+  };
+  $('#bkAdd').onclick = () => bulk(1); $('#bkSub').onclick = () => bulk(-1);
+  $('[data-presets="bk"]').onclick = e => { const b = e.target.closest('[data-pre]'); if (b) pickPreset(b, $('#bkMoney')); };
+  $('#adList').onclick = async e => {
+    const pb = e.target.closest('[data-pre]');
+    if (pb) { pickPreset(pb, $('[data-amt]', pb.closest('[data-pid]'))); return; }
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const box = b.closest('[data-pid]'), pid = box.dataset.pid, p = adPs.find(x => x.pid === pid); if (!p) return;
+    const act = b.dataset.act;
+    b.disabled = true;
+    try {
+      if (act === 'm+' || act === 'm-') {
+        const amt = Math.floor(Number(String($('[data-amt]', box).value).replace(/[^\d]/g, '')));
+        if (!amt) { toast('금액을 넣어 주세요'); return; }
+        const sign = act === 'm+' ? 1 : -1;
+        const r = await db.tx(PATH.player(pid), c => (c ? (c.money = Math.max(0, (c.money || 0) + sign * amt), c) : c));
+        adminLog({ act: 'money', nick: p.nick, delta: sign * amt });
+        toast(`${p.nick}: ${sign > 0 ? '+' : '−'}${usd(amt)} → 현금 ${usd(r.value ? r.value.money : 0)}`);
+        $('[data-amt]', box).value = ''; box.querySelectorAll('[data-pre]').forEach(x => x.classList.remove('on'));
+      } else if (act === 'code') {
+        if (!confirm(`${p.nick}님에게 새 코드를 줄까요? 예전 코드는 더 못 써요.`)) return;
+        const v = (p.codeV || 1) + 1;
+        const code = await newCode(pid, v);
+        await db.tx(PATH.player(pid), c => (c ? (c.codeV = v, c) : c));
+        adminLog({ act: 'code', nick: p.nick });
+        modal(`<h2>${esc(p.nick)}님 새 코드</h2><div class="bigcode">${code}</div><p class="small muted">이 코드를 전달해 주세요. 예전 코드는 이제 안 열려요.</p><div class="grid2"><button class="btn ghost" id="cc">복사</button><button class="btn red" data-close>닫기</button></div>`,
+          s => { $('#cc', s).onclick = () => { navigator.clipboard?.writeText(code); toast('복사했어요'); }; });
+      } else if (act === 'block') {
+        const to = !p.blocked;
+        if (!confirm(`${p.nick}님 코드를 ${to ? '정지할까요? 바로 로그아웃돼요' : '다시 켤까요'}?`)) return;
+        await db.tx(PATH.player(pid), c => (c ? (c.blocked = to || null, c) : c));
+        adminLog({ act: to ? 'block' : 'unblock', nick: p.nick });
+        setTimeout(() => { const n = adPs.find(x => x.pid === pid); if (n) box.outerHTML = adRow(n); }, 300);
+      }
+    } catch (er) { toast('실패했어요: ' + (er.message || er)); }
+    finally { b.disabled = false; }
+  };
+}
+let refreshPlayers = () => {};
+// ── 매출 종합: 모든 유저의 하루 매출 합계 (오늘 · 어제 · 7일 · 전체 · 날짜별 막대) ──
+function drawSales(ps) {
+  const today = todayKST(), yday = dayKey(Date.now() - 864e5);
+  const days14 = Array.from({ length: 14 }, (_, i) => dayKey(Date.now() - i * 864e5));
+  const range = salesPeriod === 'all' ? null : salesPeriod === 'today' ? [today] : salesPeriod === 'yday' ? [yday] : salesPeriod === 'week' ? days14.slice(0, 7) : [salesPeriod];
+  const of = p => {
+    if (!range) return { rev: p.total || 0, n: p.served || 0, r: p.rounds || 0 };
+    return range.reduce((a, d) => { const x = salesOn(p, d); return { rev: a.rev + (x.rev || 0), n: a.n + (x.n || 0), r: a.r + (x.r || 0) }; }, { rev: 0, n: 0, r: 0 });
+  };
+  const rows = ps.map(p => ({ p, ...of(p) })).filter(x => x.rev > 0 || x.r > 0).sort((a, b) => b.rev - a.rev);
+  const tot = rows.reduce((a, x) => ({ rev: a.rev + x.rev, n: a.n + x.n, r: a.r + x.r }), { rev: 0, n: 0, r: 0 });
+  const bars = days14.slice().reverse().map(d => ({ d, rev: ps.reduce((a, p) => a + (salesOn(p, d).rev || 0), 0) }));
+  const mx = Math.max(1, ...bars.map(b => b.rev));
+  const label = { all: '전체 누적', today: `오늘 (${today.slice(5).replace('-', '/')})`, yday: `어제 (${yday.slice(5).replace('-', '/')})`, week: '최근 7일' }[salesPeriod] || salesPeriod.slice(5).replace('-', '/');
+  $('#adBody').innerHTML = `<div style="display:grid;gap:10px">
+    <div class="tabs" id="slPer">${[['today', '오늘'], ['yday', '어제'], ['week', '7일'], ['all', '전체']].map(([k, t]) => `<button data-p="${k}" class="${salesPeriod === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+    <div class="card" style="display:grid;gap:8px"><b style="font:400 17px/1.2 var(--d)">📈 ${esc(label)} · 모든 가게 매출 합계</b>
+      <div class="stat3"><div>총 매출<b class="num" style="color:var(--red-d)">${usd(tot.rev)}</b></div><div>영업 횟수<b class="num">${tot.r}번</b></div><div>손님 수<b class="num">${tot.n}명</b></div></div>
+      <p class="small muted">영업한 가게 ${rows.length}곳 · 영업일은 아침 ${CFG.dailyHour}시 기준 · 실시간</p></div>
+    <div class="card"><b class="small">최근 14일 날짜별 총 매출 (누르면 그날 순위)</b>
+      <div class="bars" id="slBars">${bars.map(b => `<button data-d="${b.d}" class="${salesPeriod === b.d || (salesPeriod === 'today' && b.d === today) || (salesPeriod === 'yday' && b.d === yday) ? 'on' : ''}" title="${b.d} ${usd(b.rev)}"><em>${b.rev ? (b.rev >= 1000 ? (b.rev / 1000).toFixed(1) + 'k' : b.rev) : ''}</em><i style="height:${Math.round(b.rev / mx * 100)}%"></i><span>${b.d.slice(8)}</span></button>`).join('')}</div></div>
+    <div class="list">${rows.length ? rows.map((x, i) => `<div class="li"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(x.p.char, 's')}<div class="grow"><div class="nm">${esc(x.p.nick)}<span class="lvb">${stageOf(x.p).icon} Lv.${stageOf(x.p).lv}</span></div><div class="sub">영업 ${x.r}번 · 손님 ${x.n}명 · 보유재산 ${usd(worth(x.p))}</div></div><b class="money num">${usd(x.rev)}</b></div>`).join('') : '<p class="muted small" style="text-align:center">이 기간엔 매출이 없어요</p>'}</div></div>`;
+  $('#slPer').onclick = e => { const b = e.target.closest('[data-p]'); if (b) { salesPeriod = b.dataset.p; drawSales(ps); } };
+  $('#slBars').onclick = e => { const b = e.target.closest('[data-d]'); if (b) { salesPeriod = b.dataset.d === today ? 'today' : b.dataset.d === yday ? 'yday' : b.dataset.d; drawSales(ps); } };
+}
+
+/* ══════════ 게임 (영업 90초) ══════════ */
+let G = null;
+const has = id => !!(G && G.own[id]);
+const grillSlots = () => has('grill3') ? 3 : has('grill2') ? 2 : 1;
+const cookTime = () => has('fast') ? 2.5 : 4;
+const priceMul = () => G.st.mul * (has('neon') ? 1.2 : 1);
+function newOrder() {
+  const lv = G.st.lv;
+  const kind = has('oven') && Math.random() < 0.35 ? 'pizza' : 'burger';
+  const o = { kind };
+  const r = Math.random();
+  if (has('tap') && has('cola')) { if (r < .3) o.beer = true; else if (r < .55) o.cola = true; }
+  else if (has('tap')) { if (r < .4) o.beer = true; } else if (has('cola')) { if (r < .42) o.cola = true; }
+  if (has('fryer') && Math.random() < .35) o.fries = true;
+  if (kind === 'burger') {
+    const extras = ['cheese', 'lettuce', 'tomato']; if (lv >= 2) extras.push('bacon');
+    const fill = ['patty']; if (lv >= 3 && Math.random() < .28) fill.push('patty');
+    const mx = lv >= 4 ? 3.4 : lv >= 2 ? 2.8 : 2.2;
+    const nEx = Math.min(extras.length, Math.floor(Math.random() * mx));
+    const pool = extras.slice(); for (let i = 0; i < nEx; i++) fill.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    const ord = ['patty', 'bacon', 'cheese', 'tomato', 'lettuce'];
+    fill.sort((a, b) => ord.indexOf(a) - ord.indexOf(b));
+    o.fill = fill;
+  } else {
+    const pool = ['pepperoni', 'mushroom', 'olive']; const n = 1 + Math.floor(Math.random() * (lv >= 4 ? 2.2 : 1.5));
+    o.tops = []; for (let i = 0; i < n; i++) o.tops.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  return o;
+}
+function orderName(o) {
+  let n = o.kind === 'burger' ? (o.fill.map(f => NAMES[f]).join('·') + ' 버거') : (o.tops.map(t => NAMES[t]).join('·') + ' 피자');
+  if (o.fries) n += ' + 감튀'; if (o.cola) n += ' + 콜라'; if (o.beer) n += ' + 생맥';
+  return n;
+}
+function orderPrice(o) {
+  let p = o.kind === 'burger' ? 4 + o.fill.length : 8 + o.tops.length * 1.5;
+  if (o.cola) p += 2; if (o.beer) p += 4; if (o.fries) p += 3;
+  return Math.round(p * priceMul());
+}
+const sortStr = a => a.slice().sort().join(',');
+function matches(o, t) {
+  if (!t.item) return false;
+  if (!!o.cola !== !!t.cola || !!o.beer !== !!t.beer || !!o.fries !== !!t.fries) return false;
+  if (o.kind === 'burger') return t.item.kind === 'burger' && t.item.closed && sortStr(o.fill) === sortStr(t.item.fill);
+  return t.item.kind === 'pizza' && t.item.baked && t.item.sauce && t.item.cheese && sortStr(o.tops) === sortStr(t.item.tops);
+}
+async function startRound() {
+  if (!me) return;
+  Sound.init();
+  const st = stageOf(me);
+  G = { key: me.pid.slice(0, 6) + Date.now().toString(36), st, own: Object.assign({}, me.own || {}), rating: me.rating || 3, base: me.money || 0, todayBase: todaySales(me),
+    t: 0, spawnIn: 1.2, custs: Array(st.seats).fill(null), grill: [], warm: 0, oven: null, fry: null, pour: null, tray: { item: null, cola: false, beer: false, fries: false },
+    served: 0, missed: 0, wrong: 0, earned: 0, tips: 0, running: true, ending: false, friends: [] };
+  show('game');
+  $('#gScene').innerHTML = sceneHTML(st.lv, shopName(me), { seats: st.seats });
+  const seats = $('#gScene .seats');
+  for (let i = 0; i < st.seats; i++) { const b = document.createElement('button'); b.className = 'seat'; b.type = 'button'; b.onclick = () => serve(i); seats.appendChild(b); }
+  chefSay($('#gScene'), pick(CHEF_LINES.start));
+  renderAll();
+  // 친구 손님 명단 (친구가 내 가게에 손님으로 와요)
+  loadPlayers(Object.keys(me.friends || {}).slice(0, 30)).then(fs => { if (G) G.friends = fs.map(p => ({ nick: p.nick, char: p.char })); }).catch(() => {});
+}
+function spawnInterval() {
+  const base = G.st.spawn - (has('neon') ? 1 : 0);
+  return Math.max(2.8, (base - (G.rating - 3) * .8) * (.75 + Math.random() * .5));
+}
+function patienceFor(o) {
+  let p = 25 + (o.kind === 'pizza' ? 10 : 0) + (o.cola ? 2 : 0) + (o.beer ? 3 : 0) + (o.fries ? 4 : 0) + (o.fill && o.fill.length > 3 ? 4 : 0);
+  if (has('juke')) p *= 1.35; return p;
+}
+let last = performance.now();
+function tick(now) {
+  const dt = Math.min(.1, (now - last) / 1000); last = now;
+  if (G && G.running && !document.hidden) step(dt);
+  requestAnimationFrame(tick);
+}
+function step(dt) {
+  G.t += dt;
+  if (G.t < CFG.dayLen) {
+    G.spawnIn -= dt;
+    if (G.spawnIn <= 0) {
+      const free = G.custs.map((c, i) => c ? -1 : i).filter(i => i >= 0);
+      if (free.length) {
+        const i = pick(free), o = newOrder(), p = patienceFor(o);
+        const fr = G.friends.length && Math.random() < .2 ? pick(G.friends) : null;
+        G.custs[i] = { o, p, max: p, char: fr ? fr.char : pick(CH), shirt: pick(SHIRTS), friend: fr ? fr.nick : null };
+        renderSeat(i); if (fr) chefSay($('#gScene'), pick(CHEF_LINES.friend));
+      }
+      G.spawnIn = spawnInterval();
+    }
+  }
+  G.custs.forEach((c, i) => {
+    if (!c) return;
+    c.p -= dt;
+    if (c.p <= 0) {
+      G.custs[i] = null; G.missed++; G.rating = Math.max(1, G.rating - .25);
+      leaveSeat(i, false); chefSay($('#gScene'), pick(CHEF_LINES.leave)); logMsg('손님이 기다리다 떠났어요. 평점이 내려가요 😢'); renderHud();
+    } else renderPatience(i);
+  });
+  // 그릴
+  G.grill.forEach(g => { g.t += dt; });
+  const done = G.grill.filter(g => g.t >= cookTime());
+  if (done.length) { G.warm += done.length; G.grill = G.grill.filter(g => g.t < cookTime()); Sound.play('ding'); renderGrill(true); if (isOpenBurger()) renderIngs(); }
+  if (has('helper') && G.grill.length < grillSlots() && G.warm + G.grill.length < 4) { G.grill.push({ t: 0 }); renderGrill(true); }
+  renderGrill(false);
+  // 오븐
+  if (G.oven && !G.oven.done) { G.oven.t += dt; if (G.oven.t >= 5) { G.oven.done = true; G.oven.item.baked = true; Sound.play('ding'); renderOven(); logMsg('피자가 다 구워졌어요! 오븐을 눌러 꺼내요 🍕'); } else renderBar('#ovenBox', G.oven.t / 5); }
+  // 튀김기 · 생맥주
+  if (G.fry != null) { G.fry += dt; if (G.fry >= 3) { G.fry = null; G.tray.fries = true; Sound.play('ding'); renderFry(); renderTray(); renderIngs(); markReady(); } else renderBar('#fryBox', G.fry / 3); }
+  if (G.pour != null) { G.pour += dt; if (G.pour >= 2) { G.pour = null; G.tray.beer = true; renderTray(); renderIngs(); markReady(); } }
+  const left = Math.max(0, CFG.dayLen - G.t);
+  $('#hTime').style.width = (left / CFG.dayLen * 100) + '%';
+  $('#hClock').textContent = left > 0 ? `영업 ${Math.ceil(left)}초` : '마감! 남은 손님만';
+  if (left <= 0 && !G.custs.some(Boolean) && !G.ending) { G.ending = true; endRound(false); }
+}
+const isOpenBurger = () => G.tray.item && G.tray.item.kind === 'burger' && !G.tray.item.closed;
+const isRawPizza = () => G.tray.item && G.tray.item.kind === 'pizza' && !G.tray.item.baked;
+function act(a) {
+  if (!G || !G.running) return; const t = G.tray;
+  switch (a) {
+    case 'bun': if (t.item) return; t.item = { kind: 'burger', fill: [], closed: false }; break;
+    case 'dough': if (t.item || !has('oven')) return; t.item = { kind: 'pizza', sauce: false, cheese: false, tops: [], baked: false }; break;
+    case 'patty': if (!isOpenBurger() || G.warm < 1) return; G.warm--; t.item.fill.push('patty'); renderGrill(true); break;
+    case 'cheese': case 'lettuce': case 'tomato': case 'bacon': if (!isOpenBurger()) return; if (a === 'bacon' && G.st.lv < 2) return; t.item.fill.push(a); break;
+    case 'top': if (!isOpenBurger() || !t.item.fill.length) return; t.item.closed = true; break;
+    case 'sauce': if (!isRawPizza()) return; t.item.sauce = true; break;
+    case 'pcheese': if (!isRawPizza()) return; t.item.cheese = true; break;
+    case 'pepperoni': case 'mushroom': case 'olive': if (!isRawPizza() || t.item.tops.includes(a)) return; t.item.tops.push(a); break;
+    case 'bake': if (!isRawPizza() || G.oven || !t.item.sauce || !t.item.cheese) return; G.oven = { item: t.item, t: 0, done: false }; t.item = null; renderOven(); break;
+    case 'cola': if (!has('cola') || t.cola) return; t.cola = true; break;
+    case 'beer': if (!has('tap') || t.beer || G.pour != null) return; G.pour = 0; break;
+    case 'fries': if (!has('fryer') || t.fries || G.fry != null) return; G.fry = 0; renderFry(); break;
+    case 'trash': if (!t.item && !t.cola && !t.beer && !t.fries) return; t.item = null; t.cola = false; t.beer = false; t.fries = false; chefSay($('#gScene'), pick(CHEF_LINES.trash)); break;
+  }
+  Sound.play('tap');
+  renderTray(); renderIngs(); markReady();
+}
+function takeOven() { if (!G || !G.oven || !G.oven.done || G.tray.item) return; G.tray.item = G.oven.item; G.oven = null; renderOven(); renderTray(); renderIngs(); markReady(); }
+function addPatty() { if (!G || !G.running || G.grill.length >= grillSlots()) return; G.grill.push({ t: 0 }); Sound.play('sizzle'); renderGrill(true); }
+function serve(i) {
+  const c = G && G.running && G.custs[i]; if (!c) return; const t = G.tray;
+  if (!t.item && !t.cola && !t.beer && !t.fries) { logMsg('쟁반이 비어 있어요. 주문서대로 먼저 만들어요!'); return; }
+  const seat = $('#gScene .seats').children[i];
+  if (matches(c.o, t)) {
+    const price = orderPrice(c.o), frac = c.p / c.max;
+    const tip = Math.round(price * .5 * frac * (c.friend ? 2 : 1)), gain = price + tip;
+    G.earned += gain; G.tips += tip; G.served++;
+    G.rating = Math.min(5, G.rating + (frac > .5 ? .12 : .05));
+    G.custs[i] = null; t.item = null; t.cola = false; t.beer = false; t.fries = false;
+    Sound.play('cash'); vib(15);
+    const ln = lineOf(c.char, 'good');
+    chefSay($('#gScene'), pick(CHEF_LINES.good));
+    logMsg(`${c.friend ? `👫 ${c.friend}님 ` : ''}${orderName(c.o)} 완성! ${usd(price)} + 팁 ${usd(tip)}${ln ? ` · “${ln}”` : ''}`);
+    floatTxt(seat, '+' + usd(gain)); leaveSeat(i, true);
+  } else {
+    G.wrong++; G.rating = Math.max(1, G.rating - .15); c.p = Math.max(0, c.p - 6);
+    Sound.play('bad'); vib([20, 40, 20]);
+    chefSay($('#gScene'), pick(CHEF_LINES.bad));
+    logMsg('주문과 달라요! 주문서를 다시 보고, 틀렸으면 버리기로 쟁반을 비워요.');
+    floatTxt(seat, '✗', true);
+    const cu = seat.querySelector('.cust'); if (cu) { cu.classList.remove('mad'); void cu.offsetWidth; cu.classList.add('mad'); }
+  }
+  renderTray(); renderIngs(); renderHud(); markReady();
+}
+
+/* ── 게임 화면 그리기 ── */
+function logMsg(s) { $('#gLog').textContent = s; }
+function floatTxt(box, s, x) { if (!box) return; const f = document.createElement('div'); f.className = 'float' + (x ? ' x' : ''); f.textContent = s; box.appendChild(f); setTimeout(() => f.remove(), 1100); }
+function renderHud() {
+  if (!G) return;
+  $('#hMoney').textContent = usd((me ? me.money : G.base) + G.earned);
+  $('#hToday').textContent = usd(G.todayBase + G.earned);
+  $('#hRate').textContent = '★' + G.rating.toFixed(1);
+}
+function renderSeat(i) {
+  const seat = $('#gScene .seats').children[i]; const c = G.custs[i];
+  seat.classList.remove('ready');
+  if (!c) { seat.innerHTML = '<div class="empty">빈자리</div>'; seat.setAttribute('aria-label', '빈자리'); return; }
+  seat.innerHTML = `<div class="cust">
+      <div class="ticket"><div class="food">${orderSVG(c.o, 30)}</div><div class="tname">${esc(orderName(c.o))}</div><div class="price">${usd(orderPrice(c.o))}</div></div>
+      <div class="who">${c.friend ? `<span class="ftag">👫${esc(c.friend)}</span>` : ''}<img src="${imgOf(c.char)}" alt="${esc(nameOf(c.char))}"><div class="body" style="--c:${c.shirt}"></div></div>
+    </div><div class="pat"><i></i></div>`;
+  seat.setAttribute('aria-label', `${nameOf(c.char)} 손님 주문: ${orderName(c.o)}. 눌러서 내주기`);
+  renderPatience(i);
+}
+function leaveSeat(i, happy) {
+  const seat = $('#gScene .seats').children[i]; const cu = seat.querySelector('.cust');
+  seat.classList.remove('ready');
+  const pat = seat.querySelector('.pat'); if (pat) pat.remove();
+  if (cu) { cu.classList.add(happy ? 'happy' : 'mad'); setTimeout(() => cu.classList.add('out'), happy ? 380 : 300); }
+  setTimeout(() => { if (G && !G.custs[i]) { const fl = seat.querySelector('.float'); seat.innerHTML = '<div class="empty">빈자리</div>'; if (fl) seat.appendChild(fl); } }, happy ? 800 : 700);
+}
+function renderPatience(i) {
+  const seat = $('#gScene .seats').children[i], c = G.custs[i]; if (!seat || !c) return;
+  const pb = seat.querySelector('.pat'); if (!pb) return;
+  const f = c.p / c.max; pb.firstChild.style.width = (f * 100).toFixed(1) + '%';
+  const cls = 'pat' + (f < .3 ? ' low' : f < .6 ? ' mid' : ''); if (pb.className !== cls) pb.className = cls;
+}
+function markReady() { if (!G) return; [...$('#gScene .seats').children].forEach((b, i) => { const c = G.custs[i]; b.classList.toggle('ready', !!c && matches(c.o, G.tray)); }); }
+function renderTray() {
+  const tr = $('#tray'), t = G.tray;
+  if (!t.item && !t.cola && !t.beer && !t.fries) { tr.innerHTML = `<div class="hint">${has('oven') ? '아래빵이나 도우를 눌러 시작해요' : '아래빵을 눌러 버거를 시작해요 🍔'}</div>`; $('#trayName').textContent = '비어 있음'; return; }
+  let h = '';
+  if (t.item) h += t.item.kind === 'burger' ? burgerSVG(t.item.fill, t.item.closed, 92) : pizzaSVG(t.item, 92);
+  if (t.fries) h += friesSVG(40); if (t.cola) h += colaSVG(30); if (t.beer) h += beerSVG(42);
+  tr.innerHTML = h;
+  let n = '';
+  if (t.item) n = t.item.kind === 'burger' ? (t.item.closed ? '완성된 버거 ✔' : '버거 만드는 중') : (t.item.baked ? '구운 피자 ✔' : '피자 만드는 중 → 오븐에!');
+  ['fries', 'cola', 'beer'].forEach(k => { if (t[k]) n += (n ? ' + ' : '') + NAMES[k]; });
+  $('#trayName').textContent = n;
+}
+function ib(a, label, sub, cls, dis) { return `<button class="ib ${cls || ''}" type="button" data-a="${a}" ${dis ? 'disabled' : ''}>${iconSVG(a)}${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>`; }
+function renderIngs() {
+  const t = G.tray; let h = '';
+  if (!t.item) {
+    h += ib('bun', '아래빵', '버거 시작', 'start');
+    h += ib('dough', '도우', has('oven') ? '피자 시작' : '오븐 필요', 'start', !has('oven'));
+  } else if (t.item.kind === 'burger' && !t.item.closed) {
+    h += ib('patty', '패티', `준비 ${G.warm}개`, '', G.warm < 1);
+    ['cheese', 'lettuce', 'tomato'].forEach(k => h += ib(k, NAMES[k]));
+    h += ib('bacon', '베이컨', G.st.lv >= 2 ? '' : 'Lv.2부터', '', G.st.lv < 2);
+    h += ib('top', '위빵', '버거 완성', 'act', t.item.fill.length < 1);
+  } else if (t.item.kind === 'pizza' && !t.item.baked) {
+    h += ib('sauce', '소스', '', '', t.item.sauce);
+    h += ib('pcheese', '모차렐라', '', '', t.item.cheese);
+    ['pepperoni', 'mushroom', 'olive'].forEach(k => h += ib(k, NAMES[k], '', '', t.item.tops.includes(k)));
+    h += ib('bake', '오븐에', G.oven ? '오븐 사용 중' : '5초', 'act', !!G.oven || !t.item.sauce || !t.item.cheese);
+  }
+  if (has('fryer')) h += ib('fries', '감튀', t.fries ? '담았어요' : G.fry != null ? '튀기는 중…' : '3초 · +$3', '', t.fries || G.fry != null);
+  if (has('cola')) h += ib('cola', '콜라', t.cola ? '담았어요' : '+$2', '', t.cola);
+  if (has('tap')) h += ib('beer', '생맥주', t.beer ? '담았어요' : G.pour != null ? '따르는 중…' : '2초 · +$4', '', t.beer || G.pour != null);
+  h += ib('trash', '버리기', '쟁반 비우기', 'trash', !t.item && !t.cola && !t.beer && !t.fries);
+  $('#ings').innerHTML = h;
+}
+const PATTY_ICON = cooked => `<svg viewBox="0 0 100 34"><ellipse cx="50" cy="19" rx="46" ry="12" fill="${cooked >= 1 ? 'url(#gPatty)' : cooked > .5 ? '#A85D3A' : 'url(#gRaw)'}" stroke="#2E160A" stroke-width="2.4"/>${cooked > .5 ? '<path d="M24 16h14M46 21h14M68 16h12" stroke="#2B130A" stroke-width="3" stroke-linecap="round" opacity=".55"/>' : ''}</svg>`;
+function renderGrill(full) {
+  const box = $('#grill'), n = grillSlots();
+  if (full || box.querySelectorAll('.gs').length !== n) {
+    box.innerHTML = `<div class="flames">${'<i></i>'.repeat(6)}</div>` + Array.from({ length: n }, () => '<div class="gs"><div class="pt"></div><div class="bar"><i></i></div></div>').join('');
+    box._k = [];
+  }
+  [...box.querySelectorAll('.gs')].forEach((s, i) => {
+    const g = G.grill[i], bar = s.querySelector('.bar i'), pt = s.querySelector('.pt');
+    const f = g ? Math.min(1, g.t / cookTime()) : -1, k = f < 0 ? 'x' : f < .5 ? 'r' : 'm';
+    if (box._k[i] !== k) { box._k[i] = k; pt.innerHTML = f < 0 ? '' : PATTY_ICON(f) + '<span class="stm"></span><span class="stm b"></span>'; }
+    bar.style.width = (Math.max(0, f) * 100) + '%';
+  });
+  $('#warm').textContent = G.warm;
+  $('#grillInfo').textContent = `그릴 ${G.grill.length}/${n} · ${cookTime()}초${has('helper') ? ' · 🧑‍🍳알바' : ''}`;
+  $('#addPatty').disabled = G.grill.length >= n;
+}
+function renderOven() {
+  const box = $('#ovenBox');
+  if (!has('oven')) { box.innerHTML = `<div class="locked">🔒<br>Lv.3부터</div>`; return; }
+  const o = G.oven;
+  box.innerHTML = `<button class="oven ${o && !o.done ? 'on' : ''}" type="button" id="ovenBtn"><span class="mouth"></span><span class="lbl">${!o ? '비어 있음' : o.done ? (G.tray.item ? '쟁반 비워요' : '눌러 꺼내기!') : '굽는 중…'}</span><span class="bar"><i style="width:${o ? Math.min(100, o.t / 5 * 100) : 0}%"></i></span></button>`;
+  $('#ovenBtn').onclick = takeOven;
+}
+function renderFry() {
+  const box = $('#fryBox');
+  if (!has('fryer')) { box.innerHTML = `<div class="locked">🔒<br>설비에서 설치</div>`; return; }
+  box.innerHTML = `<div class="fryer ${G.fry != null ? 'on' : ''}"><span class="oil"></span><span class="lbl">${G.fry != null ? '지글지글' : '대기'}</span><span class="bar"><i style="width:0%"></i></span></div>`;
+}
+function renderBar(sel, f) { const i = document.querySelector(sel + ' .bar i'); if (i) i.style.width = Math.min(100, f * 100) + '%'; }
+function renderAll() { renderHud(); for (let i = 0; i < G.custs.length; i++) renderSeat(i); renderTray(); renderIngs(); renderGrill(true); renderOven(); renderFry(); logMsg('주문서를 보고 쟁반에 만든 뒤, 손님을 눌러서 내줘요!'); }
+
+/* ── 영업 끝: 번 돈 저장 (key로 한 번만) ── */
+async function settleRound(g) {
+  const d = todayKST();
+  const r = await txMe(c => {
+    c.tx = c.tx || {}; if (c.tx[g.key]) return undefined;
+    c.money = (c.money || 0) + g.earned; c.total = (c.total || 0) + g.earned;
+    c.rounds = (c.rounds || 0) + 1; c.served = (c.served || 0) + g.served;
+    c.best = Math.max(c.best || 0, g.earned); c.rating = Math.round(g.rating * 100) / 100;
+    c.sales = c.sales || {}; const x = c.sales[d] = c.sales[d] || { rev: 0, n: 0, r: 0 };
+    x.rev += g.earned; x.n += g.served; x.r += 1; pruneDates(c.sales, 120);
+    c.tx[g.key] = Date.now(); const ks = Object.keys(c.tx); if (ks.length > 40) ks.sort((a, b) => c.tx[a] - c.tx[b]).slice(0, ks.length - 40).forEach(k => delete c.tx[k]);
+    return c;
+  });
+  return r && (r.committed || !!(r.value && r.value.tx && r.value.tx[g.key]));
+}
+async function endRound(quit) {
+  const g = G; if (!g) return;
+  g.running = false;
+  Sound.play('end');
+  let ok = false;
+  for (let n = 0; n < 4 && !ok; n++) { try { ok = await settleRound(g); } catch (e) { await sleep(800 * (n + 1)); } }
+  if (quit) { G = null; show('lobby'); toast(ok ? `영업을 접었어요. ${usd(g.earned)} 챙겼어요` : '저장하지 못했어요. 연결을 확인해 주세요', 2600); return; }
+  const best = me && g.earned >= (me.best || 0) && g.earned > 0;
+  $('#ovRoot').innerHTML = `<div class="ov"><div class="sheet">
+    <h2>${best ? '🎉 최고 매출 신기록!' : '오늘 영업 끝, 수고했다고!'}</h2>
+    <div class="row">${CHEF_SVG.replace('<svg ', '<svg style="width:70px;flex:none" ')}<p>${esc(pick(g.served >= 8 ? ['이게 바로 어메리카 스타일이지!', '대박! 오늘 장사 끝내줬다!'] : g.served >= 3 ? ['Alright! 이 정도면 괜찮지!', '내일은 더 팔아 보자고!'] : ['괜찮아, 다음 영업은 더 잘할 거야!', '그릴 미리 달궈 두자고!']))}</p></div>
+    <div class="sum"><div>이번 매출<b class="num" style="color:var(--red-d)">${usd(g.earned)}</b></div><div>손님<b>${g.served}명</b></div><div>놓친 손님<b>${g.missed}명</b></div></div>
+    <p class="small muted">팁 ${usd(g.tips)} · 잘못 낸 음식 ${g.wrong}번 · 평점 ★${g.rating.toFixed(1)} · 오늘 매출 합계 <b>${usd(g.todayBase + g.earned)}</b>${ok ? '' : ' · ⚠️ 저장 실패 (연결 확인)'}</p>
+    <div class="grid2"><button class="btn ghost" id="erHome">🏠 가게로</button><button class="btn red" id="erAgain">🍔 한 번 더 영업</button></div>
+    <button class="btn teal" id="erShop">🛠️ 가게 키우기 (현금 ${usd(me ? me.money : 0)})</button></div></div>`;
+  const close = () => { $('#ovRoot').innerHTML = ''; };
+  $('#erHome').onclick = () => { close(); G = null; show('lobby'); };
+  $('#erAgain').onclick = () => { close(); startRound(); };
+  $('#erShop').onclick = () => { close(); G = null; show('shop'); };
+}
+$('#gQuit').onclick = () => {
+  if (!G || !G.running) return;
+  modal(`<h2>영업을 접을까요?</h2><p>지금까지 번 <b>${usd(G.earned)}</b>는 챙겨서 나가요.</p><div class="grid2"><button class="btn ghost" data-close>계속 영업</button><button class="btn red" id="qGo">접기</button></div>`, (s, close) => { $('#qGo', s).onclick = () => { close(); endRound(true); }; });
+};
+$('#ings').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a); });
+$('#addPatty').innerHTML = `${PATTY_ICON(0).replace('<svg ', '<svg style="width:34px;height:20px" ')}패티 굽기<small>그릴에 올리기</small>`;
+$('#addPatty').onclick = addPatty;
+document.addEventListener('visibilitychange', () => { last = performance.now(); });
+addEventListener('pagehide', () => { if (G && G.running && G.earned > 0) { G.running = false; settleRound(G).catch(() => {}); } });
+
+/* ══════════ 새 버전 확인 ══════════ */
+async function checkVersion() {
+  try {
+    const v = (await (await fetch('version.txt?t=' + Date.now(), { cache: 'no-store' })).text()).trim();
+    if (v && v !== APP_VERSION && !(G && G.running) && ['login', 'lobby'].includes(cur) && !document.querySelector('#modalRoot .modal')) location.reload();
+  } catch (e) {}
+}
+
+/* ══════════ 확대·축소 막기 (빠르게 연타해도 확대되지 않게) ══════════ */
+(function lockZoom() {
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, { passive: false });
+  let lastEnd = 0;
+  document.addEventListener('touchend', e => {
+    const now = e.timeStamp || Date.now(), quick = now - lastEnd < 350; lastEnd = now;
+    if (!quick) return;
+    const t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    e.preventDefault();
+    const b = t && t.closest && t.closest('button,a,label');
+    if (b && !b.disabled) b.click();
+  }, { passive: false });
+  addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
+  document.addEventListener('dblclick', e => e.preventDefault(), { passive: false });
+})();
+
+/* ══════════ 시작 ══════════ */
+function bootMsg(text, sub) { $('#s-boot').innerHTML = `<div style="margin:auto;text-align:center;display:grid;gap:10px;justify-items:center">${CHEF_SVG.replace('<svg ', '<svg style="width:90px" ')}<b style="font:400 20px/1.3 var(--d)">${esc(text)}</b>${sub ? `<p class="small muted">${esc(sub)}</p>` : ''}</div>`; }
+requestAnimationFrame(t => { last = t; requestAnimationFrame(tick); });
+(async function boot() {
+  bootMsg('가게 문 여는 중… 🍔');
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('local') === '1') db = new LocalDB();
+  else {
+    db = new FireDB();
+    for (let n = 1; ; n++) {
+      try { await db.init(); break; }
+      catch (e) { console.warn('Firebase 연결 재시도', n, e); bootMsg('서버에 연결하는 중…', n > 1 ? `${n}번째 시도 중이에요. 와이파이나 데이터가 켜져 있는지 확인해 주세요` : ''); await sleep(Math.min(6000, 1000 * n)); }
+    }
+    setInterval(checkVersion, 120000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(checkVersion, 3000); });
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && me) dailyCheck(); });
+  setInterval(() => { if (me && !document.hidden) dailyCheck(); }, 60000);
+  const saved = savedCode();
+  if (saved) {
+    for (let n = 1; n < 6; n++) {
+      let r;
+      try { r = await login(saved); }
+      catch (e) { bootMsg('내 코드로 들어가는 중…', `연결이 불안정해서 다시 시도하고 있어요 (${n}번째)`); await sleep(Math.min(6000, 1000 * n)); continue; }
+      if (!r.err) return enter(r.code, r.player);
+      if (r.replaced) clearCode();
+      toast(r.err, 3000);
+      break;
+    }
+  }
+  show('login');
+})();
+</script>
+</body>
+</html>
