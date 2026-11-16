@@ -156,6 +156,37 @@ h2{font-size:28px;margin:4px 0 10px}h3{font-size:22px;margin:18px 0 8px}
 .hero .d{font-size:24px}
 .rules li{margin:4px 0}
 .ver{font-size:11px;color:var(--muted);text-align:center;margin-top:18px}
+/* 채팅 */
+.chat{background:var(--paper);border:2px solid var(--ink);border-radius:16px;box-shadow:3px 4px 0 var(--ink);margin:12px 0;overflow:hidden;display:flex;flex-direction:column}
+.chat .ch{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:2px solid var(--ink);background:#fff;font:700 20px/1 var(--d)}
+.chat .ch .grow{flex:1}
+.chat .cl{height:var(--chat-h,210px);overflow-y:auto;padding:10px 10px 4px;display:flex;flex-direction:column;gap:7px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.chat .cm{display:flex;gap:6px;align-items:flex-end;max-width:88%}
+.chat .cm .av{width:26px;height:26px;font-size:13px;border-width:1.5px}
+.chat .cm .bx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.chat .cm .nk{font-size:11px;color:var(--muted);font-weight:700}
+.chat .cm .bb{background:#fff;border:1.5px solid var(--ink);border-radius:4px 14px 14px 14px;padding:6px 10px;font-size:14px;line-height:1.35;overflow-wrap:anywhere;white-space:pre-wrap}
+.chat .cm .tm{font-size:10px;color:var(--muted);white-space:nowrap}
+.chat .cm.me{align-self:flex-end;flex-direction:row-reverse}
+.chat .cm.me .bb{background:var(--yellow);border-radius:14px 4px 14px 14px}
+.chat .empty{margin:auto;color:var(--muted);font-size:13px;text-align:center}
+.chat form{display:flex;gap:6px;padding:8px;border-top:2px solid var(--ink);background:#fff}
+.chat form input{flex:1;min-width:0;min-height:42px;border:2px solid var(--ink);border-radius:12px;padding:0 12px;outline:none;background:#fff}
+.chat form button{flex:none;min-height:42px;padding:0 14px;border:2px solid var(--ink);border-radius:12px;background:var(--blue);color:#fff;font:700 18px/1 var(--d);cursor:pointer}
+.qk{display:flex;gap:5px;overflow-x:auto;padding:6px 8px 0;background:#fff;scrollbar-width:none}
+.qk::-webkit-scrollbar{display:none}
+.qk button{flex:none;border:1.5px solid var(--line2);border-radius:999px;background:var(--paper);padding:4px 10px;font-size:13px;cursor:pointer}
+.fab{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:40;width:58px;height:58px;border-radius:50%;border:2px solid var(--ink);background:var(--yellow);box-shadow:2px 3px 0 var(--ink);font-size:26px;cursor:pointer;display:none;place-items:center}
+.fab.on{display:grid}
+.fab .bd{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;border-radius:11px;background:var(--red);color:#fff;border:2px solid var(--ink);font:700 12px/18px var(--f);padding:0 5px;display:none}
+.fab .bd.on{display:block}
+.peek{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:calc(max(16px,env(safe-area-inset-bottom)) + 66px);z-index:40;max-width:min(260px,70vw);background:#fff;border:2px solid var(--ink);border-radius:14px 14px 4px 14px;padding:7px 11px;font-size:13px;box-shadow:2px 3px 0 var(--ink);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;overflow-wrap:anywhere}
+.peek.on{opacity:1;transform:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:45;display:none;justify-content:center;padding:0 8px max(8px,env(safe-area-inset-bottom))}
+.sheet.on{display:flex}
+.sheet .chat{width:100%;max-width:560px;margin:0;--chat-h:min(46vh,340px);box-shadow:0 -4px 0 rgba(43,42,51,.15),3px 4px 0 var(--ink)}
+.sheet .x{border:2px solid var(--ink);background:#fff;border-radius:10px;width:34px;height:34px;cursor:pointer;font-size:16px}
+body.withfab .wrap{padding-bottom:96px}
 .confirm{position:fixed;inset:0;background:rgba(43,42,51,.45);display:grid;place-items:center;z-index:50;padding:20px}
 .confirm .card{max-width:360px;width:100%}
 </style>
@@ -172,6 +203,9 @@ h2{font-size:28px;margin:4px 0 10px}h3{font-size:22px;margin:18px 0 8px}
   <section class="screen" id="s-book"></section>
 </div>
 <div class="toast" id="toast"></div>
+<button class="fab" id="fab" aria-label="채팅">💬<span class="bd" id="fabBd"></span></button>
+<div class="peek" id="peek"></div>
+<div class="sheet" id="sheet"></div>
 
 <script>
 'use strict';
@@ -194,7 +228,7 @@ const CFG = {
   guessOpts: [20, 30, 45],
   grace: 2500,       // 시간이 끝난 뒤 마지막 그림이 올라올 때까지 기다리는 시간
 };
-const APP_VERSION = '20261116-2';
+const APP_VERSION = '20261116-3';
 
 /* ══════════ 제시어 ══════════ */
 const WORDS = `고양이 강아지 기린 코끼리 펭귄 문어 거북이 토끼 사자 호랑이 원숭이 돌고래 상어 고래 낙타 하마 악어 부엉이 공작새 달팽이 거미 나비 꿀벌 개구리 오리 병아리 돼지 젖소 얼룩말 양 판다 캥거루 고슴도치 다람쥐 박쥐 해파리 불가사리 랍스터 앵무새 미어캣 나무늘보 공룡 유니콘 용
@@ -298,6 +332,9 @@ class LocalDB {
   cancelDisconnect(p) { this.discon = this.discon.filter(d => d[0] !== p); }
   onDisconnectStamp(p) { this.onDisconnect(p, STAMP); }
   onConnected(cb) { setTimeout(() => cb(true), 0); return () => {}; }
+  async push(p, v) { const k = ('00000000' + Date.now().toString(36)).slice(-9) + rid(6); this._write(p + '/' + k, v); return k; }
+  onLast(p, n, cb) { return this.on(p, v => { const ks = Object.keys(v || {}).sort().slice(-n), o = {}; ks.forEach(k => { o[k] = v[k]; }); cb(o); }); }
+  async pruneBefore(p, key) { const v = this._get(p) || {}; for (const k of Object.keys(v)) if (k < key) this._write(p + '/' + k, null); }
 }
 class FireDB {
   constructor() { this.mode = 'firebase'; this.offset = 0; }
@@ -328,6 +365,13 @@ class FireDB {
   cancelDisconnect(p) { return this.ref(p).onDisconnect().cancel(); }
   onDisconnectStamp(p) { return this.ref(p).onDisconnect().set(firebase.database.ServerValue.TIMESTAMP); }
   onConnected(cb) { const r = this.db.ref('.info/connected'), f = s => cb(!!s.val()); r.on('value', f); return () => r.off('value', f); }
+  async push(p, v) { return (await this.ref(p).push(v)).key; }
+  onLast(p, n, cb) { const q = this.ref(p).limitToLast(n), f = s => cb(s.val()); q.on('value', f); return () => q.off('value', f); }
+  async pruneBefore(p, key) {
+    const snap = await this.ref(p).orderByKey().endAt(key).limitToFirst(200).get(), u = {};
+    snap.forEach(c => { if (c.key < key) u[c.key] = null; });
+    if (Object.keys(u).length) await this.ref(p).update(u);
+  }
 }
 let db = null;
 const P = CFG.prefix;
@@ -338,6 +382,8 @@ const PATH = {
   hof: P + 'hof',                       // 명예의 전당 목록: hof/<스케치북 id> = { gid, opid, owner, word, last, n, players, ts, lk }
   like: id => P + 'like/' + id,         // like/<스케치북 id>/<pid> = true
   thumb: id => P + 'thumb/' + id,       // 작은 미리보기 그림
+  lobbyChat: P + 'chat',                // 로비 채팅
+  roomChat: c => P + 'rc-' + c,         // 방 채팅 (대기실·게임 중·공개)
 };
 
 /* ══════════ 나 ══════════ */
@@ -345,6 +391,92 @@ let me = { pid: store.get('doodle-pid'), nick: store.get('doodle-nick') || '' };
 if (!me.pid) { me.pid = 'p' + rid(11); store.set('doodle-pid', me.pid); }
 let LIKED = {}; try { LIKED = JSON.parse(store.get('doodle-liked') || '{}') || {}; } catch (e) {}
 const saveLiked = () => store.set('doodle-liked', JSON.stringify(LIKED));
+
+/* ══════════ 채팅 ══════════ */
+const CHAT_KEEP = 60, CHAT_MAX = 80;
+const QUICK = ['ㅋㅋㅋㅋㅋ', '이게 뭐야 🤣', '천재다', '누가 그린 거야', '빨리빨리~', '한 판 더!', '안녕하세요 👋'];
+class ChatFeed {
+  constructor(path) {
+    this.path = path; this.msgs = []; this.views = new Set(); this.seen = Date.now(); this.lastSend = 0; this.first = true;
+    this.off = db.onLast(path, CHAT_KEEP, v => {
+      const old = new Set(this.msgs.map(m => m.k));
+      this.msgs = Object.entries(v || {}).filter(([, m]) => m && typeof m.t === 'string').map(([k, m]) => ({ k, ...m })).sort((a, b) => (a.k < b.k ? -1 : 1));
+      const fresh = this.first ? [] : this.msgs.filter(m => !old.has(m.k) && m.pid !== me.pid);
+      this.first = false;
+      this.views.forEach(f => f(fresh));
+    });
+  }
+  close() { if (this.off) this.off(); this.off = null; this.views.clear(); }
+  unread() { return this.msgs.filter(m => m.pid !== me.pid && (m.ts || 0) > this.seen).length; }
+  markSeen() { const last = this.msgs[this.msgs.length - 1]; this.seen = Math.max(Date.now(), last ? last.ts || 0 : 0); }
+  async send(text) {
+    text = String(text || '').replace(/\s+/g, ' ').trim().slice(0, CHAT_MAX);
+    if (!text) return false;
+    if (Date.now() - this.lastSend < 700) { toast('조금 천천히 보내 주세요'); return false; }
+    this.lastSend = Date.now();
+    try {
+      await db.push(this.path, { pid: me.pid, nick: me.nick, t: text, ts: db.now() });
+      // 오래된 메시지는 지워서 가볍게 유지해요
+      if (this.msgs.length >= CHAT_KEEP && Math.random() < .25) db.pruneBefore(this.path, this.msgs[0].k).catch(() => {});
+      return true;
+    } catch (e) { toast('메시지를 못 보냈어요'); return false; }
+  }
+}
+function hhmm(ts) { const d = new Date((ts || Date.now()) + 9 * 3600e3); return String(d.getUTCHours()).padStart(2, '0') + ':' + String(d.getUTCMinutes()).padStart(2, '0'); }
+// box 안에 채팅창을 붙여요. 돌려주는 함수를 부르면 떼어져요.
+function mountChat(box, feed, { title = '💬 채팅', quick = true, closer = null, onView = null } = {}) {
+  box.innerHTML = `<div class="chat"><div class="ch"><span class="grow">${esc(title)}</span>${closer ? '<button class="x" data-x aria-label="닫기">✕</button>' : ''}</div>
+    <div class="cl"></div>
+    ${quick ? `<div class="qk">${QUICK.map(q => `<button type="button" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>` : ''}
+    <form><input maxlength="${CHAT_MAX}" placeholder="메시지 보내기" autocomplete="off" enterkeyhint="send" aria-label="메시지"><button type="submit">보내기</button></form></div>`;
+  const list = $('.cl', box), inp = $('input', box);
+  const draw = () => {
+    const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
+    list.innerHTML = feed.msgs.length ? feed.msgs.map(m => `<div class="cm ${m.pid === me.pid ? 'me' : ''}">${m.pid === me.pid ? '' : av(m.pid, m.nick)}<div class="bx">${m.pid === me.pid ? '' : `<span class="nk">${esc(m.nick)}</span>`}<div class="bb">${esc(m.t)}</div></div><span class="tm">${hhmm(m.ts)}</span></div>`).join('')
+      : `<p class="empty">아직 조용해요. 먼저 인사해 보세요 👋</p>`;
+    if (atBottom || list.dataset.init !== '1') { list.scrollTop = list.scrollHeight; list.dataset.init = '1'; }
+    if (onView) onView();
+  };
+  const view = () => draw();
+  feed.views.add(view); draw();
+  $('form', box).onsubmit = async e => { e.preventDefault(); const t = inp.value; if (await feed.send(t)) { inp.value = ''; list.dataset.init = '0'; } };
+  $$('[data-q]', box).forEach(b => b.onclick = () => feed.send(b.dataset.q).then(ok => { if (ok) list.dataset.init = '0'; }));
+  const x = $('[data-x]', box); if (x) x.onclick = closer;
+  return () => { feed.views.delete(view); };
+}
+let lobbyFeed = null, lobbyChatOff = null, roomFeed = null, roomChatOff = null, sheetOff = null, fabView = null, peekT = 0;
+function openRoomFeed(code) {
+  closeRoomFeed();
+  roomFeed = new ChatFeed(PATH.roomChat(code));
+  fabView = fresh => {
+    const sheetOpen = $('#sheet').classList.contains('on');
+    if (sheetOpen || cur === 'room') roomFeed.markSeen();
+    updateFab();
+    if (!sheetOpen && cur !== 'room' && fresh && fresh.length) {
+      const m = fresh[fresh.length - 1], pk = $('#peek');
+      pk.innerHTML = `<b>${esc(m.nick)}</b> ${esc(m.t)}`; pk.classList.add('on');
+      clearTimeout(peekT); peekT = setTimeout(() => pk.classList.remove('on'), 3200);
+    }
+  };
+  roomFeed.views.add(fabView);
+}
+function closeRoomFeed() { closeSheet(); if (roomChatOff) { roomChatOff(); roomChatOff = null; } if (roomFeed) roomFeed.close(); roomFeed = null; updateFab(); }
+function updateFab() {
+  const show = !!roomFeed && (cur === 'play' || cur === 'reveal');
+  $('#fab').classList.toggle('on', show && !$('#sheet').classList.contains('on'));
+  document.body.classList.toggle('withfab', show);
+  const n = show ? roomFeed.unread() : 0, bd = $('#fabBd');
+  bd.textContent = n > 9 ? '9+' : n; bd.classList.toggle('on', n > 0);
+  if (!show) { closeSheet(); $('#peek').classList.remove('on'); }
+}
+function openSheet() {
+  if (!roomFeed) return;
+  const sh = $('#sheet'); sh.classList.add('on'); $('#peek').classList.remove('on');
+  if (sheetOff) sheetOff();
+  sheetOff = mountChat(sh, roomFeed, { title: '💬 방 채팅', closer: closeSheet, onView: () => roomFeed.markSeen() });
+  roomFeed.markSeen(); updateFab();
+}
+function closeSheet() { const sh = $('#sheet'); if (sheetOff) { sheetOff(); sheetOff = null; } sh.classList.remove('on'); sh.innerHTML = ''; if (roomFeed) { roomFeed.markSeen(); } const f = $('#fab'); if (f) { const show = !!roomFeed && (cur === 'play' || cur === 'reveal'); f.classList.toggle('on', show); } }
 
 /* ══════════ 화면 전환 ══════════ */
 let cur = 'boot';
@@ -355,6 +487,7 @@ function show(name) {
   $$('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + name));
   if (SCREENS[name]) SCREENS[name]();
   scrollTo(0, 0);
+  updateFab();
 }
 const SCREENS = {};
 
@@ -417,6 +550,7 @@ SCREENS.lobby = () => {
     <h3>🙋 지금 모이는 방</h3>
     <div id="openList"><p class="small muted">찾는 중…</p></div>
     <button class="btn p" id="lbHof" style="margin-top:16px">🏆 명예의 전당</button>
+    <div id="lbChat"></div>
     <p class="ver">${db.mode === 'local' ? '시험 모드 · 이 브라우저에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
   $('#lbNick', el).onclick = () => show('nick');
   $('#lbCreate', el).onclick = createRoom;
@@ -424,8 +558,11 @@ SCREENS.lobby = () => {
   $('#lbHof', el).onclick = () => show('hof');
   if (openOff) openOff();
   openOff = db.on(PATH.open, v => renderOpen(v || {}));
+  if (!lobbyFeed) lobbyFeed = new ChatFeed(PATH.lobbyChat);
+  if (lobbyChatOff) lobbyChatOff();
+  lobbyChatOff = mountChat($('#lbChat', el), lobbyFeed, { title: '💬 로비 수다방 · 같이 할 사람 구해요' });
 };
-leaveHooks.lobby = () => { if (openOff) { openOff(); openOff = null; } };
+leaveHooks.lobby = () => { if (openOff) { openOff(); openOff = null; } if (lobbyChatOff) { lobbyChatOff(); lobbyChatOff = null; } };
 function renderOpen(v) {
   const box = $('#openList'); if (!box) return;
   const now = db.now();
@@ -492,6 +629,7 @@ function enterRoom(code) {
   db.onDisconnectStamp(pp + '/off');
   if (roomOff) roomOff();
   room = null; phaseKey = '';
+  if (!roomFeed || roomFeed.path !== PATH.roomChat(code)) openRoomFeed(code);
   roomOff = db.on(PATH.room(code), onRoom);
   if (connOff) connOff();
   let first = true;
@@ -538,6 +676,7 @@ async function leaveRoom() {
   if (connOff) { connOff(); connOff = null; }
   clearInterval(beatT); clearInterval(sweepT); stopTick();
   roomCode = null; room = null; phaseKey = ''; store.sset('doodle-room', null);
+  closeRoomFeed();
   try {
     db.cancelDisconnect(PATH.room(code) + '/players/' + me.pid + '/off');
     let empty = false;
@@ -561,7 +700,7 @@ function heartbeat() {
 let lastOpenSig = '';
 function onRoom(v) {
   if (leaving) return;
-  if (!v) { toast('방이 없어졌어요'); roomCode = null; room = null; store.sset('doodle-room', null); stopTick(); show('lobby'); return; }
+  if (!v) { toast('방이 없어졌어요'); closeRoomFeed(); roomCode = null; room = null; store.sset('doodle-room', null); stopTick(); show('lobby'); return; }
   room = v;
   const ids = playerIds(v);
   // 방장이 나갔으면 가장 먼저 들어온 사람이 이어받아요
@@ -590,9 +729,17 @@ function onRoom(v) {
   }
 }
 
-SCREENS.room = () => renderRoom();
+SCREENS.room = () => {
+  const el = $('#s-room');
+  el.innerHTML = '<div id="roomMain"></div><div id="roomChat"></div>';
+  if (roomChatOff) roomChatOff();
+  roomChatOff = roomFeed ? mountChat($('#roomChat', el), roomFeed, { title: '💬 방 채팅', onView: () => roomFeed.markSeen() }) : null;
+  renderRoom();
+};
+leaveHooks.room = () => { if (roomChatOff) { roomChatOff(); roomChatOff = null; } };
 function renderRoom() {
-  const el = $('#s-room'); const v = room;
+  if (!$('#roomMain')) { SCREENS.room(); return; }
+  const el = $('#roomMain'); const v = room;
   if (!v) { el.innerHTML = '<p class="center muted">불러오는 중…</p>'; return; }
   const ids = playerIds(v), isHost = v.host === me.pid, playing = v.status !== 'wait';
   const set = v.set || { draw: 60, guess: 30 };
@@ -1126,6 +1273,8 @@ async function checkVersion() {
   }, { passive: false });
   addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
 })();
+
+$('#fab').onclick = openSheet;
 
 /* ══════════ 시작 ══════════ */
 (async function boot() {
