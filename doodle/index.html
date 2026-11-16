@@ -173,9 +173,9 @@ h2{font-size:28px;margin:4px 0 10px}h3{font-size:22px;margin:18px 0 8px}
 .chat form{display:flex;gap:6px;padding:8px;border-top:2px solid var(--ink);background:#fff}
 .chat form input{flex:1;min-width:0;min-height:42px;border:2px solid var(--ink);border-radius:12px;padding:0 12px;outline:none;background:#fff}
 .chat form button{flex:none;min-height:42px;padding:0 14px;border:2px solid var(--ink);border-radius:12px;background:var(--blue);color:#fff;font:700 18px/1 var(--d);cursor:pointer}
-.qk{display:flex;gap:5px;overflow-x:auto;padding:6px 8px 0;background:#fff;scrollbar-width:none}
+.qk{display:flex;flex-wrap:wrap;gap:5px;padding:6px 8px 0;background:#fff}
 .qk::-webkit-scrollbar{display:none}
-.qk button{flex:none;border:1.5px solid var(--line2);border-radius:999px;background:var(--paper);padding:4px 10px;font-size:13px;cursor:pointer}
+.qk button{flex:none;max-width:9.5em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1.5px solid var(--line2);border-radius:999px;background:var(--paper);padding:4px 10px;font-size:13px;cursor:pointer}
 .fab{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:40;width:58px;height:58px;border-radius:50%;border:2px solid var(--ink);background:var(--yellow);box-shadow:2px 3px 0 var(--ink);font-size:26px;cursor:pointer;display:none;place-items:center}
 .fab.on{display:grid}
 .fab .bd{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;border-radius:11px;background:var(--red);color:#fff;border:2px solid var(--ink);font:700 12px/18px var(--f);padding:0 5px;display:none}
@@ -228,7 +228,7 @@ const CFG = {
   guessOpts: [20, 30, 45],
   grace: 2500,       // 시간이 끝난 뒤 마지막 그림이 올라올 때까지 기다리는 시간
 };
-const APP_VERSION = '20261116-3';
+const APP_VERSION = '20261116-4';
 
 /* ══════════ 제시어 ══════════ */
 const WORDS = `고양이 강아지 기린 코끼리 펭귄 문어 거북이 토끼 사자 호랑이 원숭이 돌고래 상어 고래 낙타 하마 악어 부엉이 공작새 달팽이 거미 나비 꿀벌 개구리 오리 병아리 돼지 젖소 얼룩말 양 판다 캥거루 고슴도치 다람쥐 박쥐 해파리 불가사리 랍스터 앵무새 미어캣 나무늘보 공룡 유니콘 용
@@ -394,7 +394,7 @@ const saveLiked = () => store.set('doodle-liked', JSON.stringify(LIKED));
 
 /* ══════════ 채팅 ══════════ */
 const CHAT_KEEP = 60, CHAT_MAX = 80;
-const QUICK = ['ㅋㅋㅋㅋㅋ', '이게 뭐야 🤣', '천재다', '누가 그린 거야', '빨리빨리~', '한 판 더!', '안녕하세요 👋'];
+const QUICK = ['ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ', '마 도랏나', '마 자나', '머하는데', '째깍슨째깍슨째깍슨째깍슨째깍슨', '이게 뭐고'];
 class ChatFeed {
   constructor(path) {
     this.path = path; this.msgs = []; this.views = new Set(); this.seen = Date.now(); this.lastSend = 0; this.first = true;
