@@ -7,9 +7,9 @@
 <meta name="theme-color" content="#FFF6E0">
 <meta name="description" content="그림으로 하는 말 전달 게임! 최대 8명이 그리고, 맞히고, 다시 그려요. 처음 단어가 어떻게 변했는지 같이 보며 웃어요.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="이게 뭘 그린거야 도대체!">
+<meta property="og:title" content="이거 뭘 그린거야 도대체!">
 <meta property="og:description" content="그림으로 하는 말 전달 게임! 최대 8명 온라인 대결 · 명예의 전당">
-<title>이게 뭘 그린거야 도대체!</title>
+<title>이거 뭘 그린거야 도대체!</title>
 <meta property="og:image" content="https://vino94-s.github.io/vino_is_best/doodle/thumb.jpg">
 <meta property="og:image:width" content="800">
 <meta property="og:image:height" content="800">
@@ -162,7 +162,7 @@ h2{font-size:28px;margin:4px 0 10px}h3{font-size:22px;margin:18px 0 8px}
 </head>
 <body>
 <div class="wrap">
-  <section class="screen on" id="s-boot"><div style="padding:60px 0" class="center"><img src="thumb.jpg" alt="" width="180" height="180" style="border-radius:22px;border:2px solid var(--ink);box-shadow:3px 4px 0 var(--ink)"><div class="logo"><div class="t">이게 뭘 그린거야<br><span class="q">도대체!</span></div></div><p class="d" style="font-size:20px">연필 깎는 중… ✏️</p></div></section>
+  <section class="screen on" id="s-boot"><div style="padding:60px 0" class="center"><img src="thumb.jpg" alt="" width="180" height="180" style="border-radius:22px;border:2px solid var(--ink);box-shadow:3px 4px 0 var(--ink)"><div class="logo"><div class="t">이거 뭘 그린거야<br><span class="q">도대체!</span></div></div><p class="d" style="font-size:20px">연필 깎는 중… ✏️</p></div></section>
   <section class="screen" id="s-nick"></section>
   <section class="screen" id="s-lobby"></section>
   <section class="screen" id="s-room"></section>
@@ -194,7 +194,7 @@ const CFG = {
   guessOpts: [20, 30, 45],
   grace: 2500,       // 시간이 끝난 뒤 마지막 그림이 올라올 때까지 기다리는 시간
 };
-const APP_VERSION = '20261116-1';
+const APP_VERSION = '20261116-2';
 
 /* ══════════ 제시어 ══════════ */
 const WORDS = `고양이 강아지 기린 코끼리 펭귄 문어 거북이 토끼 사자 호랑이 원숭이 돌고래 상어 고래 낙타 하마 악어 부엉이 공작새 달팽이 거미 나비 꿀벌 개구리 오리 병아리 돼지 젖소 얼룩말 양 판다 캥거루 고슴도치 다람쥐 박쥐 해파리 불가사리 랍스터 앵무새 미어캣 나무늘보 공룡 유니콘 용
@@ -362,7 +362,7 @@ const SCREENS = {};
 SCREENS.nick = () => {
   const el = $('#s-nick');
   el.innerHTML = `
-    <div class="logo"><div class="t">이게 뭘 그린거야<br><span class="q">도대체!</span></div><div class="s">그림으로 하는 말 전달 게임</div></div>
+    <div class="logo"><div class="t">이거 뭘 그린거야<br><span class="q">도대체!</span></div><div class="s">그림으로 하는 말 전달 게임</div></div>
     <form class="card" id="nickForm">
       <h2 style="margin-top:0">닉네임을 적어 주세요</h2>
       <p class="small muted" style="margin:0 0 10px">스케치북과 명예의 전당에 이 이름이 남아요. 이 기기에 기억돼요.</p>
@@ -402,7 +402,7 @@ let openOff = null;
 SCREENS.lobby = () => {
   const el = $('#s-lobby');
   el.innerHTML = `
-    <div class="logo"><div class="t">이게 뭘 그린거야<br><span class="q">도대체!</span></div></div>
+    <div class="logo"><div class="t">이거 뭘 그린거야<br><span class="q">도대체!</span></div></div>
     <div class="card row" style="gap:10px">
       ${av(me.pid, me.nick)}
       <div style="flex:1;min-width:0"><div class="small muted">내 닉네임</div><b class="d" style="font-size:22px">${esc(me.nick)}</b></div>
@@ -950,7 +950,7 @@ function renderReveal() {
     <div class="book" id="bookBody">${b.pages.slice(0, shown).map((p, i) => (i ? '<div class="arrow">▼</div>' : '') + pageHtml(p, i, b.pages.length)).join('')}</div>
     ${done ? `<div class="card center">
         <div class="sumline"><span class="a">${esc(b.word)}</span> ➜ <span class="z">${esc(last || '???')}</span></div>
-        <p class="d" style="font-size:20px;margin:4px 0 10px">${last && last.replace(/\s/g, '') === String(b.word).replace(/\s/g, '') ? '🎉 끝까지 살아남았어요!' : '🤣 이게 뭘 그린거야 도대체!'}</p>
+        <p class="d" style="font-size:20px;margin:4px 0 10px">${last && last.replace(/\s/g, '') === String(b.word).replace(/\s/g, '') ? '🎉 끝까지 살아남았어요!' : '🤣 이거 뭘 그린거야 도대체!'}</p>
         <div id="likeBox"></div>
       </div>` : `<div class="grid2"><button class="btn y" id="rvNext">한 장 넘기기 ▶</button><button class="btn" id="rvAll">끝까지 보기 ⏩</button></div>`}
     ${done && revealSel < revealBooks.length - 1 ? `<button class="btn b" id="rvNextBook" style="margin-top:10px">다음 스케치북 ▶ (${esc(revealBooks[revealSel + 1].nick)})</button>` : ''}
