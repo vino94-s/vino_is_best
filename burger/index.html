@@ -113,16 +113,16 @@ p{margin:0}
 .counter.lv4::after,.counter.lv5::after{content:"★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★";position:absolute;inset:12px 0 0;text-align:center;color:#FFF3DA;font-size:12px;letter-spacing:6px;white-space:nowrap;overflow:hidden}
 .counter.lv5{background:linear-gradient(#F7D774 0 7px,#1C1430 7px)}
 .counter.lv5::after{color:#F7D774}
-.chefbox{position:absolute;left:4px;bottom:24px;width:86px;z-index:3;display:grid;justify-items:center}
-.chefbox svg{width:86px;height:auto;display:block;animation:bob 2.4s ease-in-out infinite;transform-origin:50% 100%}
-.chefbox.happy svg{animation:hop .5s ease}
+.chefbox{position:absolute;left:0;bottom:28px;width:118px;z-index:3;display:grid;justify-items:center}
+.chefbox .chefimg{width:118px;height:auto;display:block;animation:bob 2.4s ease-in-out infinite;transform-origin:50% 100%}
+.chefbox.happy .chefimg{animation:hop .5s ease}
 .bubble{position:absolute;bottom:100%;left:10px;margin-bottom:-6px;background:#fff;border:2.5px solid var(--ink);border-radius:12px;padding:4px 8px;font:400 13px/1.2 var(--d);white-space:nowrap;z-index:6;max-width:200px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 0 var(--ink)}
 .bubble::after{content:"";position:absolute;left:22px;top:100%;border:6px solid transparent;border-top-color:var(--ink)}
 .bubble[hidden]{display:none}
-.owner{position:absolute;left:84px;bottom:44px;z-index:3;display:grid;justify-items:center;gap:2px}
+.owner{position:absolute;left:112px;bottom:44px;z-index:3;display:grid;justify-items:center;gap:2px}
 .owner .face{width:48px;height:48px}
 .tag{font:400 11px/1 var(--d);background:var(--navy);color:#fff;border-radius:6px;padding:3px 6px;white-space:nowrap}
-.seats{position:absolute;left:92px;right:6px;bottom:22px;top:38px;z-index:5;display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:5px;align-items:end}
+.seats{position:absolute;left:112px;right:6px;bottom:22px;top:38px;z-index:5;display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:5px;align-items:end}
 .seat{all:unset;box-sizing:border-box;position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;cursor:pointer;min-width:0}
 .seat:focus-visible{outline:3px solid var(--mustard);border-radius:10px}
 .seat .empty{margin-bottom:22px;font:400 12px/1 var(--d);color:rgba(255,255,255,.95);text-shadow:0 1px 2px rgba(0,0,0,.6);opacity:.8}
@@ -131,12 +131,14 @@ p{margin:0}
 .ticket{background:#fff;border:2.5px solid var(--ink);border-radius:10px;padding:3px 3px 4px;width:100%;max-width:96px;display:grid;justify-items:center;gap:1px;position:relative;margin-bottom:5px;box-shadow:0 2px 0 var(--ink)}
 .ticket::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
 .ticket .food{display:flex;align-items:flex-end;justify-content:center;gap:2px;min-height:30px}
-.ticket .tname{font-size:9.5px;line-height:1.15;max-height:2.3em;text-align:center;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+.ticket .tname{font-size:9.5px;line-height:1.15;max-height:21px;line-height:10.5px;text-align:center;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
 .ticket .price{font:400 12px/1 var(--d);color:var(--red-d)}
 .seat.ready .ticket{border-color:var(--good);box-shadow:0 0 0 3px #9BE3A8,0 2px 0 var(--ink)}
 .who{position:relative;display:grid;justify-items:center}
-.who img{width:54px;height:54px;object-fit:contain;position:relative;z-index:2;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
-.who .body{width:44px;height:22px;margin-top:-8px;border-radius:18px 18px 4px 4px;background:var(--c,#4C8FF5);border:2.5px solid var(--ink);border-bottom:0}
+.who img{width:64px;height:64px;margin-bottom:-6px;object-fit:contain;position:relative;z-index:2;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.who .body{display:none}
+.cust.sr .who img{filter:drop-shadow(0 0 6px #FFE27A) drop-shadow(0 0 2px #fff)}
+.srtag{position:absolute;top:-4px;left:-4px;z-index:3;font:400 10px/1 var(--d);background:linear-gradient(90deg,#FF4FA3,#F6B731);color:#fff;border:1.5px solid var(--ink);border-radius:6px;padding:2px 4px;white-space:nowrap}
 .cust.happy .who img{animation:hop .5s ease}
 .cust.mad .who img{animation:shake .4s ease}
 .pat{position:absolute;left:50%;bottom:-17px;transform:translateX(-50%);width:44px;height:7px;background:rgba(0,0,0,.35);border:1.5px solid var(--ink);border-radius:5px;overflow:hidden;z-index:6}
@@ -309,7 +311,6 @@ p{margin:0}
 <div id="modalRoot"></div>
 <div id="toast" role="status"></div>
 
-<script src="../characters/bung-chars.js"></script>
 <script>
 'use strict';
 /* ══════════ 설정 ══════════ */
@@ -329,7 +330,7 @@ const CFG = {
   visitBonus: 10, visitMax: 10, // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261116-1';
+const APP_VERSION = '20261116-2';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -364,10 +365,15 @@ const CHEF_LINES = {
 const SHIRTS = ['#4C8FF5', '#F6B731', '#E64980', '#1E8A84', '#8C6BD6', '#3B9B4F', '#D33A31', '#24324D', '#FF8A3D'];
 
 /* ══════════ 캐릭터 (벙참 공용 캐릭터 13명) ══════════ */
-const CH = (window.BUNG_CHARS && BUNG_CHARS.list) ? BUNG_CHARS.list.map(c => c.id) : ['eomji', 'yeoni', 'yeongjun', 'yongwang', 'juntak', 'haetsal', 'goran', 'kkaegul', 'mandu', 'myongradak', 'bongchum', 'bino', 'gana'];
-const nameOf = id => { try { return BUNG_CHARS.get(id).name; } catch (e) { return id; } };
-const imgOf = id => 'img/' + (CH.includes(id) ? id : 'bino') + '.webp';
-const lineOf = (id, k) => { try { return BUNG_CHARS.line(id, k) || ''; } catch (e) { return ''; } };
+// 손님: 인형뽑기(술안먹고 뽑을수있지?)의 히든 인형 15종. 고란·준탁은 초희귀 인형이에요 (가끔만 와요, 팁 3배)
+const HID = {"yongwang": {"name": "히든용왕", "color": "#D4AF37", "good": ["과인의 진짜 모습을 보았느냐!", "에헴… 이 몸이 히든용왕이로다"], "bad": ["어허! 쉽게 잡힐 과인이 아니로다", "여봐라, 다시 해 보거라"], "rare": false}, "bino": {"name": "히든비노", "color": "#8A8F98", "good": ["……뽑혔네.", "(후드 끈을 조용히 당김)"], "bad": ["……", "(귀걸이만 반짝임)"], "rare": false}, "goran": {"name": "초희귀고란", "color": "#A0673A", "good": ["츄릅… 초희귀라서… 더 맛있어…", "딸랑… 방울 소리 들었지…?"], "bad": ["주르륵… 뿔이 걸렸어…", "배고파서… 놓쳤어…"], "rare": true}, "juntak": {"name": "초희귀 준탁", "color": "#EFE2CB", "good": ["실례지만… 초희귀라 건배 한 잔 하겠습니다 🥂", "네 아가씨, 오늘 밤은 제가 모시지요"], "bad": ["이런… 샴페인을 쏟을 뻔했군요", "모자가 살짝 삐뚤어졌군요…"], "rare": true}, "haetsal": {"name": "히든햇살", "color": "#F6D365", "good": ["ㅇㅋ 히든이라 더 눈부심 ☀️", "안물안궁? 근데 나 공주임 ㅋ"], "bad": ["구름 꼈네 ㅋ", "안물안궁 ㅇㅋ"], "rare": false}, "mandu": {"name": "히든만두", "color": "#E8DCC0", "good": ["우아하게 뽑혔다냥 ✨", "만두 장식 예쁘지냥?"], "bad": ["하악… 옷자락이 걸렸다냥", "우아하게 실수했다냥…"], "rare": false}, "kkaegul": {"name": "히든깨굴", "color": "#8DB86B", "good": ["히든이라 더 귀엽다굴~ ✨", "깨굴깨굴! 리본 예쁘지굴?"], "bad": ["연못에 빠졌다굴…", "리본이 걸렸다굴…"], "rare": false}, "yeoni": {"name": "히든여니", "color": "#EDE3D6", "good": ["어… 뽑혔네… 장미 줄게…", "미안… 근데 오늘은 좀 예쁘지…?"], "bad": ["끄응… 장미가 걸렸어…", "역시 나는… 끄응…"], "rare": false}, "gana": {"name": "히든가나", "color": "#7A3E1E", "good": ["메롱~ 히든이라 더 달달하지롱!", "너! 너! 초코 날개 봤지? 메롱~"], "bad": ["으앙… 녹아내렸다…", "쓴맛 봤다… 카카오 100%…"], "rare": false}, "yeongjun": {"name": "히든영준", "color": "#E8432E", "good": ["만세! 히든이라 더 신난다 짹!", "짹짹! 새 모자 멋지지 만세!"], "bad": ["짹… 모자가 벗겨졌다…", "만세 취소 짹…"], "rare": false}, "eomji": {"name": "히든엄지", "color": "#E9D3B5", "good": ["따봉! 히든이라 엄지 두 배잉 👍", "이게 바로 히든 엄지척이지~"], "bad": ["아… 엄지 꺾였다잉…", "이건 노따봉…"], "rare": false}, "myongradak": {"name": "히든묭라닥", "color": "#F3ECE2", "good": ["꼬끼오! 히든이라 더 빛난다!", "꼬꼬댁~ 볏 예쁘지?"], "bad": ["꼬… 알 깨졌다…", "꼬꼬댁! 이게 뭐야!"], "rare": false}, "bongchum": {"name": "히든봉춘", "color": "#B88A5A", "good": ["왈왈왈!! 히든이라 더 신난다!!", "멍! 멍! 최고다!!"], "bad": ["깨갱…", "낑… 실수했다…"], "rare": false}, "jongu": {"name": "히든존구", "color": "#8A5A3A", "good": ["히든이라 더 바삭하지~ 🍪", "초코칩 콕콕! 뽑혔다~"], "bad": ["앗… 부스러기 떨어졌다…", "쿠키가 눅눅해졌어…"], "rare": false}, "byeolnara": {"name": "히든별나라", "color": "#2E3A78", "good": ["반짝! 히든이라 별빛 두 배 😜", "윙크 한 번에 별이 쏟아진다~"], "bad": ["앗… 별 하나 떨어졌다…", "졸려서 놓쳤어… 하암~"], "rare": false}};
+const CH = Object.keys(HID);
+const RARE = CH.filter(id => HID[id].rare);
+const nameOf = id => (HID[id] || HID.bino).name;
+const imgOf = id => 'img/h-' + (HID[id] ? id : 'bino') + '.webp';
+const lineOf = (id, k) => pick(((HID[id] || {})[k]) || ['']);
+// 초희귀는 6%, 나머지 히든 인형은 골고루
+const pickGuest = () => Math.random() < .06 ? pick(RARE) : pick(CH.filter(id => !HID[id].rare));
 
 /* ══════════ 도구 ══════════ */
 const $ = (s, r = document) => r.querySelector(s);
@@ -546,26 +552,8 @@ function iconSVG(k) {
 }
 
 /* ══════════ 그림: 준탁 셰프 (썸네일의 수염 사장님) ══════════ */
-const CHEF_SVG = `<svg viewBox="0 0 100 124" aria-label="준탁 셰프">
-  <path d="M14 124Q12 92 30 84L50 80L70 84Q88 92 86 124Z" fill="#FFFFFF" stroke="#2B2220" stroke-width="3"/>
-  <path d="M30 124V96Q30 90 36 90H64Q70 90 70 96V124Z" fill="#2E2A28" stroke="#2B2220" stroke-width="2.5"/>
-  <path d="M36 90L33 82M64 90L67 82" stroke="#2E2A28" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="35" cy="95" r="2.2" fill="#E9B45A"/><circle cx="65" cy="95" r="2.2" fill="#E9B45A"/>
-  <g transform="translate(40 101) scale(.2)"><path d="M3 30Q2 6 50 5Q98 6 97 30Z" fill="#E49A45" stroke="#2B2220" stroke-width="6"/><rect x="2" y="32" width="96" height="14" rx="6" fill="#6B3A22" stroke="#2B2220" stroke-width="6"/><path d="M0 34H100" stroke="#7CCB4C" stroke-width="7"/><path d="M5 50H95Q95 64 80 64H20Q5 64 5 50Z" fill="#E49A45" stroke="#2B2220" stroke-width="6"/></g>
-  <circle cx="16" cy="110" r="8" fill="#F2C29C" stroke="#2B2220" stroke-width="2.5"/><circle cx="84" cy="110" r="8" fill="#F2C29C" stroke="#2B2220" stroke-width="2.5"/>
-  <ellipse cx="24" cy="48" rx="5" ry="7" fill="#EDB78F" stroke="#2B2220" stroke-width="2.5"/><ellipse cx="76" cy="48" rx="5" ry="7" fill="#EDB78F" stroke="#2B2220" stroke-width="2.5"/>
-  <path d="M25 40Q24 14 50 13Q76 14 75 40Q76 70 50 78Q24 70 25 40Z" fill="#F2C29C" stroke="#2B2220" stroke-width="3"/>
-  <path d="M25 34Q22 10 46 8Q52 2 60 8Q78 10 76 34Q72 22 66 20Q58 15 50 18Q38 14 30 22Q26 26 25 34Z" fill="#26201E" stroke="#2B2220" stroke-width="2.5"/>
-  <path d="M26 38Q26 28 30 24V40Z" fill="#7D7470"/><path d="M74 38Q74 28 70 24V40Z" fill="#7D7470"/>
-  <path d="M34 50Q34 70 50 70Q66 70 66 50Q72 52 73 46Q74 70 50 79Q26 70 27 46Q28 52 34 50Z" fill="#4A3426" stroke="#2B2220" stroke-width="2"/>
-  <path d="M33 33Q39 28 46 32M54 32Q61 28 67 33" stroke="#1E1816" stroke-width="4.5" stroke-linecap="round" fill="none"/>
-  <path d="M35 40Q40 37 45 40Q40 43 35 40Z" fill="#fff" stroke="#2B2220" stroke-width="1.6"/><circle cx="42" cy="40" r="2.1" fill="#1E1816"/>
-  <path d="M55 40Q60 37 65 40Q60 43 55 40Z" fill="#fff" stroke="#2B2220" stroke-width="1.6"/><circle cx="62" cy="40" r="2.1" fill="#1E1816"/>
-  <path d="M49 42Q47 50 50 52" stroke="#C98E67" stroke-width="2" fill="none" stroke-linecap="round"/>
-  <path d="M38 57Q50 51 62 57Q57 55 50 56Q43 55 38 57Z" fill="#3A281D" stroke="#2B2220" stroke-width="2.4" stroke-linejoin="round"/>
-  <path d="M40 59Q50 58 60 59Q58 70 50 70Q42 70 40 59Z" fill="#9E2B25" stroke="#2B2220" stroke-width="2"/><path d="M43 60H57Q56 62 50 62Q44 62 43 60Z" fill="#fff"/><ellipse cx="50" cy="66.5" rx="5" ry="2.5" fill="#F07C74"/>
-  <ellipse cx="33" cy="49" rx="4" ry="2.4" fill="#F59C8C" opacity=".45"/><ellipse cx="67" cy="49" rx="4" ry="2.4" fill="#F59C8C" opacity=".45"/>
-</svg>`;
+const CHEF_SVG = '<img class="chefimg" src="img/chef.webp" alt="준탁 셰프" draggable="false">';
+const chefImg = w => `<img src="img/chef.webp" alt="준탁 셰프" style="width:${w}px;flex:none;height:auto">`;
 
 /* ══════════ 그림: 가게 단계별 배경 (400×250) ══════════ */
 function sceneBG(lv) {
@@ -754,7 +742,7 @@ function renderLogin() {
     <div class="tabs" role="tablist"><button class="on" data-t="new">처음 왔어요</button><button data-t="code">코드로 입장</button></div>
     <div class="card" id="lgNew" style="display:grid;gap:12px">
       <input class="inp" id="lgNick" maxlength="10" placeholder="닉네임 (2~10글자) · 가게 이름이 돼요" autocomplete="off">
-      <p class="small muted">내 캐릭터 (친구 가게에 손님으로 놀러가요)</p>
+      <p class="small muted">내 캐릭터 · 히든 인형 15종 (친구 가게에 손님으로 놀러가요)</p>
       <div class="charpick" id="lgChars">${CH.map(id => `<button type="button" data-c="${id}" class="${id === pickChar ? 'on' : ''}">${faceEl(id)}${esc(nameOf(id))}</button>`).join('')}</div>
       <button class="btn red big" id="lgGo">🍔 내 가게 열고 코드 받기</button>
       <p class="small muted">가입하면 푸드트럭 1대와 ${usd(CFG.startMoney)}을 드려요. 매일 아침 ${CFG.dailyHour}시에 출근 보너스 ${usd(CFG.daily)}!</p>
@@ -829,7 +817,7 @@ function renderLobby() {
     <div class="card small" style="display:grid;gap:4px"><b style="font:400 16px/1.2 var(--d)">이렇게 해요</b>
       <span>① 아래빵 → 재료 → 위빵 순서로 쟁반에 버거를 만들어요 (재료 순서는 상관없어요)</span>
       <span>② 패티는 그릴에서 먼저 구워야 써요. 미리 구워 두면 빨라요</span>
-      <span>③ 다 만들면 그 손님을 눌러서 내줘요. 빨리 낼수록 팁이 커요 · 친구 손님은 팁 2배!</span>
+      <span>③ 다 만들면 그 손님을 눌러서 내줘요. 빨리 낼수록 팁이 커요 · 친구 손님 팁 2배, ✨초희귀 고란·준탁은 팁 3배!</span>
       <span>④ 번 돈으로 트럭 → 스탠드 → 다이너 → 버거하우스 → 본점까지 키워요</span></div>
     <div class="grid3"><button class="btn ghost" id="lbSound">${Sound.on ? '🔊 소리' : '🔇 소리'}</button><button class="btn ghost" id="lbAdmin">🔐 어드민</button><button class="btn ghost" id="lbOut">로그아웃</button></div>
     <p class="mode-note">${db.mode === 'local' ? '오프라인 모드 · 이 기기에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
@@ -1229,7 +1217,7 @@ function step(dt) {
       if (free.length) {
         const i = pick(free), o = newOrder(), p = patienceFor(o);
         const fr = G.friends.length && Math.random() < .2 ? pick(G.friends) : null;
-        G.custs[i] = { o, p, max: p, char: fr ? fr.char : pick(CH), shirt: pick(SHIRTS), friend: fr ? fr.nick : null };
+        G.custs[i] = { o, p, max: p, char: fr ? fr.char : pickGuest(), shirt: pick(SHIRTS), friend: fr ? fr.nick : null };
         renderSeat(i); if (fr) chefSay($('#gScene'), pick(CHEF_LINES.friend));
       }
       G.spawnIn = spawnInterval();
@@ -1289,14 +1277,14 @@ function serve(i) {
   const seat = $('#gScene .seats').children[i];
   if (matches(c.o, t)) {
     const price = orderPrice(c.o), frac = c.p / c.max;
-    const tip = Math.round(price * .5 * frac * (c.friend ? 2 : 1)), gain = price + tip;
+    const tip = Math.round(price * .5 * frac * (c.friend ? 2 : 1) * (HID[c.char] && HID[c.char].rare ? 3 : 1)), gain = price + tip;
     G.earned += gain; G.tips += tip; G.served++;
     G.rating = Math.min(5, G.rating + (frac > .5 ? .12 : .05));
     G.custs[i] = null; t.item = null; t.cola = false; t.beer = false; t.fries = false;
     Sound.play('cash'); vib(15);
     const ln = lineOf(c.char, 'good');
     chefSay($('#gScene'), pick(CHEF_LINES.good));
-    logMsg(`${c.friend ? `👫 ${c.friend}님 ` : ''}${orderName(c.o)} 완성! ${usd(price)} + 팁 ${usd(tip)}${ln ? ` · “${ln}”` : ''}`);
+    logMsg(`${c.friend ? `👫 ${c.friend}님 ` : HID[c.char].rare ? `✨${nameOf(c.char)} 팁 3배! ` : ''}${orderName(c.o)} 완성! ${usd(price)} + 팁 ${usd(tip)}${ln ? ` · “${ln}”` : ''}`);
     floatTxt(seat, '+' + usd(gain)); leaveSeat(i, true);
   } else {
     G.wrong++; G.rating = Math.max(1, G.rating - .15); c.p = Math.max(0, c.p - 6);
@@ -1322,9 +1310,9 @@ function renderSeat(i) {
   const seat = $('#gScene .seats').children[i]; const c = G.custs[i];
   seat.classList.remove('ready');
   if (!c) { seat.innerHTML = '<div class="empty">빈자리</div>'; seat.setAttribute('aria-label', '빈자리'); return; }
-  seat.innerHTML = `<div class="cust">
+  seat.innerHTML = `<div class="cust${HID[c.char] && HID[c.char].rare ? ' sr' : ''}">
       <div class="ticket"><div class="food">${orderSVG(c.o, 30)}</div><div class="tname">${esc(orderName(c.o))}</div><div class="price">${usd(orderPrice(c.o))}</div></div>
-      <div class="who">${c.friend ? `<span class="ftag">👫${esc(c.friend)}</span>` : ''}<img src="${imgOf(c.char)}" alt="${esc(nameOf(c.char))}"><div class="body" style="--c:${c.shirt}"></div></div>
+      <div class="who">${c.friend ? `<span class="ftag">👫${esc(c.friend)}</span>` : ''}${HID[c.char] && HID[c.char].rare ? '<span class="srtag">✨초희귀</span>' : ''}<img src="${imgOf(c.char)}" alt="${esc(nameOf(c.char))}"><div class="body" style="--c:${c.shirt}"></div></div>
     </div><div class="pat"><i></i></div>`;
   seat.setAttribute('aria-label', `${nameOf(c.char)} 손님 주문: ${orderName(c.o)}. 눌러서 내주기`);
   renderPatience(i);
@@ -1435,7 +1423,7 @@ async function endRound(quit) {
   const best = me && g.earned >= (me.best || 0) && g.earned > 0;
   $('#ovRoot').innerHTML = `<div class="ov"><div class="sheet">
     <h2>${best ? '🎉 최고 매출 신기록!' : '오늘 영업 끝, 수고했다고!'}</h2>
-    <div class="row">${CHEF_SVG.replace('<svg ', '<svg style="width:70px;flex:none" ')}<p>${esc(pick(g.served >= 8 ? ['이게 바로 어메리카 스타일이지!', '대박! 오늘 장사 끝내줬다!'] : g.served >= 3 ? ['Alright! 이 정도면 괜찮지!', '내일은 더 팔아 보자고!'] : ['괜찮아, 다음 영업은 더 잘할 거야!', '그릴 미리 달궈 두자고!']))}</p></div>
+    <div class="row">${chefImg(110)}<p>${esc(pick(g.served >= 8 ? ['이게 바로 어메리카 스타일이지!', '대박! 오늘 장사 끝내줬다!'] : g.served >= 3 ? ['Alright! 이 정도면 괜찮지!', '내일은 더 팔아 보자고!'] : ['괜찮아, 다음 영업은 더 잘할 거야!', '그릴 미리 달궈 두자고!']))}</p></div>
     <div class="sum"><div>이번 매출<b class="num" style="color:var(--red-d)">${usd(g.earned)}</b></div><div>손님<b>${g.served}명</b></div><div>놓친 손님<b>${g.missed}명</b></div></div>
     <p class="small muted">팁 ${usd(g.tips)} · 잘못 낸 음식 ${g.wrong}번 · 평점 ★${g.rating.toFixed(1)} · 오늘 매출 합계 <b>${usd(g.todayBase + g.earned)}</b>${ok ? '' : ' · ⚠️ 저장 실패 (연결 확인)'}</p>
     <div class="grid2"><button class="btn ghost" id="erHome">🏠 가게로</button><button class="btn red" id="erAgain">🍔 한 번 더 영업</button></div>
@@ -1482,7 +1470,7 @@ async function checkVersion() {
 })();
 
 /* ══════════ 시작 ══════════ */
-function bootMsg(text, sub) { $('#s-boot').innerHTML = `<div style="margin:auto;text-align:center;display:grid;gap:10px;justify-items:center">${CHEF_SVG.replace('<svg ', '<svg style="width:90px" ')}<b style="font:400 20px/1.3 var(--d)">${esc(text)}</b>${sub ? `<p class="small muted">${esc(sub)}</p>` : ''}</div>`; }
+function bootMsg(text, sub) { $('#s-boot').innerHTML = `<div style="margin:auto;text-align:center;display:grid;gap:10px;justify-items:center">${chefImg(180)}<b style="font:400 20px/1.3 var(--d)">${esc(text)}</b>${sub ? `<p class="small muted">${esc(sub)}</p>` : ''}</div>`; }
 requestAnimationFrame(t => { last = t; requestAnimationFrame(tick); });
 (async function boot() {
   bootMsg('가게 문 여는 중… 🍔');
