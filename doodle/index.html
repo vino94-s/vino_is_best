@@ -75,7 +75,13 @@ h2{font-size:28px;margin:4px 0 10px}h3{font-size:22px;margin:18px 0 8px}
 .seg button:disabled{opacity:.6;cursor:default}
 .code{font:700 42px/1 var(--d);letter-spacing:6px;text-align:center;margin:4px 0}
 .openroom{display:flex;align-items:center;gap:10px;border:2px solid var(--ink);border-radius:12px;padding:10px 12px;background:#fff;margin:8px 0;cursor:pointer;width:100%;text-align:left}
-.openroom b{font:700 22px/1 var(--d);letter-spacing:2px}
+.openroom .rt{font:700 21px/1.15 var(--d);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.openroom .rs{font-size:12px;color:var(--muted);display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.openroom .rs b{letter-spacing:1.5px;color:var(--ink)}
+.openroom.busy{background:#f6f1e6;cursor:default}
+.st-play{color:var(--red);font-weight:800;font-size:15px;white-space:nowrap}
+.st-full{color:var(--blue);font-weight:800;font-size:15px;white-space:nowrap}
+.rtitle{font:700 24px/1.15 var(--d);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .openroom .grow{flex:1;min-width:0}
 .toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;z-index:99;max-width:90vw;text-align:center;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%)}
@@ -228,7 +234,7 @@ const CFG = {
   guessOpts: [20, 30, 45],
   grace: 2500,       // 시간이 끝난 뒤 마지막 그림이 올라올 때까지 기다리는 시간
 };
-const APP_VERSION = '20261116-4';
+const APP_VERSION = '20261116-5';
 
 /* ══════════ 제시어 ══════════ */
 const WORDS = `고양이 강아지 기린 코끼리 펭귄 문어 거북이 토끼 사자 호랑이 원숭이 돌고래 상어 고래 낙타 하마 악어 부엉이 공작새 달팽이 거미 나비 꿀벌 개구리 오리 병아리 돼지 젖소 얼룩말 양 판다 캥거루 고슴도치 다람쥐 박쥐 해파리 불가사리 랍스터 앵무새 미어캣 나무늘보 공룡 유니콘 용
@@ -553,7 +559,7 @@ SCREENS.lobby = () => {
     <div id="lbChat"></div>
     <p class="ver">${db.mode === 'local' ? '시험 모드 · 이 브라우저에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
   $('#lbNick', el).onclick = () => show('nick');
-  $('#lbCreate', el).onclick = createRoom;
+  $('#lbCreate', el).onclick = createRoomDialog;
   $('#lbJoin', el).onsubmit = e => { e.preventDefault(); const c = $('#lbCode', el).value.trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(c)) { $('#lbErr', el).textContent = '방 코드는 영어 4자리예요'; return; } joinRoom(c); };
   $('#lbHof', el).onclick = () => show('hof');
   if (openOff) openOff();
@@ -566,10 +572,21 @@ leaveHooks.lobby = () => { if (openOff) { openOff(); openOff = null; } if (lobby
 function renderOpen(v) {
   const box = $('#openList'); if (!box) return;
   const now = db.now();
-  const list = Object.entries(v).filter(([c, o]) => o && now - (o.ts || 0) < 70000 && (o.n || 0) < CFG.maxPlayers).sort((a, b) => (b[1].ts || 0) - (a[1].ts || 0));
+  // 방 사람 중 누구라도 남아 있으면 방장이 계속 신호를 보내서 목록에 남아요 (70초 동안 신호가 없으면 빠져요)
+  const stOf = o => (o.st === 'play' ? 2 : (o.n || 0) >= CFG.maxPlayers ? 1 : 0);
+  const list = Object.entries(v).filter(([c, o]) => o && now - (o.ts || 0) < 70000)
+    .sort((a, b) => stOf(a[1]) - stOf(b[1]) || (b[1].ts || 0) - (a[1].ts || 0));
   if (!list.length) { box.innerHTML = `<p class="small muted">지금 모이는 방이 없어요. 방을 만들고 친구에게 코드를 알려 주세요!</p>`; return; }
-  box.innerHTML = list.map(([c, o]) => `<button class="openroom" data-c="${esc(c)}"><b>${esc(c)}</b><span class="grow"><span class="small muted">방장</span> ${esc(o.host || '')}</span><span class="chip">👥 ${o.n || 1}/${CFG.maxPlayers}</span></button>`).join('');
-  $$('[data-c]', box).forEach(b => b.onclick = () => joinRoom(b.dataset.c));
+  box.innerHTML = list.map(([c, o]) => {
+    const st = stOf(o);
+    const right = st === 2 ? '<span class="st-play">게임중</span>' : st === 1 ? '<span class="st-full">8마슨</span>' : `<span class="chip">👥 ${o.n || 1}/${CFG.maxPlayers}</span>`;
+    return `<button class="openroom ${st ? 'busy' : ''}" data-c="${esc(c)}" data-st="${st}"><span class="grow"><span class="rt">${esc(o.title || (o.host || '') + '의 방')}</span><span class="rs"><b>${esc(c)}</b> · 방장 ${esc(o.host || '')}${st === 2 ? ` · 👥 ${o.n || 1}명` : ''}</span></span>${right}</button>`;
+  }).join('');
+  $$('[data-c]', box).forEach(b => b.onclick = () => {
+    if (b.dataset.st === '2') return toast('지금 게임 중인 방이에요. 끝나면 들어갈 수 있어요');
+    if (b.dataset.st === '1') return toast('8명이 꽉 찼어요');
+    joinRoom(b.dataset.c);
+  });
 }
 
 /* ══════════ 방 ══════════ */
@@ -580,14 +597,41 @@ const GONE_MS = 15000;
 const gone = (v, pid) => { const p = v && v.players && v.players[pid]; return !p || (p.off && db.now() - p.off > GONE_MS); };
 const playerIds = v => Object.keys((v && v.players) || {}).filter(id => !gone(v, id)).sort((a, b) => (v.players[a].j || 0) - (v.players[b].j || 0));
 
-async function createRoom() {
+function createRoomDialog() {
+  const w = document.createElement('div'); w.className = 'confirm';
+  let priv = false; // 매번 공개방으로 시작해요
+  w.innerHTML = `<form class="card" style="max-width:380px;width:100%">
+      <h2 style="margin-top:0">🎨 방 만들기</h2>
+      <b class="d" style="font-size:19px">방 제목</b>
+      <input class="inp" id="crTitle" maxlength="20" placeholder="${esc(me.nick)}의 방" style="margin:6px 0 12px">
+      <b class="d" style="font-size:19px">공개 설정</b>
+      <div class="seg" style="margin:6px 0 4px"><button type="button" data-p="0">🌏 공개방</button><button type="button" data-p="1">🔒 비공개방</button></div>
+      <p class="small muted" id="crHelp" style="margin:4px 0 12px;min-height:34px"></p>
+      <div class="grid2"><button type="button" class="btn" data-n>취소</button><button type="submit" class="btn y">만들기</button></div>
+    </form>`;
+  document.body.appendChild(w);
+  const drawP = () => {
+    $$('[data-p]', w).forEach(b => b.classList.toggle('on', (b.dataset.p === '1') === priv));
+    $('#crHelp', w).textContent = priv ? '지금 모이는 방 목록에 안 나와요. 방 코드나 초대 링크로만 들어올 수 있어요.' : '로비의 지금 모이는 방 목록에 나와서 누구나 들어올 수 있어요.';
+  };
+  drawP();
+  $$('[data-p]', w).forEach(b => b.onclick = () => { priv = b.dataset.p === '1'; drawP(); });
+  $('[data-n]', w).onclick = () => w.remove();
+  setTimeout(() => $('#crTitle', w).focus(), 50);
+  $('form', w).onsubmit = e => {
+    e.preventDefault();
+    const title = ($('#crTitle', w).value || '').replace(/\s+/g, ' ').trim().slice(0, 20) || me.nick + '의 방';
+    w.remove(); createRoom(title, priv);
+  };
+}
+async function createRoom(title, priv) {
   const btn = $('#lbCreate'); if (btn) btn.disabled = true;
   try {
     for (let n = 0; n < 8; n++) {
       const code = genCode(4), now = db.now();
       const r = await db.tx(PATH.room(code), c => {
         if (c && c.updatedAt && now - c.updatedAt < 86400e3) return undefined; // 쓰는 중인 코드
-        return { code, host: me.pid, status: 'wait', createdAt: now, updatedAt: now, set: { draw: 60, guess: 30 }, players: { [me.pid]: { nick: me.nick, j: now } } };
+        return { code, title, priv: !!priv, host: me.pid, status: 'wait', createdAt: now, updatedAt: now, set: { draw: 60, guess: 30 }, players: { [me.pid]: { nick: me.nick, j: now } } };
       });
       if (r.committed) return enterRoom(code);
     }
@@ -695,7 +739,9 @@ async function leaveRoom() {
 // 방장이 '지금 모이는 방' 목록을 살아 있게 유지해요
 function heartbeat() {
   if (!room || !roomCode) return;
-  if (room.host === me.pid && room.status === 'wait') db.set(PATH.open + '/' + roomCode, { host: me.nick, n: playerIds(room).length, ts: db.now() }).catch(() => {});
+  if (room.host !== me.pid) return;
+  if (room.priv) { db.remove(PATH.open + '/' + roomCode).catch(() => {}); return; }
+  db.set(PATH.open + '/' + roomCode, { host: me.nick, title: room.title || me.nick + '의 방', n: playerIds(room).length, st: room.status === 'wait' ? 'wait' : 'play', ts: db.now() }).catch(() => {});
 }
 let lastOpenSig = '';
 function onRoom(v) {
@@ -707,17 +753,15 @@ function onRoom(v) {
   if (gone(v, v.host) && ids[0] === me.pid) {
     db.tx(PATH.room(roomCode), c => { if (c == null) return null; if (!gone(c, c.host)) return undefined; c.host = me.pid; return c; }).catch(() => {});
   }
+  if (v.host === me.pid) {
+    const sig = [ids.length, me.nick, v.status === 'wait' ? 'w' : 'p', v.title, v.priv ? 1 : 0].join('|');
+    if (sig !== lastOpenSig) { lastOpenSig = sig; heartbeat(); }
+  } else lastOpenSig = '';
   if (v.status === 'wait') {
-    if (v.host === me.pid) {
-      const sig = ids.length + '|' + me.nick;
-      if (sig !== lastOpenSig) { lastOpenSig = sig; heartbeat(); }
-      db.onDisconnect(PATH.open + '/' + roomCode, null);
-    }
     stopTick();
     if (cur !== 'room') show('room'); else renderRoom();
     return;
   }
-  lastOpenSig = '';
   const g = v.game;
   if (!g || !(g.order || []).includes(me.pid)) { if (cur !== 'room') show('room'); else renderRoom(); return; }
   if (v.status === 'play') return onPlay(v);
@@ -752,7 +796,7 @@ function renderRoom() {
   }
   const seg = (key, opts, val) => `<div class="seg">${opts.map(o => `<button data-set="${key}" data-v="${o}" class="${o === val ? 'on' : ''}" ${!isHost || playing ? 'disabled' : ''}>${o}초</button>`).join('')}</div>`;
   el.innerHTML = `
-    <div class="top"><button class="back" id="rmBack" aria-label="나가기">←</button><div class="grow d" style="font-size:24px">대기실</div><span class="chip">👥 ${ids.length}/${CFG.maxPlayers}</span></div>
+    <div class="top"><button class="back" id="rmBack" aria-label="나가기">←</button><div class="grow" style="min-width:0"><div class="small muted">${v.priv ? '🔒 비공개방 · 코드로만 입장' : '🌏 공개방 · 대기실'}</div><div class="rtitle">${esc(v.title || '대기실')}</div></div><span class="chip">👥 ${ids.length}/${CFG.maxPlayers}</span></div>
     <div class="card center">
       <div class="small muted">방 코드</div>
       <div class="code">${esc(v.code)}</div>
@@ -793,8 +837,7 @@ async function startGame() {
     c.status = 'play'; c.updatedAt = now;
     return c;
   }).catch(() => ({ committed: false }));
-  if (r.committed) { db.remove(PATH.open + '/' + code).catch(() => {}); db.cancelDisconnect(PATH.open + '/' + code); }
-  else { toast('시작하지 못했어요. 다시 눌러 주세요'); if (btn) btn.disabled = false; }
+  if (!r.committed) { toast('시작하지 못했어요. 다시 눌러 주세요'); if (btn) btn.disabled = false; }
 }
 
 /* ══════════ 게임 진행 ══════════
