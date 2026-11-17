@@ -382,6 +382,24 @@ p{margin:0}
 .xpick button{border:2px solid var(--ink);border-radius:10px;background:#fff;padding:4px 2px;display:grid;justify-items:center;font:400 11.5px/1.15 var(--d);cursor:pointer}
 .xpick button small{font:700 9.5px var(--f);color:var(--muted)}
 .xpick button.on{background:#D8F5DD;border-color:var(--good)}
+
+/* ── 천하제일 푸드트럭 ── */
+.bthero{position:relative;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink);background:linear-gradient(135deg,#24324D,#8C2A6E 60%,#D33A31);display:flex;align-items:flex-end;justify-content:space-between;padding:12px 10px 0 16px;overflow:hidden;min-height:130px}
+.bthero .bt-t{font:400 30px/1.05 var(--d);color:#FFE27A;text-shadow:0 3px 0 #2B2220,0 0 12px rgba(255,183,3,.6);align-self:center;letter-spacing:.02em}
+.slots4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.slot4{position:relative;background:var(--paper);border:2.5px solid var(--ink);border-radius:14px;padding:6px 4px;display:grid;justify-items:center;gap:2px;font-size:12px;box-shadow:0 3px 0 var(--ink)}
+.slot4 img{width:60px;height:60px;object-fit:contain}
+.slot4 b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot4.me{background:#FFF0C2}
+.slot4.empty{border-style:dashed;color:var(--muted);place-items:center;min-height:96px;box-shadow:none;background:transparent}
+.slot4 .crown{position:absolute;top:-10px;left:-4px;font-size:20px}
+.mpick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.mp{border:2px solid var(--ink);border-radius:10px;background:#fff;padding:4px 2px;display:grid;justify-items:center;gap:1px;font:400 11px/1.15 var(--d);cursor:pointer;min-width:0}
+.mp span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp small{font:700 9.5px var(--f);color:var(--muted)}
+.mp.on{background:#FFE7E2;border-color:var(--red);box-shadow:0 0 0 2px var(--red)}
+.cdown{display:grid;justify-items:center;gap:6px;color:#fff;text-align:center}
+.cdown b{font:400 120px/1 var(--d);color:#FFE27A;text-shadow:0 6px 0 #2B2220;animation:hop .9s ease}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 </head>
@@ -411,6 +429,8 @@ p{margin:0}
 <section class="screen hidden" id="s-menu"></section>
 <section class="screen hidden" id="s-chain"></section>
 <section class="screen hidden" id="s-branch"></section>
+<section class="screen hidden" id="s-battle"></section>
+<section class="screen hidden" id="s-broom"></section>
 <section class="screen hidden" id="s-admin"></section>
 <section class="hidden" id="game">
   <div class="hud">
@@ -464,7 +484,7 @@ const CFG = {
   buyMax: 20,               // 친구 가게 주문: 하루 20번까지 // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261117-3';
+const APP_VERSION = '20261117-4';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -672,7 +692,7 @@ class LocalDB {
   async tx(p, fn) { this.load(); const cur = clone(this._get(p)); const nv = fn(cur); if (nv === undefined) return { committed: false, value: cur }; this._write(p, nv); return { committed: true, value: clone(nv) }; }
   async push(p, v) { const k = Date.now().toString(36) + genCode(4).toLowerCase(); this._write(p + '/' + k, v); return k; }
   async presence(p, v) { this._write(p, v); }
-  on(p, cb) { const s = { p, cb }; this.subs.add(s); setTimeout(() => this.subs.has(s) && cb(clone(this._get(p))), 0); return () => this.subs.delete(s); }
+  on(p, cb) { const s = { p, cb }; this.subs.add(s); setTimeout(() => { if (this.subs.has(s)) { this.load(); cb(clone(this._get(p))); } }, 0); return () => this.subs.delete(s); }
 }
 class FireDB {
   constructor() { this.mode = 'firebase'; }
@@ -682,6 +702,7 @@ class FireDB {
     if (!firebase.database) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
     this.app = (firebase.apps || []).find(a => a.name === 'burger') || firebase.initializeApp(CFG.firebase, 'burger');
     this.db = this.app.database();
+    this.db.ref('.info/serverTimeOffset').on('value', s => { this.off = s.val() || 0; });
     await new Promise((res, rej) => {
       const r = this.db.ref('.info/connected');
       const f = s => { if (s.val()) { clearTimeout(t); r.off('value', f); res(); } };
@@ -702,7 +723,7 @@ let db = null;
 const PFX = CFG.prefix;
 const PATH = {
   nicks: PFX + 'nicks', acc: c => PFX + 'acc-' + c, players: PFX + 'players', player: pid => PFX + 'players/' + pid,
-  gb: pid => PFX + 'gb-' + pid, log: PFX + 'log', pres: pid => PFX + 'pres-' + pid,
+  gb: pid => PFX + 'gb-' + pid, log: PFX + 'log', pres: pid => PFX + 'pres-' + pid, battles: PFX + 'battles', battle: c => PFX + 'battles/' + c,
 };
 
 /* ══════════ 그림: 음식 (SVG) ══════════ */
@@ -990,7 +1011,7 @@ function show(name) {
   if (liveOff) { liveOff(); liveOff = null; }
   for (const s of document.querySelectorAll('body > section')) s.classList.add('hidden');
   ($('#' + (name === 'game' ? 'game' : 's-' + name))).classList.remove('hidden');
-  ({ login: renderLogin, lobby: renderLobby, shop: renderShop, friends: renderFriends, rank: renderRank, admin: renderAdmin, staff: renderStaff, menu: renderMenu, chain: renderChain }[name] || (() => {}))();
+  ({ login: renderLogin, lobby: renderLobby, shop: renderShop, friends: renderFriends, rank: renderRank, admin: renderAdmin, staff: renderStaff, menu: renderMenu, chain: renderChain, battle: renderBattle, broom: () => BR && BR.room && drawRoom(BR.room) }[name] || (() => {}))();
   window.scrollTo(0, 0);
 }
 
@@ -1075,6 +1096,7 @@ function renderLobby() {
       <div class="small muted">👥 직원 ${staffList(me).length}명 · 급여 ${usd(payroll(me))}/영업${Object.keys(me.chains || {}).length ? ` · 🗺️ 체인점 ${Object.keys(me.chains).length}곳 하루 약 +${usd(chainIncome(me.chains))}` : ''}${salesOn(me, todayKST()).gn ? ` · 🛎️ 오늘 친구 주문 ${salesOn(me, todayKST()).gn}건 ${usd(salesOn(me, todayKST()).guest || 0)}` : ''}</div>
     </div>
     <button class="btn red big" id="lbPlay">🍔 영업 시작!<small>${CFG.dayLen}초 동안 주문서대로 만들어 팔아요 · 번 돈은 바로 내 돈</small></button>
+    <button class="btn navy big" id="lbBattle" style="background:linear-gradient(90deg,#24324D,#8C2A6E)">⚔️ 천하제일 푸드트럭<small>최대 4명 온라인 대결 · 1등이 판돈 독식! · ${btStats(me).w}승 ${btStats(me).p}판</small></button>
     <div class="grid2"><button class="btn teal" id="lbShop">🛠️ 가게 키우기<small>확장 · 설비 사기</small></button><button class="btn navy rel" id="lbStaff">👥 직원 ${staffList(me).length}/${staffMax(me)}${me.job ? '<span class="dot">!</span>' : ''}<small>채용 공고 · 교육 · 급여 ${usd(payroll(me))}/영업</small></button></div>
     <div class="grid2"><button class="btn" id="lbMenu">📋 메뉴판<small>판매 중 ${MENU.filter(m => st.lv >= m.lv && (!m.need || (me.own || {})[m.need])).length}종 · 레시피 보기</small></button><button class="btn ${st.lv >= 5 ? 'red' : 'ghost'}" id="lbChain">🗺️ 체인점<small>${st.lv >= 5 ? `${Object.keys(me.chains || {}).length}곳 · 하루 약 +${usd(chainIncome(me.chains))} 정산` : '🔒 본점(Lv.5)부터'}</small></button></div>
     <div class="grid2"><button class="btn navy" id="lbFriends">👫 친구 가게<small>걸어 다니며 주문 · 방명록</small></button><button class="btn rel" id="lbBook">🏠 내 가게·방명록${visitors ? `<span class="dot">${visitors}</span>` : ''}<small>오늘 놀러온 친구 ${visitors}명</small></button></div>
@@ -1089,6 +1111,7 @@ function renderLobby() {
     <p class="mode-note">${db.mode === 'local' ? '오프라인 모드 · 이 기기에만 저장돼요' : '온라인 연결됨'} · v${APP_VERSION}</p>`;
   $('#lbPlay').onclick = startRound;
   $('#lbShop').onclick = () => show('shop');
+  $('#lbBattle').onclick = () => show('battle');
   $('#lbStaff').onclick = () => show('staff');
   $('#lbMenu').onclick = () => show('menu');
   $('#lbChain').onclick = () => show('chain');
@@ -1487,19 +1510,23 @@ function renderRank() {
   const el = $('#s-rank');
   el.innerHTML = `<div class="toprow"><button class="back" id="rkBack">← 뒤로</button><h2>🏆 오픈 랭킹</h2><span style="width:60px"></span></div>
     <div class="tabs" id="rkTabs"><button data-t="worth" class="${rankTab === 'worth' ? 'on' : ''}">💰 보유재산</button><button data-t="today" class="${rankTab === 'today' ? 'on' : ''}">📈 오늘 매출</button></div>
+    <div class="tabs" id="rkTabs2"><button data-t="bwin" class="${rankTab === 'bwin' ? 'on' : ''}">⚔️ 대결 승률</button><button data-t="bmoney" class="${rankTab === 'bmoney' ? 'on' : ''}">⚔️ 대결 수익</button></div>
     <p class="small muted" id="rkNote"></p>
     <div class="list" id="rkList"><p class="muted small" style="text-align:center">불러오는 중…</p></div>`;
   $('#rkBack').onclick = () => show(me ? 'lobby' : 'login');
   let ps = [];
   const draw = () => {
     const today = todayKST();
-    const val = rankTab === 'worth' ? worth : p => todaySales(p);
-    $('#rkNote').textContent = rankTab === 'worth' ? '보유재산 = 현금 + 가게 확장비 + 설비 값 + 체인점 값' : `오늘(${today.slice(5).replace('-', '/')}, 아침 ${CFG.dailyHour}시 기준) 번 매출 합계 · 실시간`;
-    const list = ps.filter(p => rankTab === 'worth' || val(p) > 0).sort((a, b) => val(b) - val(a) || (a.createdAt || 0) - (b.createdAt || 0));
-    $('#rkList').innerHTML = list.length ? list.slice(0, 80).map((p, i) => `<div class="li ${me && p.pid === me.pid ? 'me' : ''}" data-pid="${p.pid}" style="cursor:pointer"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(p.char, 's')}<div class="grow"><div class="nm">${esc(p.nick)}<span class="lvb">${stageOf(p).icon} Lv.${stageOf(p).lv}</span></div></div><b class="money num">${usd(val(p))}</b></div>`).join('')
+    const T = rankTab;
+    const val = T === 'worth' ? worth : T === 'today' ? p => todaySales(p) : T === 'bwin' ? winRate : p => btStats(p).m;
+    $('#rkNote').textContent = { worth: '보유재산 = 현금 + 가게 확장비 + 설비 값 + 체인점 값', today: `오늘(${today.slice(5).replace('-', '/')}, 아침 ${CFG.dailyHour}시 기준) 번 매출 합계 · 실시간`, bwin: '천하제일 푸드트럭 승률 (같으면 승수 많은 순)', bmoney: '천하제일 푸드트럭에서 독식한 돈 합계' }[T];
+    const list = ps.filter(p => T === 'worth' || (T === 'bwin' ? btStats(p).p > 0 : val(p) > 0)).sort((a, b) => val(b) - val(a) || (T === 'bwin' ? btStats(b).w - btStats(a).w || btStats(b).p - btStats(a).p : 0) || (a.createdAt || 0) - (b.createdAt || 0));
+    const fmt = p => T === 'bwin' ? `${Math.round(winRate(p) * 100)}%<div class="sub" style="text-align:right">${btStats(p).w}승 ${btStats(p).p}판</div>` : usd(val(p));
+    $('#rkList').innerHTML = list.length ? list.slice(0, 80).map((p, i) => `<div class="li ${me && p.pid === me.pid ? 'me' : ''}" data-pid="${p.pid}" style="cursor:pointer"><span class="rk">${i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>${faceEl(p.char, 's')}<div class="grow"><div class="nm">${esc(p.nick)}<span class="lvb">${stageOf(p).icon} Lv.${stageOf(p).lv}</span></div></div><b class="money num">${fmt(p)}</b></div>`).join('')
       : '<p class="muted small" style="text-align:center">아직 아무도 없어요</p>';
   };
-  $('#rkTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; rankTab = b.dataset.t; $('#rkTabs').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); draw(); };
+  const tabsF = e => { const b = e.target.closest('button'); if (!b) return; rankTab = b.dataset.t; document.querySelectorAll('#rkTabs button,#rkTabs2 button').forEach(x => x.classList.toggle('on', x === b)); draw(); };
+  $('#rkTabs').onclick = tabsF; $('#rkTabs2').onclick = tabsF;
   $('#rkList').onclick = e => { const r = e.target.closest('[data-pid]'); if (r) openVisit(r.dataset.pid); };
   liveOff = db.on(PATH.players, v => { if (cur !== 'rank') return; ps = Object.values(v || {}).filter(p => p && p.pid && !p.blocked); draw(); });
 }
@@ -1951,6 +1978,247 @@ async function openBranch(id) {
   liveOff = () => { clearInterval(branchT); branchT = null; };
 }
 
+/* ══════════ ⚔️ 온라인 대결: 천하제일 푸드트럭 ══════════
+   최대 4명이 같은 메뉴·같은 손님 순서로 120초 동안 장사해요. 상대 화면은 안 보여요.
+   제일 많이 번 사람이 모두가 번 돈을 독식해요 (동점이면 나눠 가져요). */
+const BT = { len: 120, max: 4, lead: 4000, grace: 15000 };
+const srvNow = () => Date.now() + ((db && db.off) || 0);
+const btStats = p => Object.assign({ p: 0, w: 0, m: 0, best: 0 }, (p && p.bt) || {});
+const winRate = p => { const b = btStats(p); return b.p ? b.w / b.p : 0; };
+const MAIN_IDS = MENU.map(m => m.id), XTRA_IDS = [...SIDES, ...DRINKS].map(x => x.id);
+const BT_PRESETS = {
+  classic: { name: '🍔 클래식', ids: ['hamburger', 'cheeseburger', 'daves', 'whopper', 'fries', 'cola'] },
+  burger: { name: '🍔 버거 전부', ids: [...MENU.filter(m => m.kind === 'burger').map(m => m.id), 'fries', 'rings', 'cola', 'beer'] },
+  pizza: { name: '🍕 피자 전쟁', ids: [...MENU.filter(m => m.kind === 'pizza').map(m => m.id), 'wings', 'mozz', 'cola'] },
+  all: { name: '🌟 전 메뉴', ids: [...MAIN_IDS, ...XTRA_IDS] },
+};
+const roomPlayers = r => Object.entries((r && r.players) || {}).map(([pid, x]) => ({ pid, ...x })).sort((a, b) => (a.at || 0) - (b.at || 0));
+const roomHost = r => { const ps = roomPlayers(r); return ps.some(x => x.pid === r.host) ? r.host : (ps[0] || {}).pid; };
+const menuNames = r => [...(r.menus || []), ...(r.xtras || [])].map(id => (MENU_BY[id] || XTRA[id] || {}).name).filter(Boolean);
+let BR = null; // 지금 들어가 있는 방 { code, off, room, started, finishing }
+
+function renderBattle() {
+  if (!me) return show('login');
+  const b = btStats(me);
+  $('#s-battle').innerHTML = `<div class="toprow"><button class="back" id="btBack">← 가게</button><h2>⚔️ 천하제일 푸드트럭</h2><span style="width:60px"></span></div>
+    <div class="bthero"><div class="bt-t">天下第一<br>FOOD TRUCK</div>${chefImg(120)}</div>
+    <div class="card small" style="display:grid;gap:4px"><b style="font:400 17px var(--d)">규칙</b>
+      <span>① 2~4명이 같은 메뉴, 같은 손님 순서로 <b>${BT.len}초</b> 동안 장사해요. 상대 화면은 안 보여요.</span>
+      <span>② 영업 시간이 끝났을 때 <b>가장 많이 번 사람이 우승</b>!</span>
+      <span>③ 모두가 번 돈을 <b>1등이 독식</b>해요 (동점이면 나눠 가져요). 직원·설비 효과 없이 모두 같은 조건이에요.</span></div>
+    <div class="stat3"><div>대결<b>${b.p}판 ${b.w}승</b></div><div>승률<b>${b.p ? Math.round(b.w / b.p * 100) : 0}%</b></div><div>대결 수익<b class="num">${usd(b.m)}</b></div></div>
+    <div class="grid2"><button class="btn red big" id="btNew">⚔️ 방 만들기</button><button class="btn navy big" id="btCode">🔑 코드로 입장</button></div>
+    <div class="card list"><b style="font:400 18px var(--d)">🚚 참가 기다리는 방</b><div class="list" id="btRooms"><p class="muted small">불러오는 중…</p></div></div>
+    <button class="btn ghost" id="btRank">🏆 대결 랭킹 (승률 · 대결 수익)</button>`;
+  $('#btBack').onclick = () => show('lobby');
+  $('#btRank').onclick = () => { rankTab = 'bwin'; show('rank'); };
+  $('#btNew').onclick = createRoomModal;
+  $('#btCode').onclick = () => modal(`<h2>🔑 방 코드</h2><input class="inp code-inp" id="bcIn" maxlength="4" placeholder="AB12" autocomplete="off" autocapitalize="characters"><div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="bcGo">입장</button></div>`, (sh, close) => {
+    const go = () => { const c = $('#bcIn', sh).value.trim().toUpperCase(); if (c.length !== 4) return toast('코드는 4자리예요'); close(); joinRoom(c); };
+    $('#bcGo', sh).onclick = go; $('#bcIn', sh).onkeydown = e => { if (e.key === 'Enter') go(); }; setTimeout(() => $('#bcIn', sh).focus(), 50);
+  });
+  liveOff = db.on(PATH.battles, v => {
+    if (cur !== 'battle') return;
+    const now = srvNow(), rooms = [];
+    for (const [code, r] of Object.entries(v || {})) {
+      if (!r) continue;
+      const n = roomPlayers(r).length;
+      const stale = (!n && now - (r.createdAt || 0) > 60e3) || (r.state === 'wait' && now - (r.createdAt || 0) > 3600e3) || (r.state === 'play' && now - (r.startAt || 0) > 600e3) || (r.state === 'done' && now - ((r.result || {}).at || 0) > 1800e3);
+      if (stale) { db.remove(PATH.battle(code)).catch(() => {}); continue; }
+      if (r.state === 'wait' && n) rooms.push({ code, r, n });
+    }
+    const box = $('#btRooms'); if (!box) return;
+    box.innerHTML = rooms.length ? rooms.sort((a, b) => (b.r.createdAt || 0) - (a.r.createdAt || 0)).map(({ code, r, n }) => { const host = roomPlayers(r).find(x => x.pid === roomHost(r)) || {};
+      return `<div class="li"><span>${faceEl(host.char || 'bino', 's')}</span><div class="grow"><div class="nm">${esc(host.nick || '?')}님의 방 <span class="lvb">${code}</span></div><div class="sub">${n}/${r.max || 4}명 · 메뉴 ${menuNames(r).length}종: ${esc(menuNames(r).slice(0, 4).join(', '))}${menuNames(r).length > 4 ? '…' : ''}</div></div><button class="btn sm red" data-join="${code}" style="flex:none" ${n >= (r.max || 4) ? 'disabled' : ''}>${n >= (r.max || 4) ? '꽉 참' : '참가'}</button></div>`; }).join('')
+      : '<p class="muted small">지금 열린 방이 없어요. 방을 만들고 친구들에게 코드를 알려 주세요!</p>';
+    box.querySelectorAll('[data-join]').forEach(x => x.onclick = () => joinRoom(x.dataset.join));
+  });
+}
+// 메뉴 고르기 (방장)
+function menuPickModal(sel, max, done) {
+  sel = new Set(sel);
+  const item = (id, svg, name, price) => `<button type="button" class="mp ${sel.has(id) ? 'on' : ''}" data-id="${id}">${svg}<span>${esc(name)}</span><small>${usd(price)}</small></button>`;
+  modal(`<h2>🍔 대결 메뉴 고르기</h2>
+    <div class="presets">${Object.entries(BT_PRESETS).map(([k, p]) => `<button type="button" data-pre="${k}">${p.name}</button>`).join('')}</div>
+    <b class="small">버거 · 피자 (1개 이상)</b><div class="mpick">${MENU.map(m => item(m.id, m.kind === 'burger' ? burgerSVG(m.fill, true, 30) : pizzaSVG({ sauce: true, cheese: true, tops: m.tops, baked: true }, 28), m.name, m.price)).join('')}</div>
+    <b class="small">사이드 · 음료 (없어도 돼요)</b><div class="mpick">${[...SIDES, ...DRINKS].map(x => item(x.id, xtraSVG(x.id, 22), x.name, x.price)).join('')}</div>
+    <div><b class="small">최대 인원</b><div class="presets" id="mpMax">${[2, 3, 4].map(n => `<button type="button" data-max="${n}" class="${n === max ? 'on' : ''}">${n}명</button>`).join('')}</div></div>
+    <div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="mpGo">확인</button></div>`, (sh, close) => {
+    const upd = () => sh.querySelectorAll('.mp').forEach(b => b.classList.toggle('on', sel.has(b.dataset.id)));
+    sh.querySelectorAll('.mp').forEach(b => b.onclick = () => { const id = b.dataset.id; sel.has(id) ? sel.delete(id) : sel.add(id); upd(); });
+    sh.querySelectorAll('[data-pre]').forEach(b => b.onclick = () => { sel = new Set(BT_PRESETS[b.dataset.pre].ids); upd(); });
+    sh.querySelectorAll('[data-max]').forEach(b => b.onclick = () => { max = +b.dataset.max; sh.querySelectorAll('[data-max]').forEach(x => x.classList.toggle('on', x === b)); });
+    $('#mpGo', sh).onclick = () => {
+      const menus = MAIN_IDS.filter(id => sel.has(id)), xtras = XTRA_IDS.filter(id => sel.has(id));
+      if (!menus.length) return toast('버거나 피자를 1개 이상 골라 주세요');
+      close(); done(menus, xtras, max);
+    };
+  });
+}
+function createRoomModal() {
+  menuPickModal(BT_PRESETS.classic.ids, 4, async (menus, xtras, max) => {
+    let code = null;
+    for (let i = 0; i < 20 && !code; i++) {
+      const c = genCode(4);
+      const r = await db.tx(PATH.battle(c), cur => (cur ? undefined : { code: c, host: me.pid, state: 'wait', menus, xtras, max, createdAt: srvNow(), seed: genCode(8) })).catch(() => null);
+      if (r && r.committed) code = c;
+    }
+    if (!code) return toast('방을 만들지 못했어요. 다시 해 주세요');
+    await joinRoom(code, true);
+  });
+}
+async function joinRoom(code, created) {
+  code = String(code).toUpperCase();
+  const r = await db.get(PATH.battle(code)).catch(() => null);
+  if (!r) return toast('없는 방이에요');
+  const mine = r.players && r.players[me.pid];
+  if (!mine && r.state !== 'wait') return toast('이미 대결이 시작된 방이에요');
+  if (!mine && roomPlayers(r).length >= (r.max || 4)) return toast('방이 꽉 찼어요');
+  await db.presence(PATH.battle(code) + '/players/' + me.pid, { nick: me.nick, char: me.char, at: (mine && mine.at) || srvNow(), score: 0, served: 0 });
+  openRoom(code);
+  if (!created) Sound.play('ding');
+}
+function leaveRoom(toScreen = 'battle') {
+  const b = BR; BR = null;
+  if (b) {
+    b.off && b.off(); clearInterval(b.tick);
+    const r = b.room;
+    if (r && r.state === 'wait') {
+      db.remove(PATH.battle(b.code) + '/players/' + me.pid).catch(() => {});
+      if (roomPlayers(r).filter(x => x.pid !== me.pid).length === 0) db.remove(PATH.battle(b.code)).catch(() => {});
+    }
+  }
+  if (toScreen) show(toScreen);
+}
+function openRoom(code) {
+  if (BR && BR.code !== code) leaveRoom(null);
+  if (!BR) BR = { code, room: null, started: false, finishing: false };
+  show('broom');
+  BR.off && BR.off();
+  BR.off = db.on(PATH.battle(code), r => {
+    if (!BR || BR.code !== code) return;
+    BR.room = r;
+    if (!r) { toast('방이 사라졌어요'); leaveRoom(); return; }
+    const inRoom = r.players && r.players[me.pid];
+    if (r.state === 'wait' && !inRoom) { toast('방에서 나왔어요'); leaveRoom(); return; }
+    if (r.state === 'play' && inRoom && !BR.started) { BR.started = true; countdown(r); return; }
+    if (r.state === 'done') { payBattle(code, r); if (!BR.shown) { BR.shown = true; battleResult(r); } return; }
+    if (cur === 'broom') drawRoom(r);
+  });
+}
+function drawRoom(r) {
+  const ps = roomPlayers(r), host = roomHost(r), isHost = host === me.pid, max = r.max || 4;
+  $('#s-broom').innerHTML = `<div class="toprow"><button class="back" id="brmBack">← 나가기</button><h2>⚔️ 대결 대기실</h2><span style="width:60px"></span></div>
+    <div class="card" style="display:grid;gap:8px;text-align:center"><span class="small muted">방 코드 · 친구에게 알려 주세요</span><div class="bigcode" style="font-size:40px;padding:8px">${esc(r.code)}</div><button class="btn sm ghost" id="brmCopy">📋 코드 복사</button></div>
+    <div class="slots4">${Array.from({ length: max }, (_, i) => { const p = ps[i]; return p ? `<div class="slot4 ${p.pid === me.pid ? 'me' : ''}">${p.pid === host ? '<span class="crown">👑</span>' : ''}<img src="${imgOf(p.char)}" alt=""><b>${esc(p.nick)}</b></div>` : '<div class="slot4 empty">빈자리</div>'; }).join('')}</div>
+    <div class="card" style="display:grid;gap:6px"><b>🍔 대결 메뉴 ${menuNames(r).length}종 · 최대 ${max}명 · ${BT.len}초</b><div class="chips">${menuNames(r).map(n => `<span class="ch t"><em>${esc(n)}</em></span>`).join('')}</div>
+      ${isHost ? '<button class="btn sm teal" id="brmMenu">🍔 메뉴·인원 바꾸기</button>' : ''}</div>
+    ${isHost ? `<button class="btn red big" id="brmStart" ${ps.length < 2 ? 'disabled' : ''}>▶ 대결 시작!${ps.length < 2 ? '<small>2명 이상 모이면 시작할 수 있어요</small>' : `<small>${ps.length}명 · 판돈은 모두가 번 돈, 1등이 독식!</small>`}</button>`
+      : `<div class="card small" style="text-align:center">👑 방장 ${esc((ps.find(x => x.pid === host) || {}).nick || '')}님이 시작하길 기다리는 중… 🚚</div>`}`;
+  $('#brmBack').onclick = () => leaveRoom();
+  $('#brmCopy').onclick = () => { navigator.clipboard?.writeText(r.code); toast('복사했어요'); };
+  if ($('#brmMenu')) $('#brmMenu').onclick = () => menuPickModal([...(r.menus || []), ...(r.xtras || [])], max, (menus, xtras, mx) => db.tx(PATH.battle(r.code), c => { if (!c || c.state !== 'wait') return undefined; c.menus = menus; c.xtras = xtras; c.max = Math.max(mx, roomPlayers(c).length); return c; }));
+  if ($('#brmStart')) $('#brmStart').onclick = () => db.tx(PATH.battle(r.code), c => { if (!c || c.state !== 'wait' || roomPlayers(c).length < 2) return undefined; c.state = 'play'; c.startAt = srvNow() + BT.lead; c.host = me.pid; return c; });
+}
+// 3·2·1 → 시작
+function countdown(r) {
+  Sound.init();
+  const ov = $('#ovRoot');
+  const tickF = () => {
+    if (!BR) return;
+    const left = Math.ceil((r.startAt - srvNow()) / 1000);
+    if (left <= 0) { clearInterval(BR.cd); ov.innerHTML = ''; startBattleRound(r); return; }
+    ov.innerHTML = `<div class="ov"><div class="cdown"><div class="small">천하제일 푸드트럭</div><b>${left}</b><div class="small">${roomPlayers(r).length}명 대결 · 1등이 독식!</div></div></div>`;
+    Sound.play('tap');
+  };
+  tickF(); BR.cd = setInterval(tickF, 1000);
+}
+// 대결용 게임 시작: 모두 같은 조건 (Lv.5 재료, 기본 설비, 직원 없음, 같은 손님 순서)
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function startBattleRound(r) {
+  const seats = 3, ms = (r.menus || []).map(id => MENU_BY[id]).filter(Boolean), xs = (r.xtras || []).map(id => XTRA[id]).filter(Boolean);
+  // 고른 메뉴에 필요한 설비만 똑같이 줘요
+  const own = { grill2: 1 }; if (ms.some(m => m.kind === 'pizza')) own.oven = 1; xs.forEach(x => { own[x.need] = 1; });
+  G = { battle: { code: r.code, startAt: r.startAt, menus: r.menus || [], xtras: r.xtras || [], n: roomPlayers(r).length },
+    rnd: mulberry(Math.floor(hashf(r.seed || r.code) * 4294967296)),
+    key: 'bt' + r.code, st: { lv: 5, seats, mul: 1, spawn: 5.4 }, own, rating: 3, base: 0, todayBase: 0,
+    dayLen: BT.len, staff: [], staffLv: {},
+    t: 0, spawnIn: 1.2, custs: Array(seats).fill(null), grill: [], warm: 0, ovens: [], fry: [], bar: [], stock: {}, serveT: 0,
+    tray: { item: null, side: null, drink: null },
+    served: 0, missed: 0, wrong: 0, earned: 0, tips: 0, running: true, ending: false, friends: [] };
+  show('game');
+  $('#gScene').innerHTML = sceneHTML(1, `⚔️ 천하제일 푸드트럭 · ${me.nick}`, { seats });
+  const st = $('#gScene .seats');
+  for (let i = 0; i < seats; i++) { const b = document.createElement('button'); b.className = 'seat'; b.type = 'button'; b.onclick = () => serve(i); st.appendChild(b); }
+  $('#rail').style.setProperty('--n', seats);
+  $('#rail').innerHTML = Array.from({ length: seats }, (_, i) => `<div class="rc" data-i="${i}"></div>`).join('');
+  $('#staffBar').innerHTML = `<span class="sc none">⚔️ ${G.battle.n}명 대결 중 · 상대 점수는 끝나고 공개!</span>`;
+  $('#hMoney').previousElementSibling.textContent = '대결 수익'; $('#hToday').previousElementSibling.textContent = '대결';
+  chefSay($('#gScene'), '천하제일 푸드트럭, 시작이다!');
+  renderAll();
+  BR.tick = setInterval(() => { if (G && G.battle && G.running) db.set(PATH.battle(r.code) + '/players/' + me.pid + '/score', G.earned).catch(() => {}); }, 2000);
+}
+// 내 영업 끝 → 점수 올리고 다른 사람 기다리기
+async function battleFinishLocal(forfeit) {
+  const g = G; if (!g || !g.battle) return;
+  g.running = false; Sound.play('end');
+  const code = g.battle.code, path = PATH.battle(code) + '/players/' + me.pid;
+  clearInterval(BR && BR.tick);
+  await db.tx(path, c => (c ? Object.assign(c, { score: g.earned, served: g.served, done: true, forfeit: forfeit || null }) : c)).catch(() => {});
+  $('#ovRoot').innerHTML = `<div class="ov"><div class="sheet" style="text-align:center"><h2>${forfeit ? '🏳️ 기권했어요' : '⏰ 영업 끝!'}</h2>
+    <div class="row" style="justify-content:center">${chefImg(100)}<div><div class="small muted">내 대결 수익</div><b style="font:400 34px var(--d);color:var(--red-d)">${usd(g.earned)}</b><div class="small">손님 ${g.served}명</div></div></div>
+    <p class="small muted" id="btWait">다른 참가자 결과를 기다리는 중…</p></div></div>`;
+  const fin = setInterval(async () => {
+    const r = BR && BR.room;
+    if (!r || r.state === 'done') { clearInterval(fin); return; }
+    const ps = roomPlayers(r), allDone = ps.every(x => x.done), late = srvNow() > (r.startAt || 0) + BT.len * 1000 + BT.grace;
+    if ($('#btWait')) $('#btWait').textContent = `다른 참가자 결과를 기다리는 중… (${ps.filter(x => x.done).length}/${ps.length})`;
+    if (allDone || late) { clearInterval(fin); finalizeBattle(code); }
+  }, 1500);
+}
+async function finalizeBattle(code) {
+  await db.tx(PATH.battle(code), r => {
+    if (!r || r.state !== 'play') return undefined;
+    const ps = roomPlayers(r).map(x => ({ pid: x.pid, nick: x.nick, char: x.char, score: Math.max(0, Math.round(x.score || 0)), served: x.served || 0, forfeit: !!x.forfeit }));
+    ps.sort((a, b) => b.score - a.score || (a.forfeit - b.forfeit));
+    const ok = ps.filter(x => !x.forfeit), top = ok.length ? Math.max(...ok.map(x => x.score)) : 0, winners = ok.filter(x => x.score === top && top > 0).map(x => x.pid); // 기권하면 우승 못 해요
+    const pot = ps.reduce((a, x) => a + x.score, 0);
+    r.state = 'done'; r.result = { at: srvNow(), pot, winners, share: winners.length ? Math.floor(pot / winners.length) : 0, ranking: ps };
+    return r;
+  }).catch(() => {});
+}
+// 상금·전적 반영 (방에 있던 누구든 실행해요 · 플레이어마다 한 번만)
+async function payBattle(code, r) {
+  const res = r.result; if (!res) return;
+  for (const x of res.ranking || []) {
+    const win = (res.winners || []).includes(x.pid);
+    await db.tx(PATH.player(x.pid), c => {
+      if (!c) return c;
+      c.tx = c.tx || {}; const k = 'bt_' + code + '_' + res.at; if (c.tx[k]) return undefined;
+      const b = c.bt = Object.assign({ p: 0, w: 0, m: 0, best: 0 }, c.bt || {});
+      b.p += 1; if (win) { b.w += 1; b.m += res.share; c.money = (c.money || 0) + res.share; }
+      b.best = Math.max(b.best, x.score);
+      c.tx[k] = Date.now(); const ks = Object.keys(c.tx); if (ks.length > 40) ks.sort((a, z) => c.tx[a] - c.tx[z]).slice(0, ks.length - 40).forEach(q => delete c.tx[q]);
+      return c;
+    }).catch(() => {});
+  }
+}
+function battleResult(r) {
+  const res = r.result, iWin = (res.winners || []).includes(me.pid);
+  if (G && G.battle) { G.running = false; G = null; }
+  Sound.play(iWin ? 'buy' : 'end');
+  $('#ovRoot').innerHTML = `<div class="ov"><div class="sheet">
+    <h2 style="text-align:center">${iWin ? '🏆 천하제일 푸드트럭 우승!' : '⚔️ 대결 결과'}</h2>
+    <div class="card" style="text-align:center"><div class="small muted">판돈 (모두가 번 돈)</div><b style="font:400 30px var(--d);color:var(--red-d)">${usd(res.pot)}</b>
+      <div class="small">${res.winners.length ? `${res.ranking.filter(x => res.winners.includes(x.pid)).map(x => esc(x.nick)).join(', ')}님이 ${res.winners.length > 1 ? `${usd(res.share)}씩 나눠 가져요` : `${usd(res.share)} 독식!`}` : '아무도 돈을 못 벌어서 우승자가 없어요'}</div></div>
+    <div class="list">${res.ranking.map((x, i) => `<div class="li ${x.pid === me.pid ? 'me' : ''}"><span class="rk">${res.winners.includes(x.pid) ? '👑' : i + 1}</span><span>${faceEl(x.char, 's')}</span><div class="grow"><div class="nm">${esc(x.nick)}${x.forfeit ? ' <span class="badge-x">기권</span>' : ''}</div><div class="sub">손님 ${x.served}명</div></div><b class="money num">${usd(x.score)}</b></div>`).join('')}</div>
+    ${iWin ? `<p class="small" style="text-align:center">💰 내 가게에 <b>${usd(res.share)}</b> 들어왔어요!</p>` : '<p class="small muted" style="text-align:center">다음 판엔 꼭 독식해 봐요! 🔥</p>'}
+    <div class="grid2"><button class="btn ghost" id="brHome">🏠 가게로</button><button class="btn red" id="brAgain">⚔️ 대결 목록</button></div></div></div>`;
+  const close = () => { $('#ovRoot').innerHTML = ''; };
+  $('#brHome').onclick = () => { close(); leaveRoom('lobby'); };
+  $('#brAgain').onclick = () => { close(); leaveRoom('battle'); };
+}
+
 /* ══════════ 게임 (영업 120초) ══════════ */
 let G = null;
 const MENU_BY = Object.fromEntries(MENU.map(m => [m.id, m]));
@@ -1965,19 +2233,20 @@ const fryerSlots = () => has('fryer2') ? 2 : 1;
 const ovenSlots = () => has('oven2') ? 2 : 1;
 const priceMul = () => G.st.mul * (has('neon') ? 1.2 : 1) * (sk('counter') >= 4 ? 1.1 : sk('counter') >= 2 ? 1.05 : 1) * (sk('manager') >= 5 ? 1.1 : 1);
 const tipMul = () => (sk('counter') >= 5 ? 1.25 : 1) * (sk('serve') >= 5 ? 1.25 : sk('serve') >= 3 ? 1.1 : 1);
-const menuOK = m => G.st.lv >= m.lv && (!m.need || has(m.need));
-const xtraOK = x => G.st.lv >= x.lv && has(x.need);
+const menuOK = m => G.battle ? G.battle.menus.includes(m.id) : G.st.lv >= m.lv && (!m.need || has(m.need));
+const xtraOK = x => G.battle ? G.battle.xtras.includes(x.id) : G.st.lv >= x.lv && has(x.need);
 const ingOK = ([k, lv]) => G.st.lv >= lv;
 function newOrder() {
-  const menus = MENU.filter(menuOK);
-  // 새로 열린 메뉴일수록 조금 더 자주 나와요
-  const w = menus.map(m => 1 + m.lv * .4), sum = w.reduce((a, b) => a + b, 0);
-  let r = Math.random() * sum, m = menus[0];
+  const menus = MENU.filter(menuOK), R = G.rnd || Math.random, pk = a => a[Math.floor(R() * a.length)];
+  // 새로 열린 메뉴일수록 조금 더 자주 나와요 (대결은 골고루)
+  const w = menus.map(m => G.battle ? 1 : 1 + m.lv * .4), sum = w.reduce((a, b) => a + b, 0);
+  let r = R() * sum, m = menus[0];
   for (let i = 0; i < menus.length; i++) { r -= w[i]; if (r <= 0) { m = menus[i]; break; } }
   const o = { menu: m.id, side: null, drink: null };
   const sides = SIDES.filter(xtraOK), drinks = DRINKS.filter(xtraOK);
-  if (sides.length && Math.random() < .42) o.side = pick(sides).id;
-  if (drinks.length && Math.random() < .45) o.drink = pick(drinks).id;
+  const r1 = R(), r2 = R(), s1 = pk(sides.length ? sides : [0]), d1 = pk(drinks.length ? drinks : [0]);
+  if (sides.length && r1 < .42) o.side = s1.id;
+  if (drinks.length && r2 < .45) o.drink = d1.id;
   return o;
 }
 const orderName = o => MENU_BY[o.menu].name + (o.side ? ' + ' + XTRA[o.side].name : '') + (o.drink ? ' + ' + XTRA[o.drink].name : '');
@@ -2027,6 +2296,7 @@ async function startRound() {
     tray: { item: null, side: null, drink: null },
     served: 0, missed: 0, wrong: 0, earned: 0, tips: 0, running: true, ending: false, friends: [] };
   show('game');
+  $('#hMoney').previousElementSibling.textContent = '보유'; $('#hToday').previousElementSibling.textContent = '오늘 매출';
   $('#gScene').innerHTML = sceneHTML(st.lv, shopName(me), { seats: st.seats });
   const seats = $('#gScene .seats');
   for (let i = 0; i < st.seats; i++) { const b = document.createElement('button'); b.className = 'seat'; b.type = 'button'; b.onclick = () => serve(i); seats.appendChild(b); }
@@ -2046,7 +2316,7 @@ function staffPing(role, txt) {
 function spawnInterval() {
   const cl = sk('clean'), base = G.st.spawn - (has('neon') ? 1 : 0);
   const f = cl >= 5 ? .8 : cl >= 4 ? .9 : 1;
-  return Math.max(2.6, (base - (G.rating - 3) * .8) * f * (.75 + Math.random() * .5));
+  return Math.max(2.6, (base - (G.rating - 3) * .8) * f * (.75 + (G.rnd || Math.random)() * .5));
 }
 function patienceFor(o) {
   const m = MENU_BY[o.menu];
@@ -2070,14 +2340,15 @@ function needOf(id) {
   return n;
 }
 function step(dt) {
-  G.t += dt;
+  if (G.battle) { const nt = (srvNow() - G.battle.startAt) / 1000; dt = Math.min(.5, Math.max(0, nt - G.t)); G.t = nt; } else G.t += dt;
   const L = G.dayLen;
   if (G.t < L) {
     G.spawnIn -= dt;
     if (G.spawnIn <= 0) {
       const free = G.custs.map((c, i) => c ? -1 : i).filter(i => i >= 0);
+      const o0 = G.battle ? newOrder() : null; // 대결: 자리가 없어도 손님 순서는 모두 같게
       if (free.length) {
-        const i = pick(free), o = newOrder(), p = patienceFor(o);
+        const i = pick(free), o = o0 || newOrder(), p = patienceFor(o);
         const fr = G.friends.length && Math.random() < .2 ? pick(G.friends) : null;
         G.custs[i] = { o, p, max: p, char: fr ? fr.char : pickGuest(), friend: fr ? fr.nick : null };
         renderSeat(i); if (fr) chefSay($('#gScene'), pick(CHEF_LINES.friend));
@@ -2131,6 +2402,7 @@ function step(dt) {
   const left = Math.max(0, L - G.t);
   $('#hTime').style.width = (left / L * 100) + '%';
   $('#hClock').textContent = left > 0 ? `영업 ${Math.ceil(left)}초` : '마감! 남은 손님만';
+  if (G.battle) { if (left <= 0 && !G.ending) { G.ending = true; battleFinishLocal(false); } return; }
   if (left <= 0 && !G.custs.some(Boolean) && !G.ending) { G.ending = true; endRound(false); }
 }
 const isOpenBurger = () => G.tray.item && G.tray.item.kind === 'burger' && !G.tray.item.closed;
@@ -2220,8 +2492,8 @@ function logMsg(s) { $('#gLog').textContent = s; }
 function floatTxt(box, s, x) { if (!box) return; const f = document.createElement('div'); f.className = 'float' + (x ? ' x' : ''); f.textContent = s; box.appendChild(f); setTimeout(() => f.remove(), 1100); }
 function renderHud() {
   if (!G) return;
-  $('#hMoney').textContent = usd((me ? me.money : G.base) + G.earned);
-  $('#hToday').textContent = usd(G.todayBase + G.earned);
+  if (G.battle) { $('#hMoney').textContent = usd(G.earned); $('#hToday').textContent = `${G.battle.n}명`; }
+  else { $('#hMoney').textContent = usd((me ? me.money : G.base) + G.earned); $('#hToday').textContent = usd(G.todayBase + G.earned); }
   $('#hRate').textContent = '★' + G.rating.toFixed(1);
 }
 const SEAT_COL = ['#D33A31', '#1E8A84', '#8C6BD6', '#F08C00'];
@@ -2402,6 +2674,7 @@ async function endRound(quit) {
 }
 $('#gQuit').onclick = () => {
   if (!G || !G.running) return;
+  if (G.battle) return modal(`<h2>대결을 기권할까요?</h2><p>지금까지 번 <b>${usd(G.earned)}</b>는 판돈에 들어가고, 1등은 못 해요.</p><div class="grid2"><button class="btn ghost" data-close>계속 대결</button><button class="btn red" id="qGo">기권</button></div>`, (s, close) => { $('#qGo', s).onclick = () => { close(); battleFinishLocal(true); }; });
   modal(`<h2>영업을 접을까요?</h2><p>지금까지 번 <b>${usd(G.earned)}</b>는 챙기고, 직원 급여는 똑같이 나가요.</p><div class="grid2"><button class="btn ghost" data-close>계속 영업</button><button class="btn red" id="qGo">접기</button></div>`, (s, close) => { $('#qGo', s).onclick = () => { close(); endRound(true); }; });
 };
 $('#ings').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && !b.disabled) act(b.dataset.a); });
