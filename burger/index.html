@@ -322,6 +322,66 @@ p{margin:0}
 .mrow.lock{opacity:.55;background:#F3EDE3}
 .usmap{width:100%;height:auto;display:block}
 .usmap .pin:hover circle{filter:brightness(1.1)}
+
+/* ── 친구 가게 걸어 다니기 ── */
+.room{position:relative;height:340px;border:3px solid var(--ink);border-radius:18px;overflow:hidden;box-shadow:0 4px 0 var(--ink);touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.room .wall{position:absolute;left:0;right:0;top:0;height:128px;overflow:hidden}
+.room .wall .bg{position:absolute;inset:0;width:100%;height:100%}
+.room .wall .sign{position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:3;font:400 13px/1 var(--d);color:#fff;background:var(--red);border:2.5px solid var(--ink);border-radius:9px;padding:5px 9px 4px;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+.room .wall .sign.neon{background:#1C1430;color:#FFE27A;border-color:#FFB703}
+.menuboard{position:absolute;right:16%;top:40px;width:23%;background:#2B2220;color:#FFF3DA;border:3px solid #8A5A3A;border-radius:6px;padding:3px 5px;display:grid;gap:1px;font-size:8.5px;line-height:1.15;z-index:2}
+.menuboard b{font:400 11px/1 var(--d);color:#F6B731;text-align:center}
+.menuboard span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room .floor{position:absolute;left:0;right:0;top:128px;bottom:0;background:repeating-conic-gradient(#FFFBF2 0 25%,#2B2220 0 50%) 0 0/36px 36px;opacity:.9}
+.room.lv1 .floor{background:repeating-linear-gradient(90deg,#E7D3AE 0 40px,#DCC69C 40px 42px)}
+.room.lv2 .floor{background:#8CC56B}
+.room .floor::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(0,0,0,.18),transparent 30%)}
+.rcounter{position:absolute!important;left:0;width:56%!important;top:120px!important;height:46px!important;bottom:auto!important;border:3px solid var(--ink);border-left:0;border-radius:0 12px 12px 0;z-index:150}
+.rchef{position:absolute;left:4px;top:52px;width:104px;z-index:140}
+.rchef .chefimg{width:104px;display:block}
+.rchef .bubble{left:60px;bottom:auto;top:-22px}
+.rowner{position:absolute;left:39%;top:84px;z-index:145;display:grid;justify-items:center;gap:1px}
+.rowner .face{width:40px;height:40px}
+.rtable{position:absolute;width:76px;height:40px;margin-left:-38px;margin-top:-14px;z-index:200}
+.rtable b{position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#fff,#E9EEF2 60%,#B8C2CA);border:3px solid var(--ink);box-shadow:0 5px 0 rgba(0,0,0,.25)}
+.rtable .stool{position:absolute;top:8px;width:20px;height:20px;border-radius:50%;background:var(--red);border:2.5px solid var(--ink)}
+.rtable .stool.l{left:-22px}.rtable .stool.r{right:-22px}
+.rjuke{position:absolute;right:6px;top:150px;width:44px;height:64px;border-radius:22px 22px 6px 6px;background:linear-gradient(#E64980,#FFD447);border:3px solid var(--ink);z-index:160;box-shadow:inset 0 -14px 0 rgba(0,0,0,.15)}
+.rjuke::after{content:"";position:absolute;left:8px;right:8px;top:14px;height:18px;border-radius:5px;background:#4FE3FF;border:2px solid var(--ink);animation:twinkle 1.2s infinite}
+.rplant{position:absolute;right:8px;top:160px;font-size:36px;z-index:160}
+.rbook{position:absolute;right:10px;top:262px;font-size:30px;z-index:270;filter:drop-shadow(0 2px 0 rgba(0,0,0,.3))}
+.actors{position:absolute;inset:0;pointer-events:none}
+.actor{position:absolute;width:62px;margin-left:-31px;margin-top:-66px;display:grid;justify-items:center;transition:left .55s linear,top .55s linear}
+.actor.me{transition:none}
+.actor img{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
+.actor.flip img{transform:scaleX(-1)}
+.actor.walk img{animation:waddle .32s ease-in-out infinite}
+.actor.sit img{transform:translateY(6px) scale(.95)}
+.actor .tag{margin-top:-4px;font-size:10px;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+.actor.me .tag{background:var(--red)}
+.actor .bubble{left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:2px}
+.actor .bubble::after{left:50%;margin-left:-6px}
+.actor .hold{position:absolute;top:-6px;left:50%;transform:translateX(-50%);z-index:3;line-height:0}
+.actor .hold.eating svg{animation:munch 1.8s steps(6) forwards}
+@keyframes waddle{50%{transform:translateY(-3px) rotate(4deg)}}
+.actor.flip.walk img{animation-name:waddleF}
+@keyframes waddleF{0%,100%{transform:scaleX(-1)}50%{transform:scaleX(-1) translateY(-3px) rotate(-4deg)}}
+@keyframes munch{to{transform:scale(.15);opacity:.2}}
+.roomctl{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.dpad{display:grid;grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,34px);gap:2px}
+.dpad button{border:2.5px solid var(--ink);border-radius:9px;background:var(--paper);font-size:15px;cursor:pointer;box-shadow:0 2px 0 var(--ink);touch-action:none}
+.dpad button:active{background:var(--mustard)}
+.dpad .d-up{grid-column:2;grid-row:1}.dpad .d-left{grid-column:1;grid-row:2}.dpad .d-right{grid-column:3;grid-row:2}.dpad .d-down{grid-column:2;grid-row:3}
+.ractions{display:grid;gap:6px}
+.ractions .btn{font-size:16px;padding:11px 8px 10px}
+.emotes{display:flex;gap:4px;justify-content:space-between}
+.emotes button{flex:1;border:2px solid var(--ink);border-radius:10px;background:#fff;font-size:18px;padding:4px 0;cursor:pointer}
+.mrow.pick{width:100%;cursor:pointer;font:inherit}
+.mrow.pick.on{background:#FFE7E2;border-color:var(--red);box-shadow:0 0 0 2px var(--red)}
+.xpick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:5px}
+.xpick button{border:2px solid var(--ink);border-radius:10px;background:#fff;padding:4px 2px;display:grid;justify-items:center;font:400 11.5px/1.15 var(--d);cursor:pointer}
+.xpick button small{font:700 9.5px var(--f);color:var(--muted)}
+.xpick button.on{background:#D8F5DD;border-color:var(--good)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 </head>
@@ -400,10 +460,11 @@ const CFG = {
   startMoney: 100,          // 가입 선물 $100
   daily: 50, dailyHour: 6,  // 매일 한국 시간 아침 6시 이후 첫 접속 때 $50 (영업일도 아침 6시에 바뀌어요)
   dayLen: 120,               // 영업 한 번 120초
-  visitBonus: 10, visitMax: 10, // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
+  visitBonus: 10, visitMax: 10,
+  buyMax: 20,               // 친구 가게 주문: 하루 20번까지 // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261116-6';
+const APP_VERSION = '20261117-1';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -500,7 +561,7 @@ const CITIES = [
 ];
 const CHAIN_LV = [{ mul: 1, up: 0 }, { mul: 1.8, up: .6 }, { mul: 2.8, up: 1 }]; // 지점 레벨: 수익 배율, 확장비(개설비 대비)
 const chainVal = ch => Object.entries(ch || {}).reduce((a, [id, b]) => { const c = CITIES.find(x => x.id === id); if (!c) return a; let v = c.cost; for (let i = 1; i < (b.lv || 1); i++) v += Math.round(c.cost * CHAIN_LV[i].up); return a + v; }, 0);
-const chainIncome = ch => Object.entries(ch || {}).reduce((a, [id, b]) => { const c = CITIES.find(x => x.id === id); return a + (c ? Math.round(c.inc * CHAIN_LV[(b.lv || 1) - 1].mul) : 0); }, 0);
+let chainIncome = ch => Object.entries(ch || {}).reduce((a, [id, b]) => { const c = CITIES.find(x => x.id === id); return a + (c ? Math.round(c.inc * CHAIN_LV[(b.lv || 1) - 1].mul) : 0); }, 0);
 const CHEF_LINES = {
   start: ['자, 오늘도 맛있게 가 보자고!', '그릴 달궈졌다! Alright!', '놀러오세요~ 버거하우스!', '퇴근 후가 진짜 영업이지!'],
   good: ['Alright!', '이게 바로 손맛이지!', '맛있게 드쇼!', '또 오쇼~', 'Yeehaw! 🤠'],
@@ -610,6 +671,7 @@ class LocalDB {
   async remove(p) { this._write(p, null); }
   async tx(p, fn) { this.load(); const cur = clone(this._get(p)); const nv = fn(cur); if (nv === undefined) return { committed: false, value: cur }; this._write(p, nv); return { committed: true, value: clone(nv) }; }
   async push(p, v) { const k = Date.now().toString(36) + genCode(4).toLowerCase(); this._write(p + '/' + k, v); return k; }
+  async presence(p, v) { this._write(p, v); }
   on(p, cb) { const s = { p, cb }; this.subs.add(s); setTimeout(() => this.subs.has(s) && cb(clone(this._get(p))), 0); return () => this.subs.delete(s); }
 }
 class FireDB {
@@ -633,13 +695,14 @@ class FireDB {
   remove(p) { return this.ref(p).remove(); }
   async tx(p, fn) { const r = await this.ref(p).transaction(cur => fn(cur), undefined, false); return { committed: r.committed, value: r.snapshot.val() }; }
   async push(p, v) { return (await this.ref(p).push(v)).key; }
+  presence(p, v) { const r = this.ref(p); if (!this._od) this._od = new Set(); if (!this._od.has(p)) { this._od.add(p); r.onDisconnect().remove(); } return r.set(v); }
   on(p, cb) { const r = this.ref(p), f = s => cb(s.val()); r.on('value', f); return () => r.off('value', f); }
 }
 let db = null;
 const PFX = CFG.prefix;
 const PATH = {
   nicks: PFX + 'nicks', acc: c => PFX + 'acc-' + c, players: PFX + 'players', player: pid => PFX + 'players/' + pid,
-  gb: pid => PFX + 'gb-' + pid, log: PFX + 'log',
+  gb: pid => PFX + 'gb-' + pid, log: PFX + 'log', pres: pid => PFX + 'pres-' + pid,
 };
 
 /* ══════════ 그림: 음식 (SVG) ══════════ */
@@ -885,7 +948,7 @@ async function enter(code, player) {
     setMe(v);
   });
   show('lobby');
-  dailyCheck();
+  dailyCheck().then(settleChains);
 }
 let goneT = 0;
 function confirmGone(pid) {
@@ -1009,12 +1072,12 @@ function renderLobby() {
         <div class="small muted">내 코드 <b>${esc(myCode || '')}</b> · 영업 ${me.rounds || 0}번 · 손님 ${me.served || 0}명 · ★${(me.rating || 3).toFixed(1)}</div></div></div>
       <div class="stat3"><div>현금<b class="num">${usd(me.money)}</b></div><div>보유재산<b class="num">${usd(worth(me))}</b></div><div>오늘 매출<b class="num">${usd(todaySales(me))}</b></div></div>
       <div class="stagebar">${STAGES.map(s => `<i class="${s.lv <= st.lv ? 'on' : ''}" title="${esc(s.name)}"></i>`).join('')}</div>
-      <div class="small muted">👥 직원 ${staffList(me).length}명 · 급여 ${usd(payroll(me))}/영업${Object.keys(me.chains || {}).length ? ` · 🗺️ 체인점 ${Object.keys(me.chains).length}곳 +${usd(chainIncome(me.chains))}/영업` : ''}</div>
+      <div class="small muted">👥 직원 ${staffList(me).length}명 · 급여 ${usd(payroll(me))}/영업${Object.keys(me.chains || {}).length ? ` · 🗺️ 체인점 ${Object.keys(me.chains).length}곳 하루 약 +${usd(chainIncome(me.chains))}` : ''}${salesOn(me, todayKST()).gn ? ` · 🛎️ 오늘 친구 주문 ${salesOn(me, todayKST()).gn}건 ${usd(salesOn(me, todayKST()).guest || 0)}` : ''}</div>
     </div>
     <button class="btn red big" id="lbPlay">🍔 영업 시작!<small>${CFG.dayLen}초 동안 주문서대로 만들어 팔아요 · 번 돈은 바로 내 돈</small></button>
     <div class="grid2"><button class="btn teal" id="lbShop">🛠️ 가게 키우기<small>확장 · 설비 사기</small></button><button class="btn navy rel" id="lbStaff">👥 직원 ${staffList(me).length}/${staffMax(me)}${me.job ? '<span class="dot">!</span>' : ''}<small>채용 공고 · 교육 · 급여 ${usd(payroll(me))}/영업</small></button></div>
-    <div class="grid2"><button class="btn" id="lbMenu">📋 메뉴판<small>판매 중 ${MENU.filter(m => st.lv >= m.lv && (!m.need || (me.own || {})[m.need])).length}종 · 레시피 보기</small></button><button class="btn ${st.lv >= 5 ? 'red' : 'ghost'}" id="lbChain">🗺️ 체인점<small>${st.lv >= 5 ? `${Object.keys(me.chains || {}).length}곳 · +${usd(chainIncome(me.chains))}/영업` : '🔒 본점(Lv.5)부터'}</small></button></div>
-    <div class="grid2"><button class="btn navy" id="lbFriends">👫 친구 가게<small>놀러가기 · 친구 추가</small></button><button class="btn rel" id="lbBook">📒 내 방명록${visitors ? `<span class="dot">${visitors}</span>` : ''}<small>오늘 놀러온 친구 ${visitors}명</small></button></div>
+    <div class="grid2"><button class="btn" id="lbMenu">📋 메뉴판<small>판매 중 ${MENU.filter(m => st.lv >= m.lv && (!m.need || (me.own || {})[m.need])).length}종 · 레시피 보기</small></button><button class="btn ${st.lv >= 5 ? 'red' : 'ghost'}" id="lbChain">🗺️ 체인점<small>${st.lv >= 5 ? `${Object.keys(me.chains || {}).length}곳 · 하루 약 +${usd(chainIncome(me.chains))} 정산` : '🔒 본점(Lv.5)부터'}</small></button></div>
+    <div class="grid2"><button class="btn navy" id="lbFriends">👫 친구 가게<small>걸어 다니며 주문 · 방명록</small></button><button class="btn rel" id="lbBook">🏠 내 가게·방명록${visitors ? `<span class="dot">${visitors}</span>` : ''}<small>오늘 놀러온 친구 ${visitors}명</small></button></div>
     <button class="btn ghost" id="lbRank">🏆 오픈 랭킹 · 보유재산 / 오늘 매출</button>
     <div class="card small" style="display:grid;gap:4px"><b style="font:400 16px/1.2 var(--d)">이렇게 해요</b>
       <span>① 장면 아래 <b>주문서</b>에 레시피가 나와요. 아래빵 → 재료 → 위빵 순서로 쟁반에 만들어요 (재료 순서는 상관없고, 맞게 담긴 재료는 초록색)</span>
@@ -1111,8 +1174,9 @@ async function removeFriend(pid) {
   await db.tx(PATH.player(pid), c => { if (!c || !c.friends || !c.friends[me.pid]) return undefined; delete c.friends[me.pid]; return c; });
 }
 
-/* ══════════ 가게 구경 (친구 가게 놀러가기 · 내 방명록) ══════════ */
+/* ══════════ 가게 구경 (친구 가게 놀러가기: 걸어 다니기 · 주문하기 · 방명록) ══════════ */
 let visitPid = null;
+const ROOM_H = 340, WALL_H = 128, FLOOR_Y0 = 172, FLOOR_Y1 = ROOM_H - 20;
 async function openVisit(pid) {
   visitPid = pid;
   show('visit');
@@ -1123,29 +1187,36 @@ async function openVisit(pid) {
   if (!p) { toast('가게를 찾지 못했어요'); return show(me ? 'friends' : 'rank'); }
   const mine = me && pid === me.pid, st = stageOf(p), today = todayKST();
   const isFriend = me && !mine && !!(me.friends || {})[pid];
-  const visitedToday = me && !!(((me.vis || {})[today]) || {})[pid];
   const todayVis = Object.keys(((p.visitors || {})[today]) || {}).length;
-  el.innerHTML = `<div class="toprow"><button class="back" id="vsBack">← 뒤로</button><h2>${mine ? '내 가게 방명록' : '놀러왔어요!'}</h2><span style="width:60px"></span></div>
-    <div class="scene" id="vsScene">${sceneHTML(st.lv, shopName(p), { mini: true, owner: p, seats: !mine && me ? 1 : 0 })}</div>
+  const gs = salesOn(p, today);
+  el.innerHTML = `<div class="toprow"><button class="back" id="vsBack">← 뒤로</button><h2>${mine ? '내 가게 둘러보기' : `${esc(p.nick)}네 가게`}</h2><span style="width:60px"></span></div>
+    <div class="room lv${st.lv}" id="room">
+      <div class="wall">${sceneBG(st.lv)}<div class="sign ${st.lv >= 4 ? 'neon' : ''}">${esc(shopName(p))}</div>
+        <div class="menuboard"><b>MENU</b>${MENU.filter(m => m.lv <= st.lv && (!m.need || (p.own || {})[m.need])).slice(-4).map(m => `<span>${esc(m.name)}</span>`).join('')}</div></div>
+      <div class="floor"></div>
+      <div class="rcounter counter lv${st.lv}"></div>
+      <div class="rchef">${CHEF_SVG}<div class="bubble" hidden></div></div>
+      <div class="rowner">${faceEl(p.char)}<span class="tag">사장님</span></div>
+      ${[[.22, 268], [.62, 268]].map(([x, y], i) => `<div class="rtable" style="left:${x * 100}%;top:${y}px" data-table="${i}"><i class="stool l"></i><i class="stool r"></i><b></b></div>`).join('')}
+      ${(p.own || {}).juke ? '<div class="rjuke" title="주크박스"></div>' : '<div class="rplant">🪴</div>'}
+      <div class="rbook">📒</div>
+      <div class="actors" id="actors"></div>
+    </div>
+    ${me ? `<div class="roomctl">
+      <div class="dpad">${[['up', '▲'], ['left', '◀'], ['right', '▶'], ['down', '▼']].map(([d, t]) => `<button type="button" data-dir="${d}" class="d-${d}">${t}</button>`).join('')}</div>
+      <div class="ractions"><button class="btn red" id="rAct" disabled>바닥을 누르면 걸어가요</button>
+        <div class="emotes">${['👋', '😋', '❤️', '👍', '🍔'].map(e => `<button type="button" data-emo="${e}">${e}</button>`).join('')}</div></div></div>` : ''}
     <div class="card" style="display:grid;gap:10px">
       <div class="row">${faceEl(p.char, 'l')}<div class="grow"><div style="font:400 20px/1.2 var(--d)">${esc(p.nick)} 사장님 <span class="lvb">${st.icon} ${esc(st.name)}</span></div>
         <div class="small muted">영업 ${p.rounds || 0}번 · 손님 ${p.served || 0}명 · ★${(p.rating || 3).toFixed(1)} · ❤️ 방문 ${p.likes || 0}번 · 오늘 ${todayVis}명</div></div></div>
-      <div class="stat3"><div>보유재산<b class="num">${usd(worth(p))}</b></div><div>오늘 매출<b class="num">${usd(todaySales(p))}</b></div><div>최고 1회<b class="num">${usd(p.best || 0)}</b></div></div>
-      ${!mine && me ? `<div class="grid2"><button class="btn red" id="vsHi" ${visitedToday ? 'disabled' : ''}>${visitedToday ? '오늘 인사 완료 ✔' : `🍔 버거 한 입! (둘 다 +${usd(CFG.visitBonus)})`}</button>
-        ${isFriend ? '<button class="btn ghost" id="vsUnf">친구 끊기</button>' : '<button class="btn teal" id="vsAdd">🤝 친구 추가</button>'}</div>` : ''}
+      <div class="stat3"><div>보유재산<b class="num">${usd(worth(p))}</b></div><div>오늘 매출<b class="num">${usd(todaySales(p))}</b></div><div>오늘 친구 주문<b class="num">${gs.gn || 0}건</b></div></div>
+      ${mine && (p.guestLog || []).length ? `<div class="small" style="display:grid;gap:3px"><b>🛎️ 최근 친구 주문</b>${(p.guestLog || []).slice(-6).reverse().map(g => `<span>${esc(g.nick)}님 · ${esc(g.menu)} · <b>${usd(g.price)}</b> · ${new Date(g.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>`).join('')}</div>` : ''}
+      ${!mine && me ? `<div class="grid2"><button class="btn teal" id="vsOrder">🍔 주문하기</button>${isFriend ? '<button class="btn ghost" id="vsUnf">친구 끊기</button>' : '<button class="btn navy" id="vsAdd">🤝 친구 추가</button>'}</div>` : ''}
     </div>
-    <div class="card" style="display:grid;gap:8px"><b style="font:400 18px/1.2 var(--d)">📒 방명록</b>
+    <div class="card" style="display:grid;gap:8px" id="gbCard"><b style="font:400 18px/1.2 var(--d)">📒 방명록</b>
       ${me ? `<div class="row"><input class="inp" id="gbIn" maxlength="60" placeholder="${mine ? '내 가게에 한마디' : '사장님께 한마디 (60자)'}" autocomplete="off"><button class="btn sm red" id="gbGo" style="flex:none">남기기</button></div>` : ''}
       <div class="gb" id="gbList"><p class="muted small">불러오는 중…</p></div></div>`;
   $('#vsBack').onclick = () => show(mine ? 'lobby' : me ? 'friends' : 'rank');
-  const sc = $('#vsScene');
-  if (!mine && me) {
-    const seat = sc.querySelector('.seats');
-    seat.style.left = 'auto'; seat.style.width = '96px'; seat.style.right = '28px';
-    seat.innerHTML = `<div class="seat"><div class="cust"><div class="ticket" style="padding:5px 6px"><div class="tname" style="font-size:11px">${visitedToday ? '또 왔어요~' : '놀러왔어요!'}</div></div><div class="who"><img src="${imgOf(me.char)}" alt=""><div class="body" style="--c:#E64980"></div></div></div></div>`;
-    chefSay(sc, pick([`어서오세요 ${me.nick}님!`, '놀러오셨네! 버거 한 입?', '네 손님! Alright!']), 2600);
-  } else chefSay(sc, mine ? '오늘도 영업 가 보자고!' : '어서오세요!', 2200);
-  if ($('#vsHi')) $('#vsHi').onclick = () => visitHello(p);
   if ($('#vsAdd')) $('#vsAdd').onclick = async () => { await addFriend(pid); openVisit(pid); };
   if ($('#vsUnf')) $('#vsUnf').onclick = () => modal(`<h2>${esc(p.nick)}님과 친구를 끊을까요?</h2><div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="yu">끊기</button></div>`, (s, close) => { $('#yu', s).onclick = async () => { close(); await removeFriend(pid); toast('친구를 끊었어요'); openVisit(pid); }; });
   if ($('#gbGo')) {
@@ -1154,7 +1225,7 @@ async function openVisit(pid) {
       $('#gbGo').disabled = true;
       try {
         await db.push(PATH.gb(pid), { pid: me.pid, nick: me.nick, char: me.char, msg, at: Date.now() });
-        $('#gbIn').value = ''; Sound.play('ding');
+        $('#gbIn').value = ''; Sound.play('ding'); room && room.say('📒 방명록 남겼어요!');
         const all = (await db.get(PATH.gb(pid))) || {}, ks = Object.keys(all);
         if (ks.length > 40) ks.sort((a, b) => (all[a].at || 0) - (all[b].at || 0)).slice(0, ks.length - 40).forEach(k => db.remove(PATH.gb(pid) + '/' + k));
       } catch (e) { toast('못 남겼어요. 다시 해 주세요'); }
@@ -1162,15 +1233,235 @@ async function openVisit(pid) {
     };
     $('#gbGo').onclick = send; $('#gbIn').onkeydown = e => { if (e.key === 'Enter') send(); };
   }
-  liveOff = db.on(PATH.gb(pid), v => {
+  const offGb = db.on(PATH.gb(pid), v => {
     const box = $('#gbList'); if (!box) return;
     const ms = Object.entries(v || {}).map(([k, m]) => ({ k, ...m })).sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, 30);
     box.innerHTML = ms.length ? ms.map(m => `<div class="m">${faceEl(m.char, 's')}<div class="grow"><div class="w">${esc(m.nick)} · ${new Date(m.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}${me && (m.pid === me.pid || mine) ? ` · <a href="#" data-del="${esc(m.k)}" style="color:var(--red)">지우기</a>` : ''}</div><div class="t">${esc(m.msg)}</div></div></div>`).join('')
       : '<p class="muted small">아직 방명록이 비어 있어요. 첫 글을 남겨 봐요!</p>';
     box.querySelectorAll('[data-del]').forEach(a => a.onclick = e => { e.preventDefault(); db.remove(PATH.gb(pid) + '/' + a.dataset.del); });
   });
+  const room = makeRoom(p, mine);
+  if ($('#vsOrder')) $('#vsOrder').onclick = () => room.order();
+  liveOff = () => { offGb(); room.stop(); };
 }
-async function visitHello(p) {
+
+// ── 가게 안 걸어 다니기: 바닥을 누르거나 방향키로 이동, 가까이 가면 할 수 있는 일이 버튼으로 떠요 ──
+let room = null;
+function makeRoom(p, mine) {
+  const R = $('#room'), A = $('#actors'), pid = p.pid, today = todayKST();
+  const W = () => R.clientWidth;
+  const chefBox = R.querySelector('.rchef');
+  const chefTalk = (s, ms = 2200) => { const b = chefBox.querySelector('.bubble'); b.textContent = s; b.hidden = false; clearTimeout(b._t); b._t = setTimeout(() => { b.hidden = true; }, ms); };
+  setTimeout(() => chefTalk(mine ? '사장님 오셨다! 오늘도 Alright!' : me ? `어서오세요 ${me.nick}님! 놀러오세요~` : '어서오세요!', 2600), 300);
+  const spots = [
+    !mine && me && { id: 'order', x: .3, y: 182, label: '🍔 주문하기' },
+    !mine && me && { id: 'hello', x: .44, y: 182, label: `👋 사장님께 인사 (둘 다 +${usd(CFG.visitBonus)})` },
+    { id: 'menu', x: .72, y: 178, label: '📋 메뉴판 보기' },
+    (p.own || {}).juke && { id: 'juke', x: .9, y: 212, label: '🎵 주크박스 틀기' },
+    { id: 't0', x: .22, y: 262, label: '🪑 앉기', table: 0 },
+    { id: 't1', x: .62, y: 262, label: '🪑 앉기', table: 1 },
+    me && { id: 'book', x: .9, y: 300, label: '📒 방명록 쓰기' },
+  ].filter(Boolean);
+  const actors = {};
+  function actorEl(key, char, nick, isMe) {
+    let a = actors[key];
+    if (!a) {
+      a = document.createElement('div'); a.className = 'actor' + (isMe ? ' me' : '');
+      a.innerHTML = `<div class="bubble" hidden></div><div class="hold"></div><img src="${imgOf(char)}" alt=""><span class="tag">${esc(nick)}</span>`;
+      A.appendChild(a); actors[key] = a;
+    }
+    return a;
+  }
+  const place = (a, x, y) => { a.style.left = x + 'px'; a.style.top = y + 'px'; a.style.zIndex = Math.round(y); };
+  const bubble = (a, s, ms = 2400) => { const b = a.querySelector('.bubble'); b.textContent = s; b.hidden = false; clearTimeout(b._t); b._t = setTimeout(() => { b.hidden = true; }, ms); };
+  let me_ = null, pos = null, target = null, dir = null, holding = null, eating = false, sitting = null, stopped = false;
+  const presPath = me ? PATH.pres(pid) + '/' + me.pid : null;
+  let lastSend = 0, pend = null;
+  const send = (extra = {}) => {
+    if (!me || stopped) return;
+    const now = Date.now();
+    pend = Object.assign(pend || {}, extra);
+    if (now - lastSend < 500 && !extra.say) return;
+    lastSend = now;
+    const v = { nick: me.nick, char: me.char, x: +(pos.x / W()).toFixed(3), y: Math.round(pos.y), at: now, food: holding || null, sit: sitting, ...(pend || {}) };
+    pend = null;
+    db.presence(presPath, v).catch(() => {});
+  };
+  if (me) {
+    me_ = actorEl('me', me.char, mine ? `${me.nick} (사장님)` : me.nick, true);
+    pos = { x: W() * .5, y: ROOM_H - 30 };
+    place(me_, pos.x, pos.y);
+    setTimeout(() => { target = { x: W() * .5, y: 230 }; }, 200);
+    send();
+  }
+  // 다른 방문자 (실시간)
+  const offPres = db.on(PATH.pres(pid), v => {
+    if (stopped) return;
+    const now = Date.now(), seen = new Set();
+    for (const [k, o] of Object.entries(v || {})) {
+      if (!o || (me && k === me.pid) || now - (o.at || 0) > 60000) continue;
+      seen.add(k);
+      const a = actorEl(k, o.char, o.nick + (k === pid ? ' (사장님)' : ''), false);
+      place(a, o.x * W(), o.y);
+      a.querySelector('.hold').innerHTML = o.food ? orderSVG({ menu: o.food }, 26) : '';
+      a.classList.toggle('sit', o.sit != null);
+      if (o.say && o.sayAt && o.sayAt !== a._sayAt && now - o.sayAt < 5000) { a._sayAt = o.sayAt; bubble(a, o.say); }
+    }
+    for (const k of Object.keys(actors)) if (k !== 'me' && !seen.has(k)) { actors[k].remove(); delete actors[k]; }
+  });
+  const hb = setInterval(() => { if (me && !stopped) { lastSend = 0; send(); } }, 15000);
+  // 바닥 누르면 걸어가요
+  R.addEventListener('pointerdown', e => {
+    if (!me || e.target.closest('.actor.me')) return;
+    const r = R.getBoundingClientRect();
+    target = { x: Math.max(18, Math.min(W() - 18, e.clientX - r.left)), y: Math.max(FLOOR_Y0, Math.min(FLOOR_Y1, e.clientY - r.top)) };
+    standUp();
+  });
+  document.querySelectorAll('.dpad [data-dir]').forEach(b => {
+    const on = e => { e.preventDefault(); dir = b.dataset.dir; target = null; standUp(); };
+    const off = () => { if (dir === b.dataset.dir) dir = null; };
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
+  });
+  const keys = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+  const kd = e => { if (keys[e.key] && cur === 'visit' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); dir = keys[e.key]; target = null; standUp(); } };
+  const ku = e => { if (keys[e.key] === dir) dir = null; };
+  addEventListener('keydown', kd); addEventListener('keyup', ku);
+  document.querySelectorAll('.emotes [data-emo]').forEach(b => b.onclick = () => say(b.dataset.emo));
+  function say(s) { if (!me_) return; bubble(me_, s); send({ say: s, sayAt: Date.now() }); }
+  function standUp() { if (sitting != null && !eating) { sitting = null; me_.classList.remove('sit'); send(); } }
+  // 가까운 곳
+  let near = null;
+  const actBtn = $('#rAct');
+  function updateNear() {
+    if (!me_) return;
+    let best = null, bd = 60;
+    for (const s of spots) { const d = Math.hypot(s.x * W() - pos.x, s.y - pos.y); if (d < bd) { bd = d; best = s; } }
+    if (best && (best.id === 't0' || best.id === 't1')) best = { ...best, label: holding ? '🪑 앉아서 먹기' : sitting === best.table ? '🙋 일어나기' : '🪑 앉기' };
+    const key = best ? best.id + best.label : '';
+    if (key === (near ? near.id + near.label : '')) return;
+    near = best;
+    actBtn.disabled = !best || eating;
+    actBtn.textContent = best ? best.label : holding ? '🍔 음식을 들고 있어요 · 테이블로 가요' : '바닥을 누르거나 방향키로 걸어가요';
+    R.querySelectorAll('.hot').forEach(x => x.classList.remove('hot'));
+  }
+  if (actBtn) actBtn.onclick = () => near && doSpot(near);
+  async function doSpot(s) {
+    if (s.id === 'order') return order();
+    if (s.id === 'hello') { const ok = await visitHello(p, true); if (ok) { say('👋 안녕하세요!'); chefTalk('반가워요! 또 놀러오세요~'); } return; }
+    if (s.id === 'menu') return menuPeek();
+    if (s.id === 'juke') { Sound.play('buy'); say('🎵 ♪♫'); chefTalk('컨트리 음악 좋지! Yeehaw! 🤠'); return; }
+    if (s.id === 'book') { $('#gbCard').scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => $('#gbIn') && $('#gbIn').focus(), 400); return; }
+    if (s.table != null) {
+      if (sitting === s.table && !holding) { standUp(); updateNear(); return; }
+      sitting = s.table; target = null; dir = null;
+      pos = { x: s.x * W() + (Math.random() < .5 ? -24 : 24), y: s.y - 6 }; place(me_, pos.x, pos.y); me_.classList.add('sit');
+      send();
+      if (holding) eat();
+      near = null; updateNear();
+    }
+  }
+  function eat() {
+    eating = true; actBtn.disabled = true; actBtn.textContent = '😋 냠냠 먹는 중…';
+    const h = me_.querySelector('.hold'); h.classList.add('eating');
+    say('😋 냠냠!');
+    setTimeout(() => { if (stopped) return; say(pick(['맛있다! 😍', '역시 준탁 버거!', '배부르다~ 🍔', '또 먹으러 올게요!'])); }, 1800);
+    setTimeout(() => { if (stopped) return; holding = null; eating = false; h.classList.remove('eating'); h.innerHTML = ''; send(); near = null; updateNear(); }, 3600);
+  }
+  function menuPeek() {
+    const ms = MENU.filter(m => m.lv <= stageOf(p).lv && (!m.need || (p.own || {})[m.need]));
+    modal(`<h2>📋 ${esc(p.nick)}네 메뉴판</h2><div class="list">${ms.map(m => `<div class="mrow">${m.kind === 'burger' ? burgerSVG(m.fill, true, 44) : pizzaSVG({ sauce: true, cheese: true, tops: m.tops, baked: true }, 44)}<div class="grow"><div class="nm">${esc(m.name)} <b class="money" style="font-size:14px">${usd(friendPrice(p, m.price))}</b></div><div class="sub">${esc(m.ref)}</div></div></div>`).join('')}</div>
+      <div class="grid2"><button class="btn ghost" data-close>닫기</button>${!mine && me ? '<button class="btn red" id="mpOrd">🍔 주문하기</button>' : ''}</div>`, (sh, close) => { if ($('#mpOrd', sh)) $('#mpOrd', sh).onclick = () => { close(); order(); }; });
+  }
+  function order() {
+    if (mine || !me) return;
+    if (holding) { toast('들고 있는 음식부터 먹어요! 테이블로 가요 🪑'); return; }
+    friendOrder(p, menuId => {
+      // 주문 완료 → 셰프가 만들어서 건네줘요
+      say('🛎️ 주문했어요!'); chefTalk('주문 들어왔다! 바로 만들어 드릴게요!');
+      if (pos.y > 210 || Math.abs(pos.x - W() * .3) > 60) target = { x: W() * .3, y: 190 };
+      setTimeout(() => {
+        if (stopped) return;
+        holding = menuId; me_.querySelector('.hold').innerHTML = orderSVG({ menu: menuId }, 30);
+        chefTalk(`${MENU_BY[menuId].name} 나왔습니다! 맛있게 드쇼!`); Sound.play('ding'); say('받았다! 🍔');
+        send(); near = null; updateNear();
+        toast('🪑 테이블로 가서 앉아 먹어요!');
+      }, 2200);
+    });
+  }
+  // 이동 루프
+  let lt = performance.now(), raf = 0;
+  const loop = t => {
+    if (stopped) return;
+    const dt = Math.min(.05, (t - lt) / 1000); lt = t;
+    if (me_ && !eating) {
+      const sp = 170 * dt; let moved = false;
+      if (dir) {
+        const d = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[dir];
+        pos.x = Math.max(18, Math.min(W() - 18, pos.x + d[0] * sp)); pos.y = Math.max(FLOOR_Y0, Math.min(FLOOR_Y1, pos.y + d[1] * sp));
+        if (d[0]) me_.classList.toggle('flip', d[0] > 0); moved = true;
+      } else if (target) {
+        const dx = target.x - pos.x, dy = target.y - pos.y, dist = Math.hypot(dx, dy);
+        if (dist < sp) { pos.x = target.x; pos.y = target.y; target = null; } else { pos.x += dx / dist * sp; pos.y += dy / dist * sp; }
+        if (Math.abs(dx) > 2) me_.classList.toggle('flip', dx > 0); moved = true;
+      }
+      if (moved) { place(me_, pos.x, pos.y); me_.classList.add('walk'); send(); updateNear(); if (!dir && !target) { lastSend = 0; send(); } }
+      else me_.classList.remove('walk');
+    }
+    raf = requestAnimationFrame(loop);
+  };
+  raf = requestAnimationFrame(loop);
+  updateNear();
+  room = {
+    say, order,
+    stop() { stopped = true; cancelAnimationFrame(raf); clearInterval(hb); offPres(); removeEventListener('keydown', kd); removeEventListener('keyup', ku); if (presPath) db.remove(presPath).catch(() => {}); room = null; },
+  };
+  return room;
+}
+// 친구 가게 가격 = 기본 가격 × 그 가게 단계 배율 × 네온 간판
+const friendPrice = (p, base) => Math.round(base * stageOf(p).mul * ((p.own || {}).neon ? 1.2 : 1));
+function friendOrder(p, done) {
+  const st = stageOf(p), own = p.own || {};
+  const ms = MENU.filter(m => m.lv <= st.lv && (!m.need || own[m.need]));
+  const xs = [...SIDES, ...DRINKS].filter(x => x.lv <= st.lv && own[x.need]);
+  let sel = (ms.filter(m => m.kind === 'burger').pop() || ms[0]).id, side = null, drink = null;
+  const total = () => friendPrice(p, MENU_BY[sel].price + (side ? XTRA[side].price : 0) + (drink ? XTRA[drink].price : 0));
+  modal(`<h2>🍔 ${esc(p.nick)}네 가게 주문</h2>
+    <p class="small muted">결제한 돈은 ${esc(p.nick)} 사장님 매출이 돼요. 하루 ${CFG.buyMax}번까지 주문할 수 있어요 (오늘 ${((me.buy || {})[todayKST()] || 0)}번).</p>
+    <div class="list" id="foMenu">${ms.map(m => `<button type="button" class="mrow pick ${m.id === sel ? 'on' : ''}" data-m="${m.id}">${m.kind === 'burger' ? burgerSVG(m.fill, true, 40) : pizzaSVG({ sauce: true, cheese: true, tops: m.tops, baked: true }, 40)}<div class="grow" style="text-align:left"><div class="nm">${esc(m.name)}</div><div class="sub">${esc(m.ref)}</div></div><b class="money" style="font-size:15px">${usd(friendPrice(p, m.price))}</b></button>`).join('')}</div>
+    ${xs.length ? `<div><b class="small">사이드 · 음료 추가</b><div class="xpick" id="foX">${xs.map(x => `<button type="button" data-x="${x.id}">${xtraSVG(x.id, 22)}<span>${esc(x.name)}</span><small>+${usd(friendPrice(p, x.price))}</small></button>`).join('')}</div></div>` : ''}
+    <div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="foGo"></button></div>`, (sh, close) => {
+    const upd = () => {
+      sh.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === sel));
+      sh.querySelectorAll('[data-x]').forEach(b => b.classList.toggle('on', b.dataset.x === side || b.dataset.x === drink));
+      const t = total(); $('#foGo', sh).textContent = `${usd(t)} 결제하기`; $('#foGo', sh).disabled = (me.money || 0) < t;
+    };
+    sh.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { sel = b.dataset.m; upd(); });
+    sh.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { const x = XTRA[b.dataset.x]; if (x.kind === 'side') side = side === x.id ? null : x.id; else drink = drink === x.id ? null : x.id; upd(); });
+    upd();
+    $('#foGo', sh).onclick = async () => {
+      const price = total(), today = todayKST(), name = MENU_BY[sel].name + (side ? ' + ' + XTRA[side].name : '') + (drink ? ' + ' + XTRA[drink].name : '');
+      $('#foGo', sh).disabled = true;
+      let why = '';
+      const r = await txMe(c => {
+        c.buy = c.buy || {}; const n = c.buy[today] || 0;
+        if (n >= CFG.buyMax) { why = `오늘은 ${CFG.buyMax}번까지 주문했어요`; return undefined; }
+        if ((c.money || 0) < price) { why = '돈이 모자라요'; return undefined; }
+        c.money -= price; c.buy[today] = n + 1; pruneDates(c.buy, 3); return c;
+      }).catch(() => null);
+      if (!r || !r.committed) { toast(why || '주문하지 못했어요'); $('#foGo', sh).disabled = false; return; }
+      await db.tx(PATH.player(p.pid), c => {
+        if (!c) return c;
+        c.money = (c.money || 0) + price; c.total = (c.total || 0) + price;
+        c.sales = c.sales || {}; const x = c.sales[today] = c.sales[today] || { rev: 0, n: 0, r: 0 };
+        x.rev += price; x.guest = (x.guest || 0) + price; x.gn = (x.gn || 0) + 1; pruneDates(c.sales, 120);
+        c.guestLog = (c.guestLog || []).concat([{ nick: me.nick, char: me.char, menu: name, price, at: Date.now() }]).slice(-12);
+        return c;
+      }).catch(() => {});
+      Sound.play('cash'); close(); toast(`🛎️ ${name} 주문 완료! ${usd(price)}`); done(sel);
+    };
+  });
+}
+async function visitHello(p, quiet) {
   const today = todayKST(), B = CFG.visitBonus;
   let full = false;
   const r = await txMe(c => {
@@ -1179,15 +1470,15 @@ async function visitHello(p) {
     if (Object.keys(d).length >= CFG.visitMax) { full = true; return undefined; }
     d[p.pid] = 1; c.money = (c.money || 0) + B; pruneDates(c.vis, 3); return c;
   }).catch(() => null);
-  if (!r || !r.committed) { toast(full ? `오늘은 ${CFG.visitMax}곳까지 인사했어요. 내일 또!` : '이미 인사했거나 연결이 불안정해요'); return; }
+  if (!r || !r.committed) { toast(full ? `오늘은 ${CFG.visitMax}곳까지 인사했어요. 내일 또!` : '오늘은 이미 인사했어요 😊'); return false; }
   await db.tx(PATH.player(p.pid), c => {
     if (!c) return c;
     c.visitors = c.visitors || {}; const d = c.visitors[today] = c.visitors[today] || {};
     if (d[me.pid]) return undefined;
     d[me.pid] = 1; c.money = (c.money || 0) + B; c.likes = (c.likes || 0) + 1; pruneDates(c.visitors, 3); return c;
   }).catch(() => {});
-  Sound.play('cash'); toast(`🍔 냠! 나도 ${p.nick}님도 +${usd(B)}`, 2400);
-  openVisit(p.pid);
+  Sound.play('cash'); toast(`👋 반가워요! 나도 ${p.nick}님도 +${usd(B)}`, 2400);
+  return true;
 }
 
 /* ══════════ 랭킹 (보유재산 · 오늘 매출) ══════════ */
@@ -1338,6 +1629,56 @@ function drawSales(ps) {
   $('#slBars').onclick = e => { const b = e.target.closest('[data-d]'); if (b) { salesPeriod = b.dataset.d === today ? 'today' : b.dataset.d === yday ? 'yday' : b.dataset.d; drawSales(ps); } };
 }
 
+// ── 체인점 하루 정산: 지점은 하루 종일 알아서 영업하고, 영업일(아침 6시)이 바뀌면 매출의 35%를 본점으로 보내요 ──
+const ROYALTY = .35, DAY_REV = 15, SETTLE_MAX = 7;
+const hashf = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return ((h >>> 0) % 10000) / 10000; };
+// 지점 하루 매출 (같은 날·같은 지점이면 언제 봐도 같은 값)
+function branchDay(pid, c, lv, d) {
+  const r = hashf(pid + c.id + d), rev = Math.round(c.inc * DAY_REV * CHAIN_LV[lv - 1].mul * (.8 + .4 * r));
+  return { rev, share: Math.round(rev * ROYALTY), cust: Math.round(rev / 14) };
+}
+const branchAvg = (c, lv) => Math.round(c.inc * DAY_REV * CHAIN_LV[lv - 1].mul * ROYALTY);
+// 하루 평균 본점 정산금 합계 (표시용)
+chainIncome = ch => Object.entries(ch || {}).reduce((a, [id, b]) => { const c = CITIES.find(x => x.id === id); return a + (c && b ? branchAvg(c, b.lv || 1) : 0); }, 0);
+// 영업일 진행률 (아침 6시 0 → 다음날 아침 6시 1)
+const dayFrac = () => { const t = (Date.now() + (9 - CFG.dailyHour) * 3600e3) % 864e5; return t / 864e5; };
+async function settleChains() {
+  if (!me || !me.chains || !Object.keys(me.chains).length) return;
+  const today = todayKST();
+  const days = Array.from({ length: SETTLE_MAX }, (_, i) => dayKey(Date.now() - (i + 1) * 864e5)).reverse(); // 지난 7일 (오래된 순)
+  let report = null;
+  const r = await txMe(c => {
+    let any = false; const rep = [];
+    for (const [id, b] of Object.entries(c.chains || {})) {
+      const city = CITIES.find(x => x.id === id); if (!city || !b) continue;
+      const open = dayKey(b.at || Date.now());
+      const todo = days.filter(d => d >= open && d > (b.paid || '') && d < today);
+      if (!todo.length) { if (!b.paid) b.paid = dayKey(Date.now() - 864e5); continue; }
+      let rev = 0, share = 0;
+      for (const d of todo) {
+        const x = branchDay(c.pid, city, b.lv || 1, d); rev += x.rev; share += x.share;
+        c.sales = c.sales || {}; const s = c.sales[d] = c.sales[d] || { rev: 0, n: 0, r: 0 };
+        s.rev += x.share; s.chain = (s.chain || 0) + x.share;
+      }
+      b.paid = todo[todo.length - 1]; b.earned = (b.earned || 0) + share; b.rev = (b.rev || 0) + rev;
+      b.lastDay = { d: b.paid, rev: branchDay(c.pid, city, b.lv || 1, b.paid).rev, share: branchDay(c.pid, city, b.lv || 1, b.paid).share };
+      c.money = (c.money || 0) + share; c.total = (c.total || 0) + share; any = true;
+      rep.push({ id, name: city.name, emoji: CITY_THEME[city.theme].emoji, days: todo.length, rev, share });
+    }
+    if (!any) return undefined;
+    pruneDates(c.sales, 120);
+    report = rep; return c;
+  }).catch(() => null);
+  if (r && r.committed && report && report.length) {
+    const tot = report.reduce((a, x) => a + x.share, 0);
+    Sound.play('buy');
+    modal(`<h2>📬 체인점 정산 도착!</h2><p class="small muted">지점 매출의 ${Math.round(ROYALTY * 100)}%가 본점으로 들어왔어요.</p>
+      <div class="list">${report.map(x => `<div class="li"><span style="font-size:24px">${x.emoji}</span><div class="grow"><div class="nm">${esc(x.name)}점${x.days > 1 ? ` · ${x.days}일치` : ''}</div><div class="sub">지점 매출 ${usd(x.rev)}</div></div><b class="money num">+${usd(x.share)}</b></div>`).join('')}</div>
+      <div class="card" style="text-align:center;font:400 22px var(--d)">합계 +${usd(tot)}</div>
+      <button class="btn red" data-close>좋아요!</button>`);
+  }
+}
+
 /* ══════════ 직원 (채용 공고 · 급여 · 교육) ══════════ */
 const staffMax = p => STAFF_MAX[stageOf(p).lv - 1];
 const rolesOpen = p => ROLE_KEYS.filter(r => ROLES[r].lv <= stageOf(p).lv);
@@ -1451,12 +1792,13 @@ function renderChain() {
     ${open ? '' : `<div class="card small">🔒 <b>본점(Lv.5)</b>이 되면 미국 전역에 체인점을 낼 수 있어요. 지금은 Lv.${st.lv} ${st.icon} ${esc(st.name)}이에요. 지도를 둘러보며 어디에 낼지 골라 봐요!</div>`}
     <div class="card" style="padding:8px">${usMapSVG(ch, cityPick)}</div>
     ${c ? `<div class="card" style="display:grid;gap:8px"><div class="row" style="justify-content:space-between"><b style="font:400 21px var(--d)">${CITY_THEME[c.theme].emoji} ${c.name}${b ? ` 지점 · Lv.${lv}` : ''}</b><span class="small muted">${CITY_THEME[c.theme].desc}</span></div>
-      <div class="stat3"><div>${b ? '지점 가치' : '개설 비용'}<b class="num">${usd(b ? chainVal({ [c.id]: b }) : c.cost)}</b></div><div>영업 1회당 수익<b class="num">${usd(Math.round(c.inc * CHAIN_LV[Math.max(0, lv - 1)].mul))}</b></div><div>${b ? '누적 수익' : '지점 메뉴'}<b class="num">${b ? usd(b.earned || 0) : '전 메뉴'}</b></div></div>
+      <div class="stat3"><div>${b ? '지점 가치' : '개설 비용'}<b class="num">${usd(b ? chainVal({ [c.id]: b }) : c.cost)}</b></div><div>하루 정산(약)<b class="num">${usd(branchAvg(c, Math.max(1, lv)))}</b></div><div>${b ? '누적 정산' : '지점 하루 매출'}<b class="num">${b ? usd(b.earned || 0) : '약 ' + usd(c.inc * DAY_REV)}</b></div></div>
+      <p class="small muted">지점은 점장이 하루 종일 운영하고, 매일 아침 ${CFG.dailyHour}시에 그날 매출의 ${Math.round(ROYALTY * 100)}%를 본점으로 정산해요.${b && b.lastDay ? ` 어제 지점 매출 ${usd(b.lastDay.rev)} → 정산 ${usd(b.lastDay.share)}` : ''}</p>
       ${b ? `<div class="grid2"><button class="btn red" id="chVisit">👀 지점 시찰</button><button class="btn teal" id="chUp" ${lv >= 3 || me.money < upCost ? 'disabled' : ''}>${lv >= 3 ? '최고 레벨 지점' : `🏗️ 지점 확장 ${usd(upCost)}`}</button></div>`
         : `<button class="btn red big" id="chOpen" ${!open || me.money < c.cost ? 'disabled' : ''}>🏁 ${c.name}에 체인점 내기 ${usd(c.cost)}</button>`}</div>` : '<p class="small muted" style="text-align:center">지도에서 도시를 눌러 봐요</p>'}
-    <div class="card list"><b style="font:400 18px var(--d)">🍔 내 체인점 ${mine.length}곳 · 영업 1회당 +${usd(chainIncome(ch))}</b>
-      ${mine.length ? mine.map(x => `<div class="li"><span style="font-size:24px">${CITY_THEME[x.theme].emoji}</span><div class="grow"><div class="nm">${x.name}점 <span class="lvb">Lv.${ch[x.id].lv || 1}</span></div><div class="sub">영업 1회당 ${usd(Math.round(x.inc * CHAIN_LV[(ch[x.id].lv || 1) - 1].mul))} · 누적 ${usd(ch[x.id].earned || 0)}</div></div><button class="btn sm red" data-go="${x.id}" style="flex:none">지점 시찰</button></div>`).join('')
-        : '<p class="small muted">아직 체인점이 없어요. 체인점 수익은 내가 영업할 때마다 들어와요.</p>'}</div>`;
+    <div class="card list"><b style="font:400 18px var(--d)">🍔 내 체인점 ${mine.length}곳 · 하루 약 +${usd(chainIncome(ch))} 정산</b>
+      ${mine.length ? mine.map(x => `<div class="li"><span style="font-size:24px">${CITY_THEME[x.theme].emoji}</span><div class="grow"><div class="nm">${x.name}점 <span class="lvb">Lv.${ch[x.id].lv || 1}</span></div><div class="sub">하루 정산 약 ${usd(branchAvg(x, ch[x.id].lv || 1))} · 누적 ${usd(ch[x.id].earned || 0)}</div></div><button class="btn sm red" data-go="${x.id}" style="flex:none">지점 시찰</button></div>`).join('')
+        : '<p class="small muted">아직 체인점이 없어요. 지점은 하루 종일 알아서 영업하고 매일 아침 수익의 일부를 본점으로 보내요.</p>'}</div>`;
   $('#chBack').onclick = () => show('lobby');
   el.querySelectorAll('[data-city]').forEach(g => g.onclick = () => { cityPick = g.dataset.city; renderChain(); });
   el.querySelectorAll('[data-go]').forEach(b2 => b2.onclick = () => openBranch(b2.dataset.go));
@@ -1499,7 +1841,7 @@ async function openBranch(id) {
   const c = CITIES.find(x => x.id === id); if (!c || !me) return;
   const b = (me.chains || {})[id]; if (!b) return;
   show('branch');
-  const lv = b.lv || 1, inc = Math.round(c.inc * CHAIN_LV[lv - 1].mul), seats = 2 + lv, mgr = pick(CH.filter(x => !HID[x].rare));
+  const lv = b.lv || 1, td = branchDay(me.pid, c, lv, todayKST()), seats = 2 + lv, mgr = CH.filter(x => !HID[x].rare)[Math.floor(hashf(me.pid + c.id) * 13)];
   const el = $('#s-branch');
   el.innerHTML = `<div class="toprow"><button class="back" id="brBack">← 지도</button><h2>👀 ${c.name}점 시찰</h2><span style="width:60px"></span></div>
     <div class="scene" id="brScene" style="height:260px">${cityBG(c.theme)}<div class="sign neon">준탁 버거하우스 ${esc(c.name)}점 · ${esc(me.nick)}</div>
@@ -1507,8 +1849,9 @@ async function openBranch(id) {
       <div class="seats" style="--n:${seats}"></div><div class="counter lv5"></div></div>
     <div class="card" style="display:grid;gap:8px"><div class="row" style="justify-content:space-between"><b style="font:400 20px var(--d)">${CITY_THEME[c.theme].emoji} ${c.name}점 · Lv.${lv}</b><span class="small muted">${CITY_THEME[c.theme].desc}</span></div>
       <div class="row">${faceEl(mgr, 'l')}<div class="small"><b>점장 ${esc(shortName(mgr))}</b> · "사장님, ${esc(c.name)}점은 오늘도 손님이 가득이에요!"</div></div>
-      <div class="stat3"><div>영업 1회당 수익<b class="num">${usd(inc)}</b></div><div>누적 수익<b class="num">${usd(b.earned || 0)}</b></div><div>지금 손님<b class="num" id="brCnt">0명</b></div></div>
-      <p class="small muted">체인점은 점장이 알아서 운영해요. 내가 본점에서 영업할 때마다 수익이 들어와요. 지점을 확장하면 수익이 늘어요 (Lv.2 ×1.8, Lv.3 ×2.8).</p>
+      <div class="stat3"><div>오늘 지점 매출<b class="num" id="brToday">${usd(Math.round(td.rev * dayFrac()))}</b></div><div>어제 매출 → 정산<b class="num">${b.lastDay ? `${usd(b.lastDay.share)}` : '내일 첫 정산'}</b></div><div>누적 정산<b class="num">${usd(b.earned || 0)}</b></div></div>
+      <div class="small"><div class="xpbar"><i id="brBar" style="width:${(dayFrac() * 100).toFixed(1)}%"></i><span>오늘 영업 ${(dayFrac() * 100).toFixed(0)}% · 예상 매출 ${usd(td.rev)} → 내일 아침 정산 약 ${usd(td.share)}</span></div></div>
+      <p class="small muted">점장이 하루 종일 알아서 운영해요. 매일 아침 ${CFG.dailyHour}시에 전날 매출의 ${Math.round(ROYALTY * 100)}%가 본점으로 정산돼요 (못 받은 정산은 ${SETTLE_MAX}일치까지 쌓여요). 지점을 확장하면 매출이 늘어요 (Lv.2 ×1.8, Lv.3 ×2.8). 지금 손님 <b id="brCnt">0명</b></p>
       <button class="btn teal" id="brMap">🗺️ 지도로 돌아가기</button></div>`;
   $('#brBack').onclick = $('#brMap').onclick = () => { cityPick = id; show('chain'); };
   const sc = $('#brScene'), seatEl = sc.querySelector('.seats');
@@ -1534,7 +1877,7 @@ async function openBranch(id) {
       }, 2200 + Math.random() * 2600);
     }
   };
-  loop(); branchT = setInterval(loop, 1300);
+  loop(); branchT = setInterval(() => { loop(); if ($('#brToday')) { $('#brToday').textContent = usd(Math.round(td.rev * dayFrac())); $('#brBar').style.width = (dayFrac() * 100).toFixed(2) + '%'; } }, 1300);
   liveOff = () => { clearInterval(branchT); branchT = null; };
 }
 
@@ -1944,15 +2287,14 @@ async function settleRound(g) {
   let res = null;
   const r = await txMe(c => {
     c.tx = c.tx || {}; if (c.tx[g.key]) return undefined;
-    const chain = chainIncome(c.chains), wages = payroll(c), gross = g.earned + chain;
+    const chain = 0, wages = payroll(c), gross = g.earned;
     const pay = Math.min(wages, (c.money || 0) + gross);
     c.money = (c.money || 0) + gross - pay; c.total = (c.total || 0) + gross;
     c.rounds = (c.rounds || 0) + 1; c.served = (c.served || 0) + g.served;
     c.best = Math.max(c.best || 0, g.earned); c.rating = Math.round(g.rating * 100) / 100;
     c.sales = c.sales || {}; const x = c.sales[d] = c.sales[d] || { rev: 0, n: 0, r: 0 };
-    x.rev += gross; x.n += g.served; x.r += 1; x.wage = (x.wage || 0) + pay; x.chain = (x.chain || 0) + chain; pruneDates(c.sales, 120);
+    x.rev += gross; x.n += g.served; x.r += 1; x.wage = (x.wage || 0) + pay; pruneDates(c.sales, 120);
     for (const s of Object.values(c.staff || {})) if (s) s.xp = (s.xp || 0) + 1;
-    Object.entries(c.chains || {}).forEach(([id, b]) => { const ci = CITIES.find(x => x.id === id); if (ci && b) b.earned = (b.earned || 0) + Math.round(ci.inc * CHAIN_LV[(b.lv || 1) - 1].mul); });
     c.tx[g.key] = Date.now(); const ks = Object.keys(c.tx); if (ks.length > 40) ks.sort((a, b) => c.tx[a] - c.tx[b]).slice(0, ks.length - 40).forEach(k => delete c.tx[k]);
     res = { chain, wages: pay };
     return c;
@@ -2042,8 +2384,8 @@ requestAnimationFrame(t => { last = t; requestAnimationFrame(tick); });
     setInterval(checkVersion, 120000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(checkVersion, 3000); });
   }
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && me) dailyCheck(); });
-  setInterval(() => { if (me && !document.hidden) dailyCheck(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && me) dailyCheck().then(settleChains); });
+  setInterval(() => { if (me && !document.hidden) dailyCheck().then(settleChains); }, 60000);
   const saved = savedCode();
   if (saved) {
     for (let n = 1; n < 6; n++) {
