@@ -464,7 +464,7 @@ const CFG = {
   buyMax: 20,               // 친구 가게 주문: 하루 20번까지 // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261117-1';
+const APP_VERSION = '20261117-2';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -1541,7 +1541,7 @@ const adRow = p => { const s = stageOf(p); return `<div class="li adm" data-pid=
       <div class="sub">현금 ${usd(p.money)} · 오늘 매출 ${usd(todaySales(p))} · 영업 ${p.rounds || 0}번</div></div><div style="text-align:right"><div class="sub">보유재산</div><b class="money num">${usd(worth(p))}</b></div></div>
     ${presetsHTML()}
     <div class="adrow"><input class="inp sm" data-amt inputmode="numeric" placeholder="금액 ($)"><button class="btn sm teal" data-act="m+">+ 돈 주기</button><button class="btn sm" data-act="m-">− 빼기</button></div>
-    <div class="adrow"><button class="btn sm ghost" data-act="code">🔑 새 코드 발급</button><button class="btn sm ghost" data-act="block">${p.blocked ? '✅ 코드 다시 켜기' : '⛔ 코드 정지'}</button></div>
+    <div class="adrow"><button class="btn sm ghost" data-act="char">🎭 캐릭터 바꾸기</button><button class="btn sm ghost" data-act="code">🔑 새 코드 발급</button><button class="btn sm ghost" data-act="block">${p.blocked ? '✅ 코드 다시 켜기' : '⛔ 코드 정지'}</button></div>
   </div>`; };
 function drawPlayers(ps) {
   adPs = ps;
@@ -1591,6 +1591,19 @@ function drawPlayers(ps) {
         adminLog({ act: 'code', nick: p.nick });
         modal(`<h2>${esc(p.nick)}님 새 코드</h2><div class="bigcode">${code}</div><p class="small muted">이 코드를 전달해 주세요. 예전 코드는 이제 안 열려요.</p><div class="grid2"><button class="btn ghost" id="cc">복사</button><button class="btn red" data-close>닫기</button></div>`,
           s => { $('#cc', s).onclick = () => { navigator.clipboard?.writeText(code); toast('복사했어요'); }; });
+      } else if (act === 'char') {
+        let pickC = p.char;
+        modal(`<h2>${esc(p.nick)}님 캐릭터 바꾸기</h2><p class="small muted">지금: ${esc(nameOf(p.char))}</p>
+          <div class="charpick" id="acChars">${CH.map(id => `<button type="button" data-c="${id}" class="${id === p.char ? 'on' : ''}">${faceEl(id)}${esc(nameOf(id))}</button>`).join('')}</div>
+          <div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="acGo">바꾸기</button></div>`, (sh, close) => {
+          $('#acChars', sh).onclick = e => { const x = e.target.closest('[data-c]'); if (!x) return; pickC = x.dataset.c; sh.querySelectorAll('[data-c]').forEach(y => y.classList.toggle('on', y === x)); };
+          $('#acGo', sh).onclick = async () => {
+            if (pickC === p.char) { close(); return; }
+            const r = await db.tx(PATH.player(pid), c => (c ? (c.char = pickC, c) : c)).catch(() => null);
+            if (r && r.committed) { adminLog({ act: 'char', nick: p.nick, from: p.char, to: pickC }); toast(`${p.nick}님 캐릭터 → ${nameOf(pickC)}`); close(); setTimeout(() => { const n = adPs.find(x => x.pid === pid); if (n) box.outerHTML = adRow(n); }, 300); }
+            else toast('바꾸지 못했어요');
+          };
+        });
       } else if (act === 'block') {
         const to = !p.blocked;
         if (!confirm(`${p.nick}님 코드를 ${to ? '정지할까요? 바로 로그아웃돼요' : '다시 켤까요'}?`)) return;
