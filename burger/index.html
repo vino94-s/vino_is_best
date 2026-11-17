@@ -464,7 +464,7 @@ const CFG = {
   buyMax: 20,               // 친구 가게 주문: 하루 20번까지 // 친구 가게 방문 보너스: 하루에 친구마다 한 번, 둘 다 $10 (하루 10곳까지)
   adminSha256: '713688ae63ee6e422b7dbe78f4d8fbc7289172126e04b143d33d59850375d6f1',
 };
-const APP_VERSION = '20261117-2';
+const APP_VERSION = '20261117-3';
 // 가게 확장 단계
 const STAGES = [
   { lv: 1, id: 'truck', icon: '🚚', name: '푸드트럭', title: '준탁 버거 트럭', cost: 0, seats: 2, mul: 1, spawn: 7.2 },
@@ -1542,13 +1542,49 @@ const adRow = p => { const s = stageOf(p); return `<div class="li adm" data-pid=
     ${presetsHTML()}
     <div class="adrow"><input class="inp sm" data-amt inputmode="numeric" placeholder="금액 ($)"><button class="btn sm teal" data-act="m+">+ 돈 주기</button><button class="btn sm" data-act="m-">− 빼기</button></div>
     <div class="adrow"><button class="btn sm ghost" data-act="char">🎭 캐릭터 바꾸기</button><button class="btn sm ghost" data-act="code">🔑 새 코드 발급</button><button class="btn sm ghost" data-act="block">${p.blocked ? '✅ 코드 다시 켜기' : '⛔ 코드 정지'}</button></div>
+    <div class="adrow"><button class="btn sm ghost" data-act="reset">♻️ 기록 초기화</button><button class="btn sm ghost" data-act="del" style="color:var(--red-d)">🗑️ 유저 삭제</button></div>
   </div>`; };
+// ── 기록 초기화 · 유저 삭제 ──
+// stats: 매출·전적·방문 기록만 지워요 (돈·가게·직원·체인점은 그대로) · all: 가입 직후 상태로 (닉네임·캐릭터·코드·친구는 그대로)
+function resetPlayerData(c, mode) {
+  if (!c) return c;
+  if (mode === 'all') {
+    const keep = { codeV: c.codeV || 1, friends: c.friends || null, createdAt: c.createdAt || Date.now(), blocked: c.blocked || null };
+    return Object.assign(emptyPlayer(c.pid, c.nick, c.char), keep, { resetAt: Date.now() });
+  }
+  Object.assign(c, { sales: null, rounds: 0, served: 0, best: 0, total: 0, likes: 0, rating: 3, guestLog: null, visitors: null, vis: null, buy: null, tx: null, resetAt: Date.now() });
+  return c;
+}
+async function deletePlayer(p) {
+  for (const fid of Object.keys(p.friends || {})) await db.tx(PATH.player(fid), c => { if (!c || !c.friends || !c.friends[p.pid]) return undefined; delete c.friends[p.pid]; return c; }).catch(() => {});
+  const k = PATH.nicks + '/' + nickKey(p.nick || '');
+  if ((await db.get(k).catch(() => null)) === p.pid) await db.remove(k);
+  await db.remove(PATH.gb(p.pid)).catch(() => {});
+  await db.remove(PATH.pres(p.pid)).catch(() => {});
+  await db.remove(PATH.player(p.pid));
+}
+const RESET_TXT = { stats: '📊 매출·전적 기록만 지우기 (돈·가게·직원·체인점은 그대로)', all: '♻️ 처음부터 다시 (푸드트럭 · $' + CFG.startMoney + '부터, 닉네임·캐릭터·코드·친구는 그대로)' };
+function resetModal(title, n, run) {
+  modal(`<h2>${title}</h2><div class="list">${Object.entries(RESET_TXT).map(([k, t]) => `<label class="li" style="cursor:pointer"><input type="radio" name="rm" value="${k}" ${k === 'stats' ? 'checked' : ''}><span class="small" style="flex:1">${t}</span></label>`).join('')}</div>
+    ${n > 1 ? `<p class="small" style="color:var(--red-d)">⚠️ ${n}명 모두에게 적용돼요. 되돌릴 수 없어요. 확인을 위해 <b>초기화</b>라고 입력해 주세요.</p><input class="inp" id="rmTxt" placeholder="초기화" autocomplete="off">` : '<p class="small" style="color:var(--red-d)">⚠️ 되돌릴 수 없어요.</p>'}
+    <div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="rmGo">초기화</button></div>`, (sh, close) => {
+    $('#rmGo', sh).onclick = async () => {
+      if (n > 1 && $('#rmTxt', sh).value.trim() !== '초기화') { toast('초기화라고 입력해 주세요'); return; }
+      const mode = sh.querySelector('[name=rm]:checked').value;
+      $('#rmGo', sh).disabled = true; $('#rmGo', sh).textContent = '초기화 중…';
+      try { await run(mode); close(); toast('초기화했어요'); } catch (e) { toast('실패했어요: ' + (e.message || e)); $('#rmGo', sh).disabled = false; }
+    };
+  });
+}
 function drawPlayers(ps) {
   adPs = ps;
   $('#adBody').innerHTML = `<div style="display:grid;gap:10px">
     <div class="card" style="display:grid;gap:8px"><b>모든 플레이어 일괄 돈 넣기 · 빼기</b>${presetsHTML('data-presets="bk"')}
       <div class="adrow"><input class="inp sm" id="bkMoney" inputmode="numeric" placeholder="금액 ($)"><button class="btn sm teal" id="bkAdd">➕ 넣기</button><button class="btn sm" id="bkSub">➖ 빼기</button></div>
       <p class="small muted">빼기는 $0 아래로 내려가지 않아요.</p></div>
+    <div class="card" style="display:grid;gap:8px;border-color:var(--red-d)"><b style="color:var(--red-d)">⚠️ 전체 기록 초기화</b>
+      <p class="small muted">모든 플레이어의 매출·전적만 지우거나(새 시즌), 모두 처음부터 다시 시작하게 할 수 있어요. 유저 한 명만 하려면 아래 목록의 버튼을 써요.</p>
+      <button class="btn sm red" id="bkReset">🗑️ 전체 기록 초기화…</button></div>
     <input class="inp" id="adQ" type="search" placeholder="🔍 닉네임 검색" autocomplete="off" value="${esc(adminQ)}">
     <p class="small muted" id="adInfo"></p><div class="list" id="adList"></div></div>`;
   const list = () => { const q = adminQ.trim().toLowerCase(); return adPs.slice().sort(byWorth).filter(p => !q || String(p.nick || '').toLowerCase().includes(q)); };
@@ -1565,6 +1601,10 @@ function drawPlayers(ps) {
     adminLog({ act: sign > 0 ? 'bulk+' : 'bulk-', amt, n: adPs.length });
     toast('완료했어요');
   };
+  $('#bkReset').onclick = () => resetModal(`플레이어 ${adPs.length}명 기록 초기화`, adPs.length, async mode => {
+    for (const p of adPs) await db.tx(PATH.player(p.pid), c => resetPlayerData(c, mode));
+    adminLog({ act: 'resetAll', mode, n: adPs.length });
+  });
   $('#bkAdd').onclick = () => bulk(1); $('#bkSub').onclick = () => bulk(-1);
   $('[data-presets="bk"]').onclick = e => { const b = e.target.closest('[data-pre]'); if (b) pickPreset(b, $('#bkMoney')); };
   $('#adList').onclick = async e => {
@@ -1591,6 +1631,23 @@ function drawPlayers(ps) {
         adminLog({ act: 'code', nick: p.nick });
         modal(`<h2>${esc(p.nick)}님 새 코드</h2><div class="bigcode">${code}</div><p class="small muted">이 코드를 전달해 주세요. 예전 코드는 이제 안 열려요.</p><div class="grid2"><button class="btn ghost" id="cc">복사</button><button class="btn red" data-close>닫기</button></div>`,
           s => { $('#cc', s).onclick = () => { navigator.clipboard?.writeText(code); toast('복사했어요'); }; });
+      } else if (act === 'reset') {
+        resetModal(`${esc(p.nick)}님 기록 초기화`, 1, async mode => {
+          await db.tx(PATH.player(pid), c => resetPlayerData(c, mode));
+          adminLog({ act: 'reset', mode, nick: p.nick });
+          setTimeout(() => { const n = adPs.find(x => x.pid === pid); if (n && box.isConnected) box.outerHTML = adRow(n); }, 300);
+        });
+      } else if (act === 'del') {
+        modal(`<h2>${esc(p.nick)}님을 삭제할까요?</h2><p class="small">가게·돈·직원·체인점·방명록이 모두 지워지고, 친구 목록에서도 빠져요. 코드로 다시 들어올 수 없고, 닉네임은 다시 쓸 수 있게 돼요. <b style="color:var(--red-d)">되돌릴 수 없어요.</b></p>
+          <p class="small">확인을 위해 닉네임 <b>${esc(p.nick)}</b>을(를) 입력해 주세요.</p><input class="inp" id="dlTxt" placeholder="${esc(p.nick)}" autocomplete="off">
+          <div class="grid2"><button class="btn ghost" data-close>취소</button><button class="btn red" id="dlGo">삭제</button></div>`, (sh, close) => {
+          $('#dlGo', sh).onclick = async () => {
+            if ($('#dlTxt', sh).value.trim() !== p.nick) { toast('닉네임이 달라요'); return; }
+            $('#dlGo', sh).disabled = true; $('#dlGo', sh).textContent = '삭제 중…';
+            try { await deletePlayer(p); adminLog({ act: 'delete', nick: p.nick }); close(); toast(`${p.nick}님을 삭제했어요`); adPs = adPs.filter(x => x.pid !== pid); box.remove(); }
+            catch (e) { toast('삭제 실패: ' + (e.message || e)); $('#dlGo', sh).disabled = false; }
+          };
+        });
       } else if (act === 'char') {
         let pickC = p.char;
         modal(`<h2>${esc(p.nick)}님 캐릭터 바꾸기</h2><p class="small muted">지금: ${esc(nameOf(p.char))}</p>
