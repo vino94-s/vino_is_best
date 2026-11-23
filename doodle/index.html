@@ -213,6 +213,7 @@ body.withfab .wrap{padding-bottom:96px}
 <div class="peek" id="peek"></div>
 <div class="sheet" id="sheet"></div>
 
+<script src="words.js?v=20261123-1"></script>
 <script>
 'use strict';
 /* ══════════ 설정 ══════════ */
@@ -234,20 +235,36 @@ const CFG = {
   guessOpts: [20, 30, 45],
   grace: 2500,       // 시간이 끝난 뒤 마지막 그림이 올라올 때까지 기다리는 시간
 };
-const APP_VERSION = '20261116-5';
+const APP_VERSION = '20261123-1';
 
-/* ══════════ 제시어 ══════════ */
-const WORDS = `고양이 강아지 기린 코끼리 펭귄 문어 거북이 토끼 사자 호랑이 원숭이 돌고래 상어 고래 낙타 하마 악어 부엉이 공작새 달팽이 거미 나비 꿀벌 개구리 오리 병아리 돼지 젖소 얼룩말 양 판다 캥거루 고슴도치 다람쥐 박쥐 해파리 불가사리 랍스터 앵무새 미어캣 나무늘보 공룡 유니콘 용
-김밥 떡볶이 라면 치킨 피자 햄버거 초밥 아이스크림 수박 바나나 파인애플 딸기 포도 계란후라이 핫도그 붕어빵 호떡 삼겹살 짜장면 탕후루 마카롱 도넛 팝콘 생일케이크 샌드위치 감자튀김 떡국 만두 솜사탕 와플 옥수수 당근 브로콜리 버섯 고구마 컵라면 군고구마 빙수 소떡소떡 치맥
-우산 안경 손목시계 휴대폰 노트북 냉장고 세탁기 가위 망치 열쇠 자물쇠 전구 양초 풍선 선물상자 왕관 칫솔 거울 의자 침대 소파 텔레비전 리모컨 헤드폰 카메라 마이크 기타 피아노 드럼 축구공 볼링 자전거 킥보드 연필 지우개 책가방 운동화 하이힐 넥타이 모자 장갑 목도리 양말 반지 지갑 돋보기 나침반 망원경 로켓 비행기 헬리콥터 잠수함 기차 소방차 구급차 트랙터 돛단배 신호등 변기 드라이기 선풍기 에어컨 청소기 휴지 고무장갑 택배상자 쇼핑카트 오토바이 열기구
-화산 무지개 눈사람 번개 태풍 사막 오아시스 무인도 등대 피라미드 에펠탑 롤러코스터 회전목마 대관람차 수영장 찜질방 편의점 노래방 엘리베이터 지하철 텐트 모닥불 폭포 해바라기 선인장 장미 보름달 별똥별 태양 지구 외계인 비행접시 블랙홀 놀이터 미끄럼틀 그네 시소 캠핑카
-산타클로스 해적 닌자 마법사 공주 로봇 좀비 유령 뱀파이어 인어 천사 요리사 의사 경찰 소방관 우주비행사 미용사 택배기사 아이돌 마술사 피에로 카우보이 슈퍼히어로 왕 신데렐라 미라 허수아비 눈의여왕
-줄넘기 낚시 요가 스키 서핑 번지점프 낮잠 코골이 재채기 하품 셀카 야근 지각 다이어트 회식 건배 생일파티 결혼식 졸업식 소개팅 짝사랑 첫눈 월요병 칼퇴 월급날 홈트 배달음식 이사 대청소 설거지 빨래 산책 등산 줄서기 고백 숨바꼭질 가위바위보 팔씨름 줄다리기 눈싸움 물총싸움 불꽃놀이 연날리기 술래잡기 방귀 딸꾹질 몸살 모기 알람 늦잠 출근길 퇴근길 엘리베이터방귀 혼밥 먹방 단톡방 읽씹 밤샘 벼락치기
-그림의떡 우물안개구리 누워서떡먹기 하늘의별따기 식은죽먹기 꿩먹고알먹고 티끌모아태산 소잃고외양간고친다 원숭이도나무에서떨어진다 등잔밑이어둡다 개천에서용난다 도토리키재기 김칫국마시기 그림자 눈물 사랑 질투 행복 시간 꿈`.split(/\s+/).filter(Boolean)
-  .map(w => w.replace(/^그림의떡$/, '그림의 떡').replace(/^우물안개구리$/, '우물 안 개구리').replace(/^누워서떡먹기$/, '누워서 떡 먹기').replace(/^하늘의별따기$/, '하늘의 별 따기')
-    .replace(/^식은죽먹기$/, '식은 죽 먹기').replace(/^꿩먹고알먹고$/, '꿩 먹고 알 먹고').replace(/^티끌모아태산$/, '티끌 모아 태산').replace(/^소잃고외양간고친다$/, '소 잃고 외양간 고친다')
-    .replace(/^원숭이도나무에서떨어진다$/, '원숭이도 나무에서 떨어진다').replace(/^등잔밑이어둡다$/, '등잔 밑이 어둡다').replace(/^개천에서용난다$/, '개천에서 용 난다')
-    .replace(/^도토리키재기$/, '도토리 키 재기').replace(/^김칫국마시기$/, '김칫국 마시기').replace(/^엘리베이터방귀$/, '엘리베이터 방귀').replace(/^눈의여왕$/, '눈의 여왕'));
+/* ══════════ 제시어 (words.js) ══════════ */
+const WORD_GROUPS = [], WORD_CAT = {};
+String(window.DOODLE_WORDS || '').split('\n').forEach(line => {
+  const k = line.indexOf(':'); if (k < 0) return;
+  const name = line.slice(0, k).trim(), ws = [];
+  line.slice(k + 1).split(',').map(w => w.replace(/\s+/g, ' ').trim()).filter(w => w && !/[.#$\[\]\/]/.test(w)).forEach(w => { if (!WORD_CAT[w]) { WORD_CAT[w] = name; ws.push(w); } });
+  if (ws.length) WORD_GROUPS.push({ name, words: ws });
+});
+const WORDS = Object.keys(WORD_CAT);
+// 카드 나눠 주기: 한 사람의 카드 6장은 서로 다른 묶음에서, 최근에 덜 나온 단어 위주로 골라요
+function dealCards(n, recent) {
+  recent = recent || {};
+  const taken = new Set(), out = [];
+  for (let p = 0; p < n; p++) {
+    const hand = [];
+    for (const g of shuffle(WORD_GROUPS)) {
+      if (hand.length >= CFG.cards) break;
+      const cand = g.words.filter(w => !taken.has(w));
+      if (!cand.length) continue;
+      cand.sort((a, b) => (recent[a] || 0) - (recent[b] || 0) || Math.random() - .5);
+      const pool = cand.slice(0, Math.max(3, Math.ceil(cand.length * .35)));
+      const w = pool[Math.floor(Math.random() * pool.length)];
+      taken.add(w); hand.push(w);
+    }
+    out.push(hand);
+  }
+  return out;
+}
 
 /* ══════════ 도구 ══════════ */
 const $ = (s, r = document) => r.querySelector(s);
@@ -388,6 +405,7 @@ const PATH = {
   hof: P + 'hof',                       // 명예의 전당 목록: hof/<스케치북 id> = { gid, opid, owner, word, last, n, players, ts, lk }
   like: id => P + 'like/' + id,         // like/<스케치북 id>/<pid> = true
   thumb: id => P + 'thumb/' + id,       // 작은 미리보기 그림
+  recent: P + 'recent',                 // 제시어가 마지막으로 나온 때: recent/<단어> = ts
   lobbyChat: P + 'chat',                // 로비 채팅
   roomChat: c => P + 'rc-' + c,         // 방 채팅 (대기실·게임 중·공개)
 };
@@ -825,19 +843,25 @@ function renderRoom() {
 async function startGame() {
   const btn = $('#rmStart'); if (btn) btn.disabled = true;
   const code = roomCode;
+  const recent = await db.get(PATH.recent).catch(() => null);
+  let dealt = [];
   const r = await db.tx(PATH.room(code), c => {
     if (c == null) return null;
     const ids = playerIds(c).slice(0, CFG.maxPlayers);
     if (c.status !== 'wait' || c.host !== me.pid || ids.length < CFG.minPlayers) return undefined;
     const now = db.now();
-    const order = shuffle(ids), deck = shuffle(WORDS), cards = {}, nicks = {};
-    order.forEach((id, i) => { cards[id] = deck.slice(i * CFG.cards, (i + 1) * CFG.cards); nicks[id] = c.players[id].nick; });
+    const order = shuffle(ids), hands = dealCards(order.length, recent), cards = {}, nicks = {};
+    order.forEach((id, i) => { cards[id] = hands[i]; nicks[id] = c.players[id].nick; });
+    dealt = hands.flat();
     const set = { draw: (c.set && c.set.draw) || 60, guess: (c.set && c.set.guess) || 30 };
     c.game = { gid: now.toString(36) + rid(5), order, nicks, cards, R: order.length, r: 0, ends: now + CFG.pickSec * 1000, set, started: now };
     c.status = 'play'; c.updatedAt = now;
     return c;
   }).catch(() => ({ committed: false }));
-  if (!r.committed) { toast('시작하지 못했어요. 다시 눌러 주세요'); if (btn) btn.disabled = false; }
+  if (!r.committed) { toast('시작하지 못했어요. 다시 눌러 주세요'); if (btn) btn.disabled = false; return; }
+  // 이번에 나온 단어를 기록해서 한동안 덜 나오게 해요
+  const t = db.now(), u = {}; dealt.forEach(w => { u[w] = t; });
+  db.update(PATH.recent, u).catch(() => {});
 }
 
 /* ══════════ 게임 진행 ══════════
@@ -935,7 +959,7 @@ function showWait(body, g) {
 function buildPick(body, g) {
   const cards = g.cards[me.pid] || [];
   body.innerHTML = `<p class="task">카드 한 장을 골라요!<br><span class="small muted" style="font-family:var(--f)">뒤집힌 단어가 내 스케치북의 제시어가 돼요</span></p>
-    <div class="cards">${cards.map((w, i) => `<button class="wc" data-i="${i}"><span class="b">?</span><span class="f">${esc(w)}</span></button>`).join('')}</div>`;
+    <div class="cards">${cards.map((w, i) => `<button class="wc" data-i="${i}"><span class="b">?</span><span class="f" style="font-size:${[...w].length > 14 ? 14 : [...w].length > 8 ? 17 : 23}px">${esc(w)}${WORD_CAT[w] ? `<small style="display:block;font:400 11px/1.2 var(--f);color:var(--muted);margin-top:6px">${esc(WORD_CAT[w])}</small>` : ''}</span></button>`).join('')}</div>`;
   let picked = false;
   $$('.wc', body).forEach(b => b.onclick = async () => {
     if (picked) return; picked = true;
